@@ -1,4 +1,5 @@
-export default async function handler(req, res) {
+// CommonJS Format to prevent "SyntaxError" at load time on Vercel
+module.exports = async (req, res) => {
     // 1. Top-level Error Handling Wrapper
     try {
         // 2. CORS Headers
@@ -7,11 +8,6 @@ export default async function handler(req, res) {
         res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
         if (req.method === 'OPTIONS') return res.status(200).end();
-
-        // 3. Environment Check
-        if (!globalThis.fetch) {
-            throw new Error(`Global fetch is not available in Node.js version ${process.version}`);
-        }
 
         const { action } = req.query || {};
         const KIE_KEY_HARDCODED = '365b6afae3b952cef9297bbc5384ec8e';
@@ -30,9 +26,9 @@ export default async function handler(req, res) {
 
             const payload = provider === 'kie' ? { model, input } : input;
 
-            // Log Request for Debugging (Vercel Logs)
-            console.log(`[Proxy] Creating Task via ${provider}:`, JSON.stringify(payload).substring(0, 100) + '...');
+            console.log(`[Proxy] Creating Task via ${provider}...`);
 
+            // Use native fetch (Node 18+)
             const response = await fetch(url, {
                 method: 'POST',
                 headers: {
@@ -44,7 +40,6 @@ export default async function handler(req, res) {
 
             if (!response.ok) {
                 const txt = await response.text();
-                // Return 200 with error field to avoid Client Throw if possible, or Status 502
                 return res.status(response.status).json({
                     error: `Upstream Provider Error (${response.status})`,
                     details: txt
@@ -80,13 +75,11 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: `Invalid action: ${action}` });
 
     } catch (criticalError) {
-        // 4. Catch-All Error Handler
         console.error('[Critical Proxy Error]', criticalError);
         return res.status(500).json({
             error: 'Internal Proxy Error',
             message: criticalError.message,
-            stack: criticalError.stack,
-            nodeVersion: process.version
+            stack: criticalError.stack
         });
     }
-}
+};
