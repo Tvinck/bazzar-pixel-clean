@@ -785,6 +785,7 @@ const DEFAPI_URL = 'https://api.defapi.org/api';
 // Create Task Proxy
 app.post('/api/proxy/create-task', async (req, res) => {
     try {
+        const { provider, model, input, endpoint } = req.body;
         const KIE_KEY_HARDCODED = '365b6afae3b952cef9297bbc5384ec8e';
         const apiKey = provider === 'kie' ? KIE_KEY_HARDCODED : process.env.DEFAPI_KEY;
 
@@ -840,6 +841,7 @@ app.post('/api/proxy/create-task', async (req, res) => {
 // Check Status Proxy
 app.get('/api/proxy/check-task', async (req, res) => {
     try {
+        const { provider, taskId } = req.query;
         const KIE_KEY_HARDCODED = '365b6afae3b952cef9297bbc5384ec8e';
         const apiKey = provider === 'kie' ? KIE_KEY_HARDCODED : process.env.DEFAPI_KEY;
 
