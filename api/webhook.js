@@ -63,6 +63,47 @@ export default async function handler(req, res) {
                 });
 
                 console.log(`✅ Sent welcome message to ${chatId}`);
+            } else if (text === 'Трендовые фото 🔥') {
+                console.log('🔥 Processing Trending Photos...');
+                await bot.sendMessage(chatId, '🔥 *Трендовые фото*\n\nСмотри самые популярные фото в нашем канале @pixel\\_imagess!', {
+                    parse_mode: 'Markdown'
+                });
+                console.log(`✅ Sent trending photos to ${chatId}`);
+            } else if (text === 'Сообщество 👥') {
+                console.log('👥 Processing Community...');
+                await bot.sendMessage(chatId, '👥 *Сообщество*\n\nПрисоединяйся к нашему чату @pixel\\_communityy и делись своими работами!', {
+                    parse_mode: 'Markdown'
+                });
+                console.log(`✅ Sent community to ${chatId}`);
+            } else if (text === 'Главное меню 🏠') {
+                console.log('🏠 Processing Main Menu...');
+                const webAppUrl = 'https://bazzar-pixel-clean-4zm4.vercel.app';
+                const keyboard = {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: '🚀 Открыть приложение', web_app: { url: webAppUrl } }]
+                        ]
+                    }
+                };
+                await bot.sendMessage(chatId, '🏠 *Главное меню*\n\nОткрой наше приложение для полного функционала!', {
+                    parse_mode: 'Markdown',
+                    ...keyboard
+                });
+                console.log(`✅ Sent main menu to ${chatId}`);
+            } else if (text === 'Баланс ⚡') {
+                console.log('⚡ Processing Balance...');
+                await bot.sendMessage(chatId, '⚡ *Баланс*\n\nТвой баланс: 0 токенов\n\nПополни баланс в приложении!', {
+                    parse_mode: 'Markdown'
+                });
+                console.log(`✅ Sent balance to ${chatId}`);
+            } else if (text === 'Пригласи друга 🤝') {
+                console.log('🤝 Processing Invite Friend...');
+                const botUsername = 'NanoBananaBot'; // Replace with your actual bot username
+                const referralLink = `https://t.me/${botUsername}?start=ref_${chatId}`;
+                await bot.sendMessage(chatId, `🤝 *Пригласи друга*\n\nТвоя реферальная ссылка:\n${referralLink}\n\nПолучай бонусы за каждого приглашенного друга!`, {
+                    parse_mode: 'Markdown'
+                });
+                console.log(`✅ Sent invite friend to ${chatId}`);
             } else if (text) {
                 console.log('💬 Processing text message...');
                 // Echo back for now
