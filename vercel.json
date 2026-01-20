@@ -16,6 +16,10 @@
         {
             "source": "/api/staff/(.*)",
             "destination": "/api/index.js"
+        },
+        {
+            "source": "/api/proxy/(.*)",
+            "destination": "/api/index.js"
         }
     ]
 }
