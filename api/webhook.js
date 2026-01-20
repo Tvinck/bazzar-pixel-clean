@@ -100,8 +100,9 @@ export default async function handler(req, res) {
                 console.log('🤝 Processing Invite Friend...');
                 const botUsername = 'NanoBananaBot'; // Replace with your actual bot username
                 const referralLink = `https://t.me/${botUsername}?start=ref_${chatId}`;
-                await bot.sendMessage(chatId, `🤝 *Пригласи друга*\n\nТвоя реферальная ссылка:\n${referralLink}\n\nПолучай бонусы за каждого приглашенного друга!`, {
-                    parse_mode: 'Markdown'
+                const message = `🤝 <b>Пригласи друга</b>\n\nТвоя реферальная ссылка:\n${referralLink}\n\nПолучай бонусы за каждого приглашенного друга!`;
+                await bot.sendMessage(chatId, message, {
+                    parse_mode: 'HTML'
                 });
                 console.log(`✅ Sent invite friend to ${chatId}`);
             } else if (text) {
