@@ -58,18 +58,60 @@ const aiService = {
             console.log('🌐 Browser Mode: Starting Async Generation...');
 
             // Helper to convert File to Base64
-            const toBase64 = file => new Promise((resolve, reject) => {
+            // Helper to compress and convert File to Base64
+            const processFile = (file) => new Promise((resolve, reject) => {
+                // If not image, return simple base64 (e.g. small text files?) or reject?
+                // Assuming mostly images for now. 
+                if (!file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.readAsDataURL(file);
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = reject;
+                    return;
+                }
+
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = error => reject(error);
+                reader.onload = (event) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const MAX_SIZE = 1024;
+
+                        // Resize logic
+                        if (width > height) {
+                            if (width > MAX_SIZE) {
+                                height *= MAX_SIZE / width;
+                                width = MAX_SIZE;
+                            }
+                        } else {
+                            if (height > MAX_SIZE) {
+                                width *= MAX_SIZE / height;
+                                height = MAX_SIZE;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Compress to JPEG 0.8 which is very efficient
+                        resolve(canvas.toDataURL('image/jpeg', 0.8));
+                    };
+                    img.onerror = reject;
+                    img.src = event.target.result;
+                };
+                reader.onerror = reject;
             });
 
             // Prepare files
             let processedFiles = [];
             if (options.source_files && Array.isArray(options.source_files)) {
                 processedFiles = await Promise.all(options.source_files.map(async (f) => {
-                    if (f instanceof File) return await toBase64(f);
+                    if (f instanceof File) return await processFile(f);
                     return f;
                 }));
             }
