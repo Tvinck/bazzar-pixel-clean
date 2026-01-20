@@ -12,7 +12,7 @@ import { aiService } from './src/ai-service.js';
 import { generateBlurhash } from './src/utils/blurhash-server.js';
 import { botAnalytics, supabase } from './bot-supabase.js';
 import multer from 'multer';
-import fetch from 'node-fetch';
+// import fetch from 'node-fetch';
 import crypto from 'crypto';
 import sharp from 'sharp'; // For mask generation
 import { setupRoutes } from './src/server/routes.js';
@@ -785,7 +785,8 @@ const DEFAPI_URL = 'https://api.defapi.org/api';
 // Create Task Proxy
 app.post('/api/proxy/create-task', async (req, res) => {
     try {
-        const { provider, model, input, endpoint } = req.body;
+        console.log('Proxy Create Request Body:', req.body);
+        const { provider, model, input, endpoint } = req.body || {};
         const KIE_KEY_HARDCODED = '365b6afae3b952cef9297bbc5384ec8e';
         const apiKey = provider === 'kie' ? KIE_KEY_HARDCODED : process.env.DEFAPI_KEY;
 
@@ -841,7 +842,7 @@ app.post('/api/proxy/create-task', async (req, res) => {
 // Check Status Proxy
 app.get('/api/proxy/check-task', async (req, res) => {
     try {
-        const { provider, taskId } = req.query;
+        const { provider, taskId } = req.query || {};
         const KIE_KEY_HARDCODED = '365b6afae3b952cef9297bbc5384ec8e';
         const apiKey = provider === 'kie' ? KIE_KEY_HARDCODED : process.env.DEFAPI_KEY;
 
