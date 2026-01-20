@@ -79,12 +79,13 @@ const aiService = {
                 // If File objects, we'd need base64 too, but let's stick to logic above for source_files compatibility.
             }
 
-            // Call Async Implementation
-            return await aiService.generateImageAsync(prompt, modelId, {
+            // Call KIE Implementation using Client-side Proxy logic
+            return await aiService.generateWithKie(prompt, modelId, {
                 ...options,
                 source_files: processedFiles
             });
         }
+
 
         // 2. Node.js: Direct API Call
         const provider = getProvider();
@@ -116,8 +117,9 @@ const aiService = {
     // ============================================
     generateWithKie: async (prompt, modelId, options = {}) => {
         console.log(`🔍 DEBUG: generateWithKie START. Prompt: ${prompt?.substring(0, 20)}... Model: '${modelId}'`);
-        const apiKey = getEnv('KIE_API_KEY');
-        if (!apiKey) throw new Error('KIE_API_KEY not set');
+
+        const apiKey = !isBrowser ? getEnv('KIE_API_KEY') : null;
+        if (!isBrowser && !apiKey) throw new Error('KIE_API_KEY not set');
 
         // KIE MODEL MAPPING - Strictly based on Documentation
         const KIE_MAP = {
@@ -297,14 +299,29 @@ const aiService = {
         console.log('📤 Kie.ai Request:', JSON.stringify(requestBody, null, 2));
 
         // Create task
-        const createRes = await fetch(`${KIE_API_URL}/jobs/createTask`, {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${apiKey}`,
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify(requestBody)
-        });
+        // Create task (Proxy or Direct)
+        let createRes;
+
+        if (isBrowser) {
+            createRes = await fetch('/api/proxy/create-task', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    provider: 'kie',
+                    model: requestBody.model,
+                    input: requestBody.input
+                })
+            });
+        } else {
+            createRes = await fetch(`${KIE_API_URL}/jobs/createTask`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestBody)
+            });
+        }
 
         if (!createRes.ok) {
             const errorText = await createRes.text();
@@ -362,9 +379,15 @@ const aiService = {
 
             let data;
             try {
-                const res = await fetch(`${KIE_API_URL}/jobs/recordInfo?taskId=${taskId}`, {
-                    headers: { 'Authorization': `Bearer ${apiKey}` }
-                });
+
+                let res;
+                if (isBrowser) {
+                    res = await fetch(`/api/proxy/check-task?provider=kie&taskId=${taskId}`);
+                } else {
+                    res = await fetch(`${KIE_API_URL}/jobs/recordInfo?taskId=${taskId}`, {
+                        headers: { 'Authorization': `Bearer ${apiKey}` }
+                    });
+                }
                 data = await res.json();
             } catch (err) {
                 console.warn(`⚠️ Kie.ai polling attempt ${i} failed, retrying...`);

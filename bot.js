@@ -777,6 +777,101 @@ app.post('/api/staff/approve-application', async (req, res) => {
     }
 });
 
+// --- AI PROXY ENDPOINTS (To bypass Vercel Timeout) ---
+
+const KIE_API_URL = 'https://api.kie.ai/api/v1';
+const DEFAPI_URL = 'https://api.defapi.org/api';
+
+// Create Task Proxy
+app.post('/api/proxy/create-task', async (req, res) => {
+    try {
+        const { provider, model, input, endpoint } = req.body;
+        const apiKey = provider === 'kie' ? process.env.KIE_API_KEY : process.env.DEFAPI_KEY;
+
+        if (!apiKey) {
+            return res.status(500).json({ error: `${provider.toUpperCase()} API Key not configured on server` });
+        }
+
+        // KIE
+        if (provider === 'kie') {
+            const response = await fetch(`${KIE_API_URL}/jobs/createTask`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ model, input })
+            });
+
+            if (!response.ok) {
+                const txt = await response.text();
+                return res.status(response.status).json({ error: txt });
+            }
+            const data = await response.json();
+            return res.json(data);
+        }
+
+        // DEFAPI
+        if (provider === 'defapi') {
+            const response = await fetch(`${DEFAPI_URL}/generate`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(input) // DefAPI expects flat input often, or matched structure
+            });
+            if (!response.ok) {
+                const txt = await response.text();
+                return res.status(response.status).json({ error: txt });
+            }
+            const data = await response.json();
+            return res.json(data);
+        }
+
+        res.status(400).json({ error: 'Unknown provider' });
+
+    } catch (e) {
+        console.error('Proxy Create Error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Check Status Proxy
+app.get('/api/proxy/check-task', async (req, res) => {
+    try {
+        const { provider, taskId } = req.query;
+        const apiKey = provider === 'kie' ? process.env.KIE_API_KEY : process.env.DEFAPI_KEY;
+
+        if (!apiKey) {
+            return res.status(500).json({ error: `${provider.toUpperCase()} API Key not configured on server` });
+        }
+
+        if (provider === 'kie') {
+            const response = await fetch(`${KIE_API_URL}/jobs/recordInfo?taskId=${taskId}`, {
+                headers: { 'Authorization': `Bearer ${apiKey}` }
+            });
+            const data = await response.json();
+            return res.json(data);
+        }
+
+        if (provider === 'defapi') {
+            const response = await fetch(`${DEFAPI_URL}/task/query?task_id=${taskId}`, {
+                headers: { 'Authorization': `Bearer ${apiKey}` }
+            });
+            const data = await response.json();
+            return res.json(data);
+        }
+
+        res.status(400).json({ error: 'Unknown provider' });
+
+    } catch (e) {
+        console.error('Proxy Status Error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+
 // Catch-all handler for SPA (Must be last)
 app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
