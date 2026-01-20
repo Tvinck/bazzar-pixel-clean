@@ -238,6 +238,57 @@ app.get('/api/config', (req, res) => {
     });
 });
 
+// Health Check Endpoint
+app.get('/api/health', (req, res) => {
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL;
+    res.json({
+        status: 'ok',
+        env: isProduction ? 'production' : 'development',
+        hasToken: !!process.env.TELEGRAM_BOT_TOKEN,
+        timestamp: new Date().toISOString()
+    });
+});
+
+// Set Webhook (for Vercel deployment)
+app.get('/api/set-webhook', async (req, res) => {
+    try {
+        const webhookUrl = `https://${req.headers.host}/api/webhook`;
+        const result = await bot.setWebHook(webhookUrl);
+        res.json({
+            success: true,
+            webhookUrl,
+            result
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: error.message
+        });
+    }
+});
+
+// Get Webhook Info
+app.get('/api/webhook-info', async (req, res) => {
+    try {
+        const info = await bot.getWebHookInfo();
+        res.json(info);
+    } catch (error) {
+        res.status(500).json({ error: error.message });
+    }
+});
+
+// Webhook Handler (for production)
+app.post('/api/webhook', async (req, res) => {
+    try {
+        console.log('📩 Webhook received:', JSON.stringify(req.body, null, 2));
+        await bot.processUpdate(req.body);
+        res.sendStatus(200);
+    } catch (error) {
+        console.error('Webhook Error:', error);
+        res.sendStatus(500);
+    }
+});
+
 // Helper: Verify Telegram Web App Data
 app.post('/api/admin/notify', async (req, res) => {
     try {
@@ -1357,3 +1408,6 @@ bot.on('photo', async (msg) => {
     console.log('🤖 Bot is running...');
     console.log(`📊 Total users: ${totalUsers} `);
 })();
+
+// Export app for Vercel serverless functions
+export default app;
