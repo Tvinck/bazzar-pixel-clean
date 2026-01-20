@@ -17,12 +17,27 @@ export default async function handler(req, res) {
     }
 
     try {
+        // DEBUG: Check environment variables
+        if (!supabaseServiceKey || supabaseServiceKey === 'PLACEHOLDER') {
+            console.error('CRITICAL: SUPABASE_SERVICE_KEY is missing or PLACEHOLDER');
+            return res.status(500).json({
+                error: 'Configuration Error',
+                details: 'Service key is invalid',
+                keyStatus: supabaseServiceKey ? 'Present' : 'Missing',
+                keyPrefix: supabaseServiceKey ? supabaseServiceKey.substring(0, 5) : 'N/A'
+            });
+        }
+
         const { data, error } = await supabase
             .from('likes')
             .select('creation_id')
             .eq('user_id', userId);
 
-        if (error) throw error;
+        if (error) {
+            console.error('Supabase Error:', error);
+            // Return raw error for debugging
+            return res.status(500).json({ error: error.message, details: error });
+        }
 
         const ids = (data || []).map(like => like.creation_id);
         res.status(200).json(ids);
