@@ -25,20 +25,26 @@ const welcomeMessage = `
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
+        console.log('❌ Not a POST request');
         return res.status(405).json({ error: 'Method not allowed' });
     }
 
     try {
         const update = req.body;
         console.log('📩 Webhook received:', JSON.stringify(update, null, 2));
+        console.log('🔍 Update keys:', Object.keys(update));
+        console.log('🔍 Has message?', !!update.message);
 
         // Handle message
         if (update.message) {
+            console.log('✅ Message detected!');
             const chatId = update.message.chat.id;
             const text = update.message.text;
+            console.log(`💬 Chat ID: ${chatId}, Text: "${text}"`);
 
             // Handle /start command
             if (text === '/start') {
+                console.log('🚀 Processing /start command...');
                 const keyboard = {
                     reply_markup: {
                         keyboard: [
@@ -50,22 +56,30 @@ export default async function handler(req, res) {
                     }
                 };
 
+                console.log('📤 Sending welcome message...');
                 await bot.sendMessage(chatId, welcomeMessage, {
                     parse_mode: 'Markdown',
                     ...keyboard
                 });
 
                 console.log(`✅ Sent welcome message to ${chatId}`);
-            } else {
+            } else if (text) {
+                console.log('💬 Processing text message...');
                 // Echo back for now
                 await bot.sendMessage(chatId, `Получил: ${text}\n\nБот работает на Vercel! 🚀`);
                 console.log(`✅ Sent echo to ${chatId}`);
+            } else {
+                console.log('⚠️ No text in message');
             }
+        } else {
+            console.log('⚠️ No message in update');
         }
 
+        console.log('✅ Handler completed successfully');
         res.status(200).send('OK');
     } catch (error) {
-        console.error('Webhook Error:', error);
+        console.error('❌ Webhook Error:', error);
+        console.error('❌ Error stack:', error.stack);
         res.status(500).json({ error: error.message });
     }
 }
