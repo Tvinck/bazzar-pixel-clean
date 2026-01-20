@@ -303,7 +303,7 @@ const aiService = {
         let createRes;
 
         if (isBrowser) {
-            createRes = await fetch('/api/proxy/create-task', {
+            createRes = await fetch('/api/proxy?action=create', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -382,7 +382,7 @@ const aiService = {
 
                 let res;
                 if (isBrowser) {
-                    res = await fetch(`/api/proxy/check-task?provider=kie&taskId=${taskId}`);
+                    res = await fetch(`/api/proxy?action=check&provider=kie&taskId=${taskId}`);
                 } else {
                     res = await fetch(`${KIE_API_URL}/jobs/recordInfo?taskId=${taskId}`, {
                         headers: { 'Authorization': `Bearer ${apiKey}` }
