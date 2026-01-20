@@ -1,0 +1,21 @@
+{
+    "version": 2,
+    "rewrites": [
+        {
+            "source": "/api/jobs/(.*)",
+            "destination": "/api/index.js"
+        },
+        {
+            "source": "/api/config",
+            "destination": "/api/index.js"
+        },
+        {
+            "source": "/api/admin/(.*)",
+            "destination": "/api/index.js"
+        },
+        {
+            "source": "/api/staff/(.*)",
+            "destination": "/api/index.js"
+        }
+    ]
+}
