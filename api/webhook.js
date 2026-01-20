@@ -65,8 +65,17 @@ export default async function handler(req, res) {
                 console.log(`✅ Sent welcome message to ${chatId}`);
             } else if (text === 'Трендовые фото 🔥') {
                 console.log('🔥 Processing Trending Photos...');
-                await bot.sendMessage(chatId, '🔥 *Трендовые фото*\n\nСмотри самые популярные фото в нашем канале @pixel\\_imagess!', {
-                    parse_mode: 'Markdown'
+                const webAppUrl = 'https://bazzar-pixel-clean-4zm4.vercel.app';
+                const keyboard = {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: '🔥 Трендовые фото', web_app: { url: webAppUrl } }]
+                        ]
+                    }
+                };
+                await bot.sendMessage(chatId, '🔥 *Тренды Pixel AI*\n\nСмотрите лучшие работы пользователей в нашем приложении! 👇', {
+                    parse_mode: 'Markdown',
+                    ...keyboard
                 });
                 console.log(`✅ Sent trending photos to ${chatId}`);
             } else if (text === 'Сообщество 👥') {
@@ -77,23 +86,35 @@ export default async function handler(req, res) {
                 console.log(`✅ Sent community to ${chatId}`);
             } else if (text === 'Главное меню 🏠') {
                 console.log('🏠 Processing Main Menu...');
-                const webAppUrl = 'https://bazzar-pixel-clean-4zm4.vercel.app';
+                // Same logic as /start
                 const keyboard = {
                     reply_markup: {
-                        inline_keyboard: [
-                            [{ text: '🚀 Открыть приложение', web_app: { url: webAppUrl } }]
-                        ]
+                        keyboard: [
+                            [{ text: 'Трендовые фото 🔥' }, { text: 'Сообщество 👥' }],
+                            [{ text: 'Главное меню 🏠' }, { text: 'Баланс ⚡' }],
+                            [{ text: 'Пригласи друга 🤝' }]
+                        ],
+                        resize_keyboard: true
                     }
                 };
-                await bot.sendMessage(chatId, '🏠 *Главное меню*\n\nОткрой наше приложение для полного функционала!', {
+                await bot.sendMessage(chatId, welcomeMessage, {
                     parse_mode: 'Markdown',
                     ...keyboard
                 });
                 console.log(`✅ Sent main menu to ${chatId}`);
             } else if (text === 'Баланс ⚡') {
                 console.log('⚡ Processing Balance...');
+                const webAppUrl = 'https://bazzar-pixel-clean-4zm4.vercel.app';
+                const keyboard = {
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: '💰 Пополнить баланс', web_app: { url: webAppUrl } }]
+                        ]
+                    }
+                };
                 await bot.sendMessage(chatId, '⚡ *Баланс*\n\nТвой баланс: 0 токенов\n\nПополни баланс в приложении!', {
-                    parse_mode: 'Markdown'
+                    parse_mode: 'Markdown',
+                    ...keyboard
                 });
                 console.log(`✅ Sent balance to ${chatId}`);
             } else if (text === 'Пригласи друга 🤝') {
