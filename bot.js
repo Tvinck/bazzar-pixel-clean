@@ -785,8 +785,8 @@ const DEFAPI_URL = 'https://api.defapi.org/api';
 // Create Task Proxy
 app.post('/api/proxy/create-task', async (req, res) => {
     try {
-        const { provider, model, input, endpoint } = req.body;
-        const apiKey = provider === 'kie' ? process.env.KIE_API_KEY : process.env.DEFAPI_KEY;
+        const KIE_KEY_HARDCODED = '365b6afae3b952cef9297bbc5384ec8e';
+        const apiKey = provider === 'kie' ? KIE_KEY_HARDCODED : process.env.DEFAPI_KEY;
 
         if (!apiKey) {
             return res.status(500).json({ error: `${provider.toUpperCase()} API Key not configured on server` });
@@ -840,8 +840,8 @@ app.post('/api/proxy/create-task', async (req, res) => {
 // Check Status Proxy
 app.get('/api/proxy/check-task', async (req, res) => {
     try {
-        const { provider, taskId } = req.query;
-        const apiKey = provider === 'kie' ? process.env.KIE_API_KEY : process.env.DEFAPI_KEY;
+        const KIE_KEY_HARDCODED = '365b6afae3b952cef9297bbc5384ec8e';
+        const apiKey = provider === 'kie' ? KIE_KEY_HARDCODED : process.env.DEFAPI_KEY;
 
         if (!apiKey) {
             return res.status(500).json({ error: `${provider.toUpperCase()} API Key not configured on server` });
