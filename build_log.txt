@@ -1,0 +1,62 @@
+
+> bazzar-pixel@0.0.0 build
+> vite build
+
+vite v7.3.1 building client environment for production...
+transforming...
+✓ 3079 modules transformed.
+rendering chunks...
+
+PWA WARNING:
+</head> not found in the html, adding it to the html tag: add empty <head></head> to your html to remove this warning.
+computing gzip size...
+dist/registerSW.js                            0.13 kB
+dist/manifest.webmanifest                     0.39 kB
+dist/index.html                               1.63 kB │ gzip:   0.72 kB
+dist/assets/index-C-hhT86k.css               84.76 kB │ gzip:  12.80 kB
+dist/assets/Skeletons-DJo1r63g.js             1.35 kB │ gzip:   0.59 kB
+dist/assets/AnimatedButtons-BisByJMY.js       1.45 kB │ gzip:   0.70 kB
+dist/assets/useGallery-BPB7c0Yd.js            2.37 kB │ gzip:   1.20 kB
+dist/assets/OnboardingOverlay-DD3lci9f.js     3.74 kB │ gzip:   1.67 kB
+dist/assets/HistoryView-2NgAQdOD.js           3.86 kB │ gzip:   1.66 kB
+dist/assets/FaceSwap-BhS9oq0u.js              4.19 kB │ gzip:   1.52 kB
+dist/assets/NotificationsPanel-Qj8ynm5N.js    4.24 kB │ gzip:   1.71 kB
+dist/assets/DailyBonusModal-ybhZ2cn4.js       4.33 kB │ gzip:   1.88 kB
+dist/assets/LeaderboardDrawer-DNhj9SYq.js     4.68 kB │ gzip:   1.67 kB
+dist/assets/ai-service-CTC7Snof.js            5.04 kB │ gzip:   2.13 kB
+dist/assets/UserProfileView-CBiUk9ZP.js       6.05 kB │ gzip:   2.09 kB
+dist/assets/CreateView-DtBGnWfE.js            6.57 kB │ gzip:   2.29 kB
+dist/assets/galleryAPI-BWf5n7Qv.js            7.00 kB │ gzip:   1.93 kB
+dist/assets/InpaintingEditor-QA3V6jPj.js      8.42 kB │ gzip:   3.20 kB
+dist/assets/GalleryView-bZ10n-ky.js           8.82 kB │ gzip:   2.74 kB
+dist/assets/TemplateView-BIGGeodV.js         10.64 kB │ gzip:   4.35 kB
+dist/assets/react-vendor-BLWkLgjQ.js         11.33 kB │ gzip:   4.06 kB
+dist/assets/PaymentDrawer-DXzYNkh2.js        11.42 kB │ gzip:   3.66 kB
+dist/assets/HomeView-C5XZvHCB.js             18.48 kB │ gzip:   6.04 kB
+dist/assets/ProfileView-DzWh-HYD.js          19.67 kB │ gzip:   5.23 kB
+dist/assets/icons-CbEC2eqr.js                20.12 kB │ gzip:   7.46 kB
+dist/assets/GenerationView-QwJr9FTR.js       23.44 kB │ gzip:   6.76 kB
+dist/assets/AvatarTrainer-D9ld_RFV.js        36.97 kB │ gzip:  14.15 kB
+dist/assets/query-BCqpzcEg.js                40.78 kB │ gzip:  12.28 kB
+dist/assets/motion-ByVW41FZ.js              122.26 kB │ gzip:  40.44 kB
+dist/assets/index-6MuRjJmJ.js               451.05 kB │ gzip: 133.39 kB
+✓ built in 13.61s
+error during build:
+Error: Unable to write the service worker file. '/private/var/folders/3k/m7lrzkcs54ncblphvffbwqnr0000gn/T/965af87e33c52148c099829fb6452353/sw.js: Missing semicolon. (1:99)
+
+> 1 | import {clientsClaim as workbox_core_clientsClaim} from '/Users/macbookpro/Desktop/BAZZAR PRODJECT'S/bazzar-pixel/node_modules/workbox-core/clientsClaim.mjs';
+    |                                                                                                    ^
+  2 | import {precacheAndRoute as workbox_precaching_precacheAndRoute} from '/Users/macbookpro/Desktop/BAZZAR PRODJECT'S/bazzar-pixel/node_modules/workbox-precaching/precacheAndRoute.mjs';
+  3 | import {cleanupOutdatedCaches as workbox_precaching_cleanupOutdatedCaches} from '/Users/macbookpro/Desktop/BAZZAR PRODJECT'S/bazzar-pixel/node_modules/workbox-precaching/cleanupOutdatedCaches.mjs';
+  4 | import {registerRoute as workbox_routing_registerRoute} from '/Users/macbookpro/Desktop/BAZZAR PRODJECT'S/bazzar-pixel/node_modules/workbox-routing/registerRoute.mjs';'
+    at writeSWUsingDefaultTemplate (/Users/macbookpro/Desktop/BAZZAR PRODJECT'S/bazzar-pixel/node_modules/workbox-build/build/lib/write-sw-using-default-template.js:68:15)
+    at async generateSW (/Users/macbookpro/Desktop/BAZZAR PRODJECT'S/bazzar-pixel/node_modules/workbox-build/build/generate-sw.js:95:23)
+    at async generateServiceWorker (file:///Users/macbookpro/Desktop/BAZZAR%20PRODJECT'S/bazzar-pixel/node_modules/vite-plugin-pwa/dist/index.js:208:23)
+    at async _generateSW (file:///Users/macbookpro/Desktop/BAZZAR%20PRODJECT'S/bazzar-pixel/node_modules/vite-plugin-pwa/dist/index.js:234:5)
+    at async Object.handler (file:///Users/macbookpro/Desktop/BAZZAR%20PRODJECT'S/bazzar-pixel/node_modules/vite-plugin-pwa/dist/index.js:427:13)
+    at async PluginDriver.hookParallel (file:///Users/macbookpro/Desktop/BAZZAR%20PRODJECT'S/bazzar-pixel/node_modules/rollup/dist/es/shared/node-entry.js:22475:17)
+    at async Object.close (file:///Users/macbookpro/Desktop/BAZZAR%20PRODJECT'S/bazzar-pixel/node_modules/rollup/dist/es/shared/node-entry.js:23494:13)
+    at async buildEnvironment (file:///Users/macbookpro/Desktop/BAZZAR%20PRODJECT'S/bazzar-pixel/node_modules/vite/dist/node/chunks/config.js:33555:15)
+    at async Object.build (file:///Users/macbookpro/Desktop/BAZZAR%20PRODJECT'S/bazzar-pixel/node_modules/vite/dist/node/chunks/config.js:33900:19)
+    at async Object.buildApp (file:///Users/macbookpro/Desktop/BAZZAR%20PRODJECT'S/bazzar-pixel/node_modules/vite/dist/node/chunks/config.js:33897:153)
+    at async CAC.<anonymous> (file:///Users/macbookpro/Desktop/BAZZAR%20PRODJECT'S/bazzar-pixel/node_modules/vite/dist/node/cli.js:629:3)

@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "composite": true,
+        "target": "ES2022",
+        "lib": [
+            "ES2023"
+        ],
+        "module": "ESNext",
+        "skipLibCheck": true,
+        "moduleResolution": "bundler",
+        "allowSyntheticDefaultImports": true,
+        "strict": true,
+        "allowJs": true,
+        "noEmit": true,
+        "outDir": "./dist-config"
+    },
+    "include": [
+        "vite.config.js",
+        "vite.config.ts"
+    ]
+}

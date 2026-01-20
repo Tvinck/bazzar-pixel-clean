@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+@layer base {
+  :root {
+    /* Cosmic Purple Default */
+    --color-primary: 99 102 241;
+    --color-secondary: 217 70 239;
+    --color-accent: 168 85 247;
+  }
+  
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased overflow-x-hidden;
+    font-family: 'Outfit', sans-serif;
+    /* Clean modern body font */
+  }
+}
+
+/* Custom Fonts */
+.font-display {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+/* Noise Texture Overlay */
+.bg-noise {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 50;
+  opacity: 0.03;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+}
+
+/* Hide Scrollbar */
+::-webkit-scrollbar {
+  width: 0px;
+  background: transparent;
+}
+
+/* Animations */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+
+  50% {
+    transform: translateY(-10px);
+  }
+
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.glass-card {
+  @apply bg-white/70 backdrop-blur-xl border border-white/50 shadow-lg shadow-slate-200/50;
+}
+
+.glass-card-dark {
+  @apply bg-slate-900/90 backdrop-blur-xl border border-white/10 shadow-xl shadow-black/20;
+}

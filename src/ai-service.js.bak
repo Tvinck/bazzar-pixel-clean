@@ -1,0 +1,388 @@
+const isBrowser = typeof window !== 'undefined';
+
+// Dynamic import for Node.js
+let getModelInfo = null;
+if (!isBrowser) {
+    // In Node.js, we'll inline the model info
+    const KIE_MODELS = {
+        image: {
+            'nano_banana': { name: 'Nano Banana', credits: 10 },
+            'nano_banana_pro': { name: 'Nano Banana Pro', credits: 25 },
+            'gpt4o_image': { name: 'GPT-4o Image', credits: 30 },
+            'flux_kontext': { name: 'Flux Kontext', credits: 40 },
+            'flux_pro': { name: 'Flux Pro', credits: 45 },
+            'midjourney': { name: 'Midjourney', credits: 35 }
+        }
+    };
+
+    getModelInfo = (modelId) => {
+        for (const category of Object.values(KIE_MODELS)) {
+            if (category[modelId]) {
+                return { ...category[modelId], id: modelId };
+            }
+        }
+        return { name: modelId, credits: 20 }; // Default
+    };
+}
+
+// API URLs
+const KIE_API_URL = 'https://api.kie.ai/api/v1';
+const DEFAPI_URL = 'https://api.defapi.org/api';
+
+const getEnv = (key) => {
+    if (typeof process !== 'undefined' && process.env) return process.env[key];
+    return null;
+};
+
+// Get current provider
+const getProvider = () => {
+    const provider = getEnv('AI_PROVIDER') || 'kie';
+    return provider.toLowerCase();
+};
+
+// Legacy DefAPI Model Map (for fallback)
+const DEFAPI_MODEL_MAP = {
+    'nano_banana': 'google/nano-banana',
+    'nano_banana_pro': 'google/nano-banana-pro',
+    'gpt4o_image': 'openai/dalle-3',
+    'midjourney': 'midjourney/imagine',
+    'flux_kontext': 'flux/kontext',
+    'flux_pro': 'flux/pro'
+};
+
+const aiService = {
+    // Main Generation Function
+    generateImage: async (prompt, modelId = 'nano_banana', options = {}) => {
+        // 1. Browser: Proxy to Backend
+        if (isBrowser) {
+            const formData = new FormData();
+            formData.append('prompt', prompt);
+            formData.append('type', modelId);
+            formData.append('userId', options.userId || 'browser_user');
+            formData.append('aspectRatio', options.aspect_ratio || '1:1');
+            if (options.source_files && Array.isArray(options.source_files)) {
+                options.source_files.forEach(file => { if (file instanceof File) formData.append('files', file); });
+                delete options.source_files;
+            }
+            formData.append('options', JSON.stringify(options));
+            const res = await fetch('/api/generate', { method: 'POST', body: formData });
+            if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Generation Failed'); }
+            return (await res.json()).data;
+        }
+
+        // 2. Node.js: Direct API Call
+        const provider = getProvider();
+        console.log(`🖥️ Node Mode: ${provider.toUpperCase()} API...`);
+
+        // Mock Mode
+        if (getEnv('MOCK_AI') === 'true') {
+            console.log('🎭 MOCK AI: Simulating generation...');
+            await new Promise(r => setTimeout(r, 1000));
+            return {
+                success: true,
+                imageUrl: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=1024&auto=format&fit=crop'
+            };
+        }
+
+        // Route to provider
+        if (provider === 'kie') {
+            return await aiService.generateWithKie(prompt, modelId, options);
+        } else {
+            return await aiService.generateWithDefAPI(prompt, modelId, options);
+        }
+    },
+
+    // ============================================
+    // KIE.AI PROVIDER
+    // ============================================
+    generateWithKie: async (prompt, modelId, options = {}) => {
+        const apiKey = getEnv('KIE_API_KEY');
+        if (!apiKey) throw new Error('KIE_API_KEY not set');
+
+        const modelInfo = getModelInfo(modelId);
+        if (!modelInfo) {
+            console.warn(`⚠️ Model ${modelId} not found in Kie.ai, using nano_banana`);
+            modelId = 'nano_banana';
+        }
+
+        console.log(`🚀 Kie.ai: ${modelInfo?.name || modelId} (${modelInfo?.credits || '?'} credits)`);
+
+        // Convert model ID to Kie.ai format (underscore to dash)
+        const kieModelId = modelId.replace(/_/g, '-');
+
+        // Prepare input object (Kie.ai specific structure)
+        const input = {
+            prompt: prompt,
+            aspect_ratio: options.aspect_ratio || '1:1',
+            resolution: options.resolution || '1K',
+            output_format: options.output_format || 'png'
+        };
+
+        // Add source files if present
+        if (options.source_files && options.source_files.length > 0) {
+            input.image_input = options.source_files;
+        }
+
+        // Create task with correct Kie.ai structure
+        const requestBody = {
+            model: kieModelId,
+            input: input
+        };
+
+        console.log('📤 Kie.ai Request:', JSON.stringify(requestBody, null, 2));
+
+        // Create task
+        const createRes = await fetch(`${KIE_API_URL}/jobs/createTask`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(requestBody)
+        });
+
+        if (!createRes.ok) {
+            const errorText = await createRes.text();
+            console.error('❌ Kie.ai API Error:', errorText);
+            throw new Error(`Kie.ai API error: ${createRes.status} - ${errorText}`);
+        }
+
+        const responseData = await createRes.json();
+        console.log('📦 Kie.ai Response:', JSON.stringify(responseData, null, 2));
+
+        // Parse task ID (multiple possible formats)
+        let taskId = null;
+
+        // Try different response structures
+        if (responseData.data?.task_id) {
+            taskId = responseData.data.task_id;
+        } else if (responseData.data?.taskId) {
+            taskId = responseData.data.taskId;
+        } else if (responseData.task_id) {
+            taskId = responseData.task_id;
+        } else if (responseData.taskId) {
+            taskId = responseData.taskId;
+        } else if (responseData.id) {
+            taskId = responseData.id;
+        }
+
+        if (!taskId) {
+            console.error('❌ No task ID found in response:', responseData);
+            throw new Error('Kie.ai did not return a task ID. Check API key and model availability.');
+        }
+
+        console.log(`📋 Kie.ai Task created: ${taskId}`);
+
+        // Poll for result
+        return await aiService.pollKieTask(taskId, apiKey);
+    },
+
+    // Poll Kie.ai Task
+    pollKieTask: async (taskId, apiKey) => {
+        const maxAttempts = 120; // 120 * 3s = 6 minutes
+
+        for (let i = 0; i < maxAttempts; i++) {
+            await new Promise(r => setTimeout(r, 3000)); // Wait 3 seconds
+
+            let data;
+            try {
+                const res = await fetch(`${KIE_API_URL}/jobs/recordInfo?taskId=${taskId}`, {
+                    headers: { 'Authorization': `Bearer ${apiKey}` }
+                });
+                data = await res.json();
+            } catch (err) {
+                console.warn(`⚠️ Kie.ai polling attempt ${i} failed, retrying...`);
+                continue;
+            }
+
+            // Log full response for debugging
+            if (i === 0 || i % 10 === 0) {
+                console.log(`�� Poll Response:`, JSON.stringify(data, null, 2));
+            }
+
+            // Parse status (Kie.ai uses 'state' not 'status')
+            const status = data.data?.state || data.state || data.data?.status || data.status;
+            console.log(`⏳ Kie.ai Task ${taskId}: ${status}`);
+
+            if (status === 'success' || status === 'completed') {
+                const result = data.data?.result || data.result;
+                let imageUrl = null;
+
+                // Parse result
+                if (Array.isArray(result) && result.length > 0) {
+                    imageUrl = typeof result[0] === 'string' ? result[0] : result[0].url;
+                } else if (typeof result === 'string') {
+                    imageUrl = result;
+                } else if (result?.url) {
+                    imageUrl = result.url;
+                }
+
+                if (imageUrl) {
+                    console.log(`✅ Kie.ai completed: ${imageUrl}`);
+                    return { success: true, imageUrl };
+                }
+            }
+
+            if (status === 'failed' || status === 'error') {
+                const error = data.data?.error || data.error || 'Unknown error';
+                throw new Error(`Kie.ai generation failed: ${error}`);
+            }
+        }
+
+        throw new Error('Kie.ai task timeout (6 minutes)');
+    },
+
+    // ============================================
+    // DEFAPI PROVIDER (Fallback)
+    // ============================================
+    generateWithDefAPI: async (prompt, modelId, options = {}) => {
+        const apiKey = getEnv('DEFAPI_KEY');
+        if (!apiKey) throw new Error('DEFAPI_KEY not set');
+
+        const apiModel = DEFAPI_MODEL_MAP[modelId] || DEFAPI_MODEL_MAP['nano_banana'];
+        console.log(`🚀 DefAPI: ${apiModel}`);
+
+        // Prepare payload
+        const payload = {
+            model: apiModel,
+            prompt: prompt,
+            aspect_ratio: options.aspect_ratio || '1:1',
+            ...options
+        };
+
+        // Submit task
+        const res = await fetch(`${DEFAPI_URL}/generate`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${apiKey}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.code !== 0 || !data.data?.task_id) {
+            throw new Error(data.message || 'DefAPI validation failed');
+        }
+
+        return aiService.pollDefAPITask(data.data.task_id, apiKey);
+    },
+
+    // Poll DefAPI Task
+    pollDefAPITask: async (taskId, apiKey) => {
+        const maxAttempts = 300;
+
+        for (let i = 0; i < maxAttempts; i++) {
+            await new Promise(r => setTimeout(r, 2000));
+
+            let data;
+            try {
+                const res = await fetch(`${DEFAPI_URL}/task/query?task_id=${taskId}`, {
+                    headers: { 'Authorization': `Bearer ${apiKey}` }
+                });
+                data = await res.json();
+            } catch (err) {
+                console.warn(`⚠️ DefAPI polling attempt ${i} failed, retrying...`);
+                continue;
+            }
+
+            if (data.data?.status === 'succeeded' || data.data?.status === 'success') {
+                const res = data.data.result;
+                let resultUrl = null;
+
+                if (Array.isArray(res) && res.length > 0) {
+                    resultUrl = typeof res[0] === 'string' ? res[0] : res[0].url;
+                } else if (typeof res === 'string') {
+                    resultUrl = res;
+                } else if (res?.url) {
+                    resultUrl = res.url;
+                }
+
+                if (resultUrl) {
+                    return { success: true, imageUrl: resultUrl };
+                }
+            }
+
+            if (data.data?.status === 'failed' || data.data?.status === 'error') {
+                throw new Error(data.data.message || 'DefAPI failed');
+            }
+        }
+
+        throw new Error('DefAPI timeout');
+    },
+
+    // ============================================
+    // ASYNC JOB QUEUE (Browser)
+    // ============================================
+    generateImageAsync: async (prompt, modelId = 'nano_banana', options = {}) => {
+        if (!isBrowser) {
+            throw new Error('generateImageAsync is only available in browser mode');
+        }
+
+        const createRes = await fetch('/api/jobs/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                userId: options.userId || 'browser_user',
+                prompt: prompt,
+                modelId: modelId,
+                configuration: options,
+                sourceFiles: options.source_files || [],
+                jobType: 'image'
+            })
+        });
+
+        if (!createRes.ok) {
+            const err = await createRes.json();
+            throw new Error(err.error || 'Failed to create job');
+        }
+
+        const { jobId } = await createRes.json();
+        console.log(`📋 Job created: ${jobId}`);
+
+        // Poll for completion
+        const maxAttempts = 60;
+        for (let i = 0; i < maxAttempts; i++) {
+            await new Promise(r => setTimeout(r, 3000));
+
+            const statusRes = await fetch(`/api/jobs/${jobId}`);
+            if (!statusRes.ok) {
+                throw new Error('Failed to fetch job status');
+            }
+
+            const { job } = await statusRes.json();
+            console.log(`⏳ Job ${jobId} status: ${job.status}`);
+
+            if (job.status === 'completed') {
+                return {
+                    success: true,
+                    imageUrl: job.result_url
+                };
+            }
+
+            if (job.status === 'failed') {
+                throw new Error(job.error_message || 'Generation failed');
+            }
+        }
+
+        throw new Error('Job timeout - took longer than 3 minutes');
+    },
+
+    // Helper for Templates (Frontend)
+    generateFromTemplate: async (config) => {
+        return aiService.generateImage(config.prompt, config.modelId, {
+            ...config.configuration,
+            source_files: config.files
+        });
+    },
+
+    // Model Training (Stub/Placeholder)
+    trainModel: async (images, triggerWord, type) => {
+        console.log(`🚂 Training Stub: ${triggerWord} with ${images.length} images`);
+        await new Promise(r => setTimeout(r, 2000));
+        return { success: true, taskId: 'mock_train_' + Date.now() };
+    }
+};
+
+export { aiService };

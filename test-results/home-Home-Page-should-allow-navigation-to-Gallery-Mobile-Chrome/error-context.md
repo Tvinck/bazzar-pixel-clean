@@ -1,0 +1,83 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5] [cursor=pointer]:
+      - img [ref=e8]
+      - generic [ref=e16]:
+        - heading "PIXEL" [level=1] [ref=e17]
+        - generic [ref=e20]: Vision
+    - generic [ref=e21]:
+      - button [ref=e22] [cursor=pointer]:
+        - img [ref=e23]
+      - button "0 BUY" [ref=e25] [cursor=pointer]:
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - img [ref=e30]
+            - generic [ref=e33]: "0"
+          - generic [ref=e35]:
+            - generic [ref=e36]: BUY
+            - img [ref=e38]
+  - main [ref=e39]
+  - navigation [ref=e43]:
+    - button "Home" [ref=e44] [cursor=pointer]:
+      - img [ref=e46]
+      - generic [ref=e49]: Home
+    - button "Gallery" [active] [ref=e50] [cursor=pointer]:
+      - img [ref=e52]
+      - generic [ref=e56]: Gallery
+    - button [ref=e58] [cursor=pointer]:
+      - img [ref=e59]
+    - button "History" [ref=e61] [cursor=pointer]:
+      - img [ref=e63]
+      - generic [ref=e67]: History
+    - button "Profile" [ref=e68] [cursor=pointer]:
+      - img [ref=e70]
+      - generic [ref=e73]: Profile
+  - generic [ref=e75]:
+    - generic [ref=e77]:
+      - heading "Daily Bonus" [level=2] [ref=e78]
+      - paragraph [ref=e79]: Заходи каждый день и получай награды!
+      - generic [ref=e80]:
+        - generic [ref=e81]:
+          - generic [ref=e82]: Day 1
+          - generic [ref=e83]:
+            - generic [ref=e84]: "+1"
+            - img [ref=e85]
+        - generic [ref=e87]:
+          - generic [ref=e88]: Day 2
+          - generic [ref=e89]:
+            - generic [ref=e90]: "+2"
+            - img [ref=e91]
+        - generic [ref=e93]:
+          - generic [ref=e94]: Day 3
+          - generic [ref=e95]:
+            - generic [ref=e96]: "+5"
+            - img [ref=e97]
+        - generic [ref=e99]:
+          - generic [ref=e100]: Day 4
+          - generic [ref=e101]:
+            - generic [ref=e102]: "+8"
+            - img [ref=e103]
+        - generic [ref=e105]:
+          - generic [ref=e106]: Day 5
+          - generic [ref=e107]:
+            - generic [ref=e108]: "+12"
+            - img [ref=e109]
+        - generic [ref=e111]:
+          - generic [ref=e112]: Day 6
+          - generic [ref=e113]:
+            - generic [ref=e114]: "+15"
+            - img [ref=e115]
+        - generic [ref=e117]:
+          - generic [ref=e118]: Day 7
+          - generic [ref=e119]:
+            - generic [ref=e120]: "+50"
+            - img [ref=e121]
+      - button "CLAIM BONUS" [ref=e123] [cursor=pointer]:
+        - text: CLAIM BONUS
+        - img [ref=e124]
+    - button [ref=e126] [cursor=pointer]:
+      - img [ref=e127]
+```

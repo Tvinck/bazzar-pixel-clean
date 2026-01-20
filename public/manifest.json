@@ -1,0 +1,50 @@
+{
+    "name": "Pixel AI - AI Image & Video Generator",
+    "short_name": "Pixel AI",
+    "description": "Create stunning AI-generated images, videos, and music with Pixel AI",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0B0F19",
+    "theme_color": "#6366F1",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "/icon-192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/icon-512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "categories": [
+        "entertainment",
+        "photo",
+        "productivity"
+    ],
+    "screenshots": [
+        {
+            "src": "/screenshot1.png",
+            "sizes": "1080x1920",
+            "type": "image/png"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Create Image",
+            "short_name": "Create",
+            "description": "Generate a new AI image",
+            "url": "/?action=create",
+            "icons": [
+                {
+                    "src": "/icon-192.png",
+                    "sizes": "192x192"
+                }
+            ]
+        }
+    ]
+}

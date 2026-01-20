@@ -1,0 +1,156 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - banner [ref=e4]:
+    - generic [ref=e5] [cursor=pointer]:
+      - img [ref=e8]
+      - generic [ref=e16]:
+        - heading "PIXEL" [level=1] [ref=e17]
+        - generic [ref=e20]: Vision
+    - generic [ref=e21]:
+      - button [ref=e22] [cursor=pointer]:
+        - img [ref=e23]
+      - button "0 BUY" [ref=e25] [cursor=pointer]:
+        - generic [ref=e27]:
+          - generic [ref=e28]:
+            - img [ref=e30]
+            - generic [ref=e33]: "0"
+          - generic [ref=e35]:
+            - generic [ref=e36]: BUY
+            - img [ref=e38]
+  - main [ref=e39]:
+    - generic [ref=e40]:
+      - generic [ref=e46] [cursor=pointer]:
+        - img [ref=e49]
+        - heading "UPDATES" [level=1]
+        - generic [ref=e52]:
+          - heading "Подпишись на канал" [level=2] [ref=e53]
+          - paragraph [ref=e56]: Новости и фишки
+      - generic [ref=e61]:
+        - heading "Tools" [level=2] [ref=e63]
+        - generic [ref=e67]:
+          - button "Image Text to IMG" [ref=e68] [cursor=pointer]:
+            - img [ref=e70]
+            - generic [ref=e74]:
+              - heading "Image" [level=4] [ref=e75]
+              - paragraph [ref=e76]: Text to IMG
+          - button "Video IMG to Video" [ref=e77] [cursor=pointer]:
+            - img [ref=e79]
+            - generic [ref=e82]:
+              - heading "Video" [level=4] [ref=e83]
+              - paragraph [ref=e84]: IMG to Video
+          - generic [ref=e87] [cursor=pointer]:
+            - generic [ref=e88]: Premium
+            - heading "Nano Banana Pro" [level=3] [ref=e89]
+            - paragraph [ref=e90]: Pro Generation
+          - button "Audio Music & FX" [ref=e94] [cursor=pointer]:
+            - img [ref=e96]
+            - generic [ref=e100]:
+              - heading "Audio" [level=4] [ref=e101]
+              - paragraph [ref=e102]: Music & FX
+          - button "Animate Photo Bring to Life" [ref=e103] [cursor=pointer]:
+            - img [ref=e105]
+            - generic [ref=e108]:
+              - heading "Animate Photo" [level=4] [ref=e109]
+              - paragraph [ref=e110]: Bring to Life
+          - button "Video 3.1 HQ Generation" [ref=e111] [cursor=pointer]:
+            - img [ref=e113]
+            - generic [ref=e115]:
+              - heading "Video 3.1" [level=4] [ref=e116]
+              - paragraph [ref=e117]: HQ Generation
+          - button "Sora 2.0 Cinematic" [ref=e118] [cursor=pointer]:
+            - img [ref=e120]
+            - generic [ref=e123]:
+              - heading "Sora 2.0" [level=4] [ref=e124]
+              - paragraph [ref=e125]: Cinematic
+          - button "Tools Edit Objects" [ref=e126] [cursor=pointer]:
+            - img [ref=e128]
+            - generic [ref=e131]:
+              - heading "Tools" [level=4] [ref=e132]
+              - paragraph [ref=e133]: Edit Objects
+      - generic [ref=e134]:
+        - generic [ref=e135]:
+          - heading "Discover" [level=2] [ref=e136]
+          - button "See All" [ref=e137] [cursor=pointer]
+        - generic [ref=e138]:
+          - button "Dances" [ref=e139] [cursor=pointer]
+          - button "Trends" [ref=e140] [cursor=pointer]
+          - button "Christmas Cards" [ref=e141] [cursor=pointer]
+          - button "Angels" [ref=e142] [cursor=pointer]
+          - button "Old Trends" [ref=e143] [cursor=pointer]
+        - generic [ref=e145]:
+          - generic [ref=e148]:
+            - heading "Трендовый танец" [level=4] [ref=e149]
+            - paragraph [ref=e150]: Сгенерируй танец из этих ваших Тиктоков!
+            - generic [ref=e151]:
+              - button "Use" [ref=e152] [cursor=pointer]:
+                - img [ref=e153]
+                - text: Use
+              - button "15k" [ref=e155] [cursor=pointer]:
+                - img [ref=e157]
+                - generic [ref=e159]: 15k
+          - generic [ref=e160]:
+            - img [ref=e161]
+            - text: TREND
+  - navigation [ref=e165]:
+    - button "Home" [ref=e166] [cursor=pointer]:
+      - img [ref=e168]
+      - generic [ref=e171]: Home
+    - button "Gallery" [ref=e172] [cursor=pointer]:
+      - img [ref=e174]
+      - generic [ref=e178]: Gallery
+    - button [ref=e180] [cursor=pointer]:
+      - img [ref=e181]
+    - button "History" [ref=e183] [cursor=pointer]:
+      - img [ref=e185]
+      - generic [ref=e189]: History
+    - button "Profile" [ref=e190] [cursor=pointer]:
+      - img [ref=e192]
+      - generic [ref=e195]: Profile
+  - generic [ref=e197]:
+    - generic [ref=e199]:
+      - heading "Daily Bonus" [level=2] [ref=e200]
+      - paragraph [ref=e201]: Заходи каждый день и получай награды!
+      - generic [ref=e202]:
+        - generic [ref=e203]:
+          - generic [ref=e204]: Day 1
+          - generic [ref=e205]:
+            - generic [ref=e206]: "+1"
+            - img [ref=e207]
+        - generic [ref=e209]:
+          - generic [ref=e210]: Day 2
+          - generic [ref=e211]:
+            - generic [ref=e212]: "+2"
+            - img [ref=e213]
+        - generic [ref=e215]:
+          - generic [ref=e216]: Day 3
+          - generic [ref=e217]:
+            - generic [ref=e218]: "+5"
+            - img [ref=e219]
+        - generic [ref=e221]:
+          - generic [ref=e222]: Day 4
+          - generic [ref=e223]:
+            - generic [ref=e224]: "+8"
+            - img [ref=e225]
+        - generic [ref=e227]:
+          - generic [ref=e228]: Day 5
+          - generic [ref=e229]:
+            - generic [ref=e230]: "+12"
+            - img [ref=e231]
+        - generic [ref=e233]:
+          - generic [ref=e234]: Day 6
+          - generic [ref=e235]:
+            - generic [ref=e236]: "+15"
+            - img [ref=e237]
+        - generic [ref=e239]:
+          - generic [ref=e240]: Day 7
+          - generic [ref=e241]:
+            - generic [ref=e242]: "+50"
+            - img [ref=e243]
+      - button "CLAIM BONUS" [ref=e245] [cursor=pointer]:
+        - text: CLAIM BONUS
+        - img [ref=e246]
+    - button [ref=e248] [cursor=pointer]:
+      - img [ref=e249]
+```

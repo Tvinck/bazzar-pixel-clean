@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel AI - Тест</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        h1 {
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .info {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin: 10px 0;
+        }
+
+        .status {
+            color: #4ade80;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #f87171;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🎨 Pixel AI</h1>
+    <div class="info">
+        <p><strong>Статус:</strong> <span class="status">✅ Сервер работает</span></p>
+        <p><strong>Версия:</strong> Dev Build</p>
+        <p><strong>Язык:</strong> Русский</p>
+    </div>
+    <div class="info">
+        <p id="telegram-status">Проверка Telegram WebApp...</p>
+    </div>
+    <script>
+        if (window.Telegram && window.Telegram.WebApp) {
+            document.getElementById('telegram-status').innerHTML =
+                '<span class="status">✅ Telegram WebApp обнаружен</span><br>' +
+                'User ID: ' + (window.Telegram.WebApp.initDataUnsafe?.user?.id || 'Неизвестно');
+            window.Telegram.WebApp.ready();
+            window.Telegram.WebApp.expand();
+        } else {
+            document.getElementById('telegram-status').innerHTML =
+                '<span class="error">⚠️ Telegram WebApp не обнаружен (открыто в браузере)</span>';
+        }
+    </script>
+</body>
+
+</html>
