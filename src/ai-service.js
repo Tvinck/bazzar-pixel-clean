@@ -53,30 +53,37 @@ const DEFAPI_MODEL_MAP = {
 const aiService = {
     // Main Generation Function
     generateImage: async (prompt, modelId = 'nano_banana', options = {}) => {
-        // 1. Browser: Proxy to Backend
+        // 1. Browser: Use Async Job Queue (Vercel Friendly)
         if (isBrowser) {
-            const formData = new FormData();
+            console.log('🌐 Browser Mode: Starting Async Generation...');
 
-            // SECURITY: Get Telegram Init Data
-            const initData = window.Telegram?.WebApp?.initData || '';
-            formData.append('initData', initData);
+            // Helper to convert File to Base64
+            const toBase64 = file => new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = error => reject(error);
+            });
 
-            formData.append('prompt', prompt);
-            formData.append('type', modelId);
-            formData.append('userId', options.userId || 'browser_user');
-            formData.append('aspectRatio', options.aspect_ratio || '1:1');
+            // Prepare files
+            let processedFiles = [];
             if (options.source_files && Array.isArray(options.source_files)) {
-                options.source_files.forEach(file => { if (file instanceof File) formData.append('files', file); });
-                delete options.source_files;
+                processedFiles = await Promise.all(options.source_files.map(async (f) => {
+                    if (f instanceof File) return await toBase64(f);
+                    return f;
+                }));
             }
             if (options.video_files && Array.isArray(options.video_files)) {
-                options.video_files.forEach(file => { if (file instanceof File) formData.append('video_files', file); });
-                delete options.video_files;
+                // Just pass video paths references or base64 if needed, but usually videos are large.
+                // Assuming video_files are paths/urls here for templates. 
+                // If File objects, we'd need base64 too, but let's stick to logic above for source_files compatibility.
             }
-            formData.append('options', JSON.stringify(options));
-            const res = await fetch('/api/generate', { method: 'POST', body: formData });
-            if (!res.ok) { const err = await res.json(); throw new Error(err.error || 'Generation Failed'); }
-            return (await res.json()).data;
+
+            // Call Async Implementation
+            return await aiService.generateImageAsync(prompt, modelId, {
+                ...options,
+                source_files: processedFiles
+            });
         }
 
         // 2. Node.js: Direct API Call
