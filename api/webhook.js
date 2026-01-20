@@ -1,6 +1,27 @@
 import TelegramBot from 'node-telegram-bot-api';
 
+// Create bot without polling for serverless
 const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN);
+
+const welcomeMessage = `
+🎉 *Добро пожаловать в NanoBanana Bot!*
+
+Здесь ты можешь сгенерировать трендовый контент прямо в боте или в нашем приложении 🚀
+
+📸 *Фото → Фото:* Отправь фото и напиши, что поменять или добавить.
+
+🎬 *Фото → Видео:* Отправь фото и напиши, что должно происходить в видео — я оживлю фото и превращу его в видео.
+
+🖊 *Текст → Фото:* Опиши, что хочешь — и я сгенерю с нуля.
+
+💡 *AI Power:* Мы используем умную ротацию ключей Google Gemini для максимальной стабильности!
+
+Примеры в канале @pixel\\_imagess и в чате @pixel\\_communityy.
+
+🔥 *Попробуй:* загрузи фото и напиши «добавь рядом динозавра» 🦖 — и мы сделаем магию!
+
+Пользуясь ботом, вы подтверждаете свое согласие с [пользовательским соглашением](https://telegra.ph/POLZOVATELSKOE-SOGLASHENIE-PUBLICHNAYA-OFERTA-01-13-4), [политикой конфиденциальности](https://telegra.ph/POLITIKA-KONFIDENCIALNOSTI-01-13-41) и [согласием на обработку персональных данных](https://telegra.ph/Soglasie-na-obrabotku-personalnyh-dannyh-01-13-22).
+`;
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') {
@@ -8,8 +29,40 @@ export default async function handler(req, res) {
     }
 
     try {
-        console.log('📩 Webhook received:', JSON.stringify(req.body, null, 2));
-        await bot.processUpdate(req.body);
+        const update = req.body;
+        console.log('📩 Webhook received:', JSON.stringify(update, null, 2));
+
+        // Handle message
+        if (update.message) {
+            const chatId = update.message.chat.id;
+            const text = update.message.text;
+
+            // Handle /start command
+            if (text === '/start') {
+                const keyboard = {
+                    reply_markup: {
+                        keyboard: [
+                            [{ text: 'Трендовые фото 🔥' }, { text: 'Сообщество 👥' }],
+                            [{ text: 'Главное меню 🏠' }, { text: 'Баланс ⚡' }],
+                            [{ text: 'Пригласи друга 🤝' }]
+                        ],
+                        resize_keyboard: true
+                    }
+                };
+
+                await bot.sendMessage(chatId, welcomeMessage, {
+                    parse_mode: 'Markdown',
+                    ...keyboard
+                });
+
+                console.log(`✅ Sent welcome message to ${chatId}`);
+            } else {
+                // Echo back for now
+                await bot.sendMessage(chatId, `Получил: ${text}\n\nБот работает на Vercel! 🚀`);
+                console.log(`✅ Sent echo to ${chatId}`);
+            }
+        }
+
         res.status(200).send('OK');
     } catch (error) {
         console.error('Webhook Error:', error);
