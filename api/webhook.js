@@ -45,12 +45,17 @@ export default async function handler(req, res) {
             // Handle /start command
             if (text === '/start') {
                 console.log('🚀 Processing /start command...');
+                const webAppUrl = 'https://bazzar-pixel-clean-4zm4.vercel.app';
                 const keyboard = {
                     reply_markup: {
                         keyboard: [
                             [{ text: 'Трендовые фото 🔥' }, { text: 'Сообщество 👥' }],
                             [{ text: 'Главное меню 🏠' }, { text: 'Баланс ⚡' }],
                             [{ text: 'Пригласи друга 🤝' }]
+                        ],
+                        inline_keyboard: [
+                            [{ text: '🚀 Сгенерировать', web_app: { url: webAppUrl } }],
+                            [{ text: '🔥 Трендовые фото', web_app: { url: webAppUrl } }]
                         ],
                         resize_keyboard: true
                     }
@@ -87,12 +92,17 @@ export default async function handler(req, res) {
             } else if (text === 'Главное меню 🏠') {
                 console.log('🏠 Processing Main Menu...');
                 // Same logic as /start
+                const webAppUrl = 'https://bazzar-pixel-clean-4zm4.vercel.app';
                 const keyboard = {
                     reply_markup: {
                         keyboard: [
                             [{ text: 'Трендовые фото 🔥' }, { text: 'Сообщество 👥' }],
                             [{ text: 'Главное меню 🏠' }, { text: 'Баланс ⚡' }],
                             [{ text: 'Пригласи друга 🤝' }]
+                        ],
+                        inline_keyboard: [
+                            [{ text: '🚀 Сгенерировать', web_app: { url: webAppUrl } }],
+                            [{ text: '🔥 Трендовые фото', web_app: { url: webAppUrl } }]
                         ],
                         resize_keyboard: true
                     }

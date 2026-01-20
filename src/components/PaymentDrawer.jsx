@@ -283,7 +283,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                             </div>
                                             <input type="checkbox" className="hidden" checked={termsAccepted} onChange={() => setTermsAccepted(!termsAccepted)} />
                                             <p className="text-xs text-slate-500 leading-snug">
-                                                Я принимаю <a href="#" onClick={(e) => { e.stopPropagation(); window.Telegram?.WebApp?.openLink('https://telegra.ph/Terms-of-Service-10-24'); }} className="text-indigo-500 font-bold hover:underline relative z-10">Условия</a> и <a href="#" onClick={(e) => { e.stopPropagation(); window.Telegram?.WebApp?.openLink('https://telegra.ph/Privacy-Policy-10-24'); }} className="text-indigo-500 font-bold hover:underline relative z-10">Политику</a>.
+                                                Я принимаю <a href="#" onClick={(e) => { e.stopPropagation(); window.Telegram?.WebApp?.openLink('https://telegra.ph/Soglasie-na-obrabotku-personalnyh-dannyh-01-13-22'); }} className="text-indigo-500 font-bold hover:underline relative z-10">Условия</a>, <a href="#" onClick={(e) => { e.stopPropagation(); window.Telegram?.WebApp?.openLink('https://telegra.ph/POLITIKA-KONFIDENCIALNOSTI-01-13-41'); }} className="text-indigo-500 font-bold hover:underline relative z-10">Политику</a> и <a href="#" onClick={(e) => { e.stopPropagation(); window.Telegram?.WebApp?.openLink('https://telegra.ph/POLZOVATELSKOE-SOGLASHENIE-PUBLICHNAYA-OFERTA-01-13-4'); }} className="text-indigo-500 font-bold hover:underline relative z-10">Пользовательское соглашение</a>.
                                             </p>
                                         </label>
 
