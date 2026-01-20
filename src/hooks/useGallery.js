@@ -53,34 +53,34 @@ export const useTemplates = (category = 'all') => {
         staleTime: 0, // Force refresh to fix caching issues
         refetchOnWindowFocus: true,
     });
+};
+export const useUserLikedIds = (userId) => {
+    return useQuery({
+        queryKey: ['userLikedIds', userId],
+        queryFn: async () => {
+            if (!userId) return [];
+            return await galleryAPI.getUserLikedIds(userId);
+        },
+        enabled: !!userId,
+        staleTime: 1000 * 60 * 5, // 5 mins
+    });
+};
 
-    export const useUserLikedIds = (userId) => {
-        return useQuery({
-            queryKey: ['userLikedIds', userId],
-            queryFn: async () => {
-                if (!userId) return [];
-                return await galleryAPI.getUserLikedIds(userId);
-            },
-            enabled: !!userId,
-            staleTime: 1000 * 60 * 5, // 5 mins
-        });
-    };
+// Get Public User Profile
+export const useUserProfile = (userId) => {
+    return useQuery({
+        queryKey: ['userProfile', userId],
+        queryFn: () => galleryAPI.getUserProfile(userId),
+        enabled: !!userId,
+        staleTime: 1000 * 60 * 5 // 5 minutes
+    });
+};
 
-    // Get Public User Profile
-    export const useUserProfile = (userId) => {
-        return useQuery({
-            queryKey: ['userProfile', userId],
-            queryFn: () => galleryAPI.getUserProfile(userId),
-            enabled: !!userId,
-            staleTime: 1000 * 60 * 5 // 5 minutes
-        });
-    };
-
-    // Get User's Public Creations
-    export const useUserPublicCreations = (userId) => {
-        return useQuery({
-            queryKey: ['userPublicCreations', userId],
-            queryFn: () => galleryAPI.getUserCreations(userId, false), // false = public only
-            enabled: !!userId,
-        });
-    };
+// Get User's Public Creations
+export const useUserPublicCreations = (userId) => {
+    return useQuery({
+        queryKey: ['userPublicCreations', userId],
+        queryFn: () => galleryAPI.getUserCreations(userId, false), // false = public only
+        enabled: !!userId,
+    });
+};
