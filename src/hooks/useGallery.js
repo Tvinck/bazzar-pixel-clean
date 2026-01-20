@@ -52,7 +52,7 @@ export const useTemplates = (category = 'all') => {
         },
         staleTime: 0, // Force refresh to fix caching issues
         refetchOnWindowFocus: true,
-    };
+    });
 
     export const useUserLikedIds = (userId) => {
         return useQuery({
