@@ -224,7 +224,9 @@ const communityMessage = `🚀 *Присоединяйтесь к нашему �
 
 const trendingMessage = `🔥 *Тренды Pixel AI*\n\nСмотрите лучшие работы пользователей в нашем приложении! 👇`;
 
-const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: true });
+export const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
+    polling: process.env.NODE_ENV !== 'production' && !process.env.VERCEL
+});
 
 // --- API ENDPOINTS ---
 
