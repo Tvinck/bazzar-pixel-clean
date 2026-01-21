@@ -40,6 +40,8 @@ const TBankWidget = ({ amount, description, userId, telegramId, userEmail }) => 
                 features: {
                     payment: {
                         container: containerRef.current,
+                        // Explicitly request these methods to be shown
+                        methods: ['sbp', 'tinkoff_pay', 'card'],
                         paymentStartCallback: async () => {
                             const res = await fetch('/api/payment-init', {
                                 method: 'POST',
