@@ -430,10 +430,12 @@ const aiService = {
     // Poll Kie.ai Task
     pollKieTask: async (taskId, apiKey) => {
         // Polling logic
-        const maxAttempts = 400; // 400 * 3s = 20 minutes (Kling Video takes time)
+        const maxAttempts = 600;
 
         for (let i = 0; i < maxAttempts; i++) {
-            await new Promise(r => setTimeout(r, 3000)); // Wait 3 seconds
+            // Adaptive Polling: Check every 1s for first 15s (fast models), then 3s
+            const delay = i < 15 ? 1000 : 3000;
+            await new Promise(r => setTimeout(r, delay));
 
             let data;
             try {
