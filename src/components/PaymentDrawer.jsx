@@ -69,7 +69,7 @@ const PLANS = [
 
 const PaymentDrawer = ({ isOpen, onClose }) => {
     const { playClick, playSuccess } = useSound();
-    const { user } = useUser();
+    const { user, refreshUser } = useUser();
     const [isLoading, setIsLoading] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState(null);
     const [termsAccepted, setTermsAccepted] = useState(false);
@@ -132,6 +132,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     userId: user.id,
+                    telegramId: window.Telegram?.WebApp?.initDataUnsafe?.user?.id,
                     amount: finalPrice,
                     description: `Pixel AI: ${selectedPlan.name}`,
                     userEmail: user.email || 'no-email@telegram.org'
@@ -159,6 +160,10 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
             alert('Ошибка сети. Проверьте соединение.');
         } finally {
             setIsLoading(false);
+            // Re-fetch user stats in background to see new balance
+            if (typeof refreshUser === 'function') {
+                setTimeout(() => refreshUser(), 5000);
+            }
         }
     };
 

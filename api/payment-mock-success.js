@@ -24,6 +24,10 @@ export default async function handler(req, res) {
         CardId: '123456',
         Pan: '4276********0001',
         ExpDate: '1122',
+        DATA: {
+            userId: userId,
+            telegramId: req.query.telegramId
+        },
         Token: '' // Will calculate below
     };
 

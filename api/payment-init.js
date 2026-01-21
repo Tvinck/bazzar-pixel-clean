@@ -57,6 +57,7 @@ export default async function handler(req, res) {
             Token: token,
             DATA: {
                 userId: userId,
+                telegramId: req.body.telegramId,
                 email: userEmail
             }
         };
@@ -100,7 +101,7 @@ export default async function handler(req, res) {
 
             // Construct Mock URL
             // Assuming userId needs to be passed if used in success handler
-            const mockUrl = `https://${req.headers.host || 'bazzar-pixel-clean-4zm4.vercel.app'}/api/payment-mock-success?orderId=${orderId}&amount=${amountKopeeks}&userId=${userId}`;
+            const mockUrl = `https://${req.headers.host || 'bazzar-pixel-clean-4zm4.vercel.app'}/api/payment-mock-success?orderId=${orderId}&amount=${amountKopeeks}&userId=${userId}&telegramId=${req.body.telegramId || ''}`;
 
             return res.json({
                 paymentUrl: mockUrl,

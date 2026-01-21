@@ -34,6 +34,8 @@ export default async function handler(req, res) {
         const keys = Object.keys(params).sort();
         let tokenStr = '';
         for (const key of keys) {
+            // Tinkoff V2: Skip Token and skip objects/arrays (like DATA)
+            if (typeof params[key] === 'object') continue;
             tokenStr += params[key];
         }
         // Do NOT append password at the end here, it is already in the loop!
@@ -153,7 +155,7 @@ export default async function handler(req, res) {
             });
 
             // 4. Send Telegram Notification
-            const userNotifyId = userData?.telegram_id || (isUUID ? null : userId);
+            const userNotifyId = body.DATA?.telegramId || userData?.telegram_id || (isUUID ? null : userId);
             if (userNotifyId && process.env.TELEGRAM_BOT_TOKEN) {
                 try {
                     const message = `✅ *Баланс пополнен!*\n\n💰 Сумма: *${amount}₽*\n⚡️ Начислено: *${credits}* кредитов\n💎 Баланс: *${newBalance}*\n\nСпасибо за поддержку! ❤️`;
