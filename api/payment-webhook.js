@@ -57,15 +57,17 @@ export default async function handler(req, res) {
 
         // --- 4. IDEMPOTENCY CHECK (CRITICAL) ---
         // Check if we already processed this order to prevent double credits
+        // MST be strict: ignore 'pending_init' records
         const orderId = body.OrderId;
         const { data: existingTx } = await supabase
             .from('transactions')
             .select('id')
-            .filter('metadata->>OrderId', 'eq', orderId) // Assuming metadata stores the full T-Bank body
+            .eq('metadata->>OrderId', orderId)
+            .neq('type', 'pending_init') // Fix: Don't count the pending record as "done"
             .maybeSingle();
 
         if (existingTx) {
-            console.log(`✅ [Webhook] Order ${orderId} already processed. Skipping.`);
+            console.log(`✅ [Webhook] Order ${orderId} already processed (Deposit exists). Skipping.`);
             return res.send('OK');
         }
 

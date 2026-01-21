@@ -20,15 +20,14 @@ export default async function handler(req, res) {
         console.log(`🔎 Looking up PaymentId for Order: ${orderId}`);
         const { data: tx } = await supabase
             .from('transactions')
-            .select('*') // need metadata
-            .eq('type', 'pending_init') // optimized filter
+            .select('*')
+            .eq('type', 'pending_init')
             .filter('metadata->>OrderId', 'eq', orderId)
             .maybeSingle();
 
         if (tx && tx.metadata?.PaymentId) {
             paymentId = tx.metadata.PaymentId;
             console.log(`✅ Found PaymentId: ${paymentId}`);
-            // Also trust the userId from the pending tx if not provided
             if (!userId && tx.user_id) userId = tx.user_id;
         }
     }
@@ -39,7 +38,6 @@ export default async function handler(req, res) {
         console.log(`🔎 Checking Payment status for: ${paymentId}`);
 
         // 1. Generate Token for GetState
-        // Params: TerminalKey, PaymentId, Password
         const tokenParams = {
             TerminalKey: TERMINAL_KEY,
             PaymentId: paymentId,
@@ -85,29 +83,32 @@ export default async function handler(req, res) {
         if (bankResponse.Success && (bankResponse.Status === 'CONFIRMED' || bankResponse.Status === 'AUTHORIZED')) {
 
             // 4. Ensure Idempotency (Check if already credited)
+            // MUST ignore 'pending_init' records
             const { data: existingTx } = await supabase
                 .from('transactions')
                 .select('*')
-                .eq('metadata->>PaymentId', paymentId) // Use ->> for JSON text search
+                .eq('metadata->>PaymentId', paymentId)
+                .neq('type', 'pending_init') // Fix: Ignore pending
                 .maybeSingle();
 
             if (existingTx) {
-                console.log('✅ Already credited. Returning success.');
+                console.log('✅ Already credited (Deposit exists). Returning success.');
                 return res.status(200).json({ success: true, status: 'ALREADY_CREDITED' });
             }
 
-            // 5. Calculate Credits & Find User (from original Order params or DB if needed)
-            // Since this is a manual check, we rely on the DB having the user or passing it from client?
-            // Better: trust the Bank's Amount. 
-            // PROBLEM: GetState might not return userdata. 
-            // SOLUTION: Application code must pass userId context to this endpoint, OR we parse it from DB if we saved an "Intent".
+            // 5. User & Credits Calculation
 
-            // Simpler: Client sends userId. We trust it? NO. 
-            // We must find who made this order. 
-            // In a simple flow, checking status allows us to credit "the user who asks", 
-            // BUT we must lock this PaymentId to prevent others from claiming it.
+            // Fetch User from request OR from pending transaction
+            if (!userId) {
+                const { data: pendingTx } = await supabase
+                    .from('transactions')
+                    .select('user_id')
+                    .eq('metadata->>PaymentId', paymentId)
+                    .eq('type', 'pending_init')
+                    .maybeSingle();
+                if (pendingTx) userId = pendingTx.user_id;
+            }
 
-            const userId = req.body.userId; // Passed from client
             if (!userId) return res.status(400).json({ error: 'UserId required for claiming' });
 
             const amountRub = Math.round(bankResponse.Amount / 100);
@@ -121,7 +122,6 @@ export default async function handler(req, res) {
             console.log(`💰 Crediting ${credits} to ${userId}`);
 
             // 6. Perform Transaction
-            // Upsert User Stats
             const { data: userStats } = await supabase
                 .from('user_stats')
                 .select('current_balance')
@@ -136,7 +136,7 @@ export default async function handler(req, res) {
                 updated_at: new Date().toISOString()
             }, { onConflict: 'user_id' });
 
-            // Record Transaction (Locking PaymentId)
+            // Record Transaction
             await supabase.from('transactions').insert({
                 user_id: userId,
                 amount: credits,
@@ -145,8 +145,20 @@ export default async function handler(req, res) {
                 metadata: { ...bankResponse, manual_check: true }
             });
 
-            // 7. Notify
-            // (Optional here, client will see update)
+            // 7. Notify (Telegram)
+            try {
+                const { data: uData } = await supabase.from('users').select('telegram_id').eq('id', userId).single();
+                if (uData && uData.telegram_id && process.env.TELEGRAM_BOT_TOKEN) {
+                    const message = `✅ <b>Оплата подтверждена!</b>\n\n💰 Пополнено: <b>${amountRub}₽</b>\n⚡️ Начислено: <b>${credits} кредитов</b>\n💎 Текущий баланс: <b>${newBalance}</b>\n\n<i>(Подтверждено при входе)</i>`;
+                    await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ chat_id: uData.telegram_id, text: message, parse_mode: 'HTML' })
+                    });
+                }
+            } catch (e) {
+                console.error("Notify failed in check:", e);
+            }
 
             return res.status(200).json({ success: true, status: 'CREDITED', newBalance });
         }
