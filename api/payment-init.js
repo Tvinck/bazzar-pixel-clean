@@ -26,15 +26,42 @@ export default async function handler(req, res) {
         const orderId = `${Date.now()}${Math.floor(Math.random() * 1000)}`.slice(0, 20);
         const desc = (description || 'Pixel AI Credits').slice(0, 250);
 
-        // 2. Token calculation
-        // Tinkoff Rule: All root params except Token and DATA + Password. Sort keys.
-        const tokenParams = {
+        // 2. Build Request Body (with Receipt for FZ-54)
+        const requestBody = {
             TerminalKey: TERMINAL_KEY,
             Amount: amountKopeeks,
             OrderId: orderId,
             Description: desc,
-            Password: PASSWORD
+            NotificationURL: 'https://bazzar-pixel-clean-4zm4.vercel.app/api/payment-webhook',
+            DATA: {
+                userId: userId,
+                telegramId: req.body.telegramId,
+                email: userEmail
+            },
+            Receipt: {
+                Email: userEmail || 'customer@example.com',
+                Taxation: 'usn_income', // УСН Доходы (меняется в зависимости от вашей кассы)
+                Items: [
+                    {
+                        Name: desc,
+                        Price: amountKopeeks,
+                        Quantity: 1.00,
+                        Amount: amountKopeeks,
+                        Tax: 'none' // Без НДС
+                    }
+                ]
+            }
         };
+
+        // 3. Token calculation 
+        // Tinkoff Rule: Only FIRST-LEVEL params, skip Objects (Receipt, DATA), skip Token. 
+        // Add Password at the end.
+        const tokenParams = {};
+        for (const key in requestBody) {
+            if (key === 'Token' || key === 'DATA' || key === 'Receipt') continue;
+            tokenParams[key] = requestBody[key];
+        }
+        tokenParams.Password = PASSWORD;
 
         const sortedKeys = Object.keys(tokenParams).sort();
         let tokenStr = '';
@@ -42,28 +69,12 @@ export default async function handler(req, res) {
             tokenStr += String(tokenParams[key]);
         }
 
-        // Log the string for deep debugging
         console.log('Token String (DEBUG):', tokenStr);
-
-        const token = crypto.createHash('sha256').update(tokenStr).digest('hex');
-
-        // 3. Final Request Body
-        const requestBody = {
-            TerminalKey: TERMINAL_KEY,
-            Amount: amountKopeeks,
-            OrderId: orderId,
-            Description: desc,
-            Token: token,
-            DATA: {
-                userId: userId,
-                telegramId: req.body.telegramId,
-                email: userEmail
-            }
-        };
+        requestBody.Token = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
         console.log('Final Request Body:', JSON.stringify(requestBody));
 
-        // 4. Send Request
+        // 4. Send Request 
         const responseData = await new Promise((resolve, reject) => {
             const reqData = JSON.stringify(requestBody);
             const urlObj = new URL(API_URL);
@@ -97,12 +108,9 @@ export default async function handler(req, res) {
             const errorCode = responseData.ErrorCode || '309';
 
             console.warn(`❌ T-Bank Init Failed: [${errorCode}] ${errorMsg}`);
-
-            // Return error to frontend so user can see it
             return res.json({
-                error: `Ошибка Банка: ${errorMsg} (Код: ${errorCode}). Убедитесь, что терминал активен.`,
-                success: false,
-                isMock: false
+                error: `Ошибка Банка: ${errorMsg} (Код: ${errorCode}). Доп: ${responseData.Details || ''}`,
+                success: false
             });
         }
 
