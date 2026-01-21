@@ -227,14 +227,51 @@ const trendingMessage = `🔥 *Тренды Pixel AI*\n\nСмотрите луч
 const isPolling = process.env.POLLING === 'true';
 console.log('🤖 Bot Init. Polling:', isPolling);
 
-export const bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, {
-    polling: isPolling
-});
+// Ensure Storage Buckets are Public (Global Visibility Fix)
+export async function ensureBucketsPublic() {
+    try {
+        const bucketsToFix = ['uploads', 'source-files'];
+        for (const bucketId of bucketsToFix) {
+            console.log(`📡 Checking bucket visibility: ${bucketId}...`);
+            await supabase.storage.updateBucket(bucketId, { public: true });
+        }
+        console.log('✅ Storage buckets visibility verified.');
+    } catch (err) {
+        console.error('⚠️ Failed to verify bucket visibility:', err.message);
+    }
+}
 
-// Debug Listener
-bot.on('message', (msg) => {
-    console.log('🤖 Bot received message:', msg.text);
-});
+// Global initialization
+let bot;
+let queue;
+
+const init = async () => {
+    try {
+        await ensureBucketsPublic();
+
+        bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: isPolling });
+        queue = await initQueue(bot);
+
+        // Setup Routes with initialized bot/queue
+        setupRoutes(app, bot, queue);
+
+        // Debug Listener
+        bot.on('message', (msg) => {
+            console.log('🤖 Bot received message:', msg.text);
+        });
+
+        // Start Server
+        app.listen(PORT, () => {
+            console.log(`🚀 Bot API Server running on port ${PORT}`);
+        });
+
+        console.log('✨ System initialized successfully.');
+    } catch (initErr) {
+        console.error('💥 SYSTEM INIT FAILED:', initErr);
+    }
+};
+
+init();
 
 // --- API ENDPOINTS ---
 
@@ -511,7 +548,7 @@ app.post('/api/jobs/create', async (req, res) => {
                     prompt: prompt,
                     model_id: modelId,
                     configuration: configuration || {},
-                    source_files: processedFiles.length > 0 ? processedFiles : (sourceFiles || [])
+                    source_files: processedFiles.length > 0 ? processedFiles : [] // Never fallback to Base64
                 })
                 .select()
                 .single();
@@ -542,7 +579,7 @@ app.post('/api/jobs/create', async (req, res) => {
                             prompt: prompt,
                             model_id: modelId,
                             configuration: configuration || {},
-                            source_files: processedFiles.length > 0 ? processedFiles : (sourceFiles || [])
+                            source_files: processedFiles.length > 0 ? processedFiles : []
                         })
                         .select()
                         .single();
@@ -942,14 +979,8 @@ app.get(/.*/, (req, res) => {
     res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
 
-// Start Server
-app.listen(PORT, () => {
-    console.log(`🚀 Bot API Server running on port ${PORT}`);
-});
-
-// --- SETUP ROUTES ---
-setupRoutes(app, bot);
-initQueue(bot);
+// --- SYSTEM START ---
+// Handled in init() above
 
 // --- TEXT CONSTANTS ---
 const welcomeMessage = `

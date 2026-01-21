@@ -317,14 +317,36 @@ const aiService = {
                 input.input_urls = options.source_files;
             }
         }
-        // --- FALLBACK / GENERIC ---
-        else {
-            // For unknown models, send best-guess standard params
-            input.aspect_ratio = aspectRatio;
-            if (hasSourceFiles) {
-                input.image_urls = options.source_files;
+        // 3. Final Regularization for Kie.ai API quirks
+        const normalizeKieInput = (targetInput, targetModel) => {
+            const normalized = { ...targetInput };
+            const files = options.source_files || [];
+
+            // Dual-parameter safety for all image-to-image models
+            // Some versions of Kie API use input_urls, some use image_urls.
+            // Sending both (if not already set specifically) helps avoid "missing param" or "wrong type" errors.
+            if (targetModel.includes('image-to-image') || targetModel.includes('edit')) {
+                if (files.length > 0) {
+                    normalized.input_urls = files;
+                    normalized.image_urls = files;
+                }
             }
-        }
+
+            // Singular vs Plural safety (Some newer Kie endpoints for Flux expect singular string)
+            if (targetModel.includes('flux') && files.length === 1) {
+                normalized.image_url = files[0]; // Extra safety for Flux 1.1 Pro
+            }
+
+            return normalized;
+        };
+
+        const finalInput = normalizeKieInput(input, kieModelId);
+
+        // 4. Create Task
+        const requestBody = {
+            model: kieModelId,
+            input: finalInput
+        };
 
         // 3. Create Task
         /*
@@ -332,12 +354,6 @@ const aiService = {
              // ...
         });
         */
-
-        // Create task with correct Kie.ai structure
-        const requestBody = {
-            model: kieModelId,
-            input: input
-        };
 
         if (!isBrowser) {
             console.log(`📡 [Kie Worker] Request Body:`, JSON.stringify(requestBody, null, 2));
