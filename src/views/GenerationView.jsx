@@ -969,26 +969,24 @@ const GenerationView = () => {
                 </motion.button>
             </div>
 
-            <AnimatePresence>
-                {showLoader && (
-                    <GenerationLoader
-                        key="loader"
-                        type={currentModeKey.includes('video') ? 'video' : 'image'}
-                        estimatedTime={currentModeKey.includes('video') ? (model.includes('kling') ? 120 : 60) : 15}
-                    />
-                )}
-                {resultData && (
-                    <GenerationResult
-                        key="result"
-                        result={resultData}
-                        type={currentModeKey.includes('video') ? 'video' : 'image'}
-                        onClose={() => setResultData(null)}
-                        onRemix={() => {
-                            setResultData(null);
-                        }}
-                    />
-                )}
-            </AnimatePresence>
+            {showLoader && (
+                <GenerationLoader
+                    key="loader"
+                    type={currentModeKey.includes('video') ? 'video' : 'image'}
+                    estimatedTime={currentModeKey.includes('video') ? (model.includes('kling') ? 120 : 60) : 15}
+                />
+            )}
+            {resultData && (
+                <GenerationResult
+                    key="result"
+                    result={resultData}
+                    type={currentModeKey.includes('video') ? 'video' : 'image'}
+                    onClose={() => setResultData(null)}
+                    onRemix={() => {
+                        setResultData(null);
+                    }}
+                />
+            )}
         </motion.div >
     );
 };

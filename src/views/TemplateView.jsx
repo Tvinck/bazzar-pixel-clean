@@ -179,19 +179,48 @@ const TemplateView = () => {
             }
 
             // 3. Prepare options for AI Service
-            // Convert files to Base64 (Server expects base64 strings, not File objects)
+            // Convert files to Base64 with compression to prevent 413 errors
             const validFilesList = selectedFiles.filter(Boolean);
             const sourceFilesBase64 = await Promise.all(validFilesList.map(file => {
                 return new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    // Standard Base64 via FileReader usually OK for templates if we don't hit 4.5MB
-                    // But to be safe, we should use the same compression logic as GenerationView ideally.
-                    // For now, assuming user uploads reasonable photos or relying on server limit handling (which we fixed via client resize in GenerationView, here we might still be vulnerable?)
-                    // Let's rely on standard FileReader for now, as TemplateView usually uses existing helper logic? No, it uses inline.
-                    // TODO: Reuse compression helper.
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = error => reject(error);
+                    const img = new Image();
+                    const url = URL.createObjectURL(file);
+                    img.src = url;
+
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        let width = img.width;
+                        let height = img.height;
+                        const MAX_SIZE = 1024;
+
+                        if (width > height) {
+                            if (width > MAX_SIZE) {
+                                height *= MAX_SIZE / width;
+                                width = MAX_SIZE;
+                            }
+                        } else {
+                            if (height > MAX_SIZE) {
+                                width *= MAX_SIZE / height;
+                                height = MAX_SIZE;
+                            }
+                        }
+
+                        canvas.width = width;
+                        canvas.height = height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, width, height);
+
+                        // Clean up
+                        URL.revokeObjectURL(url);
+
+                        // Get base64 (jpeg 0.8 quality)
+                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                        resolve(dataUrl.split(',')[1]);
+                    };
+                    img.onerror = (e) => {
+                        URL.revokeObjectURL(url);
+                        reject(e);
+                    };
                 });
             }));
 
@@ -340,24 +369,22 @@ const TemplateView = () => {
                 </AnimatedButton>
             </div>
 
-            <AnimatePresence>
-                {showLoader && (
-                    <GenerationLoader
-                        key="loader"
-                        type={template.mediaType === 'video' ? 'video' : 'image'}
-                        estimatedTime={template.mediaType === 'video' ? 120 : 15}
-                    />
-                )}
-                {resultData && (
-                    <GenerationResult
-                        key="result"
-                        result={resultData}
-                        type="image"
-                        onClose={() => setResultData(null)}
-                        onRemix={() => setResultData(null)}
-                    />
-                )}
-            </AnimatePresence>
+            {showLoader && (
+                <GenerationLoader
+                    key="loader"
+                    type={template.mediaType === 'video' ? 'video' : 'image'}
+                    estimatedTime={template.mediaType === 'video' ? 120 : 15}
+                />
+            )}
+            {resultData && (
+                <GenerationResult
+                    key="result"
+                    result={resultData}
+                    type="image"
+                    onClose={() => setResultData(null)}
+                    onRemix={() => setResultData(null)}
+                />
+            )}
         </motion.div>
     );
 };
