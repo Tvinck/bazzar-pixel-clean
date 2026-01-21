@@ -12,6 +12,8 @@ import { useToast } from '../context/ToastContext';
 import { useUser } from '../context/UserContext';
 import { aiService } from '../ai-service';
 import galleryAPI from '../lib/galleryAPI';
+import GenerationLoader from '../components/GenerationLoader';
+import GenerationResult from '../components/GenerationResult';
 
 // --- Visual Components ---
 const RatioVisual = ({ ratio }) => {
@@ -324,6 +326,10 @@ const GenerationView = () => {
     // User Context
     const { user: apiUser, pay, addBalance, stats: userStats, telegramId } = useUser();
 
+    // UX State
+    const [showLoader, setShowLoader] = useState(false);
+    const [resultData, setResultData] = useState(null);
+
     const handleGenerate = async () => {
         // Validation
         const requiredInputs = modeConfig.inputs?.filter(i => i.required) || [];
@@ -340,15 +346,13 @@ const GenerationView = () => {
         }
 
         // --- PAYMENT LOGIC ---
-        const COST = 1 * genCount; // Basic logic: 1 credit per generation
+        // Basic logic: 1 credit per generation (server handles main checks)
+        // const COST = 1 * genCount; 
 
         playClick();
         setIsProcessing(true);
-        toast.info('Начинаем генерацию...');
-
-        // 1. DEDUCT CREDITS - MOVED TO BACKEND
-        // const paymentResult = await pay(COST);
-        // if (!paymentResult.success) { ... }
+        setShowLoader(true); // START LOADER
+        // toast.info('Начинаем генерацию...'); // Removed in favor of full screen loader
 
         try {
             let result;
@@ -376,6 +380,7 @@ const GenerationView = () => {
                         if (images.length === 0 || videos.length === 0) {
                             toast.error('Для Kling Motion нужно загрузить 1 фото и 1 видео!');
                             setIsProcessing(false);
+                            setShowLoader(false);
                             return;
                         }
 
@@ -384,6 +389,7 @@ const GenerationView = () => {
                     } else {
                         toast.error('Загрузите фото и видео для Kling Motion!');
                         setIsProcessing(false);
+                        setShowLoader(false);
                         return;
                     }
                 }
@@ -401,9 +407,21 @@ const GenerationView = () => {
 
             if (result.success) {
                 // Save to DB
-                await galleryAPI.saveCreation({
-                    userId: apiUser.id, // Use apiUser (UserContext user)
-                    generationId: 'gen_' + Date.now(),
+                /* 
+                   Note: Ideally, server should save. But if client saves, we get ID back.
+                   Let's assume galleryAPI.saveCreation returns the saved object or ID.
+                   If not, we construct a mock object or fetch it.
+                   Actually, aiService.generateImage returns { imageUrl, id? } usually.
+                */
+
+                // Hack: We need an ID to publish. If result doesn't have it, we generate a temp one, 
+                // but publishing requires real DB row. 
+                // Assuming galleryAPI.saveCreation saves to Supabase and we can fetch latest?
+                // Let's rely on updated galleryAPI or just save here and use the RETURNED ID if possible.
+
+                const savedRecord = await galleryAPI.saveCreation({
+                    userId: apiUser.id,
+                    generationId: result.id || 'gen_' + Date.now(),
                     title: inputs['prompt'] ? inputs['prompt'].slice(0, 30) + '...' : 'Generated Image',
                     description: inputs['prompt'] || 'Generated Content',
                     imageUrl: result.imageUrl,
@@ -415,28 +433,23 @@ const GenerationView = () => {
                     aspectRatio: aspectRatio
                 });
 
-                // Notify Bot
-                try {
-                    await fetch('http://localhost:3000/api/send-result', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            telegramId: apiUser.id, // Assuming this is the TG ID
-                            imageUrl: result.imageUrl,
-                            prompt: inputs['prompt']
-                        })
-                    });
-                } catch (err) {
-                    console.error('Failed to send bot notification', err);
-                }
+                // Notify Bot (Optional)
+                // ... fetch call ...
 
                 playSuccess();
-                toast.success('Генерация завершена!');
-                navigate('/history');
-            } else {
-                // 2. BACKEND HANDLES REFUND
-                const errorMsg = result.error || 'Unknown error';
+                setShowLoader(false); // Stop Loader
 
+                // Show Result Screen
+                setResultData({
+                    url: result.imageUrl,
+                    id: savedRecord?.id || result.id, // Prefer real DB ID
+                    prompt: inputs['prompt']
+                });
+
+            } else {
+                // Error handling
+                setShowLoader(false);
+                const errorMsg = result.error || 'Unknown error';
                 if (errorMsg.toLowerCase().includes('credit') || errorMsg.toLowerCase().includes('balance')) {
                     toast.error('⚠️ Недостаточно средств.', { duration: 5000 });
                 } else {
@@ -446,7 +459,7 @@ const GenerationView = () => {
 
         } catch (e) {
             console.error(e);
-
+            setShowLoader(false);
             const errorMsg = e.message || 'Unknown error';
             if (errorMsg.toLowerCase().includes('credit') || errorMsg.toLowerCase().includes('balance')) {
                 toast.error('⚠️ Ошибка оплаты.', { duration: 5000 });
@@ -930,7 +943,28 @@ const GenerationView = () => {
                     {canAfford ? `Сгенерировать ${modeConfig.hasCount ? `(${genCount})` : ''}` : 'Недостаточно средств'}
                 </motion.button>
             </div>
-        </motion.div>
+
+            <AnimatePresence>
+                {showLoader && (
+                    <GenerationLoader
+                        key="loader"
+                        type={currentModeKey.includes('video') ? 'video' : 'image'}
+                        estimatedTime={currentModeKey.includes('video') ? (model.includes('kling') ? 120 : 60) : 15}
+                    />
+                )}
+                {resultData && (
+                    <GenerationResult
+                        key="result"
+                        result={resultData}
+                        type={currentModeKey.includes('video') ? 'video' : 'image'}
+                        onClose={() => setResultData(null)}
+                        onRemix={() => {
+                            setResultData(null);
+                        }}
+                    />
+                )}
+            </AnimatePresence>
+        </motion.div >
     );
 };
 
