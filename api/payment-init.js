@@ -124,7 +124,9 @@ export default async function handler(req, res) {
                             TelegramId: req.body.telegramId
                         },
                         created_at: new Date().toISOString()
-                    }).catch(err => console.error('Pending Tx Save Error:', err));
+                    }).then(({ error }) => {
+                        if (error) console.error('Pending Tx Save Error:', error);
+                    });
                 }
             }
 
