@@ -36,6 +36,7 @@ const TBankWidget = ({ amount, description, userId, telegramId, userEmail }) => 
                 // Open the payment page directly
                 if (window.Telegram?.WebApp) {
                     window.Telegram.WebApp.openLink(data.paymentUrl);
+                    window.Telegram.WebApp.close();
                 } else {
                     window.open(data.paymentUrl, '_blank');
                 }

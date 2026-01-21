@@ -8,7 +8,7 @@ const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 export default async function handler(req, res) {
-    // ... (CORS headers remain)
+    // Enable CORS
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
             Amount: amountKopeeks,
             OrderId: orderId,
             Description: desc,
-            NotificationURL: `https://${req.headers.host}/api/payment-webhook`,
+            NotificationURL: `https://${req.headers.host}/api/webhook`,
             // Redirect back to Telegram Bot with OrderId beacon
             SuccessURL: `https://t.me/Pixel_ai_bot?startapp=payment_success__${orderId}`,
             FailURL: 'https://t.me/Pixel_ai_bot?startapp=payment_fail',
@@ -62,7 +62,7 @@ export default async function handler(req, res) {
             }
         };
 
-        // ... (Token calculation remains same)
+        // 3. Calc Token
         const tokenParams = {};
         for (const key in requestBody) {
             if (['Token', 'DATA', 'Receipt'].includes(key)) continue;
@@ -77,7 +77,7 @@ export default async function handler(req, res) {
         }
         requestBody.Token = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
-        // ... (Send Request remains same)
+        // 4. Send Request
         const responseData = await new Promise((resolve, reject) => {
             const reqData = JSON.stringify(requestBody);
             const request = https.request({
@@ -104,12 +104,27 @@ export default async function handler(req, res) {
         if (responseData.Success) {
             // FIRE AND FORGET: Save pending transaction
             if (userId) {
-                // Resolve UUID if needed
-                let finalUserId = userId;
-                if (userId && !String(userId).includes('-') && !isNaN(Number(userId))) {
-                    const { data: u } = await supabase.from('users').select('id').eq('telegram_id', userId).maybeSingle();
+                let finalUserId = null;
+                const telegramIdInt = Number(userId);
+
+                // 1. Try to find existing user (or verify UUID)
+                if (userId && !String(userId).includes('-') && !isNaN(telegramIdInt)) {
+                    const { data: u } = await supabase.from('users').select('id').eq('telegram_id', telegramIdInt).maybeSingle();
                     if (u) finalUserId = u.id;
-                    else finalUserId = null; // Can't link to db yet
+
+                    // 2. If not found, CREATE USER (Auto-registration)
+                    if (!finalUserId) {
+                        console.log(`Creating new user for payment init: ${telegramIdInt}`);
+                        const { data: newUser } = await supabase.from('users').insert({
+                            telegram_id: telegramIdInt,
+                            username: 'user_' + telegramIdInt,
+                            created_at: new Date().toISOString()
+                        }).select().single();
+                        if (newUser) finalUserId = newUser.id;
+                    }
+                } else {
+                    // Assume it is already a UUID
+                    finalUserId = userId;
                 }
 
                 if (finalUserId) {
@@ -121,12 +136,14 @@ export default async function handler(req, res) {
                         metadata: {
                             PaymentId: responseData.PaymentId,
                             OrderId: orderId,
-                            TelegramId: req.body.telegramId
+                            TelegramId: req.body.telegramId || telegramIdInt
                         },
                         created_at: new Date().toISOString()
                     }).then(({ error }) => {
                         if (error) console.error('Pending Tx Save Error:', error);
                     });
+                } else {
+                    console.error('Failed to resolve or create user. Transaction trace lost.');
                 }
             }
 
@@ -136,7 +153,6 @@ export default async function handler(req, res) {
                 orderId: orderId
             });
         } else {
-
             return res.json({
                 success: false,
                 error: responseData.Message || 'Ошибка инициализации'

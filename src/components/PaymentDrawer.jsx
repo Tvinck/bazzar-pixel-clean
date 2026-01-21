@@ -146,6 +146,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                 // Open Payment Link
                 if (window.Telegram?.WebApp) {
                     window.Telegram.WebApp.openLink(data.paymentUrl);
+                    window.Telegram.WebApp.close();
                 } else {
                     window.location.href = data.paymentUrl;
                 }

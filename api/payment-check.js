@@ -84,16 +84,16 @@ export default async function handler(req, res) {
         console.log('🏦 Bank Status:', bankResponse.Status);
 
         if (bankResponse.Success && (bankResponse.Status === 'CONFIRMED' || bankResponse.Status === 'AUTHORIZED')) {
-            // 3. Idempotency
+            // 3. Idempotency (Double Check: PaymentId AND OrderId)
             const { data: existingTx } = await supabase
                 .from('transactions')
                 .select('id')
-                .eq('metadata->>PaymentId', paymentId)
-                .neq('type', 'pending_init')
+                .eq('type', 'deposit') // Explicitly look for completed deposits
+                .or(`metadata->>PaymentId.eq.${paymentId},metadata->>OrderId.eq.${orderId}`)
                 .maybeSingle();
 
             if (existingTx) {
-                console.log('✅ Already credited.');
+                console.log(`✅ [Payment Check] Transaction overlap found: ${existingTx.id}. Avoiding double credit.`);
                 return res.status(200).json({ success: true, status: 'ALREADY_CREDITED' });
             }
 
