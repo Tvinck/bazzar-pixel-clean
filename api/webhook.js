@@ -13,13 +13,10 @@ export default async function handler(req, res) {
     const update = req.body;
     const updateId = update.update_id;
 
-    // Respond to Telegram IMMEDIATELY (critical for preventing retries)
-    res.status(200).send('OK');
-
-    // Check for duplicates
+    // Check for duplicates FIRST
     if (processedUpdates.has(updateId)) {
         console.log('⚠️ Duplicate update ignored:', updateId);
-        return;
+        return res.status(200).send('OK');
     }
 
     // Mark as processed
@@ -31,11 +28,17 @@ export default async function handler(req, res) {
         processedUpdates.delete(firstItem);
     }
 
-    // Process asynchronously (don't await)
+    // Process synchronously and WAIT for completion
     try {
         console.log('📩 Processing Update:', updateId);
-        bot.processUpdate(update);
+
+        // CRITICAL: await ensures Vercel doesn't kill the process
+        await bot.processUpdate(update);
+
+        console.log('✅ Update processed:', updateId);
+        res.status(200).send('OK');
     } catch (e) {
         console.error('❌ Webhook Processing Error:', e);
+        res.status(200).send('OK'); // Still respond OK to Telegram
     }
 }

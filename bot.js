@@ -1187,6 +1187,9 @@ bot.on('callback_query', async (query) => {
     const data = query.data;
 
     try {
+        // Answer callback IMMEDIATELY to stop loading animation and prevent timeout
+        await bot.answerCallbackQuery(query.id);
+
         await botAnalytics.trackEvent(query.from.id, 'callback_click', { button: data });
 
         if (data === 'generate_art') {
@@ -1360,9 +1363,6 @@ bot.on('callback_query', async (query) => {
         else if (data === 'back_to_menu') {
             sendWelcome(chatId);
         }
-
-        // Answer callback to stop loading animation
-        await bot.answerCallbackQuery(query.id);
 
     } catch (error) {
         console.error('Callback Error:', error);
