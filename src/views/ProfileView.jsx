@@ -15,6 +15,7 @@ import { analytics } from '../lib/supabase';
 import { useUser } from '../context/UserContext';
 import { useUserPublicCreations } from '../hooks/useGallery';
 import { useToast } from '../context/ToastContext';
+import PaymentWidget from '../components/PaymentWidget';
 
 const ProfileView = ({ isDark, onOpenPayment }) => {
     const { t, lang, setLang } = useLanguage();
@@ -53,6 +54,7 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
     // Transactions State
     const [transactions, setTransactions] = useState([]);
     const [isTxLoading, setIsTxLoading] = useState(false);
+    const [paymentAmount, setPaymentAmount] = useState(null);
 
     useEffect(() => {
         if (activeSection === 'account' && window.Telegram?.WebApp?.initData) {
@@ -239,17 +241,66 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
                 </form>
             </div>
 
-            {/* Manage Subscription */}
-            <button onClick={() => { playClick(); onOpenPayment(); }} className="w-full bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-4 rounded-2xl shadow-lg flex items-center justify-between group">
-                <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><CreditCard size={20} /></div>
-                    <div className="text-left">
-                        <div className="font-bold text-sm">Управление подпиской</div>
-                        <div className="text-xs opacity-80">Улучшите свой план</div>
+            {/* Payment Section */}
+            <div className="bg-slate-50 dark:bg-slate-800/50 p-4 rounded-2xl border border-slate-200 dark:border-slate-700">
+                <h4 className="font-bold text-sm mb-3 flex items-center gap-2 text-slate-900 dark:text-white">
+                    <Wallet size={16} className="text-indigo-500" />
+                    Пополнение баланса
+                </h4>
+
+                {paymentAmount ? (
+                    <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+                        <div className="flex justify-between items-center mb-4 bg-white dark:bg-slate-800 p-3 rounded-xl">
+                            <div>
+                                <div className="text-xs text-slate-500">Сумма к оплате</div>
+                                <div className="font-bold text-xl">{paymentAmount} ₽</div>
+                            </div>
+                            <button
+                                onClick={() => setPaymentAmount(null)}
+                                className="text-xs font-bold bg-slate-100 dark:bg-slate-700 px-3 py-2 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors"
+                            >
+                                Изменить
+                            </button>
+                        </div>
+                        <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
+                            <PaymentWidget
+                                amount={paymentAmount}
+                                description={`Пополнение баланса: ${paymentAmount}₽`}
+                                userId={userData?.id}
+                            />
+                        </div>
                     </div>
-                </div>
-                <ChevronRight size={20} className="opacity-60 group-hover:translate-x-1 transition-transform" />
-            </button>
+                ) : (
+                    <div className="grid grid-cols-2 gap-3">
+                        {[
+                            { price: 99, credits: 100, label: 'Starter' },
+                            { price: 299, credits: 350, label: 'Popular', tag: 'HIT' },
+                            { price: 499, credits: 600, label: 'Pro' },
+                            { price: 990, credits: 1500, label: 'Ultimate', tag: '-20%' }
+                        ].map((pack) => (
+                            <button
+                                key={pack.price}
+                                onClick={() => { playClick(); setPaymentAmount(pack.price); }}
+                                className="relative bg-white dark:bg-slate-800 p-3 rounded-xl border border-transparent hover:border-indigo-500 shadow-sm transition-all active:scale-95 text-left group"
+                            >
+                                {pack.tag && (
+                                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full shadow-sm">
+                                        {pack.tag}
+                                    </div>
+                                )}
+                                <div className="text-[10px] text-slate-400 font-bold uppercase mb-0.5">{pack.label}</div>
+                                <div className="font-black text-lg text-slate-900 dark:text-white leading-none mb-1">{pack.price} ₽</div>
+                                <div className="text-xs font-bold text-indigo-500 flex items-center gap-1">
+                                    {pack.credits} <Zap size={10} className="fill-current" />
+                                </div>
+                            </button>
+                        ))}
+                    </div>
+                )}
+                <p className="text-[10px] text-center text-slate-400 mt-3 opacity-60">
+                    Оплата происходит через безопасный шлюз Т-Банка
+                </p>
+            </div>
 
             {/* Payment History */}
             <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm">
