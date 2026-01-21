@@ -313,14 +313,39 @@ const GenerationView = () => {
     const toast = useToast();
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // Helper to get base64
+    // Helper to compress and convert to base64
     const fileToBase64 = (blobUrl) => {
-        return fetch(blobUrl).then(r => r.blob()).then(blob => new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result.split(',')[1]);
-            reader.onerror = reject;
-            reader.readAsDataURL(blob);
-        }));
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.src = blobUrl;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                const MAX_SIZE = 1024;
+
+                if (width > height) {
+                    if (width > MAX_SIZE) {
+                        height *= MAX_SIZE / width;
+                        width = MAX_SIZE;
+                    }
+                } else {
+                    if (height > MAX_SIZE) {
+                        width *= MAX_SIZE / height;
+                        height = MAX_SIZE;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                // Get base64 (remove prefix)
+                const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                resolve(dataUrl.split(',')[1]);
+            };
+            img.onerror = reject;
+        });
     };
 
     // User Context

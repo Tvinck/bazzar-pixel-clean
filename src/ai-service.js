@@ -585,6 +585,40 @@ const aiService = {
     },
 
     // ============================================
+    // TOOLS / EDIT
+    // ============================================
+    instructEdit: async (base64Img, instructions) => {
+        console.log('✨ instructEdit called', instructions);
+
+        let modelId = 'nano_banana_edit'; // Default edit model
+        let prompt = '';
+
+        // Map mode to Prompt/Model logic
+        if (instructions.mode === 'replace-object') {
+            prompt = `Replace ${instructions.old_object} with ${instructions.new_object}`;
+        } else if (instructions.mode === 'remove-object') {
+            prompt = `Remove ${instructions.remove_object}`;
+        } else if (instructions.mode === 'add-object') {
+            prompt = `Add ${instructions.new_object}`;
+        } else {
+            prompt = instructions.prompt || 'Edit image';
+        }
+
+        // Use 'generateWithKie' logic but with specific params
+        // We pass the base64 string directly as a source file
+        // The API expects URL or Base64. generateWithKie handles raw 'source_files'
+
+        // Construct a data URI since generateWithKie/proxy might expect it or handles raw?
+        // Let's pass full data URI to be safe as 'input_urls' often need scheme.
+        const dataUri = `data:image/jpeg;base64,${base64Img}`;
+
+        return await aiService.generateWithKie(prompt, modelId, {
+            source_files: [dataUri],
+            aspect_ratio: '1:1' // Usually preserves input ratio, but required param
+        });
+    },
+
+    // ============================================
     // ASYNC JOB QUEUE (Browser)
     // ============================================
     generateImageAsync: async (prompt, modelId = 'nano_banana', options = {}) => {
