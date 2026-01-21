@@ -31,6 +31,7 @@ export default async function handler(req, res) {
             Description: description || 'Credits TopUp',
             OrderId: orderId,
             TerminalKey: TERMINAL_KEY,
+            NotificationURL: 'https://bazzar-pixel-clean-4zm4.vercel.app/api/payment-webhook',
             Password: PASSWORD // Add Password HERE so it gets sorted correctly
         };
 

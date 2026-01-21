@@ -2,12 +2,14 @@ import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
 // Initialize Supabase admin client
-const supabaseUrl = process.env.PROD_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
-const supabaseKey = process.env.PROD_SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+// Hardcoded Fallback for robust operations
+const SUPABASE_URL = 'https://ktookvpqtmzfccojarwm.supabase.co';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODMxMzc2NSwiZXhwIjoyMDgzODg5NzY1fQ.L99oEJS40e0R_l05Jm2kZkItJKdaPAEYrGM0WQ0y08Y';
 
-const supabase = (supabaseUrl && supabaseKey)
-    ? createClient(supabaseUrl, supabaseKey)
-    : null;
+const supabase = createClient(
+    process.env.PROD_SUPABASE_URL || SUPABASE_URL,
+    process.env.PROD_SUPABASE_SERVICE_KEY || SUPABASE_SERVICE_KEY
+);
 
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(200).send('OK');
@@ -18,20 +20,23 @@ export default async function handler(req, res) {
 
         if (!body.Token) return res.send('OK');
 
-        // 1. PASSWORD (DEMO)
+        // 1. PASSWORD (DEMO) -> Must match payment-init.js
         const PASSWORD = 'DFgxaoJ38xAjUrsJ';
 
-        // 2. Validate Token
+        // 2. Validate Token (Correct Algorithm V2: Password in params)
         const receivedToken = body.Token;
         const params = { ...body };
         delete params.Token;
+
+        // Add password to params for sorting
+        params.Password = PASSWORD;
 
         const keys = Object.keys(params).sort();
         let tokenStr = '';
         for (const key of keys) {
             tokenStr += params[key];
         }
-        tokenStr += PASSWORD;
+        // Do NOT append password at the end here, it is already in the loop!
 
         const calculatedToken = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
