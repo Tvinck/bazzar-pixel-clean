@@ -77,16 +77,27 @@ export default async function handler(req, res) {
             console.log(`Adding ${credits} credits to user ${userId} for ${amount} RUB`);
 
             // 1. Get current balance AND telegram_id
-            const { data: user, error: fetchError } = await supabase
-                .from('profiles')
-                .select('balance, telegram_id')
-                .eq('id', userId)
-                .single();
+            // Determine if userId is UUID or Telegram ID
+            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
+
+            let query = supabase.from('profiles').select('id, balance, telegram_id');
+
+            if (isUUID) {
+                query = query.eq('id', userId);
+            } else {
+                console.log(`ℹ️ userId '${userId}' is not UUID, assuming telegram_id`);
+                query = query.eq('telegram_id', userId);
+            }
+
+            const { data: user, error: fetchError } = await query.single();
 
             if (fetchError || !user) {
                 console.error('❌ User not found in DB:', userId, fetchError);
                 return res.send('OK');
             }
+
+            // Ensure we use the UUID for updates if we found it
+            const targetId = user.id;
 
             const newBalance = (user.balance || 0) + credits;
 
@@ -94,7 +105,7 @@ export default async function handler(req, res) {
             const { error: updateError } = await supabase
                 .from('profiles')
                 .update({ balance: newBalance })
-                .eq('id', userId);
+                .eq('id', targetId);
 
             if (updateError) {
                 console.error('❌ Failed to update balance:', updateError);
@@ -103,7 +114,7 @@ export default async function handler(req, res) {
 
                 // 3. Log Transaction
                 await supabase.from('transactions').insert({
-                    user_id: userId,
+                    user_id: targetId,
                     amount: credits,
                     type: 'deposit',
                     description: `Пополнение ${amount}₽`,
