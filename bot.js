@@ -696,6 +696,8 @@ app.post('/api/jobs/create', async (req, res) => {
         // 0.5 Auto-create user_stats if missing
         if (!userStats || statsError) {
             console.log(`⚠️ User ${userId} stats missing. Auto-creating in user_stats...`);
+
+            // Attempt creation
             const { data: newStats, error: createError } = await supabase
                 .from('user_stats')
                 .insert({
@@ -708,11 +710,44 @@ app.post('/api/jobs/create', async (req, res) => {
             if (!createError && newStats) {
                 userStats = newStats;
             } else {
-                console.error(`❌ User Stats Creation Failed: User ID ${userId} must exist in 'users' table first.`);
-                return res.status(401).json({
-                    error: 'Account setup incomplete. Please restart the app from Telegram.',
-                    details: createError?.message
-                });
+                // If it failed because User doesn't exist (FK violation), create User first
+                if (createError?.message?.includes('foreign key constraint')) {
+                    console.log(`⚠️ User ${userId} missing in 'users' table. Creating placeholder user...`);
+
+                    const { error: userCreateError } = await supabase.from('users').insert({
+                        id: userId,
+                        telegram_id: Math.floor(Math.random() * 1000000000), // Random ID
+                        username: 'Dev_Guest',
+                        first_name: 'Dev',
+                        last_name: 'Guest'
+                    });
+
+                    if (!userCreateError) {
+                        // Retry creating stats
+                        const { data: retryStats, error: retryError } = await supabase
+                            .from('user_stats')
+                            .insert({
+                                user_id: userId,
+                                current_balance: 10
+                            })
+                            .select('current_balance')
+                            .single();
+
+                        if (retryStats && !retryError) {
+                            userStats = retryStats;
+                        }
+                    } else {
+                        console.error('Failed to create placeholder user:', userCreateError);
+                    }
+                }
+
+                if (!userStats) {
+                    console.error(`❌ User Stats Creation Failed: ${createError?.message}`);
+                    return res.status(401).json({
+                        error: 'Account setup incomplete. Please restart the app from Telegram.',
+                        details: createError?.message
+                    });
+                }
             }
         }
 
