@@ -32,7 +32,7 @@ export default async function handler(req, res) {
             OrderId: orderId,
             TerminalKey: TERMINAL_KEY,
             NotificationURL: 'https://bazzar-pixel-clean-4zm4.vercel.app/api/payment-webhook',
-            Password: PASSWORD // Add Password HERE so it gets sorted correctly
+            Password: PASSWORD
         };
 
         // 2. Generate Signature (Token)
@@ -41,19 +41,15 @@ export default async function handler(req, res) {
         for (const key of keys) {
             tokenStr += paramsForSignature[key];
         }
-
-        // Remove Password from body params, it is only for signature!
-        // But wait, the standard usually says: make signature, then send body WITHOUT password.
-
         const token = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
         // 3. Final Request Body
-        // DO NOT INCLUDE Password in the request body sent to API!
         const requestBody = {
-            Amount: amountKopeeks,
-            Description: description || 'Credits TopUp',
-            OrderId: orderId,
             TerminalKey: TERMINAL_KEY,
+            Amount: amountKopeeks,
+            OrderId: orderId,
+            Description: description || 'Credits TopUp',
+            NotificationURL: 'https://bazzar-pixel-clean-4zm4.vercel.app/api/payment-webhook',
             Token: token,
             DATA: {
                 userId: userId,
@@ -62,7 +58,7 @@ export default async function handler(req, res) {
             }
         };
 
-        console.log('Payment Init Request:', JSON.stringify(requestBody));
+        console.log('Payment Init Request to T-Bank:', JSON.stringify(requestBody));
 
         // 4. Send Request via HTTPS module (Zero-Dep)
         const responseData = await new Promise((resolve, reject) => {
