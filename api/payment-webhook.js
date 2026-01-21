@@ -129,7 +129,7 @@ export default async function handler(req, res) {
                             .insert({
                                 user_id: newUser.id,
                                 current_balance: credits,
-                                total_generated: 0
+                                total_generations: 0
                             });
 
                         if (createStatsError) {
