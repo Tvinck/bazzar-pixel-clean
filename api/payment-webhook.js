@@ -47,36 +47,34 @@ export default async function handler(req, res) {
             return res.send('OK');
         }
 
-        // 3. Handle Confirmed Payment
-        if (body.Status === 'CONFIRMED' && supabase) {
-            console.log(`✅ Payment ${body.OrderId} CONFIRMED.`);
+        // 3. Handle Successful Payment (CONFIRMED or AUTHORIZED)
+        const status = body.Status;
+        if ((status === 'CONFIRMED' || status === 'AUTHORIZED') && supabase) {
+            console.log(`✅ Payment ${body.OrderId} ${status}.`);
 
-            let userId = null;
-            if (body.DATA?.userId) userId = body.DATA.userId;
-
-            if (!userId && body.OrderId) {
-                const parts = body.OrderId.split('_');
-                // ORDER_{TIMESTAMP}_{USERID}
-                if (parts.length >= 3) {
-                    userId = parts.slice(2).join('_');
-                }
-            }
+            // T-Bank flattens DATA in notifications: check root first, then body.DATA
+            let userId = body.userId || body.DATA?.userId;
+            const telegramId = body.telegramId || body.DATA?.telegramId;
 
             if (!userId) {
-                console.error('❌ Could not extract UserID');
+                console.error('❌ Could not extract UserID from payload');
+                // Log the whole body for debugging
+                console.log('Payload:', JSON.stringify(body));
                 return res.send('OK');
             }
 
-            // Calculate Credits Logic
+            // Calculate Credits Logic (Matching PLANS in PaymentDrawer)
             const amount = body.Amount / 100;
-            let credits = Math.floor(amount);
+            let credits = 0;
 
-            if (amount >= 99 && amount < 290) credits = 100;
-            else if (amount >= 290 && amount < 490) credits = 350;
-            else if (amount >= 490 && amount < 900) credits = 600;
-            else if (amount >= 900) credits = 1500;
+            if (amount >= 4999) credits = 6500;
+            else if (amount >= 1999) credits = 2400;
+            else if (amount >= 999) credits = 1150;
+            else if (amount >= 499) credits = 525;
+            else if (amount >= 90) credits = 100; // Trial or lower
+            else credits = Math.floor(amount); // Fallback 1:1
 
-            console.log(`Adding ${credits} credits to user ${userId} for ${amount} RUB`);
+            console.log(`💰 Adding ${credits} credits to user ${userId} (TG: ${telegramId}) for ${amount} RUB`);
 
             // 1. Find user in 'users' table
             const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
@@ -155,7 +153,7 @@ export default async function handler(req, res) {
             });
 
             // 4. Send Telegram Notification
-            const userNotifyId = body.DATA?.telegramId || userData?.telegram_id || (isUUID ? null : userId);
+            const userNotifyId = body.telegramId || body.DATA?.telegramId || userData?.telegram_id || (isUUID ? null : userId);
             if (userNotifyId && process.env.TELEGRAM_BOT_TOKEN) {
                 try {
                     const message = `✅ *Баланс пополнен!*\n\n💰 Сумма: *${amount}₽*\n⚡️ Начислено: *${credits}* кредитов\n💎 Баланс: *${newBalance}*\n\nСпасибо за поддержку! ❤️`;
