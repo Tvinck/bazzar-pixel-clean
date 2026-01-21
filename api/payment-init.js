@@ -40,13 +40,15 @@ export default async function handler(req, res) {
             },
             Receipt: {
                 Email: userEmail || 'customer@example.com',
-                Taxation: 'ausn_income', // АУСН Доходы
+                Taxation: 'usn_income', // Используйте usn_income даже для АУСН (согласно API Т-Банка)
                 Items: [
                     {
                         Name: desc,
                         Price: amountKopeeks,
                         Quantity: 1.00,
                         Amount: amountKopeeks,
+                        PaymentMethod: 'full_prepayment',
+                        PaymentObject: 'service',
                         Tax: 'none' // Без НДС
                     }
                 ]
