@@ -14,8 +14,13 @@ CREATE TABLE IF NOT EXISTS orders (
 
 -- RLS
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Staff can view all orders" ON orders;
 CREATE POLICY "Staff can view all orders" ON orders FOR SELECT TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "Staff can update orders" ON orders;
 CREATE POLICY "Staff can update orders" ON orders FOR UPDATE TO authenticated USING (true);
+
+DROP POLICY IF EXISTS "System can insert orders" ON orders;
 CREATE POLICY "System can insert orders" ON orders FOR INSERT TO authenticated, service_role WITH CHECK (true);
 
 

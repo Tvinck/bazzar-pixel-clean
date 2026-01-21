@@ -23,14 +23,17 @@ create table if not exists public.profiles (
 alter table public.profiles enable row level security;
 
 -- Policies
+drop policy if exists "Public profiles are viewable by everyone." on profiles;
 create policy "Public profiles are viewable by everyone."
   on profiles for select
   using ( true );
 
+drop policy if exists "Users can insert their own profile." on profiles;
 create policy "Users can insert their own profile."
   on profiles for insert
   with check ( auth.uid() = id );
 
+drop policy if exists "Users can update own profile." on profiles;
 create policy "Users can update own profile."
   on profiles for update
   using ( auth.uid() = id );
@@ -50,7 +53,10 @@ CREATE TABLE IF NOT EXISTS ai_models (
 );
 
 ALTER TABLE ai_models ENABLE ROW LEVEL SECURITY;
+drop policy if exists "Everyone can read models" on ai_models;
 CREATE POLICY "Everyone can read models" ON ai_models FOR SELECT USING (true);
+
+drop policy if exists "Admins can update models" on ai_models;
 CREATE POLICY "Admins can update models" ON ai_models FOR ALL USING (
     -- Check if user is admin via profiles table
     (SELECT role FROM profiles WHERE id = auth.uid()) = 'admin'

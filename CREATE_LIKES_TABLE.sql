@@ -39,15 +39,19 @@ EXECUTE FUNCTION update_likes_count();
 ALTER TABLE likes ENABLE ROW LEVEL SECURITY;
 
 -- Policies
+DROP POLICY IF EXISTS "Users can see their own likes" ON likes;
 CREATE POLICY "Users can see their own likes" ON likes
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own likes" ON likes;
 CREATE POLICY "Users can insert their own likes" ON likes
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can delete their own likes" ON likes;
 CREATE POLICY "Users can delete their own likes" ON likes
     FOR DELETE USING (auth.uid() = user_id);
 
 -- Service Role Policy (Critically important for API)
+DROP POLICY IF EXISTS "Service role key accesses all likes" ON likes;
 CREATE POLICY "Service role key accesses all likes" ON likes
     FOR ALL USING (auth.jwt() ->> 'role' = 'service_role');
