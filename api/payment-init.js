@@ -33,7 +33,7 @@ export default async function handler(req, res) {
             OrderId: orderId,
             Description: desc,
             NotificationURL: `https://${req.headers.host}/api/payment-webhook`,
-            SuccessURL: `https://${req.headers.host}/profile`,
+            SuccessURL: `https://${req.headers.host}/payment/success`,
             FailURL: `https://${req.headers.host}/profile`,
             DATA: {
                 userId: userId,

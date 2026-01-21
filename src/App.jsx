@@ -26,6 +26,7 @@ const GenerationView = React.lazy(() => import('./views/GenerationView'));
 const TemplateView = React.lazy(() => import('./views/TemplateView'));
 const UserProfileView = React.lazy(() => import('./views/UserProfileView'));
 const AdminView = React.lazy(() => import('./views/AdminView'));
+const PaymentSuccessView = React.lazy(() => import('./views/PaymentSuccessView'));
 const NotFoundView = React.lazy(() => import('./views/NotFoundView'));
 
 // Modals/Drawers
@@ -208,6 +209,7 @@ function AppContent() {
             <Route path="/template/:id" element={<TemplateView />} />
             <Route path="/user/:userId" element={<UserProfileView />} />
             <Route path="/admin" element={<AdminView />} />
+            <Route path="/payment/success" element={<PaymentSuccessView />} />
             <Route path="*" element={<NotFoundView />} />
           </Routes>
         </Suspense>
