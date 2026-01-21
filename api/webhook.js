@@ -1,18 +1,10 @@
 
-import { createClient } from '@supabase/supabase-js';
-
 // Track processed updates
 const processedUpdates = new Set();
 const MAX_CACHE_SIZE = 1000;
 
 // Import bot token
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
-
-// Supabase client (hardcoded for reliability)
-const SUPABASE_URL = 'https://ktookvpqtmzfccojarwm.supabase.co';
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODMxMzc2NSwiZXhwIjoyMDgzODg5NzY1fQ.L99oEJS40e0R_l05Jm2kZkItJKdaPAEYrGM0WQ0y08Y';
-
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 // Text constants (from bot.js)
 const welcomeMessage = `
@@ -122,18 +114,16 @@ export default async function handler(req, res) {
                     }
                 });
             } else if (text === 'Баланс ⚡') {
-                // Fetch real balance from Supabase
+                // Fetch real balance using the SAME API as Mini App
                 const telegramId = msg.from.id;
                 let balance = 0;
 
                 try {
-                    const { data: profile } = await supabase
-                        .from('profiles')
-                        .select('balance')
-                        .eq('telegram_id', telegramId)
-                        .maybeSingle();
-
-                    balance = profile?.balance || 0;
+                    const response = await fetch(`https://bazzar-pixel-clean-4zm4.vercel.app/api/user/stats?telegram_id=${telegramId}`);
+                    if (response.ok) {
+                        const stats = await response.json();
+                        balance = stats.current_balance || 0;
+                    }
                 } catch (err) {
                     console.error('Balance fetch error:', err);
                 }
