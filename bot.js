@@ -624,7 +624,33 @@ app.post('/api/jobs/create', async (req, res) => {
                         // as Kie.ai will fail on the base64 string.
                     }
                 } else {
-                    processedFiles.push(fileItem);
+                    // It's a URL - but we must ensure it's a valid image link for Kie.ai
+                    // Re-download and Re-upload to normalize extensions
+                    if (typeof fileItem === 'string' && fileItem.startsWith('http')) {
+                        try {
+                            const resp = await fetch(fileItem);
+                            const buf = Buffer.from(await resp.arrayBuffer());
+                            const contentType = resp.headers.get('content-type') || 'image/jpeg';
+
+                            // Re-process to JPEG to be safe
+                            const safeBuffer = await sharp(buf).jpeg({ quality: 90, mozjpeg: true }).toBuffer();
+                            const safeName = `uploads/gen_src_proxy_${Date.now()}_${Math.random().toString(36).slice(2)}.jpg`;
+
+                            const { error: reUpErr } = await supabase.storage.from('uploads').upload(safeName, safeBuffer, { contentType: 'image/jpeg' });
+
+                            if (!reUpErr) {
+                                const { data: rePubData } = supabase.storage.from('uploads').getPublicUrl(safeName);
+                                processedFiles.push(rePubData.publicUrl);
+                            } else {
+                                processedFiles.push(fileItem);
+                            }
+                        } catch (e) {
+                            console.warn('Failed to normalize image URL:', e);
+                            processedFiles.push(fileItem);
+                        }
+                    } else {
+                        processedFiles.push(fileItem);
+                    }
                 }
             }
         }
