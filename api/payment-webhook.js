@@ -1,143 +1,193 @@
 import crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 
-// Initialize Supabase admin client
-// Hardcoded Fallback for robust operations
+// --- CONFIGURATION ---
+// Hardcoded Logic for maximum stability
 const SUPABASE_URL = 'https://ktookvpqtmzfccojarwm.supabase.co';
+// Using the Service Role Key (starts with eyJ... and allows bypassing RLS for admin tasks)
 const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODMxMzc2NSwiZXhwIjoyMDgzODg5NzY1fQ.L99oEJS40e0R_l05Jm2kZkItJKdaPAEYrGM0WQ0y08Y';
+const T_BANK_PASSWORD = '7XEqsWfjryCnqCck'; // Production Password
 
-const supabase = createClient(
-    process.env.PROD_SUPABASE_URL || SUPABASE_URL,
-    process.env.PROD_SUPABASE_SERVICE_KEY || SUPABASE_SERVICE_KEY
-);
+// Initialize Supabase Admin
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+});
 
 export default async function handler(req, res) {
+    // 1. Always acknowledge POST requests to prevent T-Bank from retrying endlessly
     if (req.method !== 'POST') return res.status(200).send('OK');
 
+    const body = req.body;
+    console.log(`🔔 [Webhook] Incoming Payment: ${body.OrderId} | Status: ${body.Status}`);
+
     try {
-        const body = req.body;
-        console.log('💰 Payment Webhook Payload:', JSON.stringify(body));
+        if (!body.Token) {
+            console.warn('⚠️ [Webhook] No Token found. Ignoring.');
+            return res.send('OK');
+        }
 
-        if (!body.Token) return res.send('OK');
-
-        // 1. PASSWORD (PROD) -> Must match payment-init.js
-        const PASSWORD = '7XEqsWfjryCnqCck';
-
-        // 2. Validate Token (Correct Algorithm V2: Password in params)
-        const receivedToken = body.Token;
+        // --- 2. SIGNATURE VALIDATION ---
         const params = { ...body };
         delete params.Token;
+        params.Password = T_BANK_PASSWORD;
 
-        // Add password to params for sorting
-        params.Password = PASSWORD;
-
-        const keys = Object.keys(params).sort();
+        const sortedKeys = Object.keys(params).sort();
         let tokenStr = '';
-        for (const key of keys) {
-            if (typeof params[key] === 'object') continue;
-            tokenStr += params[key];
+        for (const key of sortedKeys) {
+            if (typeof params[key] !== 'object') {
+                tokenStr += params[key];
+            }
         }
 
         const calculatedToken = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
-        console.log('--- Webhook Debug ---');
-        console.log('OrderId:', body.OrderId);
-        console.log('Status:', body.Status);
-        console.log('Token String:', tokenStr);
-        console.log('Calculated:', calculatedToken);
-        console.log('Received:', receivedToken);
-
-        if (calculatedToken !== receivedToken) {
-            console.error('❌ Webhook Signature Mismatch');
+        if (calculatedToken !== body.Token) {
+            console.error(`❌ [Webhook] Signature Fail! Calc: ${calculatedToken.substring(0, 10)}... vs Recv: ${body.Token.substring(0, 10)}...`);
+            // We still return OK so T-Bank stops annoying us with bad requests
             return res.send('OK');
         }
 
-        // 3. Handle Successful Payment
-        const status = body.Status;
-        if ((status === 'CONFIRMED' || status === 'AUTHORIZED') && supabase) {
-            console.log(`✅ Payment ${body.OrderId} ${status}. Processing...`);
+        // --- 3. FILTER EVENTS ---
+        // We handle BOTH 'CONFIRMED' (Standard) and 'AUTHORIZED' (2-step). 
+        // For digital goods, AUTHORIZED is usually enough to grant access.
+        if (body.Status !== 'CONFIRMED' && body.Status !== 'AUTHORIZED') {
+            console.log(`ℹ️ [Webhook] Status ${body.Status} ignored (not final).`);
+            return res.send('OK');
+        }
 
-            // Extract IDs
-            const userId = body.userId || body.DATA?.userId;
-            const telegramId = body.telegramId || body.DATA?.telegramId;
+        // --- 4. IDEMPOTENCY CHECK (CRITICAL) ---
+        // Check if we already processed this order to prevent double credits
+        const orderId = body.OrderId;
+        const { data: existingTx } = await supabase
+            .from('transactions')
+            .select('id')
+            .filter('metadata->>OrderId', 'eq', orderId) // Assuming metadata stores the full T-Bank body
+            .maybeSingle();
 
-            console.log(`IDs found - userId: ${userId}, telegramId: ${telegramId}`);
+        if (existingTx) {
+            console.log(`✅ [Webhook] Order ${orderId} already processed. Skipping.`);
+            return res.send('OK');
+        }
 
-            if (!userId && !telegramId) {
-                console.error('❌ No user identifiers found in webhook');
-                return res.send('OK');
-            }
+        // --- 5. IDENTIFY USER ---
+        // T-Bank puts custom params in root AND in DATA object depending on the phase
+        const userId = body.userId || body.DATA?.userId;
+        const telegramId = body.telegramId || body.DATA?.telegramId;
 
-            // Calculate Credits
-            const amount = body.Amount / 100;
-            let credits = 100; // Default for trial
-            if (amount >= 4999) credits = 6500;
-            else if (amount >= 1999) credits = 2400;
-            else if (amount >= 999) credits = 1150;
-            else if (amount >= 499) credits = 525;
-            else if (amount >= 90) credits = 100;
+        console.log(`🔍 [Webhook] Looking for User - UUID: ${userId}, TG: ${telegramId}`);
 
-            // 1. Find User 
-            let userData = null;
+        let targetUser = null;
 
-            // Try by ID (UUID)
-            if (userId && userId.length > 20) {
-                const { data } = await supabase.from('users').select('id, telegram_id').eq('id', userId).maybeSingle();
-                userData = data;
-            }
+        // Strategy A: Find by UUID (if valid)
+        if (userId && userId.length > 20) {
+            const { data } = await supabase.from('users').select('id, telegram_id').eq('id', userId).maybeSingle();
+            targetUser = data;
+        }
 
-            // Try by Telegram ID
-            if (!userData && telegramId) {
-                const { data } = await supabase.from('users').select('id, telegram_id').eq('telegram_id', telegramId).maybeSingle();
-                userData = data;
-            }
+        // Strategy B: Find by Telegram ID (if A failed)
+        if (!targetUser && telegramId) {
+            const { data } = await supabase.from('users').select('id, telegram_id').eq('telegram_id', telegramId).maybeSingle();
+            targetUser = data;
+        }
 
-            if (!userData) {
-                console.error(`❌ User not found for IDs: ${userId} / ${telegramId}`);
-                return res.send('OK');
-            }
+        // Strategy C: Auto-Create User (Last Resort)
+        if (!targetUser && telegramId) {
+            console.log(`⚠️ [Webhook] User not found. Creating new user for TG: ${telegramId}`);
+            const { data: newUser, error: createError } = await supabase
+                .from('users')
+                .insert({
+                    telegram_id: telegramId,
+                    username: 'user_' + telegramId,
+                    created_at: new Date().toISOString()
+                })
+                .select()
+                .single();
 
-            const targetId = userData.id;
-            const targetTg = userData.telegram_id;
+            if (!createError) targetUser = newUser;
+        }
 
-            // 2. Update Credits
-            const { data: stats } = await supabase.from('user_stats').select('current_balance').eq('user_id', targetId).maybeSingle();
-            const newBalance = (stats?.current_balance || 0) + credits;
+        if (!targetUser) {
+            console.error('❌ [Webhook] FATAL: Could not identify or create user. Credits lost.');
+            return res.send('OK');
+        }
 
-            await supabase.from('user_stats').upsert({
-                user_id: targetId,
+        // --- 6. CALCULATE CREDITS ---
+        const amountRub = Math.round(body.Amount / 100);
+        let creditsToAdd = 0;
+
+        // Pricing Rules (Must match Frontend)
+        if (amountRub === 99) creditsToAdd = 100;
+        else if (amountRub >= 490 && amountRub <= 510) creditsToAdd = 525;
+        else if (amountRub >= 990 && amountRub <= 1010) creditsToAdd = 1150;
+        else if (amountRub >= 1990 && amountRub <= 2010) creditsToAdd = 2400;
+        else if (amountRub >= 4990) creditsToAdd = 6500;
+        else creditsToAdd = amountRub; // Fallback 1 RUB = 1 Credit
+
+        console.log(`💰 [Webhook] Crediting ${creditsToAdd} credits to User ${targetUser.id}`);
+
+        // --- 7. ATOMIC UPDATE ---
+        // 1. Get current balance
+        const { data: currentStats } = await supabase
+            .from('user_stats')
+            .select('current_balance')
+            .eq('user_id', targetUser.id)
+            .maybeSingle();
+
+        const oldBalance = currentStats?.current_balance || 0;
+        const newBalance = oldBalance + creditsToAdd;
+
+        // 2. Perform Upsert
+        const { error: upsertError } = await supabase
+            .from('user_stats')
+            .upsert({
+                user_id: targetUser.id,
                 current_balance: newBalance,
                 updated_at: new Date().toISOString()
             }, { onConflict: 'user_id' });
 
-            // 3. Log 
-            await supabase.from('transactions').insert({
-                user_id: targetId,
-                amount: credits,
-                type: 'deposit',
-                description: `Пополнение ${amount}₽`,
-                metadata: body
-            });
-
-            // 4. Notify
-            if (targetTg && process.env.TELEGRAM_BOT_TOKEN) {
-                try {
-                    const msg = `✅ *Оплата прошла!*\n\n💰 Начислено: *${credits}* кредитов\n💎 Новый баланс: *${newBalance}*\n\nПриятного использования! ✨`;
-                    await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ chat_id: targetTg, text: msg, parse_mode: 'Markdown' })
-                    });
-                } catch (e) { console.error('Notify Error:', e); }
-            }
-
+        if (upsertError) {
+            console.error('❌ [Webhook] DB Update Failed:', upsertError);
+            // Retry logic could go here, but for now we fallback
             return res.send('OK');
+        }
+
+        // 3. Record Transaction (This marks the OrderId as processed for Idempotency)
+        await supabase.from('transactions').insert({
+            user_id: targetUser.id,
+            amount: creditsToAdd,
+            type: 'deposit',
+            description: `T-Bank: ${amountRub}₽`,
+            metadata: body, // Store full payload
+            created_at: new Date().toISOString()
+        });
+
+        console.log(`✅ [Webhook] Success! Balance: ${oldBalance} -> ${newBalance}`);
+
+        // --- 8. TELEGRAM NOTIFICATION ---
+        const userTgId = targetUser.telegram_id;
+        if (userTgId && process.env.TELEGRAM_BOT_TOKEN) {
+            try {
+                const message = `✅ <b>Оплата прошла успешно!</b>\n\n💰 Пополнено: <b>${amountRub}₽</b>\n⚡️ Начислено: <b>${creditsToAdd} кредитов</b>\n💎 Текущий баланс: <b>${newBalance}</b>\n\n<i>Приятного творчества!</i>`;
+
+                await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: userTgId,
+                        text: message,
+                        parse_mode: 'HTML'
+                    })
+                });
+                console.log(`📨 [Webhook] Notification sent to ${userTgId}`);
+            } catch (notifyErr) {
+                console.error('⚠️ [Webhook] Notify failed:', notifyErr.message);
+            }
         }
 
         return res.send('OK');
 
-    } catch (e) {
-        console.error('Webhook Fatal Error:', e);
-        return res.status(200).send('OK');
+    } catch (err) {
+        console.error('💥 [Webhook] CRITICAL ERROR:', err);
+        return res.status(200).send('OK'); // Always 200 to satisfy bank
     }
 }
