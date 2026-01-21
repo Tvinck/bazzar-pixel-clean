@@ -324,18 +324,22 @@ const aiService = {
             const files = options.source_files || [];
 
             // Dual-parameter safety for all image-to-image models
-            // Some versions of Kie API use input_urls, some use image_urls.
-            // Sending both (if not already set specifically) helps avoid "missing param" or "wrong type" errors.
-            if (targetModel.includes('image-to-image') || targetModel.includes('edit')) {
+            // Standardize on image_urls for most, only use input_urls if not google
+            if (targetModel.includes('image-to-image') || targetModel.includes('edit') || targetModel.includes('kling')) {
                 if (files.length > 0) {
-                    normalized.input_urls = files;
                     normalized.image_urls = files;
+                    // Only add input_urls for models that are known to prefer it (DefAPI style / Non-Google)
+                    if (!targetModel.includes('google') && !targetModel.includes('kling')) {
+                        normalized.input_urls = files;
+                    }
                 }
             }
 
             // Singular vs Plural safety (Some newer Kie endpoints for Flux expect singular string)
             if (targetModel.includes('flux') && files.length === 1) {
-                normalized.image_url = files[0]; // Extra safety for Flux 1.1 Pro
+                normalized.image_url = files[0];
+            } else if (targetModel.includes('google') && files.length === 1) {
+                normalized.image_url = files[0]; // Extra safety for some Google Image-to-Image variants
             }
 
             return normalized;

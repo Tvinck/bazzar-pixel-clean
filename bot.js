@@ -708,6 +708,11 @@ app.post('/api/jobs/create', async (req, res) => {
             }
         }
 
+        const finalSourceFiles = processedFiles.filter(f => typeof f === 'string' && f.length > 5);
+
+        // Log for debugging
+        console.log(`📋 Job ${modelId} will use ${finalSourceFiles.length} source files.`);
+
         // 0. Calculate Cost & Check Balance (Server-side Enforcement) BEFORE Insert
         const modelInfo = MODEL_CATALOG[modelId];
         const cost = modelInfo ? modelInfo.cost : 5; // Default cost
@@ -811,7 +816,7 @@ app.post('/api/jobs/create', async (req, res) => {
                     prompt: prompt,
                     model_id: modelId,
                     configuration: configuration || {},
-                    source_files: processedFiles.length > 0 ? processedFiles : [] // Never fallback to Base64
+                    source_files: finalSourceFiles // Use filtered and normalized files
                 })
                 .select()
                 .single();
@@ -842,7 +847,7 @@ app.post('/api/jobs/create', async (req, res) => {
                             prompt: prompt,
                             model_id: modelId,
                             configuration: configuration || {},
-                            source_files: processedFiles.length > 0 ? processedFiles : []
+                            source_files: finalSourceFiles
                         })
                         .select()
                         .single();
