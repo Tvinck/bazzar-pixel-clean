@@ -16,7 +16,7 @@ import { analytics } from '../lib/supabase';
 import { useUser } from '../context/UserContext';
 import { useUserPublicCreations } from '../hooks/useGallery';
 import { useToast } from '../context/ToastContext';
-import PaymentWidget from '../components/PaymentWidget';
+import TBankWidget from '../components/TBankWidget';
 
 const ProfileView = ({ isDark, onOpenPayment }) => {
     const navigate = useNavigate();
@@ -265,10 +265,12 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
                             </button>
                         </div>
                         <div className="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm">
-                            <PaymentWidget
+                            <TBankWidget
                                 amount={paymentAmount}
                                 description={`Пополнение баланса: ${paymentAmount}₽`}
                                 userId={userData?.id}
+                                telegramId={window.Telegram?.WebApp?.initDataUnsafe?.user?.id}
+                                userEmail={email || userData?.email}
                             />
                         </div>
                     </div>
