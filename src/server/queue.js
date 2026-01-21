@@ -33,7 +33,26 @@ export const initQueue = async (bot) => {
 
                 if (!result.success) throw new Error(result.error || 'Generation failed');
 
-                // 2. Notify User (Telegram)
+                // 2. Save to History (DB)
+                if (options.userId) {
+                    const isVideoResult = (type.includes('video') || (result.imageUrl && result.imageUrl.match(/\.(mp4|mov)$/i)));
+
+                    const { error: saveErr } = await supabase.from('creations').insert({
+                        user_id: options.userId,
+                        generation_id: 'job_' + jobId,
+                        title: prompt ? prompt.slice(0, 50) : 'Bot Generation',
+                        description: prompt || 'Created via Bot',
+                        image_url: result.imageUrl,
+                        thumbnail_url: result.imageUrl,
+                        type: isVideoResult ? 'video' : 'image',
+                        prompt: prompt,
+                        is_public: false,
+                        tags: [type, 'bot']
+                    });
+                    if (saveErr) console.error('⚠️ Failed to save bot creation to DB:', saveErr);
+                }
+
+                // 3. Notify User (Telegram)
                 if (options.telegramId && bot) {
                     // Check if it's video by model type or file extension
                     const isVideoModel = type.includes('video') || type.includes('kling') || type.includes('sora') || type.includes('veo');

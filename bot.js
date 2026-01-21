@@ -416,22 +416,46 @@ app.post('/api/jobs/create', async (req, res) => {
         const cost = modelInfo ? modelInfo.cost : 5; // Default cost
 
         // Fetch User Balance
-        const { data: userProfile, error: profileError } = await supabase
+        let { data: userProfile, error: profileError } = await supabase
             .from('profiles')
-            .select('credits')
+            .select('balance')
             .eq('id', userId)
             .single();
 
-        // If user exists, check balance. (Dev/Fallback users might cause profileError, handle gracefully or skip)
+        // Auto-create profile if missing
+        if (!userProfile || profileError) {
+            console.log(`⚠️ User ${userId} profile missing. Auto-creating...`);
+            const { data: newProfile, error: createError } = await supabase
+                .from('profiles')
+                .insert({
+                    id: userId,
+                    username: 'user_' + userId.slice(0, 8),
+                    full_name: 'New User',
+                    balance: 10 // Free credits
+                })
+                .select('balance')
+                .single();
+
+            if (!createError && newProfile) {
+                userProfile = newProfile;
+            } else {
+                console.error('Failed to auto-create profile:', createError);
+                // Proceed without valid profile? No, better create job and handle later
+            }
+        }
+
+        // If user exists, check balance
         if (userProfile) {
-            if (userProfile.credits < cost) {
+            if ((userProfile.balance || 0) < cost) {
                 return res.status(402).json({ error: 'Недостаточно кредитов. Пожалуйста, пополните баланс.' });
             }
 
             // Deduct Credits (Reservation)
+            // Ideally use RPC for atomicity: await supabase.rpc('charge_user_credits', ...)
+            // But for now, direct update to match existing style
             const { error: deductError } = await supabase
                 .from('profiles')
-                .update({ credits: userProfile.credits - cost })
+                .update({ balance: (userProfile.balance || 0) - cost })
                 .eq('id', userId);
 
             if (deductError) {
@@ -439,7 +463,7 @@ app.post('/api/jobs/create', async (req, res) => {
                 return res.status(500).json({ error: 'Payment processing failed' });
             }
         } else {
-            console.warn(`⚠️ User ${userId} profile not found. Skipping payment check (Dev Mode?).`);
+            console.warn(`⚠️ User ${userId} still no profile. Skipping payment check (Free Run).`);
         }
 
         // Create job record with Fallback for Dev Users
