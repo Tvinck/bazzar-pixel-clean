@@ -267,9 +267,10 @@ const aiService = {
             input.resolution = '1K';
 
             if (kieModelId.includes('image-to-image')) {
-                // Flex and Pro img2img use 'input_urls'
+                // Flex and Pro img2img use 'input_urls' or 'image_urls' depending on sub-version
                 if (!hasSourceFiles) throw new Error(`${kieModelId} requires input images.`);
                 input.input_urls = options.source_files;
+                input.image_urls = options.source_files; // Dual-parameter safety
             }
         }
         // --- GROK FAMILY ---
@@ -298,7 +299,8 @@ const aiService = {
             // Kling Motion Control specific inputs
             if (modelId === 'kling_motion_control' && options.video_files?.length > 0) {
                 // Image (input_urls) + Driver Video (video_urls)
-                input.input_urls = options.source_files; // Correct parameter for Image
+                input.input_urls = options.source_files;
+                input.image_urls = options.source_files; // Dual-parameter safety
                 input.video_urls = options.video_files;
                 input.character_orientation = 'video';
                 input.mode = '720p';
@@ -314,7 +316,8 @@ const aiService = {
         else if (kieModelId.startsWith('gpt-image/')) {
             if (kieModelId.includes('image-to-image')) {
                 if (!hasSourceFiles) throw new Error('GPT Image-to-Image requires input images.');
-                input.input_urls = options.source_files; // Docs say 'input_urls'
+                input.input_urls = options.source_files;
+                input.image_urls = options.source_files; // Dual-parameter safety
             }
         }
         // --- FALLBACK / GENERIC ---
