@@ -13,92 +13,91 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    let { paymentId, orderId, userId } = req.body;
+    let { paymentId, orderId, userId } = req.body; // userId might be Telegram ID (int) or UUID
 
-    // 0. Fallback: Find PaymentId by OrderId if missing
-    if (!paymentId && orderId) {
-        console.log(`🔎 Looking up PaymentId for Order: ${orderId}`);
-        const { data: tx } = await supabase
-            .from('transactions')
-            .select('*')
-            .eq('type', 'pending_init')
-            .filter('metadata->>OrderId', 'eq', orderId)
-            .maybeSingle();
-
-        if (tx && tx.metadata?.PaymentId) {
-            paymentId = tx.metadata.PaymentId;
-            console.log(`✅ Found PaymentId: ${paymentId}`);
-            if (!userId && tx.user_id) userId = tx.user_id;
-        }
-    }
-
-    if (!paymentId) return res.status(400).json({ error: 'No PaymentId found' });
+    console.log(`🔎 [Payment Check] Start. Order: ${orderId}, Payment: ${paymentId}, UserRaw: ${userId}`);
 
     try {
-        console.log(`🔎 Checking Payment status for: ${paymentId}`);
+        // 0. Resolve PaymentId via OrderId if needed
+        if (!paymentId && orderId) {
+            const { data: tx } = await supabase
+                .from('transactions')
+                .select('*')
+                .eq('type', 'pending_init')
+                .filter('metadata->>OrderId', 'eq', orderId)
+                .maybeSingle();
 
-        // 1. Generate Token for GetState
-        const tokenParams = {
-            TerminalKey: TERMINAL_KEY,
-            PaymentId: paymentId,
-            Password: PASSWORD
-        };
+            if (tx && tx.metadata?.PaymentId) {
+                paymentId = tx.metadata.PaymentId;
+                // If we found the transaction, we can trust the linked user
+                if (!userId && tx.user_id) userId = tx.user_id;
+            }
+        }
 
+        if (!paymentId) return res.status(400).json({ error: 'No PaymentId found' });
+
+        // 1. Resolve UUID from TelegramID (Critical Fix)
+        // If userId looks like an integer (Telegram ID), we MUST find the UUID
+        if (userId && !String(userId).includes('-') && !isNaN(Number(userId))) {
+            console.log(`🔄 Resolving Telegram ID ${userId} to UUID...`);
+            const { data: u } = await supabase
+                .from('users')
+                .select('id')
+                .eq('telegram_id', userId)
+                .maybeSingle();
+
+            if (u) {
+                userId = u.id;
+                console.log(`✅ Resolved UUID: ${userId}`);
+            } else {
+                console.error(`❌ Could not resolve Telegram ID ${userId} to any user!`);
+                // We cannot credit a ghost.
+                return res.status(400).json({ error: 'User not found' });
+            }
+        }
+
+        // 2. Check Status at Bank
+        console.log(`🏦 Checking T-Bank Status for: ${paymentId}`);
+        const tokenParams = { TerminalKey: TERMINAL_KEY, PaymentId: paymentId, Password: PASSWORD };
         const sortedKeys = Object.keys(tokenParams).sort();
         let tokenStr = '';
-        for (const key of sortedKeys) {
-            tokenStr += String(tokenParams[key]);
-        }
+        for (const key of sortedKeys) tokenStr += String(tokenParams[key]);
         const token = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
-        // 2. Call T-Bank API (GetState)
         const bankResponse = await new Promise((resolve, reject) => {
-            const reqData = JSON.stringify({
-                TerminalKey: TERMINAL_KEY,
-                PaymentId: paymentId,
-                Token: token
-            });
-
+            const reqData = JSON.stringify({ TerminalKey: TERMINAL_KEY, PaymentId: paymentId, Token: token });
             const request = https.request({
                 hostname: 'securepay.tinkoff.ru',
                 path: '/v2/GetState',
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Content-Length': Buffer.byteLength(reqData)
-                }
-            }, (response) => {
-                let data = '';
-                response.on('data', chunk => data += chunk);
-                response.on('end', () => resolve(JSON.parse(data)));
+                headers: { 'Content-Type': 'application/json', 'Content-Length': Buffer.byteLength(reqData) }
+            }, (res) => {
+                let d = '';
+                res.on('data', c => d += c);
+                res.on('end', () => resolve(JSON.parse(d)));
             });
             request.on('error', reject);
             request.write(reqData);
             request.end();
         });
 
-        console.log('🏦 Bank Response:', bankResponse.Status);
+        console.log('🏦 Bank Status:', bankResponse.Status);
 
-        // 3. Check Status
         if (bankResponse.Success && (bankResponse.Status === 'CONFIRMED' || bankResponse.Status === 'AUTHORIZED')) {
-
-            // 4. Ensure Idempotency (Check if already credited)
-            // MUST ignore 'pending_init' records
+            // 3. Idempotency
             const { data: existingTx } = await supabase
                 .from('transactions')
-                .select('*')
+                .select('id')
                 .eq('metadata->>PaymentId', paymentId)
-                .neq('type', 'pending_init') // Fix: Ignore pending
+                .neq('type', 'pending_init')
                 .maybeSingle();
 
             if (existingTx) {
-                console.log('✅ Already credited (Deposit exists). Returning success.');
+                console.log('✅ Already credited.');
                 return res.status(200).json({ success: true, status: 'ALREADY_CREDITED' });
             }
 
-            // 5. User & Credits Calculation
-
-            // Fetch User from request OR from pending transaction
+            // 4. Fallback User Search (if still missing)
             if (!userId) {
                 const { data: pendingTx } = await supabase
                     .from('transactions')
@@ -106,11 +105,12 @@ export default async function handler(req, res) {
                     .eq('metadata->>PaymentId', paymentId)
                     .eq('type', 'pending_init')
                     .maybeSingle();
-                if (pendingTx) userId = pendingTx.user_id;
+                if (pendingTx) userId = pendingTx.user_id; // This should be UUID from init
             }
 
-            if (!userId) return res.status(400).json({ error: 'UserId required for claiming' });
+            if (!userId) return res.status(400).json({ error: 'UserId required' });
 
+            // 5. Calculate Credits
             const amountRub = Math.round(bankResponse.Amount / 100);
             let credits = amountRub;
             if (amountRub === 99) credits = 100;
@@ -121,44 +121,35 @@ export default async function handler(req, res) {
 
             console.log(`💰 Crediting ${credits} to ${userId}`);
 
-            // 6. Perform Transaction
-            const { data: userStats } = await supabase
-                .from('user_stats')
-                .select('current_balance')
-                .eq('user_id', userId)
-                .maybeSingle();
-
+            // 6. DB Updates
+            const { data: userStats } = await supabase.from('user_stats').select('current_balance').eq('user_id', userId).maybeSingle();
             const newBalance = (userStats?.current_balance || 0) + credits;
 
-            await supabase.from('user_stats').upsert({
-                user_id: userId,
-                current_balance: newBalance,
-                updated_at: new Date().toISOString()
-            }, { onConflict: 'user_id' });
+            await supabase.from('user_stats').upsert({ user_id: userId, current_balance: newBalance, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
 
-            // Record Transaction
             await supabase.from('transactions').insert({
                 user_id: userId,
                 amount: credits,
                 type: 'deposit',
-                description: `Manual Check: ${amountRub}₽`,
+                description: `Check: ${amountRub}₽`,
                 metadata: { ...bankResponse, manual_check: true }
             });
 
-            // 7. Notify (Telegram)
+            // 7. Notify
             try {
-                const { data: uData } = await supabase.from('users').select('telegram_id').eq('id', userId).single();
-                if (uData && uData.telegram_id && process.env.TELEGRAM_BOT_TOKEN) {
-                    const message = `✅ <b>Оплата подтверждена!</b>\n\n💰 Пополнено: <b>${amountRub}₽</b>\n⚡️ Начислено: <b>${credits} кредитов</b>\n💎 Текущий баланс: <b>${newBalance}</b>\n\n<i>(Подтверждено при входе)</i>`;
+                const { data: u } = await supabase.from('users').select('telegram_id').eq('id', userId).single();
+                if (u && u.telegram_id && process.env.TELEGRAM_BOT_TOKEN) {
                     await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ chat_id: uData.telegram_id, text: message, parse_mode: 'HTML' })
+                        body: JSON.stringify({
+                            chat_id: u.telegram_id,
+                            text: `✅ <b>Оплата подтверждена!</b>\n\n💰 Пополнено: <b>${amountRub}₽</b>\n⚡️ Начислено: <b>${credits} кредитов</b>`,
+                            parse_mode: 'HTML'
+                        })
                     });
                 }
-            } catch (e) {
-                console.error("Notify failed in check:", e);
-            }
+            } catch (e) { console.error('Notify fail', e); }
 
             return res.status(200).json({ success: true, status: 'CREDITED', newBalance });
         }

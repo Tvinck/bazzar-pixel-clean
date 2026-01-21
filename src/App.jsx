@@ -88,6 +88,17 @@ function AppContent() {
       if (startParam && startParam.startsWith('payment_success')) {
         const parts = startParam.split('__');
         const orderId = parts[1];
+
+        // Immediate check (Fire & Forget insurance)
+        if (orderId) {
+          console.log('🚀 Immediate payment check for:', orderId);
+          fetch('/api/payment-check', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId, userId: tg.user?.id }) // Pass user explicitly from TG
+          }).catch(e => console.error('Immediate check failed', e));
+        }
+
         navigate('/payment/success', { state: { orderId } });
       }
 
