@@ -37,7 +37,6 @@ export default async function handler(req, res) {
         if (!paymentId) return res.status(400).json({ error: 'No PaymentId found' });
 
         // 1. Resolve UUID from TelegramID (Critical Fix)
-        // If userId looks like an integer (Telegram ID), we MUST find the UUID
         if (userId && !String(userId).includes('-') && !isNaN(Number(userId))) {
             console.log(`🔄 Resolving Telegram ID ${userId} to UUID...`);
             const { data: u } = await supabase
@@ -51,7 +50,6 @@ export default async function handler(req, res) {
                 console.log(`✅ Resolved UUID: ${userId}`);
             } else {
                 console.error(`❌ Could not resolve Telegram ID ${userId} to any user!`);
-                // We cannot credit a ghost.
                 return res.status(400).json({ error: 'User not found' });
             }
         }
@@ -84,16 +82,17 @@ export default async function handler(req, res) {
         console.log('🏦 Bank Status:', bankResponse.Status);
 
         if (bankResponse.Success && (bankResponse.Status === 'CONFIRMED' || bankResponse.Status === 'AUTHORIZED')) {
-            // 3. Idempotency (Double Check: PaymentId AND OrderId)
-            const { data: existingTx } = await supabase
-                .from('transactions')
-                .select('id')
-                .eq('type', 'deposit') // Explicitly look for completed deposits
-                .or(`metadata->>PaymentId.eq.${paymentId},metadata->>OrderId.eq.${orderId}`)
-                .maybeSingle();
 
-            if (existingTx) {
-                console.log(`✅ [Payment Check] Transaction overlap found: ${existingTx.id}. Avoiding double credit.`);
+            // 3. Idempotency (SIMPLIFIED & ROBUST)
+            // Separate queries to avoid PostgREST syntax ambiguity
+            const { data: txByPayment } = await supabase.from('transactions')
+                .select('id').eq('type', 'deposit').eq('metadata->>PaymentId', paymentId).maybeSingle();
+
+            const { data: txByOrder } = await supabase.from('transactions')
+                .select('id').eq('type', 'deposit').eq('metadata->>OrderId', orderId).maybeSingle();
+
+            if (txByPayment || txByOrder) {
+                console.log(`✅ [Payment Check] DUPLICATE DETECTED. PaymentId: ${txByPayment?.id}, OrderId: ${txByOrder?.id}`);
                 return res.status(200).json({ success: true, status: 'ALREADY_CREDITED' });
             }
 
@@ -105,7 +104,7 @@ export default async function handler(req, res) {
                     .eq('metadata->>PaymentId', paymentId)
                     .eq('type', 'pending_init')
                     .maybeSingle();
-                if (pendingTx) userId = pendingTx.user_id; // This should be UUID from init
+                if (pendingTx) userId = pendingTx.user_id;
             }
 
             if (!userId) return res.status(400).json({ error: 'UserId required' });
@@ -127,13 +126,18 @@ export default async function handler(req, res) {
 
             await supabase.from('user_stats').upsert({ user_id: userId, current_balance: newBalance, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
 
-            await supabase.from('transactions').insert({
+            // Explicitly save OrderId/PaymentId for search idempotency
+            const { error: txError } = await supabase.from('transactions').insert({
                 user_id: userId,
                 amount: credits,
                 type: 'deposit',
                 description: `Check: ${amountRub}₽`,
-                metadata: { ...bankResponse, manual_check: true }
+                metadata: { ...bankResponse, manual_check: true, OrderId: orderId, PaymentId: paymentId }
             });
+
+            if (txError) {
+                console.error('❌ [Payment Check] CRITICAL: Failed to save DEPOSIT transaction!', txError);
+            }
 
             // 7. Notify
             try {
