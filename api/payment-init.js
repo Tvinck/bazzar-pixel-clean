@@ -102,22 +102,30 @@ export default async function handler(req, res) {
         });
 
         if (responseData.Success) {
-            // FIRE AND FORGET: Save pending transaction so we can verify by OrderId later
+            // FIRE AND FORGET: Save pending transaction
             if (userId) {
-                await supabase.from('transactions').insert({
-                    user_id: userId.length > 20 ? userId : undefined, // Only if UUID
-                    // If user_id is telegram ID string, we might skip direct FK or need mapping. 
-                    // For safety, let's just use metadata to store identifiers if FK fails.
-                    amount: 0,
-                    type: 'pending_init',
-                    description: `Init: ${amount}₽`,
-                    metadata: {
-                        PaymentId: responseData.PaymentId,
-                        OrderId: orderId,
-                        TelegramId: req.body.telegramId
-                    },
-                    created_at: new Date().toISOString()
-                });
+                // Resolve UUID if needed
+                let finalUserId = userId;
+                if (userId && !String(userId).includes('-') && !isNaN(Number(userId))) {
+                    const { data: u } = await supabase.from('users').select('id').eq('telegram_id', userId).maybeSingle();
+                    if (u) finalUserId = u.id;
+                    else finalUserId = null; // Can't link to db yet
+                }
+
+                if (finalUserId) {
+                    await supabase.from('transactions').insert({
+                        user_id: finalUserId,
+                        amount: 0,
+                        type: 'pending_init',
+                        description: `Init: ${amount}₽`,
+                        metadata: {
+                            PaymentId: responseData.PaymentId,
+                            OrderId: orderId,
+                            TelegramId: req.body.telegramId
+                        },
+                        created_at: new Date().toISOString()
+                    }).catch(err => console.error('Pending Tx Save Error:', err));
+                }
             }
 
             return res.json({
