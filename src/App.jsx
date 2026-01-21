@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense, useCallback } from 'react';
+import React, { useState, useEffect, Suspense, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
@@ -47,6 +47,9 @@ function AppContent() {
   const [isOnboardingVisible, setIsOnboardingVisible] = useState(false);
   const { stats } = useUser();
 
+  // Ref to prevent deep link loop
+  const hasHandledDeepLink = useRef(false);
+
   // Layout Logic
   const mainTabs = ['/', '/gallery', '/history', '/profile'];
   console.log('📍 Path:', location.pathname, 'Onboarding:', isOnboardingVisible);
@@ -83,28 +86,24 @@ function AppContent() {
       const tg = window.Telegram.WebApp;
       setTelegramUser(tg.initDataUnsafe?.user);
 
-      // Check for start_param (Deep Linking)
-      // Check for start_param (Deep Linking)
-      const startParam = tg.initDataUnsafe?.start_param;
-      if (startParam && startParam.startsWith('payment_success')) {
-        const parts = startParam.split('__');
-        const orderId = parts[1];
+      // Check for start_param (Deep Linking) - ONCE PER SESSION
+      if (!hasHandledDeepLink.current) {
+        const startParam = tg.initDataUnsafe?.start_param;
 
-        // Check if already processed locally to prevent loop
-        const processed = JSON.parse(localStorage.getItem('processed_orders') || '[]');
-        if (processed.includes(orderId)) {
-          console.log('⚠️ Order already processed locally, skipping check:', orderId);
-          // Clear clean URL if possible or just ignore
-          navigate('/profile');
-        } else {
-          // Mark as processed immediately to prevent double-fire during nav
-          // We will remove it if it fails? No, better safe than infinite loop.
-          // Actually, let PaymentSuccessView handle the 'success' confirmation.
-          // But we need to prevent App.jsx from firing again if we reload.
+        if (startParam && startParam.startsWith('payment_success')) {
+          hasHandledDeepLink.current = true; // Gatekeeper
 
+          const parts = startParam.split('__');
+          const orderId = parts[1];
 
-
-          navigate('/payment/success', { state: { orderId } });
+          // Check if already processed locally to prevent loop
+          const processed = JSON.parse(localStorage.getItem('processed_orders') || '[]');
+          if (processed.includes(orderId)) {
+            console.log('⚠️ Order already processed locally, skipping check:', orderId);
+            navigate('/profile');
+          } else {
+            navigate('/payment/success', { state: { orderId } });
+          }
         }
       }
 
@@ -310,8 +309,6 @@ function AppContent() {
     </div>
   );
 }
-
-
 
 function App() {
   return (
