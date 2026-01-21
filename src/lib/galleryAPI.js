@@ -47,21 +47,12 @@ export const galleryAPI = {
         }
     },
 
-    // Get templates
+    // Get templates (via Proxy to bypass CORS)
     async getTemplates(category = 'all') {
         try {
-            let query = supabase
-                .from('templates')
-                .select('*')
-            // .order('created_at', { ascending: false }); // Optional: ordering
-
-            if (category !== 'all') {
-                query = query.eq('category', category);
-            }
-
-            const { data, error } = await query;
-
-            if (error) throw error;
+            const res = await fetch(`/api/templates?category=${category}`);
+            if (!res.ok) throw new Error('Failed to fetch templates via proxy');
+            const data = await res.json();
 
             // Map snake_case from DB to camelCase for frontend
             return (data || []).map(item => ({
