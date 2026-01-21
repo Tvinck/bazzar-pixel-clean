@@ -341,7 +341,8 @@ app.post('/api/jobs/create', async (req, res) => {
 
                         const type = matches[1];
                         const buffer = Buffer.from(matches[2], 'base64');
-                        const ext = type.split('/')[1] || 'png';
+                        let ext = type.split('/')[1] || 'png';
+                        if (ext === 'jpeg') ext = 'jpg'; // Kie.ai compatibility
                         const filename = `uploads/gen_src_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
                         const { error: uploadError } = await supabase.storage
@@ -426,47 +427,47 @@ app.post('/api/jobs/create', async (req, res) => {
         const cost = modelInfo ? modelInfo.cost : 5; // Default cost
 
         // Fetch User Balance
-        let { data: userProfile, error: profileError } = await supabase
-            .from('profiles')
-            .select('balance')
-            .eq('id', userId)
+        let { data: userStats, error: statsError } = await supabase
+            .from('user_stats')
+            .select('current_balance')
+            .eq('user_id', userId)
             .single();
 
-        // Auto-create profile if missing
-        if (!userProfile || profileError) {
-            console.log(`⚠️ User ${userId} profile missing. Auto-creating...`);
-            const { data: newProfile, error: createError } = await supabase
-                .from('profiles')
+        // 0.5 Auto-create user_stats if missing
+        if (!userStats || statsError) {
+            console.log(`⚠️ User ${userId} stats missing. Auto-creating in user_stats...`);
+            const { data: newStats, error: createError } = await supabase
+                .from('user_stats')
                 .insert({
-                    id: userId,
-                    username: 'user_' + userId.slice(0, 8),
-                    full_name: 'New User',
-                    balance: 10 // Free credits
+                    user_id: userId,
+                    current_balance: 10 // Free credits
                 })
-                .select('balance')
+                .select('current_balance')
                 .single();
 
-            if (!createError && newProfile) {
-                userProfile = newProfile;
+            if (!createError && newStats) {
+                userStats = newStats;
             } else {
-                console.error('Failed to auto-create profile:', createError);
-                // Proceed without valid profile? No, better create job and handle later
+                console.error(`❌ User Stats Creation Failed: User ID ${userId} must exist in 'users' table first.`);
+                return res.status(401).json({
+                    error: 'Account setup incomplete. Please restart the app from Telegram.',
+                    details: createError?.message
+                });
             }
         }
 
-        // If user exists, check balance
-        if (userProfile) {
-            if ((userProfile.balance || 0) < cost) {
+        // If user stats exists, check balance
+        if (userStats) {
+            const currentBalance = userStats.current_balance || 0;
+            if (currentBalance < cost) {
                 return res.status(402).json({ error: 'Недостаточно кредитов. Пожалуйста, пополните баланс.' });
             }
 
             // Deduct Credits (Reservation)
-            // Ideally use RPC for atomicity: await supabase.rpc('charge_user_credits', ...)
-            // But for now, direct update to match existing style
             const { error: deductError } = await supabase
-                .from('profiles')
-                .update({ balance: (userProfile.balance || 0) - cost })
-                .eq('id', userId);
+                .from('user_stats')
+                .update({ current_balance: currentBalance - cost })
+                .eq('user_id', userId);
 
             if (deductError) {
                 console.error('Payment Error:', deductError);

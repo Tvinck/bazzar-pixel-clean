@@ -75,13 +75,17 @@ language plpgsql
 security definer set search_path = public
 as $$
 begin
-  insert into public.profiles (id, full_name, avatar_url, role, balance)
+  -- 1. Create Base Stats
+  insert into public.user_stats (user_id, current_balance)
+  values (new.id, 10);
+  
+  -- 2. Create Profile (for non-TG info if needed)
+  insert into public.profiles (id, username, full_name, role)
   values (
       new.id, 
-      new.raw_user_meta_data->>'full_name', 
-      new.raw_user_meta_data->>'avatar_url', 
-      'user', 
-      10 -- Give 10 free credits on sign up
+      new.username,
+      new.first_name || ' ' || coalesce(new.last_name, ''),
+      'user'
   );
   return new;
 end;

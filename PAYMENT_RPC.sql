@@ -9,15 +9,15 @@ declare
   current_bal int;
 begin
   -- Блокируем строку для избежания гонки
-  select balance into current_bal from profiles where id = p_user_id for update;
+  select current_balance into current_bal from user_stats where user_id = p_user_id for update;
   
   if current_bal is null or current_bal < p_amount then
     return false;
   end if;
 
-  update profiles 
-  set balance = balance - p_amount 
-  where id = p_user_id;
+  update user_stats 
+  set current_balance = current_balance - p_amount 
+  where user_id = p_user_id;
 
   -- Логируем транзакцию (опционально, создайте таблицу transactions если её нет)
   -- insert into transactions (user_id, amount, type) values (p_user_id, -p_amount, 'spend');
@@ -47,8 +47,8 @@ language plpgsql
 security definer
 as $$
 begin
-  update profiles 
-  set balance = balance + p_amount 
-  where id = p_user_id;
+  update user_stats 
+  set current_balance = current_balance + p_amount 
+  where user_id = p_user_id;
 end;
 $$;
