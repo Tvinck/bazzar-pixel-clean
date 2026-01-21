@@ -380,8 +380,9 @@ app.post('/api/jobs/create', async (req, res) => {
                             processedFiles.push(publicData.publicUrl);
                         }
                     } catch (err) {
-                        console.error('File Processing Error:', err);
-                        processedFiles.push(fileItem);
+                        console.error('File Processing Error (Upload skipped):', err);
+                        // Do NOT push the original fileItem if it was a data URI,
+                        // as Kie.ai will fail on the base64 string.
                     }
                 } else {
                     processedFiles.push(fileItem);
@@ -427,7 +428,6 @@ app.post('/api/jobs/create', async (req, res) => {
                         } else {
                             // File not found locally
                             console.warn('Template video not found locally:', localPath);
-                            newVideoFiles.push(vid);
                         }
                     } catch (e) {
                         console.error('Video process error:', e);
@@ -437,7 +437,10 @@ app.post('/api/jobs/create', async (req, res) => {
                     newVideoFiles.push(vid);
                 }
             }
-            configuration.video_files = newVideoFiles;
+            // CRITICAL: Update configuration with the new Supabase URLs
+            if (newVideoFiles.length > 0) {
+                configuration.video_files = newVideoFiles;
+            }
         }
 
         // 0. Calculate Cost & Check Balance (Server-side Enforcement) BEFORE Insert
