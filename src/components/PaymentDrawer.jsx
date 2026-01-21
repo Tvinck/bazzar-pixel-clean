@@ -150,7 +150,9 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                 onClose();
             } else {
                 console.error('Payment Init Failed:', data);
-                alert('Ошибка создания платежа: ' + (data.error || 'Неизвестная ошибка'));
+                // Enhanced Error Alert
+                const details = data.details ? JSON.stringify(data.details) : '';
+                alert(`Ошибка платежа: ${data.error}\n${details}`);
             }
         } catch (error) {
             console.error('Network Error:', error);
