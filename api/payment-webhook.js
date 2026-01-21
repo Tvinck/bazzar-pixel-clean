@@ -6,7 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 const SUPABASE_URL = 'https://ktookvpqtmzfccojarwm.supabase.co';
 // Using the Service Role Key (starts with eyJ... and allows bypassing RLS for admin tasks)
 const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODMxMzc2NSwiZXhwIjoyMDgzODg5NzY1fQ.L99oEJS40e0R_l05Jm2kZkItJKdaPAEYrGM0WQ0y08Y';
-const T_BANK_PASSWORD = '7XEqsWfjryCnqCck'; // Production Password
+const T_BANK_PASSWORD = 'DFgxaoJ38xAjUrsJ'; // Demo Password
 
 // Initialize Supabase Admin
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {

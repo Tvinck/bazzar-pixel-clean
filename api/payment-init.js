@@ -22,9 +22,9 @@ export default async function handler(req, res) {
     try {
         const { amount, description, userId, userEmail } = req.body;
 
-        // PRODUCTION CREDENTIALS
-        const TERMINAL_KEY = '1768938209983';
-        const PASSWORD = '7XEqsWfjryCnqCck';
+        // DEMO CREDENTIALS
+        const TERMINAL_KEY = '1768938209941DEMO';
+        const PASSWORD = 'DFgxaoJ38xAjUrsJ';
 
         // 1. Prepare Data
         const amountKopeeks = Math.round(Number(amount) * 100);

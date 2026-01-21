@@ -4,7 +4,7 @@ import { createClient } from '@supabase/supabase-js';
 // --- CONFIGURATION ---
 const SUPABASE_URL = 'https://ktookvpqtmzfccojarwm.supabase.co';
 const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODMxMzc2NSwiZXhwIjoyMDgzODg5NzY1fQ.L99oEJS40e0R_l05Jm2kZkItJKdaPAEYrGM0WQ0y08Y';
-const T_BANK_PASSWORD = '7XEqsWfjryCnqCck';
+const T_BANK_PASSWORD = 'DFgxaoJ38xAjUrsJ';
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
 // Initialize Supabase
