@@ -1,10 +1,18 @@
 
+import { createClient } from '@supabase/supabase-js';
+
 // Track processed updates
 const processedUpdates = new Set();
 const MAX_CACHE_SIZE = 1000;
 
 // Import bot token
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+
+// Supabase client (hardcoded for reliability)
+const SUPABASE_URL = 'https://ktookvpqtmzfccojarwm.supabase.co';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODMxMzc2NSwiZXhwIjoyMDgzODg5NzY1fQ.L99oEJS40e0R_l05Jm2kZkItJKdaPAEYrGM0WQ0y08Y';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 // Text constants (from bot.js)
 const welcomeMessage = `
@@ -114,7 +122,31 @@ export default async function handler(req, res) {
                     }
                 });
             } else if (text === 'Баланс ⚡') {
-                await sendMessage(chatId, balanceMessage, {
+                // Fetch real balance from Supabase
+                const telegramId = msg.from.id;
+                let balance = 0;
+
+                try {
+                    const { data: profile } = await supabase
+                        .from('profiles')
+                        .select('balance')
+                        .eq('telegram_id', telegramId)
+                        .maybeSingle();
+
+                    balance = profile?.balance || 0;
+                } catch (err) {
+                    console.error('Balance fetch error:', err);
+                }
+
+                const dynamicBalanceMessage = `🌟 *Ваш баланс: ${balance} кредитов.*
+
+Стоимость генерации:
+- Фото: 5 кредитов
+- Видео: от 15 кредитов (зависит от модели)
+
+Выберите способ пополнения.`;
+
+                await sendMessage(chatId, dynamicBalanceMessage, {
                     reply_markup: {
                         inline_keyboard: [
                             [{ text: 'Пополнить баланс 💰', callback_data: 'pay_sbp' }]
