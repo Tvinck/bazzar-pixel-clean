@@ -23,30 +23,36 @@ export default async function handler(req, res) {
 
         // 1. Prepare Data
         const amountKopeeks = Math.round(Number(amount) * 100);
-        // Pure numeric OrderId (max 20 chars)
         const orderId = `${Date.now()}${Math.floor(Math.random() * 1000)}`.slice(0, 20);
+        const desc = (description || 'Pixel AI Credits').slice(0, 250);
 
-        // 2. Token calculation (Strict fields order per T-Bank V2)
+        // 2. Token calculation
+        // Tinkoff Rule: All root params except Token and DATA + Password. Sort keys.
         const tokenParams = {
             TerminalKey: TERMINAL_KEY,
             Amount: amountKopeeks,
             OrderId: orderId,
+            Description: desc,
             Password: PASSWORD
         };
 
-        const keys = Object.keys(tokenParams).sort();
+        const sortedKeys = Object.keys(tokenParams).sort();
         let tokenStr = '';
-        for (const key of keys) {
+        for (const key of sortedKeys) {
             tokenStr += String(tokenParams[key]);
         }
+
+        // Log the string for deep debugging
+        console.log('Token String (DEBUG):', tokenStr);
+
         const token = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
-        // 3. Final Request Body (Only what we signed + Token + DATA)
+        // 3. Final Request Body
         const requestBody = {
             TerminalKey: TERMINAL_KEY,
             Amount: amountKopeeks,
             OrderId: orderId,
-            Description: (description || 'Pixel AI Credits').slice(0, 250),
+            Description: desc,
             Token: token,
             DATA: {
                 userId: userId,
