@@ -32,14 +32,14 @@ export default async function handler(req, res) {
         console.log('📩 Processing Update:', updateId);
 
         // CRITICAL FIX: Manually emit events and WAIT for handlers
-        // processUpdate() doesn't wait for async handlers to complete
+        // Increased timeout to 5s to ensure Telegram API calls complete
 
         if (update.message) {
             // Emit 'message' event and wait for all listeners
             await new Promise((resolve) => {
                 bot.emit('message', update.message);
-                // Give handlers time to execute (they're async)
-                setTimeout(resolve, 1000);
+                // Give handlers time to execute AND send to Telegram
+                setTimeout(resolve, 5000);
             });
         }
 
@@ -47,7 +47,7 @@ export default async function handler(req, res) {
             // Emit 'callback_query' event and wait
             await new Promise((resolve) => {
                 bot.emit('callback_query', update.callback_query);
-                setTimeout(resolve, 1000);
+                setTimeout(resolve, 5000);
             });
         }
 
