@@ -636,9 +636,12 @@ async function processJobAsync(jobId) {
                     user_id: job.user_id,
                     image_url: result.imageUrl,
                     prompt: job.prompt,
-                    model: job.model_id,
-                    parameters: job.configuration || {},
-                    generation_id: generationId // Link to job if possible
+                    title: job.prompt ? job.prompt.substring(0, 30) : 'Bot Gen',
+                    description: job.prompt || 'Generated content',
+                    type: (job.job_type && job.job_type.includes('video')) ? 'video' : 'image',
+                    tags: [job.model_id],
+                    generation_id: generationId,
+                    is_public: false
                 });
 
                 if (creationError) {
@@ -649,8 +652,11 @@ async function processJobAsync(jobId) {
                             user_id: job.user_id,
                             image_url: result.imageUrl,
                             prompt: job.prompt,
-                            model: job.model_id,
-                            parameters: job.configuration || {}
+                            title: job.prompt ? job.prompt.substring(0, 30) : 'Bot Gen',
+                            description: job.prompt || 'Generated content',
+                            type: (job.job_type && job.job_type.includes('video')) ? 'video' : 'image',
+                            tags: [job.model_id],
+                            is_public: false
                         });
                     }
                 } else {
