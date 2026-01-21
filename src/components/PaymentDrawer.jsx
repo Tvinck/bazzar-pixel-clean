@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronRight, Zap, ShieldCheck, X, CreditCard, TicketPercent, Wallet, Gift, Star } from 'lucide-react';
 import { useSound } from '../context/SoundContext';
+import { useUser } from '../context/UserContext';
 import { TBankLogo, VisaLogo, MastercardLogo, MIRLogo, SBPLogo } from './PaymentLogos';
 
 const PLANS = [
@@ -67,6 +68,8 @@ const PLANS = [
 
 const PaymentDrawer = ({ isOpen, onClose }) => {
     const { playClick, playSuccess } = useSound();
+    const { user } = useUser();
+    const [isLoading, setIsLoading] = useState(false);
     const [selectedPlan, setSelectedPlan] = useState(null);
     const [termsAccepted, setTermsAccepted] = useState(false);
     const [billingCycle, setBillingCycle] = useState('monthly'); // monthly | yearly
@@ -109,14 +112,51 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
         }
     };
 
-    const handlePurchase = () => {
+    const handlePurchase = async () => {
         if (!termsAccepted) return;
         if (selectedPlan.isSubscription && !subscriptionAccepted) return;
+        if (!user?.id) {
+            alert('Ошибка: Пользователь не найден. Попробуйте перезайти.');
+            return;
+        }
 
-        playSuccess();
+        setIsLoading(true);
+        playSuccess(); // Feedback sound
+
         const finalPrice = isPromoApplied ? Math.round(getPrice(selectedPlan) * 0.9) : getPrice(selectedPlan);
-        alert(`Initiating purchase for ${selectedPlan.name}... Total: ${finalPrice}₽. This is a demo.`);
-        onClose();
+
+        try {
+            const res = await fetch('/api/payment-init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    amount: finalPrice,
+                    description: `Pixel AI: ${selectedPlan.name}`,
+                    userEmail: user.email || 'no-email@telegram.org'
+                })
+            });
+
+            const data = await res.json();
+
+            if (data.paymentUrl) {
+                // Open Payment Link
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.openLink(data.paymentUrl);
+                } else {
+                    window.location.href = data.paymentUrl;
+                }
+                onClose();
+            } else {
+                console.error('Payment Init Failed:', data);
+                alert('Ошибка создания платежа: ' + (data.error || 'Неизвестная ошибка'));
+            }
+        } catch (error) {
+            console.error('Network Error:', error);
+            alert('Ошибка сети. Проверьте соединение.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -334,13 +374,13 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                 <div className="absolute bottom-0 left-0 w-full p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 z-50">
                                     <button
                                         onClick={handlePurchase}
-                                        disabled={!termsAccepted || (selectedPlan.isSubscription && !subscriptionAccepted)}
-                                        className={`w-full py-4 rounded-2xl font-bold text-lg shadow-xl shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 ${termsAccepted && (!selectedPlan.isSubscription || subscriptionAccepted)
+                                        disabled={!termsAccepted || (selectedPlan.isSubscription && !subscriptionAccepted) || isLoading}
+                                        className={`w-full py-4 rounded-2xl font-bold text-lg shadow-xl shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 ${termsAccepted && (!selectedPlan.isSubscription || subscriptionAccepted) && !isLoading
                                             ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 scale-100 opacity-100'
                                             : 'bg-slate-200 dark:bg-slate-800 text-slate-400 scale-95 opacity-80 cursor-not-allowed'
                                             }`}
                                     >
-                                        Оплатить {isPromoApplied ? Math.round(getPrice(selectedPlan) * 0.9) : getDisplayPrice(selectedPlan)}
+                                        {isLoading ? 'Загрузка...' : `Оплатить ${isPromoApplied ? Math.round(getPrice(selectedPlan) * 0.9) : getDisplayPrice(selectedPlan)}`}
                                     </button>
                                 </div>
                             </div>
