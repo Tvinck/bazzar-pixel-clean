@@ -29,7 +29,7 @@ const TBankWidget = ({ amount, description, userId, telegramId, userEmail, onSuc
     const initWidget = async () => {
         try {
             const initConfig = {
-                terminalKey: '1768938209941DEMO',
+                terminalKey: '1768938209983',
                 product: 'eacq',
                 features: {
                     payment: {

@@ -20,8 +20,8 @@ export default async function handler(req, res) {
 
         if (!body.Token) return res.send('OK');
 
-        // 1. PASSWORD (DEMO) -> Must match payment-init.js
-        const PASSWORD = 'DFgxaoJ38xAjUrsJ';
+        // 1. PASSWORD (PROD) -> Must match payment-init.js
+        const PASSWORD = '7XEqsWfjryCnqCck';
 
         // 2. Validate Token (Correct Algorithm V2: Password in params)
         const receivedToken = body.Token;
