@@ -102,15 +102,7 @@ function AppContent() {
           // Actually, let PaymentSuccessView handle the 'success' confirmation.
           // But we need to prevent App.jsx from firing again if we reload.
 
-          // Immediate check (Fire & Forget insurance)
-          if (orderId) {
-            console.log('🚀 Immediate payment check for:', orderId);
-            fetch('/api/payment-check', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ orderId, userId: tg.user?.id })
-            }).catch(e => console.error('Immediate check failed', e));
-          }
+
 
           navigate('/payment/success', { state: { orderId } });
         }
