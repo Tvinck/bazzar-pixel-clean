@@ -25,16 +25,20 @@ export default async function handler(req, res) {
         const amountKopeeks = Math.round(Number(amount) * 100);
         const orderId = `${Date.now()}${Math.floor(Math.random() * 1000)}`.slice(0, 20);
         const desc = (description || 'Pixel AI Credits').slice(0, 250);
+        const host = req.headers.host || 'bazzar-pixel-clean-4zm4.vercel.app';
+        const protocol = host.includes('localhost') ? 'http' : 'https';
+        const baseUrl = `${protocol}://${host}`;
 
-        // 2. Build Request Body (with Receipt for FZ-54)
+        // 2. Build Request Body
         const requestBody = {
             TerminalKey: TERMINAL_KEY,
             Amount: amountKopeeks,
             OrderId: orderId,
             Description: desc,
-            NotificationURL: 'https://bazzar-pixel-clean-4zm4.vercel.app/api/payment-webhook',
-            SuccessURL: `https://${req.headers.host}/profile`,
-            FailURL: `https://${req.headers.host}/profile`,
+            NotificationURL: `${baseUrl}/api/payment-webhook`,
+            SuccessURL: `${baseUrl}/profile`,
+            FailURL: `${baseUrl}/profile`,
+            CustomerKey: userId || 'guest',
             DATA: {
                 userId: userId,
                 telegramId: req.body.telegramId,
@@ -42,27 +46,25 @@ export default async function handler(req, res) {
             },
             Receipt: {
                 Email: userEmail || 'customer@example.com',
-                Taxation: 'usn_income', // Используйте usn_income даже для АУСН (согласно API Т-Банка)
+                Taxation: 'usn_income',
                 Items: [
                     {
-                        Name: desc,
+                        Name: desc.slice(0, 100),
                         Price: amountKopeeks,
                         Quantity: 1.00,
                         Amount: amountKopeeks,
                         PaymentMethod: 'full_prepayment',
                         PaymentObject: 'service',
-                        Tax: 'none' // Без НДС
+                        Tax: 'none'
                     }
                 ]
             }
         };
 
         // 3. Token calculation 
-        // Tinkoff Rule: Only FIRST-LEVEL params, skip Objects (Receipt, DATA), skip Token. 
-        // Add Password at the end.
         const tokenParams = {};
         for (const key in requestBody) {
-            if (key === 'Token' || key === 'DATA' || key === 'Receipt') continue;
+            if (['Token', 'DATA', 'Receipt'].includes(key)) continue;
             tokenParams[key] = requestBody[key];
         }
         tokenParams.Password = PASSWORD;

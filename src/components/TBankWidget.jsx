@@ -1,18 +1,24 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 /**
- * T-Bank (Tinkoff) Payment Widget Component
+ * Premium T-Bank (Tinkoff) Payment Widget
+ * Supports native buttons (SBP, T-Pay, etc.) and iframe fallback
  */
-const TBankWidget = ({ amount, description, userId, telegramId, userEmail, onSuccess }) => {
+const TBankWidget = ({ amount, description, userId, telegramId, userEmail }) => {
     const containerRef = useRef(null);
     const [isLoaded, setIsLoaded] = useState(false);
+    const [error, setError] = useState(null);
     const integrationRef = useRef(null);
 
     useEffect(() => {
-        // 1. Check if integration script is loaded
+        let attempts = 0;
         const checkScript = setInterval(() => {
+            attempts++;
             if (window.PaymentIntegration) {
                 setIsLoaded(true);
+                clearInterval(checkScript);
+            } else if (attempts > 20) {
+                setError('Не удалось загрузить платежный модуль');
                 clearInterval(checkScript);
             }
         }, 500);
@@ -35,7 +41,6 @@ const TBankWidget = ({ amount, description, userId, telegramId, userEmail, onSuc
                     payment: {
                         container: containerRef.current,
                         paymentStartCallback: async () => {
-                            // Call our backend to get PaymentURL
                             const res = await fetch('/api/payment-init', {
                                 method: 'POST',
                                 headers: { 'Content-Type': 'application/json' },
@@ -49,42 +54,52 @@ const TBankWidget = ({ amount, description, userId, telegramId, userEmail, onSuc
                             });
 
                             const data = await res.json();
-
-                            if (data.paymentUrl) {
-                                return data.paymentUrl;
-                            } else {
-                                throw new Error(data.error || 'Failed to init payment');
-                            }
+                            if (data.paymentUrl) return data.paymentUrl;
+                            throw new Error(data.error || 'Ошибка инициализации');
                         }
+                    },
+                    iframe: {
+                        // Support for card payments in iframe if buttons fail
+                        container: null
                     }
                 }
             };
 
             const integration = await window.PaymentIntegration.init(initConfig);
             integrationRef.current = integration;
-            console.log('✅ T-Bank Widget Initialized');
+            console.log('✅ T-Bank Widget Ready');
         } catch (err) {
-            console.error('❌ T-Bank Widget Init Error:', err);
+            console.error('❌ T-Bank Widget Error:', err);
+            setError('Ошибка инициализации виджета');
         }
     };
 
     return (
-        <div className="w-full mt-4">
-            <div
-                ref={containerRef}
-                id="tbank-payment-container"
-                className="min-h-[100px] flex items-center justify-center bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-dashed border-slate-300 dark:border-slate-600"
-            >
-                {!isLoaded && (
-                    <div className="flex flex-col items-center gap-2">
-                        <div className="w-6 h-6 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-xs text-slate-500 font-medium">Загрузка виджета оплат...</span>
-                    </div>
-                )}
+        <div className="w-full mt-6 space-y-4">
+            {error ? (
+                <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-500 text-xs text-center font-medium">
+                    {error}
+                </div>
+            ) : (
+                <div
+                    ref={containerRef}
+                    id="paymentContainer"
+                    className="payment-widget-container transition-all duration-500 min-h-[60px]"
+                >
+                    {!isLoaded && (
+                        <div className="flex flex-col items-center justify-center p-8 gap-3 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 animate-pulse">
+                            <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
+                            <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Инициализация оплаты...</span>
+                        </div>
+                    )}
+                </div>
+            )}
+
+            <div className="flex items-center justify-center gap-2 py-2">
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent"></div>
+                <span className="text-[10px] text-slate-400 font-medium px-2">Защищено Т-Банк</span>
+                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent"></div>
             </div>
-            <p className="text-[10px] text-center text-slate-400 mt-2">
-                Безопасная оплата через Т-Банк (Тинькофф)
-            </p>
         </div>
     );
 };
