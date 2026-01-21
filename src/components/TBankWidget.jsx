@@ -1,107 +1,88 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useState } from 'react';
 
 /**
- * Premium T-Bank (Tinkoff) Payment Widget
- * Supports native buttons (SBP, T-Pay, etc.) and iframe fallback
+ * Simple T-Bank Payment Button
+ * Opens the official payment page in a new window/tab
  */
 const TBankWidget = ({ amount, description, userId, telegramId, userEmail }) => {
-    const containerRef = useRef(null);
-    const [isLoaded, setIsLoaded] = useState(false);
+    const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
-    const integrationRef = useRef(null);
 
-    useEffect(() => {
-        let attempts = 0;
-        const checkScript = setInterval(() => {
-            attempts++;
-            if (window.PaymentIntegration) {
-                setIsLoaded(true);
-                clearInterval(checkScript);
-            } else if (attempts > 20) {
-                setError('Не удалось загрузить платежный модуль');
-                clearInterval(checkScript);
-            }
-        }, 500);
-
-        return () => clearInterval(checkScript);
-    }, []);
-
-    useEffect(() => {
-        if (isLoaded && containerRef.current && !integrationRef.current) {
-            initWidget();
-        }
-    }, [isLoaded]);
-
-    const initWidget = async () => {
+    const handlePayment = async () => {
+        setLoading(true);
+        setError(null);
         try {
-            const initConfig = {
-                terminalKey: '1768938209983',
-                product: 'eacq',
-                methods: ['sbp', 'tinkoff_pay', 'card'],
-                features: {
-                    payment: {
-                        container: containerRef.current,
-                        methods: ['sbp', 'tinkoff_pay', 'card'],
-                        paymentStartCallback: async () => {
-                            const res = await fetch('/api/payment-init', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({
-                                    amount,
-                                    description,
-                                    userId,
-                                    telegramId,
-                                    userEmail
-                                })
-                            });
+            const res = await fetch('/api/payment-init', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    amount,
+                    description,
+                    userId,
+                    telegramId,
+                    userEmail
+                })
+            });
 
-                            const data = await res.json();
-                            if (data.paymentUrl) return data.paymentUrl;
-                            throw new Error(data.error || 'Ошибка инициализации');
-                        }
-                    },
-                    iframe: {
-                        container: null
-                    }
+            const data = await res.json();
+
+            if (data.paymentUrl) {
+                // Open the payment page directly
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.openLink(data.paymentUrl);
+                } else {
+                    window.open(data.paymentUrl, '_blank');
                 }
-            };
-
-            const integration = await window.PaymentIntegration.init(initConfig);
-            integrationRef.current = integration;
-
-            console.log('✅ T-Bank Integration Object:', integration);
-            console.log('✅ Available methods:', integration.methods || 'auto');
+            } else {
+                setError(data.error || 'Ошибка при создании платежа');
+            }
         } catch (err) {
-            console.error('❌ T-Bank Widget Error:', err);
-            setError('Ошибка инициализации виджета');
+            console.error('Payment Error:', err);
+            setError('Не удалось связаться с банком');
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
-        <div className="w-full mt-6 space-y-4">
-            {error ? (
-                <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 text-red-500 text-xs text-center font-medium">
+        <div className="w-full mt-4 space-y-3">
+            <button
+                onClick={handlePayment}
+                disabled={loading}
+                className={`
+                    w-full py-4 px-6 rounded-2xl flex items-center justify-center gap-3
+                    text-base font-bold transition-all active:scale-[0.98]
+                    ${loading
+                        ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 cursor-not-allowed'
+                        : 'bg-[#FFDD2D] text-[#000000] hover:bg-[#FFD200] shadow-lg shadow-yellow-500/20'
+                    }
+                `}
+            >
+                {loading ? (
+                    <>
+                        <div className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin"></div>
+                        <span>Создание счета...</span>
+                    </>
+                ) : (
+                    <>
+                        <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                            <path d="M20 4H4C2.89 4 2.01 4.89 2.01 6L2 18C2 19.11 2.89 20 4 20H20C21.11 20 22 19.11 22 18V6C22 4.89 21.11 4 20 4ZM20 18H4V12H20V18ZM20 8H4V6H20V8Z" fill="currentColor" />
+                        </svg>
+                        <span>Оплатить картой / СБП</span>
+                    </>
+                )}
+            </button>
+
+            {error && (
+                <p className="text-[11px] text-red-500 text-center font-medium bg-red-50 dark:bg-red-900/20 py-2 rounded-xl border border-red-100 dark:border-red-900/10">
                     {error}
-                </div>
-            ) : (
-                <div
-                    ref={containerRef}
-                    id="paymentContainer"
-                    className="payment-widget-container transition-all duration-500 min-h-[60px]"
-                >
-                    {!isLoaded && (
-                        <div className="flex flex-col items-center justify-center p-8 gap-3 bg-slate-50 dark:bg-slate-800/50 rounded-3xl border border-dashed border-slate-300 dark:border-slate-700 animate-pulse">
-                            <div className="w-8 h-8 border-3 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                            <span className="text-[11px] text-slate-500 font-bold uppercase tracking-wider">Инициализация оплаты...</span>
-                        </div>
-                    )}
-                </div>
+                </p>
             )}
 
-            <div className="flex items-center justify-center gap-2 py-2">
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent"></div>
-                <span className="text-[10px] text-slate-400 font-medium px-2">Защищено Т-Банк</span>
-                <div className="h-px flex-1 bg-gradient-to-r from-transparent via-slate-200 dark:via-slate-800 to-transparent"></div>
+            <div className="text-center">
+                <p className="text-[10px] text-slate-400 font-medium">
+                    Безопасная оплата через <b>Т-Банк</b>
+                </p>
             </div>
         </div>
     );

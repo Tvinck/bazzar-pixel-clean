@@ -23,11 +23,8 @@ export default async function handler(req, res) {
 
         // 1. Prepare Data
         const amountKopeeks = Math.round(Number(amount) * 100);
-        const orderId = `${Date.now()}${Math.floor(Math.random() * 1000)}`.slice(0, 20);
-        const desc = (description || 'Pixel AI Credits').slice(0, 250);
-        const host = req.headers.host || 'bazzar-pixel-clean-4zm4.vercel.app';
-        const protocol = host.includes('localhost') ? 'http' : 'https';
-        const baseUrl = `${protocol}://${host}`;
+        const orderId = `BZR_${Date.now().toString().slice(-8)}`;
+        const desc = (description || 'Pixel AI Credits').slice(0, 100);
 
         // 2. Build Request Body
         const requestBody = {
@@ -35,23 +32,21 @@ export default async function handler(req, res) {
             Amount: amountKopeeks,
             OrderId: orderId,
             Description: desc,
-            NotificationURL: `${baseUrl}/api/payment-webhook`,
-            SuccessURL: `${baseUrl}/profile`,
-            FailURL: `${baseUrl}/profile`,
-            CustomerKey: userId || 'guest',
+            NotificationURL: `https://${req.headers.host}/api/payment-webhook`,
+            SuccessURL: `https://${req.headers.host}/profile`,
+            FailURL: `https://${req.headers.host}/profile`,
             DATA: {
                 userId: userId,
-                telegramId: req.body.telegramId,
-                email: userEmail
+                telegramId: req.body.telegramId
             },
             Receipt: {
                 Email: userEmail || 'customer@example.com',
                 Taxation: 'usn_income',
                 Items: [
                     {
-                        Name: desc.slice(0, 100),
+                        Name: desc,
                         Price: amountKopeeks,
-                        Quantity: 1.00,
+                        Quantity: 1,
                         Amount: amountKopeeks,
                         PaymentMethod: 'full_prepayment',
                         PaymentObject: 'service',
@@ -61,33 +56,27 @@ export default async function handler(req, res) {
             }
         };
 
-        // 3. Token calculation 
-        const tokenParams = {};
-        for (const key in requestBody) {
-            if (['Token', 'DATA', 'Receipt'].includes(key)) continue;
-            tokenParams[key] = requestBody[key];
-        }
-        tokenParams.Password = PASSWORD;
+        // 3. Token calculation (ONLY MANDATORY FIELDS)
+        const tokenParams = {
+            TerminalKey: TERMINAL_KEY,
+            Amount: amountKopeeks,
+            OrderId: orderId,
+            Password: PASSWORD
+        };
 
         const sortedKeys = Object.keys(tokenParams).sort();
         let tokenStr = '';
         for (const key of sortedKeys) {
             tokenStr += String(tokenParams[key]);
         }
-
-        console.log('Token String (DEBUG):', tokenStr);
         requestBody.Token = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
-        console.log('Final Request Body:', JSON.stringify(requestBody));
-
-        // 4. Send Request 
+        // 4. Send Request
         const responseData = await new Promise((resolve, reject) => {
             const reqData = JSON.stringify(requestBody);
-            const urlObj = new URL(API_URL);
-
             const request = https.request({
-                hostname: urlObj.hostname,
-                path: urlObj.pathname,
+                hostname: 'securepay.tinkoff.ru',
+                path: '/v2/Init',
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -98,33 +87,26 @@ export default async function handler(req, res) {
                 response.on('data', chunk => data += chunk);
                 response.on('end', () => {
                     try { resolve(JSON.parse(data)); }
-                    catch (e) { resolve({ Success: false, Message: 'Invalid JSON', Details: data }); }
+                    catch (e) { resolve({ Success: false, Message: 'Invalid JSON' }); }
                 });
             });
-
             request.on('error', reject);
             request.write(reqData);
             request.end();
         });
 
-        console.log('T-Bank Response:', responseData);
-
-        if (responseData.Success === false) {
-            const errorMsg = responseData.Message || 'Ошибка параметров';
-            const errorCode = responseData.ErrorCode || '309';
-
-            console.warn(`❌ T-Bank Init Failed: [${errorCode}] ${errorMsg}`);
+        if (responseData.Success) {
             return res.json({
-                error: `Ошибка Банка: ${errorMsg} (Код: ${errorCode}). Доп: ${responseData.Details || ''}`,
-                success: false
+                paymentUrl: responseData.PaymentURL,
+                paymentId: responseData.PaymentId,
+                orderId: orderId
+            });
+        } else {
+            return res.json({
+                success: false,
+                error: responseData.Message || 'Ошибка инициализации'
             });
         }
-
-        return res.json({
-            paymentUrl: responseData.PaymentURL,
-            paymentId: responseData.PaymentId,
-            orderId: orderId
-        });
 
     } catch (error) {
         console.error('Payment Service Error:', error);
