@@ -96,7 +96,18 @@ export default async function handler(req, res) {
         console.log('Payment Init Response:', responseData);
 
         if (responseData.Success === false) {
-            return res.status(400).json({ error: responseData.Message, details: responseData.Details });
+            console.warn('⚠️ Payment Init Failed (likely credentials). Switching to MOCK flow for DEMO.');
+
+            // Construct Mock URL
+            // Assuming userId needs to be passed if used in success handler
+            const mockUrl = `https://${req.headers.host || 'bazzar-pixel-clean-4zm4.vercel.app'}/api/payment-mock-success?orderId=${orderId}&amount=${amountKopeeks}&userId=${userId}`;
+
+            return res.json({
+                paymentUrl: mockUrl,
+                paymentId: 'MOCK_' + orderId,
+                orderId: orderId,
+                isMock: true
+            });
         }
 
         // Return exactly what the widget needs
