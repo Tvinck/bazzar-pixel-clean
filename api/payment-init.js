@@ -33,6 +33,8 @@ export default async function handler(req, res) {
             OrderId: orderId,
             Description: desc,
             NotificationURL: 'https://bazzar-pixel-clean-4zm4.vercel.app/api/payment-webhook',
+            SuccessURL: `https://${req.headers.host}/profile`,
+            FailURL: `https://${req.headers.host}/profile`,
             DATA: {
                 userId: userId,
                 telegramId: req.body.telegramId,
