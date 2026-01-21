@@ -987,7 +987,7 @@ const GenerationView = () => {
                     }}
                 />
             )}
-        </motion.div >
+        </motion.div>
     );
 };
 
