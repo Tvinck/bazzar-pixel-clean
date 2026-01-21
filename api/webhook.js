@@ -22,7 +22,7 @@ async function sendMessage(chatId, text, options = {}) {
         body: JSON.stringify({
             chat_id: chatId,
             text,
-            parse_mode: options.parse_mode || 'HTML', // Switched to HTML for payments support
+            parse_mode: options.parse_mode || 'HTML', // HTML for bold text
             disable_web_page_preview: options.disable_web_page_preview || false,
             ...options
         })
@@ -42,7 +42,7 @@ export default async function handler(req, res) {
     // 1. IS THIS A T-BANK PAYMENT NOTIFICATION?
     // ==========================================
     if (body.TerminalKey && body.OrderId && body.Token) {
-        console.log(`🔔 [Webhook] Incoming Payment (Caught in Main Hook): ${body.OrderId} | Status: ${body.Status}`);
+        console.log(`🔔 [Webhook] Incoming Payment: ${body.OrderId} | Status: ${body.Status}`);
 
         try {
             // --- SIGNATURE VALIDATION ---
@@ -72,7 +72,7 @@ export default async function handler(req, res) {
                 .from('transactions')
                 .select('id')
                 .eq('metadata->>OrderId', orderId)
-                .neq('type', 'pending_init') // Ignore pending
+                .neq('type', 'pending_init') // Ignore initial pending record
                 .maybeSingle();
 
             if (existingTx) {
@@ -81,14 +81,13 @@ export default async function handler(req, res) {
             }
 
             // --- IDENTIFY USER ---
-            // Try to find who initiated this payment (from pending transaction)
             let userId = null;
             let telegramId = null;
 
             // 1. Check Payload DATA
             if (body.DATA?.userId) userId = body.DATA.userId;
 
-            // 2. Check Pending Transaction (Best Way)
+            // 2. Check Pending Transaction (Fallback)
             if (!userId) {
                 const { data: pendingTx } = await supabase
                     .from('transactions')
@@ -99,7 +98,28 @@ export default async function handler(req, res) {
 
                 if (pendingTx) {
                     userId = pendingTx.user_id;
-                    telegramId = pendingTx.metadata?.TelegramId; // Maybe we saved it
+                    telegramId = pendingTx.metadata?.TelegramId;
+                }
+            }
+
+            // --- RESOLVE UUID FROM TELEGRAM ID (CRITICAL FIX) ---
+            // If userId is a number (Telegram ID), we MUST find the UUID
+            if (userId && !String(userId).includes('-') && !isNaN(Number(userId))) {
+                console.log(`🔄 [Webhook] Resolving Telegram ID ${userId} to UUID...`);
+                const { data: uVal } = await supabase
+                    .from('users')
+                    .select('id, telegram_id')
+                    .eq('telegram_id', userId)
+                    .maybeSingle();
+
+                if (uVal) {
+                    userId = uVal.id;
+                    if (!telegramId) telegramId = uVal.telegram_id;
+                    console.log(`✅ [Webhook] Resolved UUID: ${userId}`);
+                } else {
+                    console.error(`❌ [Webhook] Could not resolve UUID for Telegram ID: ${userId}`);
+                    // Cannot credit non-existent user
+                    return res.send('OK');
                 }
             }
 
@@ -110,8 +130,9 @@ export default async function handler(req, res) {
 
             // --- CREDIT USER ---
             const amountRub = Math.round(body.Amount / 100);
-            let creditsToAdd = amountRub; // Default 1:1
+            let creditsToAdd = amountRub;
 
+            // Pricing Rules
             if (amountRub === 99) creditsToAdd = 100;
             else if (amountRub >= 490 && amountRub <= 510) creditsToAdd = 525;
             else if (amountRub >= 990 && amountRub <= 1010) creditsToAdd = 1150;
@@ -120,6 +141,7 @@ export default async function handler(req, res) {
 
             console.log(`💰 [Webhook] Crediting ${creditsToAdd} credits to User ${userId}`);
 
+            // Perform Transaction
             const { data: currentStats } = await supabase
                 .from('user_stats')
                 .select('current_balance')
@@ -145,7 +167,6 @@ export default async function handler(req, res) {
 
             // --- NOTIFY USER ---
             try {
-                // Determine Telegram ID for notification
                 if (!telegramId) {
                     const { data: u } = await supabase.from('users').select('telegram_id').eq('id', userId).single();
                     if (u) telegramId = u.telegram_id;
@@ -169,7 +190,7 @@ export default async function handler(req, res) {
     // 2. IS THIS A TELEGRAM UPDATE? (EXISTING LOGIC)
     // ==========================================
     if (body.update_id) {
-        // ... (Keep existing bot logic mostly as is, just wrapped) ...
+        // ... (Keep existing bot logic) ...
         const update = body;
         const updateId = update.update_id;
 
@@ -180,7 +201,6 @@ export default async function handler(req, res) {
         try {
             console.log('📩 Processing TG Update:', updateId);
 
-            // Handle message
             if (update.message) {
                 const msg = update.message;
                 const chatId = msg.chat.id;
@@ -194,7 +214,6 @@ export default async function handler(req, res) {
                         }
                     });
                 } else if (text === 'Баланс ⚡') {
-                    // Quick Balance Check
                     const telegramId = msg.from.id;
                     let balance = 0;
                     try {
@@ -210,15 +229,6 @@ export default async function handler(req, res) {
                             inline_keyboard: [[{ text: 'Открыть приложение', web_app: { url: 'https://bazzar-pixel-clean-4zm4.vercel.app' } }]]
                         }
                     });
-                } else {
-                    // Default simple response to avoid spamming "Unknown command"
-                    if (!text.startsWith('/')) {
-                        await sendMessage(chatId, 'Используйте меню для навигации 👇', {
-                            reply_markup: {
-                                inline_keyboard: [[{ text: 'Открыть приложение', web_app: { url: 'https://bazzar-pixel-clean-4zm4.vercel.app' } }]]
-                            }
-                        });
-                    }
                 }
             }
         } catch (e) {
@@ -228,6 +238,5 @@ export default async function handler(req, res) {
         return res.status(200).send('OK');
     }
 
-    // Unknown request type
     return res.status(200).send('OK');
 }
