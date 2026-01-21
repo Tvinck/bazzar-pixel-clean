@@ -100,6 +100,22 @@ export const galleryAPI = {
         }
     },
 
+    // Toggle Public Visibility
+    async togglePublic(id, isPublic) {
+        try {
+            const { error } = await supabase
+                .from('creations')
+                .update({ is_public: isPublic })
+                .eq('id', id);
+
+            if (error) throw error;
+            return { success: true };
+        } catch (error) {
+            console.error('Error toggling visibility:', error);
+            return { success: false, error: error.message };
+        }
+    },
+
     // Get single creation details
     async getCreation(creationId) {
         try {

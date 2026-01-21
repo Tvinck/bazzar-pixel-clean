@@ -207,15 +207,26 @@ const GenerationView = () => {
     const fileInputRef = useRef(null);
 
     // --- CONFIG LOADING (Single Source of Truth) ---
-    const [serverConfig, setServerConfig] = useState(null);
+    // --- CONFIG LOADING (Supabase) ---
+    const [serverConfig, setServerConfig] = useState({ models: {} });
     useEffect(() => {
-        fetch('/api/config')
-            .then(res => res.json())
-            .then(data => {
-                console.log('✅ Loaded Server Config:', data);
-                setServerConfig(data);
-            })
-            .catch(err => console.error('❌ Failed to load config:', err));
+        const loadConfig = async () => {
+            try {
+                const modelsList = await aiService.getModels();
+                // Convert array to map for O(1) lookup
+                const modelsMap = {};
+                if (Array.isArray(modelsList)) {
+                    modelsList.forEach(m => {
+                        modelsMap[m.id] = m;
+                    });
+                }
+                console.log('✅ Loaded Config from DB:', modelsMap);
+                setServerConfig({ models: modelsMap });
+            } catch (err) {
+                console.error('❌ Failed to load config:', err);
+            }
+        };
+        loadConfig();
     }, []);
 
     // --- KLING MOTION SPECIAL STATE ---
@@ -258,7 +269,11 @@ const GenerationView = () => {
         }
         setGenCount(1);
         setCustomValues({});
-        setInputs({});
+        if (location.state?.prompt) {
+            setInputs({ prompt: location.state.prompt });
+        } else {
+            setInputs({});
+        }
 
         if (modeConfig.customFields) {
             const defaults = {};

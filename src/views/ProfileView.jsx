@@ -1,5 +1,6 @@
 import { ProfileSkeleton } from '../components/ui/Skeletons';
 import React, { Suspense, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Star, Award, Globe, Volume2, VolumeX, Users, MessageCircle, Share2, Image, Heart, Gift, Zap, Settings, Sparkles, Video, Crown, Wallet, Moon, Copy, CreditCard, ChevronRight, ChevronLeft, Mail, Receipt, Percent, Check, Palette } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
@@ -18,6 +19,7 @@ import { useToast } from '../context/ToastContext';
 import PaymentWidget from '../components/PaymentWidget';
 
 const ProfileView = ({ isDark, onOpenPayment }) => {
+    const navigate = useNavigate();
     const { t, lang, setLang } = useLanguage();
     const { isSoundEnabled, toggleSound, playClick } = useSound();
     const toast = useToast();
@@ -541,6 +543,19 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
 
                         {/* MENU LIST */}
                         <div className="space-y-2">
+                            {(userData?.role === 'admin' || userData?.id === '13658f8b-3f48-4394-a320-dd8e2277d079' || window.location.hostname === 'localhost') && (
+                                <button onClick={() => navigate('/admin')} className="w-full bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-between shadow-lg shadow-indigo-500/20 mb-3 group active:scale-98 transition-transform">
+                                    <div className="flex items-center gap-4">
+                                        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><ShieldAlert size={20} /></div>
+                                        <div className="text-left">
+                                            <div className="font-bold">Staff Panel</div>
+                                            <div className="text-xs opacity-70">Admin Access</div>
+                                        </div>
+                                    </div>
+                                    <ChevronRight className="opacity-50 group-hover:translate-x-1 transition-transform" />
+                                </button>
+                            )}
+
                             <button onClick={() => navigateTo('account')} className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-sm group active:scale-98 transition-transform">
                                 <div className="flex items-center gap-4">
                                     <div className="w-10 h-10 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center"><CreditCard size={20} /></div>

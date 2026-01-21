@@ -635,6 +635,20 @@ const aiService = {
         });
     },
 
+    // Get Dynamic Models Configuration
+    getModels: async () => {
+        if (!isBrowser) return [];
+
+        try {
+            const { supabase } = await import('./lib/supabase');
+            const { data } = await supabase.from('ai_models').select('*').eq('is_active', true).order('cost', { ascending: true });
+            return data || [];
+        } catch (e) {
+            console.error('⚠️ Failed to load models from DB', e);
+            return [];
+        }
+    },
+
     // Model Training (Stub/Placeholder)
     trainModel: async (images, triggerWord, type) => {
         console.log(`🚂 Training Stub: ${triggerWord} with ${images.length} images`);
