@@ -56,13 +56,13 @@ export default async function handler(req, res) {
             }
         };
 
-        // 3. Token calculation (ONLY MANDATORY FIELDS)
-        const tokenParams = {
-            TerminalKey: TERMINAL_KEY,
-            Amount: amountKopeeks,
-            OrderId: orderId,
-            Password: PASSWORD
-        };
+        // 3. Token calculation (Include all root fields except objects/Token)
+        const tokenParams = {};
+        for (const key in requestBody) {
+            if (['Token', 'DATA', 'Receipt'].includes(key)) continue;
+            tokenParams[key] = requestBody[key];
+        }
+        tokenParams.Password = PASSWORD;
 
         const sortedKeys = Object.keys(tokenParams).sort();
         let tokenStr = '';
