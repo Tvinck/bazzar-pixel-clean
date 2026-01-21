@@ -43,6 +43,15 @@ const PaymentSuccessView = () => {
                 const data = await res.json();
 
                 if (data.success || data.status === 'ALREADY_CREDITED') {
+                    // Mark as processed globally
+                    if (orderId) {
+                        const processed = JSON.parse(localStorage.getItem('processed_orders') || '[]');
+                        if (!processed.includes(orderId)) {
+                            processed.push(orderId);
+                            localStorage.setItem('processed_orders', JSON.stringify(processed));
+                        }
+                    }
+
                     // Очищаем
                     localStorage.removeItem('pending_payment_id');
                     localStorage.removeItem('pending_order_id');

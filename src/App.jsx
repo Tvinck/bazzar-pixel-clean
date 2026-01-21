@@ -84,22 +84,36 @@ function AppContent() {
       setTelegramUser(tg.initDataUnsafe?.user);
 
       // Check for start_param (Deep Linking)
+      // Check for start_param (Deep Linking)
       const startParam = tg.initDataUnsafe?.start_param;
       if (startParam && startParam.startsWith('payment_success')) {
         const parts = startParam.split('__');
         const orderId = parts[1];
 
-        // Immediate check (Fire & Forget insurance)
-        if (orderId) {
-          console.log('🚀 Immediate payment check for:', orderId);
-          fetch('/api/payment-check', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ orderId, userId: tg.user?.id }) // Pass user explicitly from TG
-          }).catch(e => console.error('Immediate check failed', e));
-        }
+        // Check if already processed locally to prevent loop
+        const processed = JSON.parse(localStorage.getItem('processed_orders') || '[]');
+        if (processed.includes(orderId)) {
+          console.log('⚠️ Order already processed locally, skipping check:', orderId);
+          // Clear clean URL if possible or just ignore
+          navigate('/profile');
+        } else {
+          // Mark as processed immediately to prevent double-fire during nav
+          // We will remove it if it fails? No, better safe than infinite loop.
+          // Actually, let PaymentSuccessView handle the 'success' confirmation.
+          // But we need to prevent App.jsx from firing again if we reload.
 
-        navigate('/payment/success', { state: { orderId } });
+          // Immediate check (Fire & Forget insurance)
+          if (orderId) {
+            console.log('🚀 Immediate payment check for:', orderId);
+            fetch('/api/payment-check', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ orderId, userId: tg.user?.id })
+            }).catch(e => console.error('Immediate check failed', e));
+          }
+
+          navigate('/payment/success', { state: { orderId } });
+        }
       }
 
       try {
