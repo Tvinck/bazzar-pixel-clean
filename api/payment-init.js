@@ -31,24 +31,28 @@ export default async function handler(req, res) {
             Description: description || 'Credits TopUp',
             OrderId: orderId,
             TerminalKey: TERMINAL_KEY,
-            // CustomerKey: userId // Optional, but useful
+            Password: PASSWORD // Add Password HERE so it gets sorted correctly
         };
 
         // 2. Generate Signature (Token)
-        // Sort keys -> concat values -> concat password -> sha256
         const keys = Object.keys(paramsForSignature).sort();
         let tokenStr = '';
         for (const key of keys) {
             tokenStr += paramsForSignature[key];
         }
-        tokenStr += PASSWORD;
+
+        // Remove Password from body params, it is only for signature!
+        // But wait, the standard usually says: make signature, then send body WITHOUT password.
 
         const token = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
         // 3. Final Request Body
-        // DATA is passed separately, does NOT participate in signature usually (unless specifically configured)
+        // DO NOT INCLUDE Password in the request body sent to API!
         const requestBody = {
-            ...paramsForSignature,
+            Amount: amountKopeeks,
+            Description: description || 'Credits TopUp',
+            OrderId: orderId,
+            TerminalKey: TERMINAL_KEY,
             Token: token,
             DATA: {
                 userId: userId,
@@ -58,25 +62,41 @@ export default async function handler(req, res) {
 
         console.log('Payment Init Request:', JSON.stringify(requestBody));
 
-        /* 
         // 4. Send Request via HTTPS module (Zero-Dep)
-        // DISABLED because DEMO keys are invalid/blocked.
-        // Uncomment when you provide REAL TerminalKey & Password.
-        
         const responseData = await new Promise((resolve, reject) => {
-             // ...
-        });
-        
-        if (responseData.Success === false) { ... }
-        */
+            const reqData = JSON.stringify(requestBody);
+            const urlObj = new URL(API_URL);
 
-        console.log('⚠️ Mocking Payment Init (No valid keys provided)');
-        // MOCK RESPONSE
-        return res.json({
-            paymentUrl: 'https://test-payment-url.com/demo_success', // Replace with real redirect or success page
-            paymentId: 'MOCK_PAYMENT_' + Date.now(),
-            orderId: orderId
+            const request = https.request({
+                hostname: urlObj.hostname,
+                path: urlObj.pathname,
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Content-Length': Buffer.byteLength(reqData)
+                }
+            }, (response) => {
+                let data = '';
+                response.on('data', chunk => data += chunk);
+                response.on('end', () => {
+                    try {
+                        resolve(JSON.parse(data));
+                    } catch (e) {
+                        resolve({ Success: false, Message: 'Invalid JSON response', Details: data });
+                    }
+                });
+            });
+
+            request.on('error', reject);
+            request.write(reqData);
+            request.end();
         });
+
+        console.log('Payment Init Response:', responseData);
+
+        if (responseData.Success === false) {
+            return res.status(400).json({ error: responseData.Message, details: responseData.Details });
+        }
 
         // Return exactly what the widget needs
         return res.json({
