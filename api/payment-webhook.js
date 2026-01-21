@@ -100,56 +100,83 @@ export default async function handler(req, res) {
 
             // Auto-create user if missing
             if (!user) {
-                console.log(`⚠️ User ${userId} not found. Creating new profile...`);
+                console.log(`⚠️ User ${userId} not found. Creating new user in users + user_stats...`);
 
-                // If userId was UUID, use it. If Telegram ID, we need a new UUID.
-                const newUuid = isUUID ? userId : crypto.randomUUID();
-                const telegramId = isUUID ? null : userId;
+                // Only create if userId is telegram_id (not UUID)
+                if (!isUUID) {
+                    try {
+                        // 1. Create in 'users' table
+                        const { data: newUser, error: createUserError } = await supabase
+                            .from('users')
+                            .insert({
+                                telegram_id: userId,
+                                username: 'user_' + userId
+                            })
+                            .select()
+                            .single();
 
-                const { data: newUser, error: createError } = await supabase
-                    .from('profiles')
-                    .insert({
-                        id: newUuid,
-                        telegram_id: telegramId,
-                        username: 'user_' + userId,
-                        full_name: 'New Payer',
-                        balance: credits // Initial balance = credits
-                    })
-                    .select()
-                    .single();
+                        if (createUserError) {
+                            console.error('❌ Failed to create user:', createUserError);
+                            return res.send('OK');
+                        }
 
-                if (createError) {
-                    console.error('❌ Failed to auto-create user:', createError);
+                        console.log('✅ Created User in users table:', newUser.id);
+                        targetId = newUser.id;
+
+                        // 2. Create in 'user_stats' table
+                        const { error: createStatsError } = await supabase
+                            .from('user_stats')
+                            .insert({
+                                user_id: newUser.id,
+                                current_balance: credits,
+                                total_generated: 0
+                            });
+
+                        if (createStatsError) {
+                            console.error('❌ Failed to create user_stats:', createStatsError);
+                        } else {
+                            console.log('✅ Created user_stats with balance:', credits);
+                        }
+
+                        // Log transaction
+                        await supabase.from('transactions').insert({
+                            user_id: targetId,
+                            amount: credits,
+                            type: 'deposit',
+                            description: `Пополнение ${amount}₽ (New User)`,
+                            metadata: body,
+                            created_at: new Date().toISOString()
+                        });
+
+                        return res.send('OK');
+                    } catch (err) {
+                        console.error('❌ User creation error:', err);
+                        return res.send('OK');
+                    }
+                } else {
+                    console.error('❌ Cannot create user with UUID - user must exist');
                     return res.send('OK');
                 }
-
-                console.log('✅ Created User:', newUser.id);
-                targetId = newUuid;
-
-                // Skip update since we inserted with balance
-                // Log transaction
-                await supabase.from('transactions').insert({
-                    user_id: targetId,
-                    amount: credits,
-                    type: 'deposit',
-                    description: `Пополнение ${amount}₽ (New User)`,
-                    metadata: body,
-                    created_at: new Date().toISOString()
-                });
-
-                return res.send('OK');
             }
 
             // Ensure we use the UUID for updates if we found it
             targetId = user.id;
 
-            const newBalance = (user.balance || 0) + credits;
+            // Get current balance from user_stats (not profiles)
+            const { data: stats } = await supabase
+                .from('user_stats')
+                .select('current_balance')
+                .eq('user_id', targetId)
+                .maybeSingle();
 
-            // 2. Update balance
+            const currentBalance = stats?.current_balance || 0;
+            const newBalance = currentBalance + credits;
+
+            // 2. Update balance in user_stats
             const { error: updateError } = await supabase
-                .from('profiles')
-                .update({ balance: newBalance })
-                .eq('id', targetId);
+                .from('user_stats')
+                .update({ current_balance: newBalance })
+                .eq('user_id', targetId);
 
             if (updateError) {
                 console.error('❌ Failed to update balance:', updateError);
