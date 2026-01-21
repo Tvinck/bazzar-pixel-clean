@@ -26,36 +26,32 @@ export default async function handler(req, res) {
         // OrderId MUST be <= 20 chars for T-Bank
         const orderId = `P_${Date.now().toString().slice(-8)}_${Math.floor(Math.random() * 1000)}`;
 
-        // 1. Params for Signature (ONLY REQUIRED FIELDS PER T-BANK V2 SPEC)
-        const paramsForSignature = {
-            TerminalKey: TERMINAL_KEY,
-            Amount: amountKopeeks,
-            OrderId: orderId,
-            Password: PASSWORD
-        };
-
-        // 2. Generate Signature (Token)
-        const keys = Object.keys(paramsForSignature).sort();
-        let tokenStr = '';
-        for (const key of keys) {
-            tokenStr += paramsForSignature[key];
-        }
-        const token = crypto.createHash('sha256').update(tokenStr).digest('hex');
-
-        // 3. Final Request Body (All fields required for Init)
+        // 1. Prepare Request Body
         const requestBody = {
             TerminalKey: TERMINAL_KEY,
             Amount: amountKopeeks,
             OrderId: orderId,
-            Description: description || 'Credits TopUp',
+            Description: description || 'Pixel AI Credits',
             NotificationURL: 'https://bazzar-pixel-clean-4zm4.vercel.app/api/payment-webhook',
-            Token: token,
             DATA: {
                 userId: userId,
                 telegramId: req.body.telegramId,
                 email: userEmail
             }
         };
+
+        // 2. Generate Signature (Token) based on ALL root fields except DATA and Token
+        const paramsForToken = { ...requestBody };
+        delete paramsForToken.DATA;
+        delete paramsForToken.Token;
+        paramsForToken.Password = PASSWORD;
+
+        const keys = Object.keys(paramsForToken).sort();
+        let tokenStr = '';
+        for (const key of keys) {
+            tokenStr += paramsForToken[key];
+        }
+        requestBody.Token = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
         console.log('Payment Init Request to T-Bank:', JSON.stringify(requestBody));
 
