@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Sparkles, Zap, Cpu, Palette } from 'lucide-react';
 
@@ -37,13 +38,16 @@ const GenerationLoader = ({ type = 'image', estimatedTime = 15 }) => {
         return () => clearInterval(interval);
     }, []);
 
-    return (
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-[#0f1014] flex flex-col items-center justify-center p-6 text-center"
+            className="fixed inset-0 z-[9999] bg-[#0f1014] flex flex-col items-center justify-center p-6 text-center"
         >
+
             <div className="absolute inset-0 overflow-hidden">
                 <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-indigo-500/20 rounded-full blur-[100px] animate-pulse" />
                 <div className="absolute bottom-1/4 right-1/4 w-64 h-64 bg-fuchsia-500/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '1s' }} />
@@ -103,7 +107,8 @@ const GenerationLoader = ({ type = 'image', estimatedTime = 15 }) => {
                     <span>Среднее время: {estimatedTime} сек</span>
                 </div>
             </div>
-        </motion.div>
+        </motion.div>,
+        document.body
     );
 };
 

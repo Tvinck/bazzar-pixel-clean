@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { motion } from 'framer-motion';
 import { Download, Share2, Globe, Sparkles, X, Check, Heart, MessageCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -64,12 +65,14 @@ const GenerationResult = ({ result, type = 'image', onClose, onRemix }) => {
         }
     };
 
-    return (
+    if (typeof document === 'undefined') return null;
+
+    return createPortal(
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 1.05 }}
-            className="fixed inset-0 z-50 bg-[#0f1014] flex flex-col items-center justify-between py-6 px-4"
+            className="fixed inset-0 z-[9999] bg-[#0f1014] flex flex-col items-center justify-between py-6 px-4"
         >
             {/* Header */}
             <div className="w-full flex justify-end">
@@ -121,8 +124,8 @@ const GenerationResult = ({ result, type = 'image', onClose, onRemix }) => {
                     onClick={handlePublish}
                     disabled={isPublished || isPublishing}
                     className={`w-full py-4 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 ${isPublished
-                            ? 'bg-green-500/10 text-green-500 border border-green-500/50'
-                            : 'bg-gradient-to-r from-indigo-500 to-fuchsia-600 text-white shadow-lg shadow-indigo-500/30'
+                        ? 'bg-green-500/10 text-green-500 border border-green-500/50'
+                        : 'bg-gradient-to-r from-indigo-500 to-fuchsia-600 text-white shadow-lg shadow-indigo-500/30'
                         }`}
                 >
                     {isPublished ? (
@@ -162,7 +165,8 @@ const GenerationResult = ({ result, type = 'image', onClose, onRemix }) => {
                     </button>
                 </div>
             </motion.div>
-        </motion.div>
+        </motion.div>,
+        document.body
     );
 };
 
