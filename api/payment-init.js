@@ -40,7 +40,7 @@ export default async function handler(req, res) {
             },
             Receipt: {
                 Email: userEmail || 'customer@example.com',
-                Taxation: 'usn_income', // УСН Доходы (меняется в зависимости от вашей кассы)
+                Taxation: 'ausn_income', // АУСН Доходы
                 Items: [
                     {
                         Name: desc,
