@@ -40,6 +40,7 @@ export default async function handler(req, res) {
     const keys = Object.keys(params).sort();
     let tokenStr = '';
     for (const key of keys) {
+        if (typeof params[key] === 'object') continue; // Skip DATA or other objects
         tokenStr += params[key];
     }
 
