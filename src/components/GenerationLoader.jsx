@@ -16,8 +16,11 @@ const GenerationLoader = ({ type = 'image', estimatedTime = 15 }) => {
     const [progress, setProgress] = useState(0);
     const [tipIndex, setTipIndex] = useState(0);
 
-    // Fake progress simulation
+    const [mounted, setMounted] = useState(false);
+
     useEffect(() => {
+        setMounted(true);
+        // ... progress interval ...
         const interval = setInterval(() => {
             setProgress(prev => {
                 if (prev >= 95) return 95; // Wait for real completion
@@ -38,13 +41,12 @@ const GenerationLoader = ({ type = 'image', estimatedTime = 15 }) => {
         return () => clearInterval(interval);
     }, []);
 
-    if (typeof document === 'undefined') return null;
+    if (!mounted || typeof document === 'undefined') return null;
 
     return createPortal(
         <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
             className="fixed inset-0 z-[9999] bg-[#0f1014] flex flex-col items-center justify-center p-6 text-center"
         >
 

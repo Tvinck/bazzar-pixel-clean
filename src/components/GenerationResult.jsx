@@ -65,13 +65,18 @@ const GenerationResult = ({ result, type = 'image', onClose, onRemix }) => {
         }
     };
 
-    if (typeof document === 'undefined') return null;
+    const [mounted, setMounted] = useState(false);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    if (!mounted || typeof document === 'undefined') return null;
 
     return createPortal(
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 1.05 }}
             className="fixed inset-0 z-[9999] bg-[#0f1014] flex flex-col items-center justify-between py-6 px-4"
         >
             {/* Header */}
