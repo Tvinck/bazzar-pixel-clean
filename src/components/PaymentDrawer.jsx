@@ -5,6 +5,7 @@ import { Check, ChevronRight, Zap, ShieldCheck, X, CreditCard, TicketPercent, Wa
 import { useSound } from '../context/SoundContext';
 import { useUser } from '../context/UserContext';
 import { TBankLogo, VisaLogo, MastercardLogo, MIRLogo, SBPLogo } from './PaymentLogos';
+import TBankWidget from './TBankWidget';
 
 const PLANS = [
     {
@@ -346,11 +347,22 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                 </p>
                                             </label>
                                         )}
+
+                                        {/* Official T-Bank Widget Integration */}
+                                        {termsAccepted && (!selectedPlan.isSubscription || subscriptionAccepted) && (
+                                            <TBankWidget
+                                                amount={isPromoApplied ? Math.round(getPrice(selectedPlan) * 0.9) : getPrice(selectedPlan)}
+                                                description={`Pixel AI: ${selectedPlan.name}`}
+                                                userId={user?.id}
+                                                telegramId={window.Telegram?.WebApp?.initDataUnsafe?.user?.id}
+                                                userEmail={user?.email || 'no-email@telegram.org'}
+                                            />
+                                        )}
                                     </div>
 
                                     {/* Trust Badges */}
                                     {/* Trust Badges & Payment Icons */}
-                                    <div className="flex flex-col items-center gap-4 mb-6">
+                                    <div className="flex flex-col items-center gap-4 mb-32">
                                         {/* Payment Methods */}
                                         <div className="flex flex-wrap justify-center gap-3">
                                             <div className="bg-white dark:bg-slate-800 rounded-xl p-2 border border-slate-200 dark:border-slate-700 shadow-sm">
@@ -379,18 +391,14 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                     </div>
                                 </div>
 
-                                <div className="absolute bottom-0 left-0 w-full p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 z-50">
-                                    <button
-                                        onClick={handlePurchase}
-                                        disabled={!termsAccepted || (selectedPlan.isSubscription && !subscriptionAccepted) || isLoading}
-                                        className={`w-full py-4 rounded-2xl font-bold text-lg shadow-xl shadow-indigo-500/20 transition-all flex items-center justify-center gap-2 ${termsAccepted && (!selectedPlan.isSubscription || subscriptionAccepted) && !isLoading
-                                            ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 scale-100 opacity-100'
-                                            : 'bg-slate-200 dark:bg-slate-800 text-slate-400 scale-95 opacity-80 cursor-not-allowed'
-                                            }`}
-                                    >
-                                        {isLoading ? 'Загрузка...' : `Оплатить ${isPromoApplied ? Math.round(getPrice(selectedPlan) * 0.9) : getDisplayPrice(selectedPlan)}`}
-                                    </button>
-                                </div>
+                                {/* Fallback button or loading state */}
+                                {!termsAccepted && (
+                                    <div className="absolute bottom-0 left-0 w-full p-6 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 z-50">
+                                        <div className="w-full py-4 rounded-2xl font-bold text-lg bg-slate-200 dark:bg-slate-800 text-slate-400 text-center opacity-80">
+                                            Примите условия для оплаты
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                     </motion.div>
