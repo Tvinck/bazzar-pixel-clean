@@ -254,8 +254,8 @@ const TemplateView = () => {
                     // Show Result Screen
                     setResultData({
                         url: result.imageUrl,
-                        id: 'gen_' + Date.now(), // Mock ID as save is async/background
-                        url: result.imageUrl
+                        id: 'gen_' + Date.now(), // Mock ID
+                        prompt: finalPrompt
                     });
                     // Note: We don't navigate to history immediately for images, we let them see result
                 }
