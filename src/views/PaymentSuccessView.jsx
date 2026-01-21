@@ -9,8 +9,14 @@ const PaymentSuccessView = () => {
     const { user, refreshUser } = useUser();
     const [status, setStatus] = useState('checking');
 
+    const hasVerified = React.useRef(false);
+
     useEffect(() => {
+        if (!user || hasVerified.current) return;
+
         const verifyPayment = async () => {
+            hasVerified.current = true; // Mark as started
+
             // Priority: 1. Deep Link State, 2. Local Storage
             const orderId = location.state?.orderId || localStorage.getItem('pending_order_id');
             const paymentId = localStorage.getItem('pending_payment_id');
@@ -46,31 +52,22 @@ const PaymentSuccessView = () => {
                     setStatus('success');
                 } else {
                     console.warn('Payment check failed:', data);
-                    // Может просто еще не дошло? Дадим пользователю просто пройти
                     await refreshUser();
                     setStatus('success');
                 }
 
                 // Авто-редирект
-                setTimeout(() => navigate('/profile'), 3000);
+                setTimeout(() => navigate('/profile', { replace: true, state: {} }), 3000);
 
             } catch (e) {
                 console.error('Verify Check Error:', e);
-                // В любом случае пускаем, чтобы не блокировать интерфейс
                 setStatus('success');
-                setTimeout(() => navigate('/profile'), 3000);
+                setTimeout(() => navigate('/profile', { replace: true, state: {} }), 3000);
             }
         };
 
-        // Запуск
-        if (user) {
-            verifyPayment();
-        } else {
-            // Если user context еще не готов, ждем или редиректим
-            const t = setTimeout(() => navigate('/profile'), 2000);
-            return () => clearTimeout(t);
-        }
-    }, [user, refreshUser, navigate]);
+        verifyPayment();
+    }, [user, navigate]); // Removed refreshUser to avoid loop, though ref handles it.
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-[#0f1014] text-center">
