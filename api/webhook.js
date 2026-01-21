@@ -1,209 +1,233 @@
+import crypto from 'node:crypto';
+import { createClient } from '@supabase/supabase-js';
 
-// Track processed updates
-const processedUpdates = new Set();
-const MAX_CACHE_SIZE = 1000;
-
-// Import bot token
+// --- CONFIGURATION ---
+const SUPABASE_URL = 'https://ktookvpqtmzfccojarwm.supabase.co';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODMxMzc2NSwiZXhwIjoyMDgzODg5NzY1fQ.L99oEJS40e0R_l05Jm2kZkItJKdaPAEYrGM0WQ0y08Y';
+const T_BANK_PASSWORD = '7XEqsWfjryCnqCck';
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 
-// Text constants (from bot.js)
-const welcomeMessage = `
-🎉 *Добро пожаловать в NanoBanana Bot!*
-
-Здесь ты можешь сгенерировать трендовый контент прямо в боте или в нашем приложении 🚀
-
-📸 *Фото → Фото:* Отправь фото и напиши, что поменять или добавить.
-
-🎬 *Фото → Видео:* Отправь фото и напиши, что должно происходить в видео — я оживлю фото и превращу его в видео.
-
-🖊 *Текст → Фото:* Опиши, что хочешь — и я сгенерю с нуля.
-
-💡 *AI Power:* Мы используем умную ротацию ключей Google Gemini для максимальной стабильности!
-
-Примеры в канале @pixel\\_imagess и в чате @pixel\\_communityy.
-
-🔥 *Попробуй:* загрузи фото и напиши «добавь рядом динозавра» 🦖 — и мы сделаем магию!
-
-Пользуясь ботом, вы подтверждаете свое согласие с [пользовательским соглашением](https://telegra.ph/POLZOVATELSKOE-SOGLASHENIE-PUBLICHNAYA-OFERTA-01-13-4), [политикой конфиденциальности](https://telegra.ph/POLITIKA-KONFIDENCIALNOSTI-01-13-41) и [согласием на обработку персональных данных](https://telegra.ph/Soglasie-na-obrabotku-personalnyh-dannyh-01-13-22).
-`;
-
-const communityMessage = `🚀 *Присоединяйтесь к нашему комьюнити!*
-
-• Обсуждайте генерации
-• Делитесь промптами
-• Получайте помощь
-
-👉 [Чат сообщества](https://t.me/pixel_communityy)
-👉 [Канал с новостями](https://t.me/pixel_imagess)`;
-
-const trendingMessage = `🔥 *Тренды Pixel AI*
-
-Смотрите лучшие работы пользователей в нашем приложении! 👇`;
-
-const balanceMessage = `🌟 *Ваш баланс: 10 кредитов.*
-
-Стоимость генерации:
-- Фото: 5 кредитов
-- Видео: от 15 кредитов (зависит от модели)
-
-Выберите способ пополнения.`;
+// Initialize Supabase
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
+    auth: { persistSession: false, autoRefreshToken: false }
+});
 
 // Helper to send messages
 async function sendMessage(chatId, text, options = {}) {
+    if (!BOT_TOKEN) return;
     const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-    const response = await fetch(url, {
+    await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
             chat_id: chatId,
             text,
-            parse_mode: options.parse_mode || 'Markdown',
+            parse_mode: options.parse_mode || 'HTML', // Switched to HTML for payments support
             disable_web_page_preview: options.disable_web_page_preview || false,
             ...options
         })
     });
-    return response.json();
 }
 
+// Track processed TG updates
+const processedUpdates = new Set();
+const MAX_CACHE_SIZE = 1000;
+
 export default async function handler(req, res) {
-    if (req.method !== 'POST') {
-        return res.status(200).send('OK');
-    }
+    if (req.method !== 'POST') return res.status(200).send('OK');
 
-    const update = req.body;
-    const updateId = update.update_id;
+    const body = req.body;
 
-    // Check duplicates
-    if (processedUpdates.has(updateId)) {
-        console.log('⚠️ Duplicate:', updateId);
-        return res.status(200).send('OK');
-    }
+    // ==========================================
+    // 1. IS THIS A T-BANK PAYMENT NOTIFICATION?
+    // ==========================================
+    if (body.TerminalKey && body.OrderId && body.Token) {
+        console.log(`🔔 [Webhook] Incoming Payment (Caught in Main Hook): ${body.OrderId} | Status: ${body.Status}`);
 
-    processedUpdates.add(updateId);
-    if (processedUpdates.size > MAX_CACHE_SIZE) {
-        processedUpdates.delete(processedUpdates.values().next().value);
-    }
+        try {
+            // --- SIGNATURE VALIDATION ---
+            const params = { ...body };
+            delete params.Token;
+            params.Password = T_BANK_PASSWORD;
 
-    try {
-        console.log('📩 Processing:', updateId);
-
-        // Handle message
-        if (update.message) {
-            const msg = update.message;
-            const chatId = msg.chat.id;
-            const text = msg.text || msg.caption;
-
-            console.log('💬 Message:', text);
-
-            const webAppUrl = 'https://bazzar-pixel-clean-4zm4.vercel.app';
-
-            if (text === '/start' || text === 'Главное меню 🏠') {
-                await sendMessage(chatId, welcomeMessage, {
-                    disable_web_page_preview: true,
-                    reply_markup: {
-                        keyboard: [
-                            [{ text: 'Трендовые фото 🔥' }, { text: 'Сообщество 👥' }],
-                            [{ text: 'Главное меню 🏠' }, { text: 'Баланс ⚡' }],
-                            [{ text: 'Пригласи друга 🤝' }]
-                        ],
-                        inline_keyboard: [
-                            [{ text: 'Сгенерировать 🎨', callback_data: 'generate_art' }],
-                            [{ text: 'Трендовые фото 🔥', web_app: { url: webAppUrl } }]
-                        ],
-                        resize_keyboard: true
-                    }
-                });
-            } else if (text === 'Баланс ⚡') {
-                // Fetch real balance using the SAME API as Mini App
-                const telegramId = msg.from.id;
-                let balance = 0;
-
-                try {
-                    const response = await fetch(`https://bazzar-pixel-clean-4zm4.vercel.app/api/user/stats?telegram_id=${telegramId}`);
-                    if (response.ok) {
-                        const stats = await response.json();
-                        balance = stats.current_balance || 0;
-                    }
-                } catch (err) {
-                    console.error('Balance fetch error:', err);
-                }
-
-                const dynamicBalanceMessage = `🌟 *Ваш баланс: ${balance} кредитов.*
-
-Стоимость генерации:
-- Фото: 5 кредитов
-- Видео: от 15 кредитов (зависит от модели)
-
-Выберите способ пополнения.`;
-
-                await sendMessage(chatId, dynamicBalanceMessage, {
-                    reply_markup: {
-                        inline_keyboard: [
-                            [{ text: 'Пополнить баланс 💰', callback_data: 'pay_sbp' }]
-                        ]
-                    }
-                });
-            } else if (text === 'Сообщество 👥') {
-                await sendMessage(chatId, communityMessage);
-            } else if (text === 'Трендовые фото 🔥') {
-                await sendMessage(chatId, trendingMessage, {
-                    reply_markup: {
-                        inline_keyboard: [
-                            [{ text: 'Открыть приложение 📱', web_app: { url: webAppUrl } }]
-                        ]
-                    }
-                });
-            } else if (text === 'Пригласи друга 🤝') {
-                const userId = msg.from.id;
-                const inviteMessage = `🤝 *Партнёрская программа*
-
-Приглашайте друзей и получайте 10% от всех их платежей!
-
-🔗 *Ваша реферальная ссылка:*
-https://t.me/Pixel_ai_bot?start=r-${userId}
-
-📈 Приглашено пользователей: 0
-💰 Заработано кредитов: 0
-
-Просто поделитесь ссылкой с друзьями. Когда они зарегистрируются и пополнят баланс, вы автоматически получите 10% от суммы их пополнения на свой счёт.`;
-                await sendMessage(chatId, inviteMessage);
-            } else {
-                await sendMessage(chatId, `Получил: "${text}"\n\nИспользуйте меню или откройте приложение! 🚀`);
+            const sortedKeys = Object.keys(params).sort();
+            let tokenStr = '';
+            for (const key of sortedKeys) {
+                if (typeof params[key] !== 'object') tokenStr += params[key];
             }
-        }
+            const calculatedToken = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
-        // Handle callback query
-        if (update.callback_query) {
-            const query = update.callback_query;
-            const chatId = query.message.chat.id;
-            const data = query.data;
+            if (calculatedToken !== body.Token) {
+                console.error(`❌ [Webhook] Payment Signature Fail!`);
+                return res.send('OK');
+            }
 
-            // Answer callback immediately
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/answerCallbackQuery`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ callback_query_id: query.id })
+            if (body.Status !== 'CONFIRMED' && body.Status !== 'AUTHORIZED') {
+                return res.send('OK');
+            }
+
+            // --- IDEMPOTENCY ---
+            const orderId = body.OrderId;
+            const { data: existingTx } = await supabase
+                .from('transactions')
+                .select('id')
+                .eq('metadata->>OrderId', orderId)
+                .neq('type', 'pending_init') // Ignore pending
+                .maybeSingle();
+
+            if (existingTx) {
+                console.log(`✅ [Webhook] Payment ${orderId} already processed.`);
+                return res.send('OK');
+            }
+
+            // --- IDENTIFY USER ---
+            // Try to find who initiated this payment (from pending transaction)
+            let userId = null;
+            let telegramId = null;
+
+            // 1. Check Payload DATA
+            if (body.DATA?.userId) userId = body.DATA.userId;
+
+            // 2. Check Pending Transaction (Best Way)
+            if (!userId) {
+                const { data: pendingTx } = await supabase
+                    .from('transactions')
+                    .select('user_id, metadata')
+                    .eq('metadata->>OrderId', orderId)
+                    .eq('type', 'pending_init')
+                    .maybeSingle();
+
+                if (pendingTx) {
+                    userId = pendingTx.user_id;
+                    telegramId = pendingTx.metadata?.TelegramId; // Maybe we saved it
+                }
+            }
+
+            if (!userId) {
+                console.error('❌ [Webhook] FATAL: Could not identify user for payment.');
+                return res.send('OK');
+            }
+
+            // --- CREDIT USER ---
+            const amountRub = Math.round(body.Amount / 100);
+            let creditsToAdd = amountRub; // Default 1:1
+
+            if (amountRub === 99) creditsToAdd = 100;
+            else if (amountRub >= 490 && amountRub <= 510) creditsToAdd = 525;
+            else if (amountRub >= 990 && amountRub <= 1010) creditsToAdd = 1150;
+            else if (amountRub >= 1990 && amountRub <= 2010) creditsToAdd = 2400;
+            else if (amountRub >= 4990) creditsToAdd = 6500;
+
+            console.log(`💰 [Webhook] Crediting ${creditsToAdd} credits to User ${userId}`);
+
+            const { data: currentStats } = await supabase
+                .from('user_stats')
+                .select('current_balance')
+                .eq('user_id', userId)
+                .maybeSingle();
+
+            const newBalance = (currentStats?.current_balance || 0) + creditsToAdd;
+
+            await supabase.from('user_stats').upsert({
+                user_id: userId,
+                current_balance: newBalance,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+
+            await supabase.from('transactions').insert({
+                user_id: userId,
+                amount: creditsToAdd,
+                type: 'deposit',
+                description: `T-Bank Webhook: ${amountRub}₽`,
+                metadata: body,
+                created_at: new Date().toISOString()
             });
 
-            const webAppUrl = 'https://bazzar-pixel-clean-4zm4.vercel.app';
+            // --- NOTIFY USER ---
+            try {
+                // Determine Telegram ID for notification
+                if (!telegramId) {
+                    const { data: u } = await supabase.from('users').select('telegram_id').eq('id', userId).single();
+                    if (u) telegramId = u.telegram_id;
+                }
 
-            if (data === 'generate_art') {
-                await sendMessage(chatId, '🎨 *Режим генерации*\n\n1. Отправьте фото и напишите, что изменить\n2. Или просто напишите промпт (например "Кот-космонавт")\n\nЯ использую лучшие нейросети для создания магии! ✨');
-            } else if (data === 'pay_sbp') {
-                await sendMessage(chatId, '💳 *Пополнение баланса*\n\nДля пополнения баланса откройте наше приложение 📱', {
-                    reply_markup: {
-                        inline_keyboard: [[{ text: 'Открыть Bazzar Pixel', web_app: { url: webAppUrl } }]]
+                if (telegramId) {
+                    const msg = `✅ <b>Оплата прошла успешно!</b>\n\n💰 Пополнено: <b>${amountRub}₽</b>\n⚡️ Начислено: <b>${creditsToAdd} кредитов</b>\n💎 Текущий баланс: <b>${newBalance}</b>\n\n<i>Приятного творчества!</i>`;
+                    await sendMessage(telegramId, msg);
+                }
+            } catch (notifyErr) { console.error(notifyErr); }
+
+            return res.send('OK');
+
+        } catch (err) {
+            console.error('💥 [Webhook] Payment Error:', err);
+            return res.send('OK');
+        }
+    }
+
+    // ==========================================
+    // 2. IS THIS A TELEGRAM UPDATE? (EXISTING LOGIC)
+    // ==========================================
+    if (body.update_id) {
+        // ... (Keep existing bot logic mostly as is, just wrapped) ...
+        const update = body;
+        const updateId = update.update_id;
+
+        if (processedUpdates.has(updateId)) return res.status(200).send('OK');
+        processedUpdates.add(updateId);
+        if (processedUpdates.size > MAX_CACHE_SIZE) processedUpdates.delete(processedUpdates.values().next().value);
+
+        try {
+            console.log('📩 Processing TG Update:', updateId);
+
+            // Handle message
+            if (update.message) {
+                const msg = update.message;
+                const chatId = msg.chat.id;
+                const text = msg.text || '';
+
+                if (text === '/start' || text === 'Главное меню 🏠') {
+                    await sendMessage(chatId, `🎉 <b>Добро пожаловать в NanoBanana Bot!</b>\n\nЗдесь ты можешь создавать контент. Открой приложение 👇`, {
+                        reply_markup: {
+                            inline_keyboard: [[{ text: 'Трендовые фото 🔥', web_app: { url: 'https://bazzar-pixel-clean-4zm4.vercel.app' } }]],
+                            resize_keyboard: true
+                        }
+                    });
+                } else if (text === 'Баланс ⚡') {
+                    // Quick Balance Check
+                    const telegramId = msg.from.id;
+                    let balance = 0;
+                    try {
+                        const { data: u } = await supabase.from('users').select('id').eq('telegram_id', telegramId).single();
+                        if (u) {
+                            const { data: s } = await supabase.from('user_stats').select('current_balance').eq('user_id', u.id).single();
+                            if (s) balance = s.current_balance;
+                        }
+                    } catch (e) { }
+
+                    await sendMessage(chatId, `🌟 <b>Ваш баланс: ${balance} кредитов.</b>\n\nПополнить можно в приложении 👇`, {
+                        reply_markup: {
+                            inline_keyboard: [[{ text: 'Открыть приложение', web_app: { url: 'https://bazzar-pixel-clean-4zm4.vercel.app' } }]]
+                        }
+                    });
+                } else {
+                    // Default simple response to avoid spamming "Unknown command"
+                    if (!text.startsWith('/')) {
+                        await sendMessage(chatId, 'Используйте меню для навигации 👇', {
+                            reply_markup: {
+                                inline_keyboard: [[{ text: 'Открыть приложение', web_app: { url: 'https://bazzar-pixel-clean-4zm4.vercel.app' } }]]
+                            }
+                        });
                     }
-                });
-            } else {
-                await sendMessage(chatId, 'Кнопка нажата! Используйте приложение для полного функционала.');
+                }
             }
+        } catch (e) {
+            console.error('Bot Error:', e);
         }
 
-        console.log('✅ Processed:', updateId);
-        res.status(200).send('OK');
-    } catch (e) {
-        console.error('❌ Error:', e);
-        res.status(200).send('OK');
+        return res.status(200).send('OK');
     }
+
+    // Unknown request type
+    return res.status(200).send('OK');
 }
