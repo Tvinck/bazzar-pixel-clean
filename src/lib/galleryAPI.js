@@ -275,60 +275,38 @@ export const galleryAPI = {
                 return { success: true, alreadyExists: true };
             }
 
-            // FALLBACK FOR DEV MODE: Handle "User not found" FK error (23503)
-            console.warn('⚠️ User FK missing or error (Dev Mode). Retrying with fallback user...');
-            try {
-                // 1. Try to find ANY existing user
-                let { data: fallbackUser } = await supabase.from('users').select('id').limit(1).maybeSingle();
+            // Case 1: FK Violation (Profile Missing)
+            if (error.code === '23503') { // Foreign key violation
+                console.warn('⚠️ User/Profile missing. Attempting auto-fix...');
 
-                // 2. If no users exist, create one (Dev Mode Auto-fix)
-                if (!fallbackUser) {
-                    console.log('⚠️ No users found in DB. Creating a Dev User...');
-                    const { data: newUser, error: createErr } = await supabase
-                        .from('users')
-                        .insert({
-                            id: creation.userId,
-                            username: 'Dev User',
-                            first_name: 'Developer'
-                        })
-                        .select('id')
-                        .single();
+                // Try to create profile for THIS user
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: creation.userId,
+                        username: 'user_' + creation.userId.slice(0, 8),
+                        full_name: 'User',
+                        balance: 10, // Give free credits
+                        role: 'user'
+                    });
 
-                    if (!createErr && newUser) {
-                        fallbackUser = newUser;
-                    } else {
-                        console.error('Failed to create dev user:', createErr);
-                    }
-                }
-
-                // 3. Retry save with valid user ID
-                if (fallbackUser) {
+                if (profileError) {
+                    console.error('❌ Failed to auto-create profile:', profileError);
+                } else {
+                    // Retry original insert
                     const { data: retryData, error: retryError } = await supabase
                         .from('creations')
-                        .insert({ ...payload, user_id: fallbackUser.id })
+                        .insert(payload)
                         .select()
                         .single();
 
-                    if (!retryError) return { success: true, data: retryData };
-
-                    // 4. Secondary Fallback: If Generation FK fails
-                    if (retryError && retryError.code === '23503' && (retryError.message.includes('generation') || retryError.details?.includes('generation'))) {
-                        console.warn('⚠️ Generation FK missing. Retrying without generation_id...');
-                        const { data: finalData, error: finalError } = await supabase
-                            .from('creations')
-                            .insert({ ...payload, user_id: fallbackUser.id, generation_id: null })
-                            .select()
-                            .single();
-
-                        if (!finalError) return { success: true, data: finalData };
-                        console.error('Final save attempt failed:', finalError);
-                    } else if (retryError) {
-                        console.error('Retry save failed:', retryError);
+                    if (!retryError) {
+                        return { success: true, data: retryData };
                     }
                 }
-            } catch (retryErr) {
-                console.error('Fallback save failed:', retryErr);
             }
+
+
 
             console.error('Error saving creation (Original):', error);
             return { success: false, error: error.message };

@@ -1,4 +1,5 @@
 const isBrowser = typeof window !== 'undefined';
+const HARDCODED_KIE_KEY = '365b6afae3b952cef9297bbc5384ec8e';
 
 // Dynamic import for Node.js
 let getModelInfo = null;
@@ -160,7 +161,7 @@ const aiService = {
     generateWithKie: async (prompt, modelId, options = {}) => {
         console.log(`🔍 DEBUG: generateWithKie START. Prompt: ${prompt?.substring(0, 20)}... Model: '${modelId}'`);
 
-        const apiKey = !isBrowser ? getEnv('KIE_API_KEY') : null;
+        const apiKey = !isBrowser ? (getEnv('KIE_API_KEY') || HARDCODED_KIE_KEY) : null;
         if (!isBrowser && !apiKey) throw new Error('KIE_API_KEY not set');
 
         // KIE MODEL MAPPING - Strictly based on Documentation
