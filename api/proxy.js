@@ -16,7 +16,8 @@ const makeRequest = (url, method, body, headers = {}) => {
                 headers: {
                     'Content-Type': 'application/json',
                     ...headers
-                }
+                },
+                timeout: 25000 // 25s timeout (Vercel hobby limit is 10s usually, but safety first)
             };
 
             if (body) {
@@ -30,6 +31,10 @@ const makeRequest = (url, method, body, headers = {}) => {
             });
 
             req.on('error', (e) => reject(e));
+            req.on('timeout', () => {
+                req.destroy();
+                reject(new Error('Request Timeout'));
+            });
 
             if (body) req.write(body);
             req.end();
@@ -46,8 +51,9 @@ const callRpc = async (funcName, params) => {
     const sbUrl = process.env.PROD_SUPABASE_URL || process.env.VITE_SUPABASE_URL;
     const sbKey = process.env.PROD_SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+    // Graceful fallback if envs missing
     if (!sbUrl || !sbKey) {
-        console.warn('⚠️ [API] Supabase Env Variables missing for billing checks.');
+        console.warn('⚠️ [API] Supabase Env Variables missing. Skipping billing.');
         return { error: 'Missing Config' };
     }
 
@@ -67,9 +73,10 @@ const callRpc = async (funcName, params) => {
             try {
                 return { data: JSON.parse(data) };
             } catch {
-                return { data: data }; // Pure text/boolean
+                return { data: data };
             }
         } else {
+            console.error(`[RPC Error] ${funcName}: ${statusCode} - ${data}`);
             return { error: data, status: statusCode };
         }
     } catch (e) {
@@ -77,56 +84,68 @@ const callRpc = async (funcName, params) => {
     }
 };
 
-
 export default async function handler(req, res) {
-    // 1. CORS Headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
-
-    if (req.method === 'OPTIONS') return res.status(200).end();
-
-    // HARDCODED KIE KEY (Fallback)
-    const KIE_KEY_HARDCODED = '365b6afae3b952cef9297bbc5384ec8e';
-
+    // Global Error Handler Wrapper
     try {
+        // 1. CORS Headers
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+        res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+
+        if (req.method === 'OPTIONS') return res.status(200).end();
+
+        const KIE_KEY_HARDCODED = '365b6afae3b952cef9297bbc5384ec8e';
+
         const { action } = req.query || {};
 
         // ============================================
-        // CREATE TASK (Secure Billing)
+        // CREATE TASK
         // ============================================
         if (req.method === 'POST' && action === 'create') {
             const { provider, model, input, userId } = req.body || {};
 
+            if (!input) return res.status(400).json({ error: 'No input provided' });
+
             // --- 1. BILLING CHECK ---
             let cost = 0;
-            let shouldCharge = !!(userId && userId !== 'browser_user' && action === 'create');
+            let shouldCharge = !!(userId && userId !== 'browser_user');
+
+            // Log for debugging
+            console.log(`[Proxy] Request: User=${userId}, Model=${model}, Charge=${shouldCharge}`);
 
             if (shouldCharge) {
                 // Get Dynamic Cost
                 const costRes = await callRpc('get_model_cost', { p_model_id: model });
-                // If RPC fails (e.g. missing function), fallback to safe default 4
-                cost = (costRes.data && typeof costRes.data === 'number') ? costRes.data : 4;
 
-                console.log(`💰 [Billing] Charging user ${userId} - ${cost} credits for ${model}`);
+                // If get_model_cost Missing -> Default to 4
+                if (costRes.error) {
+                    console.warn('[Billing] get_model_cost RPC failed (likely missing SQL). Using default cost 4.');
+                    cost = 4;
+                } else {
+                    cost = (typeof costRes.data === 'number') ? costRes.data : 4;
+                }
 
-                // Charge atomically
+                // Charge
                 const chargeRes = await callRpc('charge_user_credits', { p_user_id: userId, p_amount: cost });
 
-                // Check if specifically FALSE (funds insufficient)
-                if (chargeRes.data === false) {
-                    console.warn(`⛔ [Billing] Insufficient funds for ${userId}`);
-                    return res.status(402).json({
-                        error: 'Недостаточно средств на балансе. Пожалуйста, пополните счет.',
-                        code: 'insufficient_funds',
-                        current_balance: 'low'
+                // If RPC missing/error -> Fail Securely (or Allow if you prefer dev mode)
+                if (chargeRes.error) {
+                    console.error('⚠️ [Billing] charge_user_credits Failed:', chargeRes.error);
+
+                    // IF SQL IS MISSING, SERVER SHOULD NOT CRASH, BUT SHOULD WE BLOCK?
+                    // Let's block to filter 'freeloaders' unless it's a known dev config issue.
+                    // Returning readable error
+                    return res.status(500).json({
+                        error: 'Billing System Error. Please contact support. (SQL RPC missing?)',
+                        details: chargeRes.error
                     });
                 }
 
-                // Ignore other errors (like missing table) to avoid blocking generation
-                if (chargeRes.error) {
-                    console.error('⚠️ [Billing] Charge RPC Error:', chargeRes.error);
-                    return res.status(500).json({ error: 'Ошибка транзакции (Сбой системы)' });
+                if (chargeRes.data === false) {
+                    return res.status(402).json({
+                        error: 'Недостаточно средств. Пополните баланс.',
+                        code: 'insufficient_funds'
+                    });
                 }
             }
 
@@ -136,6 +155,7 @@ export default async function handler(req, res) {
                 ? 'https://api.kie.ai/api/v1/jobs/createTask'
                 : 'https://api.defapi.org/api/generate';
 
+            // Ensure Input is valid
             const payload = provider === 'kie' ? { model, input } : input;
 
             let proxyRes;
@@ -144,59 +164,67 @@ export default async function handler(req, res) {
                     targetUrl,
                     'POST',
                     JSON.stringify(payload),
-                    { 'Authorization': `Bearer ${apiKey}` }
+                    { 'Authorization': `Bearer ${apiKey || ''}` }
                 );
             } catch (netErr) {
-                // Network failed before response -> Refund
+                // Refund if charged
                 if (shouldCharge) await callRpc('refund_user_credits', { p_user_id: userId, p_amount: cost });
-                throw netErr;
+                console.error('[Proxy] Network Error:', netErr);
+                return res.status(502).json({ error: 'Ошибка сети при запросе к нейросети.' });
             }
 
-            // --- 3. HANDLE RESULT / REFUND ---
+            // --- 3. HANDLE RESULT ---
             let json;
             try {
                 json = JSON.parse(proxyRes.data);
             } catch (e) {
-                // Garbage response -> Refund
+                // Refund
                 if (shouldCharge) await callRpc('refund_user_credits', { p_user_id: userId, p_amount: cost });
-                return res.status(502).json({ error: 'Ошибка нейросети: получен некорректный ответ' });
+                console.error('[Proxy] Invalid JSON from upstream:', proxyRes.data);
+                return res.status(502).json({ error: 'Ошибка нейросети: получен некорректный ответ (Not JSON)' });
             }
 
-            // Check specific provider error codes
+            // Upstream Error Check
             const isError = (json.code !== undefined && json.code !== 0) || (json.error);
 
             if (isError && shouldCharge) {
-                console.log(`💸 [Billing] Upstream Error, refunding ${cost} credits.`);
                 await callRpc('refund_user_credits', { p_user_id: userId, p_amount: cost });
-
                 const msg = json.error || json.message || 'Ошибка генерации';
-                return res.status(400).json({ error: `Ошибка генерации: ${msg}` });
+                return res.status(400).json({ error: `Ошибка генерации: ${msg}`, upstream: json });
             }
 
             return res.status(proxyRes.statusCode || 200).json(json);
         }
 
         // ============================================
-        // CHECK STATUS (Free)
+        // CHECK STATUS
         // ============================================
         else if (req.method === 'GET' && action === 'check') {
             const { provider, taskId } = req.query || {};
-            const apiKey = (provider === 'kie' ? KIE_KEY_HARDCODED : process.env.DEFAPI_KEY);
+            if (!taskId) return res.status(400).json({ error: 'Missing taskId' });
 
+            const apiKey = (provider === 'kie' ? KIE_KEY_HARDCODED : process.env.DEFAPI_KEY);
             const targetUrl = provider === 'kie'
                 ? `https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`
                 : `https://api.defapi.org/api/task/query?task_id=${taskId}`;
 
-            const proxyRes = await makeRequest(targetUrl, 'GET', null, { 'Authorization': `Bearer ${apiKey}` });
-            return res.status(proxyRes.statusCode || 200).send(proxyRes.data);
+            try {
+                const proxyRes = await makeRequest(targetUrl, 'GET', null, { 'Authorization': `Bearer ${apiKey || ''}` });
+                res.status(proxyRes.statusCode || 200);
+                res.send(proxyRes.data); // Send raw data (JSON string)
+                return;
+            } catch (e) {
+                return res.status(502).json({ error: 'Check Status Failed: ' + e.message });
+            }
         }
 
-        else {
-            return res.status(404).json({ error: 'Неизвестное действие' });
-        }
+        return res.status(404).json({ error: 'Unknown Action' });
 
-    } catch (e) {
-        console.error('Proxy Fatal Error:', e);
-        return res.status(500).json({ error: 'Внутренняя ошибка сервера: ' + e.message });
+    } catch (fatalError) {
+        console.error('FATAL PROXY ERROR:', fatalError);
+        return res.status(500).json({
+            error: 'Внутренняя ошибка сервера (Fatal)',
+            message: fatalError.message
+        });
     }
 }
