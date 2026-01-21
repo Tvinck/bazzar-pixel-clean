@@ -8,31 +8,39 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 export default async function handler(req, res) {
     const results = {};
 
-    // Check profile with telegram_id
-    const { data: byTelegram, error: err1 } = await supabase
+    // Check profile with telegram_id (using 'balance' column)
+    const { data: byTelegramBalance, error: err1 } = await supabase
         .from('profiles')
         .select('id, telegram_id, username, balance')
         .eq('telegram_id', '50823401');
 
-    results.byTelegramId = { data: byTelegram, error: err1 };
+    results.byTelegramId_balance = { data: byTelegramBalance, error: err1 };
 
-    // Check all profiles with balance = 50
-    const { data: by50, error: err2 } = await supabase
+    // Check profile with telegram_id (using 'credits' column if exists)
+    const { data: byTelegramCredits, error: err2 } = await supabase
         .from('profiles')
-        .select('id, telegram_id, username, balance')
-        .eq('balance', 50);
+        .select('id, telegram_id, username, credits')
+        .eq('telegram_id', '50823401');
 
-    results.withBalance50 = { data: by50, error: err2 };
+    results.byTelegramId_credits = { data: byTelegramCredits, error: err2 };
 
-    // Check profiles without telegram_id but with balance > 0
-    const { data: noTelegram, error: err3 } = await supabase
+    // Check all profiles with credits = 50
+    const { data: by50credits, error: err3 } = await supabase
         .from('profiles')
-        .select('id, telegram_id, username, balance')
+        .select('id, telegram_id, username, credits')
+        .eq('credits', 50);
+
+    results.withCredits50 = { data: by50credits, error: err3 };
+
+    // Check profiles without telegram_id but with credits > 0
+    const { data: noTelegramCredits, error: err4 } = await supabase
+        .from('profiles')
+        .select('id, telegram_id, username, credits')
         .is('telegram_id', null)
-        .gt('balance', 0)
+        .gt('credits', 0)
         .limit(5);
 
-    results.noTelegramIdWithBalance = { data: noTelegram, error: err3 };
+    results.noTelegramIdWithCredits = { data: noTelegramCredits, error: err4 };
 
     res.json(results);
 }
