@@ -268,9 +268,8 @@ const aiService = {
             input.resolution = '1K';
 
             if (kieModelId.includes('image-to-image')) {
-                // Flux img2img usually uses input_urls
                 if (!hasSourceFiles) throw new Error(`${kieModelId} requires input images.`);
-                input.input_urls = options.source_files;
+                input.image_urls = options.source_files;
             }
         }
         // --- GROK FAMILY ---
@@ -298,8 +297,8 @@ const aiService = {
 
             // Kling Motion Control specific inputs
             if (modelId === 'kling_motion_control' && options.video_files?.length > 0) {
-                // Kling Motion Control: input_urls (image) + video_urls (driver)
-                input.input_urls = options.source_files;
+                // Kling Motion Control: image_urls (image) + video_urls (driver)
+                input.image_urls = options.source_files;
                 input.video_urls = options.video_files;
                 input.character_orientation = 'video';
                 input.mode = '720p';
@@ -315,7 +314,7 @@ const aiService = {
         else if (kieModelId.startsWith('gpt-image/')) {
             if (kieModelId.includes('image-to-image')) {
                 if (!hasSourceFiles) throw new Error('GPT Image-to-Image requires input images.');
-                input.input_urls = options.source_files;
+                input.image_urls = options.source_files;
             }
         }
         // 3. Final Regularization for Kie.ai API quirks
@@ -323,31 +322,16 @@ const aiService = {
             const normalized = { ...targetInput };
             const files = options.source_files || [];
 
-            // Dual-parameter safety for all image-to-image models
-            // Standardize on image_urls for most, only use input_urls if not google/kling
-            if (targetModel.includes('image-to-image') || targetModel.includes('edit') || targetModel.includes('kling') || targetModel.includes('nano-banana')) {
-                if (files.length > 0) {
-                    normalized.image_urls = files;
+            // Absolute standard: use ONLY image_urls and image_url.
+            // DELETE any input_urls to avoid provider confusion/errors.
+            delete normalized.input_urls;
 
-                    // Only add input_urls for models that are known to prefer it (DefAPI style / Non-Google)
-                    // Robust check for Google family even if 'google/' prefix is missing
-                    const isGoogle = targetModel.includes('google') || targetModel.includes('nano-banana') || targetModel.includes('imagen');
-                    const isKling = targetModel.includes('kling');
+            if (files.length > 0) {
+                normalized.image_urls = files;
 
-                    if (!isGoogle && !isKling) {
-                        normalized.input_urls = files;
-                    } else {
-                        // Explicitly delete input_urls if it somehow leaked in
-                        delete normalized.input_urls;
-                    }
-                }
-            }
-
-            // Singular vs Plural safety (Some newer Kie endpoints for Flux/Google expect singular string)
-            if (files.length === 1) {
-                if (targetModel.includes('flux')) {
-                    normalized.image_url = files[0];
-                } else if (targetModel.includes('google') || targetModel.includes('nano-banana') || targetModel.includes('imagen')) {
+                // Singular vs Plural safety for specific models
+                if (files.length === 1) {
+                    // Flux, Google, Imagen, Grok often prefer image_url
                     normalized.image_url = files[0];
                 }
             }
