@@ -369,15 +369,21 @@ const aiService = {
         if (!createRes.ok) {
             let errorText;
             try {
-                // Try to parse JSON error first
                 const errJson = await createRes.json();
                 errorText = errJson.error || errJson.message || JSON.stringify(errJson);
             } catch (e) {
-                // Fallback to text
                 errorText = await createRes.text();
             }
             console.error('❌ Kie.ai API Error:', errorText);
             throw new Error(errorText || `API Error: ${createRes.status}`);
+        }
+
+        // Validate JSON content type
+        const contentType = createRes.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            const textRaw = await createRes.text();
+            console.error('❌ Server returned non-JSON:', textRaw);
+            throw new Error(`Server Error (Not JSON): ${textRaw.substring(0, 50)}...`);
         }
 
         const responseData = await createRes.json();
