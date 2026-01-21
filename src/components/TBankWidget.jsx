@@ -69,7 +69,10 @@ const TBankWidget = ({ amount, description, userId, telegramId, userEmail }) => 
 
             const integration = await window.PaymentIntegration.init(initConfig);
             integrationRef.current = integration;
-            console.log('✅ T-Bank Widget Ready');
+
+            // Debug: what methods are actually available for this terminal?
+            console.log('✅ T-Bank Integration Object:', integration);
+            console.log('✅ Available methods:', integration.methods || 'auto');
         } catch (err) {
             console.error('❌ T-Bank Widget Error:', err);
             setError('Ошибка инициализации виджета');
