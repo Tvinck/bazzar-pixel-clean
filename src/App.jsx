@@ -80,16 +80,24 @@ function AppContent() {
 
   useEffect(() => {
     if (window.Telegram?.WebApp) {
-      setTelegramUser(window.Telegram.WebApp.initDataUnsafe?.user);
+      const tg = window.Telegram.WebApp;
+      setTelegramUser(tg.initDataUnsafe?.user);
+
+      // Check for start_param (Deep Linking)
+      const startParam = tg.initDataUnsafe?.start_param;
+      if (startParam === 'payment_success') {
+        navigate('/payment/success');
+      }
+
       try {
-        window.Telegram.WebApp.expand();
-        window.Telegram.WebApp.ready();
-        if (window.Telegram.WebApp.colorScheme === 'dark') {
+        tg.expand();
+        tg.ready();
+        if (tg.colorScheme === 'dark') {
           document.documentElement.classList.add('dark');
         }
       } catch (e) { console.error(e); }
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
     const isCompleted = localStorage.getItem('pixel_onboarding_v2_completed');

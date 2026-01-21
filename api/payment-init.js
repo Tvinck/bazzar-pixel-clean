@@ -33,8 +33,9 @@ export default async function handler(req, res) {
             OrderId: orderId,
             Description: desc,
             NotificationURL: `https://${req.headers.host}/api/payment-webhook`,
-            SuccessURL: `https://${req.headers.host}/payment/success`,
-            FailURL: `https://${req.headers.host}/profile`,
+            // Redirect back to Telegram Bot, which opens the Mini App
+            SuccessURL: 'https://t.me/Pixel_ai_bot?startapp=payment_success',
+            FailURL: 'https://t.me/Pixel_ai_bot?startapp=payment_fail',
             DATA: {
                 userId: userId,
                 telegramId: req.body.telegramId
