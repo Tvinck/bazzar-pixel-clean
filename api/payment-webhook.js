@@ -34,135 +34,101 @@ export default async function handler(req, res) {
         const keys = Object.keys(params).sort();
         let tokenStr = '';
         for (const key of keys) {
-            // Tinkoff V2: Skip Token and skip objects/arrays (like DATA)
             if (typeof params[key] === 'object') continue;
             tokenStr += params[key];
         }
-        // Do NOT append password at the end here, it is already in the loop!
 
         const calculatedToken = crypto.createHash('sha256').update(tokenStr).digest('hex');
+
+        console.log('--- Webhook Debug ---');
+        console.log('OrderId:', body.OrderId);
+        console.log('Status:', body.Status);
+        console.log('Token String:', tokenStr);
+        console.log('Calculated:', calculatedToken);
+        console.log('Received:', receivedToken);
 
         if (calculatedToken !== receivedToken) {
             console.error('❌ Webhook Signature Mismatch');
             return res.send('OK');
         }
 
-        // 3. Handle Successful Payment (CONFIRMED or AUTHORIZED)
+        // 3. Handle Successful Payment
         const status = body.Status;
         if ((status === 'CONFIRMED' || status === 'AUTHORIZED') && supabase) {
-            console.log(`✅ Payment ${body.OrderId} ${status}.`);
+            console.log(`✅ Payment ${body.OrderId} ${status}. Processing...`);
 
-            // T-Bank flattens DATA in notifications: check root first, then body.DATA
-            let userId = body.userId || body.DATA?.userId;
+            // Extract IDs
+            const userId = body.userId || body.DATA?.userId;
             const telegramId = body.telegramId || body.DATA?.telegramId;
 
-            if (!userId) {
-                console.error('❌ Could not extract UserID from payload');
-                // Log the whole body for debugging
-                console.log('Payload:', JSON.stringify(body));
+            console.log(`IDs found - userId: ${userId}, telegramId: ${telegramId}`);
+
+            if (!userId && !telegramId) {
+                console.error('❌ No user identifiers found in webhook');
                 return res.send('OK');
             }
 
-            // Calculate Credits Logic (Matching PLANS in PaymentDrawer)
+            // Calculate Credits
             const amount = body.Amount / 100;
-            let credits = 0;
-
+            let credits = 100; // Default for trial
             if (amount >= 4999) credits = 6500;
             else if (amount >= 1999) credits = 2400;
             else if (amount >= 999) credits = 1150;
             else if (amount >= 499) credits = 525;
-            else if (amount >= 90) credits = 100; // Trial or lower
-            else credits = Math.floor(amount); // Fallback 1:1
+            else if (amount >= 90) credits = 100;
 
-            console.log(`💰 Adding ${credits} credits to user ${userId} (TG: ${telegramId}) for ${amount} RUB`);
+            // 1. Find User 
+            let userData = null;
 
-            // 1. Find user in 'users' table
-            const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId);
-
-            let userQuery = supabase.from('users').select('id, telegram_id');
-            if (isUUID) {
-                userQuery = userQuery.eq('id', userId);
-            } else {
-                userQuery = userQuery.eq('telegram_id', userId);
+            // Try by ID (UUID)
+            if (userId && userId.length > 20) {
+                const { data } = await supabase.from('users').select('id, telegram_id').eq('id', userId).maybeSingle();
+                userData = data;
             }
 
-            const { data: userData, error: fetchError } = await userQuery.maybeSingle();
-
-            if (fetchError) {
-                console.error('❌ User Fetch Error:', fetchError);
-                return res.send('OK');
+            // Try by Telegram ID
+            if (!userData && telegramId) {
+                const { data } = await supabase.from('users').select('id, telegram_id').eq('telegram_id', telegramId).maybeSingle();
+                userData = data;
             }
 
-            let targetId = userData?.id;
-
-            // Auto-create user if missing in 'users'
             if (!userData) {
-                if (!isUUID) {
-                    console.log(`⚠️ User ${userId} not found in 'users'. Creating...`);
-                    const { data: newUser, error: createUserError } = await supabase
-                        .from('users')
-                        .insert({ telegram_id: userId, username: 'user_' + userId })
-                        .select().single();
-
-                    if (createUserError) {
-                        console.error('❌ Failed to create user:', createUserError);
-                        return res.send('OK');
-                    }
-                    targetId = newUser.id;
-                } else {
-                    console.error('❌ Cannot create user with UUID - must exist in users table');
-                    return res.send('OK');
-                }
-            }
-
-            // 2. Update or Create Balance in 'user_stats' (using UPSERT to be safe)
-            console.log(`💰 Crediting user ${targetId} with ${credits} credits...`);
-
-            // First, get current balance
-            const { data: currentStats } = await supabase
-                .from('user_stats')
-                .select('current_balance, total_generations')
-                .eq('user_id', targetId)
-                .maybeSingle();
-
-            const newBalance = (currentStats?.current_balance || 0) + credits;
-
-            const { error: upsertError } = await supabase
-                .from('user_stats')
-                .upsert({
-                    user_id: targetId,
-                    current_balance: newBalance,
-                    total_generations: currentStats?.total_generations || 0
-                }, { onConflict: 'user_id' });
-
-            if (upsertError) {
-                console.error('❌ Failed to upsert user_stats:', upsertError);
+                console.error(`❌ User not found for IDs: ${userId} / ${telegramId}`);
                 return res.send('OK');
             }
 
-            console.log(`✅ Balance updated to ${newBalance} for user ${targetId}`);
+            const targetId = userData.id;
+            const targetTg = userData.telegram_id;
 
-            // 3. Log Transaction
+            // 2. Update Credits
+            const { data: stats } = await supabase.from('user_stats').select('current_balance').eq('user_id', targetId).maybeSingle();
+            const newBalance = (stats?.current_balance || 0) + credits;
+
+            await supabase.from('user_stats').upsert({
+                user_id: targetId,
+                current_balance: newBalance,
+                updated_at: new Date().toISOString()
+            }, { onConflict: 'user_id' });
+
+            // 3. Log 
             await supabase.from('transactions').insert({
                 user_id: targetId,
                 amount: credits,
                 type: 'deposit',
                 description: `Пополнение ${amount}₽`,
-                metadata: body,
-                created_at: new Date().toISOString()
+                metadata: body
             });
 
-            // 4. Send Telegram Notification
-            const userNotifyId = body.telegramId || body.DATA?.telegramId || userData?.telegram_id || (isUUID ? null : userId);
-            if (userNotifyId && process.env.TELEGRAM_BOT_TOKEN) {
+            // 4. Notify
+            if (targetTg && process.env.TELEGRAM_BOT_TOKEN) {
                 try {
-                    const message = `✅ *Баланс пополнен!*\n\n💰 Сумма: *${amount}₽*\n⚡️ Начислено: *${credits}* кредитов\n💎 Баланс: *${newBalance}*\n\nСпасибо за поддержку! ❤️`;
+                    const msg = `✅ *Оплата прошла!*\n\n💰 Начислено: *${credits}* кредитов\n💎 Новый баланс: *${newBalance}*\n\nПриятного использования! ✨`;
                     await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ chat_id: userNotifyId, text: message, parse_mode: 'Markdown' })
+                        body: JSON.stringify({ chat_id: targetTg, text: msg, parse_mode: 'Markdown' })
                     });
-                } catch (notifyErr) { console.error('⚠️ Notify failed:', notifyErr); }
+                } catch (e) { console.error('Notify Error:', e); }
             }
 
             return res.send('OK');
