@@ -10,17 +10,16 @@ const supabase = (supabaseUrl && supabaseKey)
     : null;
 
 export default async function handler(req, res) {
-    // T-Bank sends POST
     if (req.method !== 'POST') return res.status(200).send('OK');
 
     try {
         const body = req.body;
         console.log('💰 Payment Webhook Payload:', JSON.stringify(body));
 
-        if (!body.Token) return res.send('OK'); // Ignore noise
+        if (!body.Token) return res.send('OK');
 
-        // 1. PASSWORD
-        const PASSWORD = 'DFgxaoJ38xAjUrsJ'; // Hardcoded for Demo
+        // 1. PASSWORD (DEMO)
+        const PASSWORD = 'DFgxaoJ38xAjUrsJ';
 
         // 2. Validate Token
         const receivedToken = body.Token;
@@ -38,50 +37,44 @@ export default async function handler(req, res) {
 
         if (calculatedToken !== receivedToken) {
             console.error('❌ Webhook Signature Mismatch');
-            // return res.status(400).send('Invalid Signature'); 
-            return res.send('OK'); // Return OK to satisfy T-Bank retries if we can't process
+            return res.send('OK');
         }
 
         // 3. Handle Confirmed Payment
         if (body.Status === 'CONFIRMED' && supabase) {
-            console.log(`✅ Payment ${body.OrderId} CONFIRMED. Processing...`);
+            console.log(`✅ Payment ${body.OrderId} CONFIRMED.`);
 
-            // Extract User ID
             let userId = null;
-            // Check DATA first
             if (body.DATA?.userId) userId = body.DATA.userId;
 
-            // Fallback to OrderId parsing
             if (!userId && body.OrderId) {
                 const parts = body.OrderId.split('_');
-                // Format: ORDER_{TIMESTAMP}_{USERID}
+                // ORDER_{TIMESTAMP}_{USERID}
                 if (parts.length >= 3) {
                     userId = parts.slice(2).join('_');
                 }
             }
 
             if (!userId) {
-                console.error('❌ Could not extract UserID from payment');
+                console.error('❌ Could not extract UserID');
                 return res.send('OK');
             }
 
-            // Calculate Credits
+            // Calculate Credits Logic
             const amount = body.Amount / 100;
             let credits = Math.floor(amount);
 
-            // Logic must match UI
             if (amount >= 99 && amount < 290) credits = 100;
             else if (amount >= 290 && amount < 490) credits = 350;
             else if (amount >= 490 && amount < 900) credits = 600;
             else if (amount >= 900) credits = 1500;
 
-            console.log(`Adding ${credits} credits to user ${userId}...`);
+            console.log(`Adding ${credits} credits to user ${userId} for ${amount} RUB`);
 
-            // Direct DB Update (Admin)
-            // 1. Get current balance
+            // 1. Get current balance AND telegram_id
             const { data: user, error: fetchError } = await supabase
                 .from('profiles')
-                .select('balance')
+                .select('balance, telegram_id')
                 .eq('id', userId)
                 .single();
 
@@ -101,7 +94,7 @@ export default async function handler(req, res) {
             if (updateError) {
                 console.error('❌ Failed to update balance:', updateError);
             } else {
-                console.log(`🎉 Success! Balance updated to ${newBalance}`);
+                console.log(`🎉 Balance updated to ${newBalance}`);
 
                 // 3. Log Transaction
                 await supabase.from('transactions').insert({
@@ -112,6 +105,28 @@ export default async function handler(req, res) {
                     metadata: body,
                     created_at: new Date().toISOString()
                 });
+
+                // 4. Send Telegram Notification
+                if (user.telegram_id && process.env.TELEGRAM_BOT_TOKEN) {
+                    try {
+                        const message = `✅ *Баланс пополнен!*\n\n💰 Сумма: *${amount}₽*\n⚡️ Начислено: *${credits}* кредитов\n💎 Баланс: *${newBalance}*\n\nСпасибо за поддержку! ❤️`;
+
+                        await fetch(`https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                chat_id: user.telegram_id,
+                                text: message,
+                                parse_mode: 'Markdown'
+                            })
+                        });
+                        console.log('📨 Notification sent to TG ID:', user.telegram_id);
+                    } catch (notifyErr) {
+                        console.error('⚠️ Failed to send Telegram notification:', notifyErr);
+                    }
+                } else {
+                    console.log('⚠️ No Telegram Token or User ID for notification');
+                }
             }
         }
 
