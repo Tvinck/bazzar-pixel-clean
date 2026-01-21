@@ -90,11 +90,25 @@ export const setupRoutes = (app, bot) => {
                 console.log(`📂 Uploading ${req.files.length} files to Supabase...`);
                 try {
                     for (const file of req.files) {
-                        const safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '');
+                        let safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '');
+
+                        // Kie.ai Compatibility: Force .jpg extension for images
+                        if (file.mimetype.startsWith('image/')) {
+                            const nameParts = safeName.split('.');
+                            if (nameParts.length > 1) {
+                                const ext = nameParts.pop().toLowerCase();
+                                if (ext === 'jpeg' || ext === 'webp' || ext === 'heic') {
+                                    safeName = nameParts.join('.') + '.jpg';
+                                }
+                            } else {
+                                safeName = safeName + '.jpg';
+                            }
+                        }
+
                         const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}_${safeName}`;
 
                         const { error } = await supabase.storage
-                            .from('source-files')
+                            .from('uploads')
                             .upload(fileName, file.buffer, {
                                 contentType: file.mimetype,
                                 upsert: false
@@ -103,7 +117,7 @@ export const setupRoutes = (app, bot) => {
                         if (error) throw error;
 
                         const { data: publicData } = supabase.storage
-                            .from('source-files')
+                            .from('uploads')
                             .getPublicUrl(fileName);
 
                         const url = publicData.publicUrl;

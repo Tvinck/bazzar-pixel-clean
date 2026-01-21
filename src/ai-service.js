@@ -339,7 +339,11 @@ const aiService = {
             input: input
         };
 
-        console.log('📤 Kie.ai Request:', JSON.stringify(requestBody, null, 2));
+        if (!isBrowser) {
+            console.log(`📡 [Kie Worker] Request Body:`, JSON.stringify(requestBody, null, 2));
+        } else {
+            console.log('📤 Kie.ai Request:', JSON.stringify(requestBody, null, 2));
+        }
 
         // Create task
         // Create task (Proxy or Direct)

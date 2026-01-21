@@ -342,7 +342,7 @@ app.post('/api/jobs/create', async (req, res) => {
                         const type = matches[1];
                         const buffer = Buffer.from(matches[2], 'base64');
                         let ext = type.split('/')[1] || 'png';
-                        if (ext === 'jpeg') ext = 'jpg'; // Kie.ai compatibility
+                        if (ext === 'jpeg' || ext === 'webp' || ext === 'heic') ext = 'jpg'; // Kie.ai compatibility
                         const filename = `uploads/gen_src_${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
 
                         const { error: uploadError } = await supabase.storage
