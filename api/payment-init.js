@@ -33,6 +33,8 @@ export default async function handler(req, res) {
             OrderId: orderId,
             Description: description || 'Pixel AI Credits',
             NotificationURL: 'https://bazzar-pixel-clean-4zm4.vercel.app/api/payment-webhook',
+            SuccessURL: `https://${req.headers.host}/profile`,
+            FailURL: `https://${req.headers.host}/profile`,
             DATA: {
                 userId: userId,
                 telegramId: req.body.telegramId,
@@ -40,22 +42,23 @@ export default async function handler(req, res) {
             }
         };
 
-        // 2. Generate Signature (Token) based on ALL root fields except DATA and Token
+        // 2. Generate Signature (Token)
         const paramsForToken = { ...requestBody };
         delete paramsForToken.DATA;
         delete paramsForToken.Token;
         paramsForToken.Password = PASSWORD;
 
+        // Sort keys and concatenate values (all converted to string)
         const keys = Object.keys(paramsForToken).sort();
         let tokenStr = '';
         for (const key of keys) {
-            tokenStr += paramsForToken[key];
+            tokenStr += String(paramsForToken[key]);
         }
         requestBody.Token = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
-        console.log('Payment Init Request to T-Bank:', JSON.stringify(requestBody));
+        console.log('Payment Init Request:', JSON.stringify(requestBody));
 
-        // 4. Send Request via HTTPS module (Zero-Dep)
+        // 4. Send Request
         const responseData = await new Promise((resolve, reject) => {
             const reqData = JSON.stringify(requestBody);
             const urlObj = new URL(API_URL);
@@ -72,11 +75,8 @@ export default async function handler(req, res) {
                 let data = '';
                 response.on('data', chunk => data += chunk);
                 response.on('end', () => {
-                    try {
-                        resolve(JSON.parse(data));
-                    } catch (e) {
-                        resolve({ Success: false, Message: 'Invalid JSON response', Details: data });
-                    }
+                    try { resolve(JSON.parse(data)); }
+                    catch (e) { resolve({ Success: false, Message: 'Invalid JSON', Details: data }); }
                 });
             });
 
@@ -88,23 +88,19 @@ export default async function handler(req, res) {
         console.log('Payment Init Response:', responseData);
 
         if (responseData.Success === false) {
-            console.warn(`❌ T-Bank Init Failed: [${responseData.ErrorCode}] ${responseData.Message}`);
-            console.warn('Full Response:', JSON.stringify(responseData));
-            console.warn('Switching to MOCK flow for DEMO.');
+            const errorMsg = responseData.Message || 'Ошибка терминала';
+            const errorCode = responseData.ErrorCode || 'Unknown';
 
-            // Construct Mock URL
-            // Assuming userId needs to be passed if used in success handler
-            const mockUrl = `https://${req.headers.host || 'bazzar-pixel-clean-4zm4.vercel.app'}/api/payment-mock-success?orderId=${orderId}&amount=${amountKopeeks}&userId=${userId}&telegramId=${req.body.telegramId || ''}`;
+            console.warn(`❌ T-Bank Init Failed: [${errorCode}] ${errorMsg}`);
 
+            // Return error to frontend so user can see it
             return res.json({
-                paymentUrl: mockUrl,
-                paymentId: 'MOCK_' + orderId,
-                orderId: orderId,
-                isMock: true
+                error: `Ошибка Банка: ${errorMsg} (Код: ${errorCode})`,
+                success: false,
+                isMock: false
             });
         }
 
-        // Return exactly what the widget needs
         return res.json({
             paymentUrl: responseData.PaymentURL,
             paymentId: responseData.PaymentId,
