@@ -89,15 +89,59 @@ export default async function handler(req, res) {
                 query = query.eq('telegram_id', userId);
             }
 
-            const { data: user, error: fetchError } = await query.single();
+            const { data: user, error: fetchError } = await query.maybeSingle();
 
-            if (fetchError || !user) {
-                console.error('❌ User not found in DB:', userId, fetchError);
+            if (fetchError) {
+                console.error('❌ User Fetch Error:', fetchError);
+                return res.send('OK');
+            }
+
+            let targetId = user?.id;
+
+            // Auto-create user if missing
+            if (!user) {
+                console.log(`⚠️ User ${userId} not found. Creating new profile...`);
+
+                // If userId was UUID, use it. If Telegram ID, we need a new UUID.
+                const newUuid = isUUID ? userId : crypto.randomUUID();
+                const telegramId = isUUID ? null : userId;
+
+                const { data: newUser, error: createError } = await supabase
+                    .from('profiles')
+                    .insert({
+                        id: newUuid,
+                        telegram_id: telegramId,
+                        username: 'user_' + userId,
+                        full_name: 'New Payer',
+                        balance: credits // Initial balance = credits
+                    })
+                    .select()
+                    .single();
+
+                if (createError) {
+                    console.error('❌ Failed to auto-create user:', createError);
+                    return res.send('OK');
+                }
+
+                console.log('✅ Created User:', newUser.id);
+                targetId = newUuid;
+
+                // Skip update since we inserted with balance
+                // Log transaction
+                await supabase.from('transactions').insert({
+                    user_id: targetId,
+                    amount: credits,
+                    type: 'deposit',
+                    description: `Пополнение ${amount}₽ (New User)`,
+                    metadata: body,
+                    created_at: new Date().toISOString()
+                });
+
                 return res.send('OK');
             }
 
             // Ensure we use the UUID for updates if we found it
-            const targetId = user.id;
+            targetId = user.id;
 
             const newBalance = (user.balance || 0) + credits;
 
