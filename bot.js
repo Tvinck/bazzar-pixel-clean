@@ -242,36 +242,238 @@ export async function ensureBucketsPublic() {
 }
 
 // Global initialization
+// --- SYSTEM STATE ---
 let bot;
 let queue;
+const userDrafts = new Map();
+const lastGenerations = new Map();
 
-const init = async () => {
+// --- HELPERS ---
+async function getUserBalance(telegramId) {
     try {
-        await ensureBucketsPublic();
+        const { data: user } = await supabase.from('users').select('id').eq('telegram_id', telegramId).single();
+        if (!user) return 0;
+        const { data: stats } = await supabase.from('user_stats').select('current_balance').eq('user_id', user.id).single();
+        return stats?.current_balance || 0;
+    } catch (e) { return 0; }
+}
 
-        bot = new TelegramBot(process.env.TELEGRAM_BOT_TOKEN, { polling: isPolling });
-        queue = await initQueue(bot);
+async function getUserUUID(telegramId) {
+    const { data: user } = await supabase.from('users').select('id').eq('telegram_id', telegramId).single();
+    return user?.id || null;
+}
 
-        // Setup Routes with initialized bot/queue
-        setupRoutes(app, bot, queue);
-
-        // Debug Listener
-        bot.on('message', (msg) => {
-            console.log('🤖 Bot received message:', msg.text);
-        });
-
-        // Start Server
-        app.listen(PORT, () => {
-            console.log(`🚀 Bot API Server running on port ${PORT}`);
-        });
-
-        console.log('✨ System initialized successfully.');
-    } catch (initErr) {
-        console.error('💥 SYSTEM INIT FAILED:', initErr);
+async function uploadTelegramFileToSupabase(fileLink) {
+    try {
+        const response = await fetch(fileLink);
+        const buffer = Buffer.from(await response.arrayBuffer());
+        const filename = `user_upload_${Date.now()}.jpg`;
+        const { error } = await supabase.storage.from('uploads').upload(filename, buffer, { contentType: 'image/jpeg' });
+        if (error) throw error;
+        const { data } = supabase.storage.from('uploads').getPublicUrl(filename);
+        return data.publicUrl;
+    } catch (e) {
+        console.error('Upload Error:', e);
+        return null;
     }
-};
+}
 
-init();
+// --- SYSTEM INITIALIZATION ---
+console.log('📡 Initializing System...');
+try {
+    await ensureBucketsPublic();
+
+    const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    if (!botToken) {
+        throw new Error('TELEGRAM_BOT_TOKEN is missing in environment variables');
+    }
+
+    bot = new TelegramBot(botToken, { polling: isPolling });
+    console.log('🤖 Telegram Bot instance created.');
+
+    queue = await initQueue(bot);
+    console.log('📦 Job Queue initialized.');
+
+    setupRoutes(app, bot, queue);
+    console.log('🛣️ Routes attached.');
+
+    setupBotHandlers(bot);
+    console.log('🎮 Bot Handlers registered.');
+
+    if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
+        const PORT = process.env.PORT || 3000;
+        app.listen(PORT, () => console.log(`🚀 Bot Server running on port ${PORT}`));
+    }
+} catch (err) {
+    console.error('💥 SYSTEM INIT FAILED:', err);
+}
+
+// Handler functions below...
+
+function setupBotHandlers(b) {
+    if (!b) {
+        console.error('❌ setupBotHandlers called with undefined bot!');
+        return;
+    }
+    const webAppUrl = process.env.WEB_APP_URL || 'https://bazzar-pixel.vercel.app';
+
+    // /start command
+    b.onText(/\/start(?: (.+))?/, async (msg, match) => {
+        try {
+            await b.setChatMenuButton({
+                chat_id: msg.chat.id,
+                menu_button: {
+                    type: 'web_app',
+                    text: 'Open Pixel',
+                    web_app: { url: webAppUrl }
+                }
+            });
+        } catch (e) { console.error('Menu Button Error:', e.message); }
+
+        await botAnalytics.upsertUser(msg.from);
+        await botAnalytics.trackCommand(msg.from.id, 'start');
+
+        const startParam = match[1];
+        if (startParam) {
+            if (startParam.startsWith('connect')) {
+                const connectedUserId = startParam.replace('connect_', '');
+                if (connectedUserId && connectedUserId !== 'connect') {
+                    try {
+                        const { error } = await supabase.from('bot_users').upsert({
+                            user_id: connectedUserId,
+                            telegram_chat_id: msg.chat.id,
+                            username: msg.from.username
+                        });
+                        if (!error) {
+                            b.sendMessage(msg.chat.id, '✅ *Уведомления подключены!*\nТеперь вы будете получать информацию о новых заказах сюда.', { parse_mode: 'Markdown' });
+                        }
+                    } catch (e) {
+                        console.error('Connect Exception:', e);
+                    }
+                }
+            } else if (startParam.startsWith('r-')) {
+                const referrerTgId = parseInt(startParam.replace('r-', ''), 10);
+                if (referrerTgId && !isNaN(referrerTgId) && referrerTgId !== msg.from.id) {
+                    try {
+                        const userUUID = await getUserUUID(msg.from.id);
+                        if (userUUID) {
+                            const { data: refResult } = await supabase.rpc('register_referral', {
+                                p_new_user_id: userUUID,
+                                p_referrer_telegram_id: referrerTgId
+                            });
+                            if (refResult?.success) {
+                                b.sendMessage(referrerTgId, `🎉 *Новый реферал!*\nБаланс пополнен на *${refResult.bonus}* кредитов!`, { parse_mode: 'Markdown' }).catch(() => { });
+                            }
+                        }
+                    } catch (e) { console.error('Referral Error:', e); }
+                }
+            }
+        }
+        sendWelcome(msg.chat.id);
+    });
+
+    // /help command
+    b.onText(/\/help/, async (msg) => {
+        await botAnalytics.upsertUser(msg.from);
+        b.sendMessage(msg.chat.id, helpMessage, {
+            parse_mode: 'Markdown',
+            reply_markup: {
+                inline_keyboard: [
+                    [{ text: '🎨 Как генерировать', callback_data: 'faq_generate' }, { text: '💰 Цены', callback_data: 'faq_pricing' }],
+                    [{ text: '🏠 Главное меню', callback_data: 'back_to_menu' }]
+                ]
+            }
+        });
+    });
+
+    // Callback Query
+    b.on('callback_query', async (query) => {
+        const chatId = query.message.chat.id;
+        const data = query.data;
+        try {
+            await b.answerCallbackQuery(query.id);
+            if (data === 'generate_art') {
+                b.sendMessage(chatId, '🎨 *Режим генерации*\nОтправьте фото или текст.', { parse_mode: 'Markdown' });
+            } else if (data === 'back_to_menu') {
+                sendWelcome(chatId);
+            } else if (data === 'goto_gen') {
+                const draft = userDrafts.get(chatId);
+                if (!draft) return b.sendMessage(chatId, '⚠️ Сначала отправьте фото или текст.');
+                b.sendMessage(chatId, '📂 *Выберите тип контента:*', {
+                    parse_mode: 'Markdown',
+                    reply_markup: {
+                        inline_keyboard: [
+                            [{ text: '🖼 Фото', callback_data: 'set_type_image' }, { text: '🎥 Видео', callback_data: 'set_type_video' }]
+                        ]
+                    }
+                });
+            } else if (data.startsWith('set_type_')) {
+                const type = data.replace('set_type_', '');
+                const draft = userDrafts.get(chatId) || { images: [], prompt: 'Art' };
+                draft.type = type;
+                userDrafts.set(chatId, draft);
+                const models = Object.entries(MODEL_CATALOG).filter(([_, m]) => m.type === type).map(([id, m]) => ({ text: `${m.name} (${m.cost}Kr)`, callback_data: `set_model_${id}` }));
+                const keyboard = [];
+                for (let i = 0; i < models.length; i += 2) keyboard.push(models.slice(i, i + 2));
+                keyboard.push([{ text: '🔙 Назад', callback_data: 'goto_gen' }]);
+                b.editMessageText(`📂 *Выберите модель:*`, { chat_id: chatId, message_id: query.message.message_id, parse_mode: 'Markdown', reply_markup: { inline_keyboard: keyboard } });
+            } else if (data.startsWith('set_model_')) {
+                const modelId = data.replace('set_model_', '');
+                const draft = userDrafts.get(chatId);
+                if (!draft) return b.sendMessage(chatId, '⚠️ Сессия истекла.');
+                b.sendMessage(chatId, `🎨 *Генерация...*`);
+                const result = await aiService.generateImage(draft.prompt || 'Art', modelId, { telegramId: chatId, source_files: draft.images });
+                if (result.success) {
+                    if (result.imageUrl.match(/\.(mp4|mov|webm)$/i)) await b.sendVideo(chatId, result.imageUrl);
+                    else await b.sendPhoto(chatId, result.imageUrl);
+                } else {
+                    b.sendMessage(chatId, `❌ Ошибка: ${result.error || 'Server Error'}`);
+                }
+            }
+        } catch (e) { console.error('Callback Error:', e); }
+    });
+
+    // Message
+    b.on('message', async (msg) => {
+        const text = msg.text || msg.caption;
+        if (!text || text.startsWith('/')) return;
+        if (text === 'Баланс ⚡') {
+            const balance = await getUserBalance(msg.from.id);
+            b.sendMessage(msg.chat.id, `🌟 *Баланс: ${balance} кредитов.*`, {
+                parse_mode: 'Markdown',
+                reply_markup: { inline_keyboard: [[{ text: 'Пополнить ⚡', callback_data: 'pay_sbp' }]] }
+            });
+        } else if (text === 'Главное меню 🏠') {
+            sendWelcome(msg.chat.id);
+        } else if (text === 'Пригласи друга 🤝') {
+            b.sendMessage(msg.chat.id, inviteMessage(msg.from.id), { parse_mode: 'Markdown' });
+        } else {
+            // Draft logic
+            let draft = userDrafts.get(msg.chat.id) || { images: [], prompt: 'Art' };
+            draft.prompt = text;
+            userDrafts.set(msg.chat.id, draft);
+            b.sendMessage(msg.chat.id, `Запомнил: "${text}"`, {
+                reply_markup: { inline_keyboard: [[{ text: '🚀 Начать генерацию', callback_data: 'goto_gen' }]] }
+            });
+        }
+    });
+
+    // Photo
+    b.on('photo', async (msg) => {
+        const chatId = msg.chat.id;
+        const fileId = msg.photo[msg.photo.length - 1].file_id;
+        try {
+            const fileLink = await b.getFileLink(fileId);
+            const supabaseUrl = await uploadTelegramFileToSupabase(fileLink);
+            let draft = userDrafts.get(chatId) || { images: [], prompt: 'image based on attachment' };
+            draft.images.push(supabaseUrl || fileLink);
+            userDrafts.set(chatId, draft);
+            b.sendMessage(chatId, '📸 Фото добавлено!', {
+                reply_markup: { inline_keyboard: [[{ text: '🚀 Генерировать', callback_data: 'goto_gen' }]] }
+            });
+        } catch (e) { b.sendMessage(chatId, 'Ошибка при обработке фото.'); }
+    });
+}
 
 // --- API ENDPOINTS ---
 
@@ -1057,548 +1259,7 @@ const sendWelcome = (chatId) => {
     bot.sendMessage(chatId, 'Выберите действие в меню ниже 👇', mainKeyboard);
 };
 
-// --- HANDLERS ---
-
-// /start command
-bot.onText(/\/start(?: (.+))?/, async (msg, match) => {
-    try {
-        await bot.setChatMenuButton({
-            chat_id: msg.chat.id,
-            menu_button: {
-                type: 'web_app',
-                text: 'Open Pixel',
-                web_app: { url: process.env.WEB_APP_URL }
-            }
-        });
-    } catch (e) { console.error('Menu Button Error:', e.message); }
-
-    await botAnalytics.upsertUser(msg.from);
-    await botAnalytics.trackCommand(msg.from.id, 'start');
-
-
-    // Referral Processing
-    const startParam = match[1];
-    if (startParam) {
-        // 1. Connect User for Notifications
-        if (startParam.startsWith('connect')) {
-            // Support 'connect_<uuid>' or just 'connect' (if user manual, though usually needs uuid)
-            // But frontend format: 'connect_<userid>' or just 'connect' (mock?)
-            // The frontend in Notifications.jsx opened '?start=connect'. It didn't pass UUID?
-            // Wait, Notifications.jsx currently says: window.open('https://t.me/bazzar_staff_bot?start=connect', '_blank');
-            // It MUST pass the user ID! I need to fix Frontend first or rely on Telegram ID if I can match it, but I can't match it without link.
-            // Assumption: I'll update Notifications.jsx to pass UUID too, but for now let's write the bot logic to expect 'connect_<uuid>'.
-
-            // If just 'connect', we can't link, we need the UUID. 
-            // BUT, if the user opens the Mini App from this chat, we know the user. 
-            // However, the task is "Connect Notifications", implying Web -> Bot link.
-
-            const connectedUserId = startParam.replace('connect_', ''); // logic if 'connect_UUID'
-
-            // Handle 'connect' (no uuid) - maybe ask user to share contact? No, Web App is better.
-
-            if (connectedUserId && connectedUserId !== 'connect') {
-                try {
-                    const { error } = await supabase.from('bot_users').upsert({
-                        user_id: connectedUserId,
-                        telegram_chat_id: msg.chat.id,
-                        username: msg.from.username
-                    });
-
-                    if (!error) {
-                        bot.sendMessage(msg.chat.id, '✅ *Уведомления подключены!*\nТеперь вы будете получать информацию о новых заказах сюда.', { parse_mode: 'Markdown' });
-                    } else {
-                        console.error('Connect Error:', error);
-                        bot.sendMessage(msg.chat.id, '❌ Ошибка подключения. Попробуйте снова из приложения.');
-                    }
-                } catch (e) {
-                    console.error('Connect Exception:', e);
-                }
-            } else {
-                // Fallback if no UUID passed (e.g. from existing button)
-                bot.sendMessage(msg.chat.id, 'ℹ️ Чтобы подключить уведомления, нажмите кнопку "Подключить бота" в разделе Уведомлений приложения.');
-            }
-        }
-
-        // 2. Referral
-        else if (startParam.startsWith('r-')) {
-            const referrerTgId = parseInt(startParam.replace('r-', ''), 10);
-
-            if (referrerTgId && !isNaN(referrerTgId) && referrerTgId !== msg.from.id) {
-                try {
-                    const userUUID = await getUserUUID(msg.from.id);
-                    if (userUUID) {
-                        const { data: refResult, error } = await supabase.rpc('register_referral', {
-                            p_new_user_id: userUUID,
-                            p_referrer_telegram_id: referrerTgId
-                        });
-
-                        if (refResult && refResult.success) {
-                            console.log(`✅ Referral Success: ${msg.from.id} via ${referrerTgId}`);
-                            // Notify Referrer
-                            bot.sendMessage(referrerTgId, `🎉 *Новый реферал!*\n\nПо вашей ссылке зарегистрировался новый пользователь.\n💰 Баланс пополнен на *${refResult.bonus}* кредитов!`, { parse_mode: 'Markdown' }).catch(err => console.error('Failed to notify referrer', err.message));
-                        } else if (error) {
-                            console.warn('Referral RPC Error:', error);
-                        }
-                    }
-                } catch (e) {
-                    console.error('Referral Logic Error:', e);
-                }
-            }
-        }
-    }
-
-    sendWelcome(msg.chat.id);
-});
-
-// /help command
-bot.onText(/\/help/, async (msg) => {
-    await botAnalytics.upsertUser(msg.from);
-    await botAnalytics.trackCommand(msg.from.id, 'help');
-
-    const helpMessage = `
-📚 *Помощь - Pixel AI Bot*
-
-❓ *Часто задаваемые вопросы:*
-
-*1️⃣ Как создать изображение?*
-• Отправьте фото и опишите, что изменить
-• Или просто напишите текстовый промпт
-• Пример: "добавь рядом динозавра"
-
-*2️⃣ Сколько стоит генерация?*
-• Фото: 5 кредитов
-• Видео: от 15 кредитов
-• Аудио: 10 кредитов
-
-*3️⃣ Как получить кредиты?*
-• 10 кредитов при регистрации 🎁
-• Пополнение через СБП/Карту
-• Реферальная программа (10% от платежей друзей)
-
-*4️⃣ Как работает реферальная программа?*
-• Нажмите "Пригласи друга 🤝"
-• Поделитесь ссылкой
-• Получайте 10% от всех пополнений рефералов
-
-*5️⃣ Где мои генерации?*
-• В мини-аппе → вкладка "История"
-• Все сохраняется в чате с ботом
-
-*6️⃣ Как связаться с поддержкой?*
-• Канал: @pixel_imagess
-• Чат: @pixel_communityy
-
-Выберите тему для подробной информации 👇
-    `;
-
-    bot.sendMessage(msg.chat.id, helpMessage, {
-        parse_mode: 'Markdown',
-        reply_markup: {
-            inline_keyboard: [
-                [
-                    { text: '🎨 Как генерировать', callback_data: 'faq_generate' },
-                    { text: '💰 Цены', callback_data: 'faq_pricing' }
-                ],
-                [
-                    { text: '🎁 Кредиты', callback_data: 'faq_credits' },
-                    { text: '🤝 Рефералы', callback_data: 'faq_referral' }
-                ],
-                [
-                    { text: '📱 Мини-апп', callback_data: 'faq_miniapp' },
-                    { text: '🆘 Поддержка', callback_data: 'faq_support' }
-                ],
-                [
-                    { text: '🏠 Главное меню', callback_data: 'back_to_menu' }
-                ]
-            ]
-        }
-    });
-});
-
-// --- SESSION STORAGE ---
-const userDrafts = new Map();
-const lastGenerations = new Map(); // chatId -> imageUrl
-
-// --- HELPERS ---
-async function getUserBalance(telegramId) {
-    try {
-        const { data: user } = await supabase.from('users').select('id').eq('telegram_id', telegramId).single();
-        if (!user) return 0;
-        const { data: stats } = await supabase.from('user_stats').select('current_balance').eq('user_id', user.id).single();
-        return stats?.current_balance || 0;
-    } catch (e) { return 0; }
-}
-
-async function getUserUUID(telegramId) {
-    const { data: user } = await supabase.from('users').select('id').eq('telegram_id', telegramId).single();
-    return user?.id || null;
-}
-
-// --- CALLBACK QUERY HANDLER ---
-bot.on('callback_query', async (query) => {
-    const chatId = query.message.chat.id;
-    const data = query.data;
-
-    try {
-        // Answer callback IMMEDIATELY to stop loading animation and prevent timeout
-        await bot.answerCallbackQuery(query.id);
-
-        await botAnalytics.trackEvent(query.from.id, 'callback_click', { button: data });
-
-        if (data === 'generate_art') {
-            bot.sendMessage(chatId, '🎨 *Режим генерации*\n\n1. Отправьте фото и напишите, что изменить\n2. Или просто напишите промпт (например "Кот-космонавт")\n\nЯ использую лучшие нейросети для создания магии! ✨', { parse_mode: 'Markdown' });
-        }
-
-        else if (data === 'pay_sbp') {
-            bot.sendMessage(chatId, '💳 *Пополнение баланса*\n\nДля пополнения баланса откройте наше приложение 📱', {
-                reply_markup: {
-                    inline_keyboard: [[{ text: 'Открыть Bazzar Pixel', web_app: { url: process.env.WEB_APP_URL || 'https://bazzar-pixel.vercel.app' } }]]
-                },
-                parse_mode: 'Markdown'
-            });
-        }
-
-        // FAQ Handlers
-        else if (data.startsWith('faq_')) {
-            const faqMap = {
-                'faq_generate': '🎨 *Как генерировать:*\n1. Напишите, что вы хотите увидеть\n2. Или отправьте фото и подпишите "сделай в стиле аниме"',
-                'faq_pricing': '💰 *Цены:*\n• Изображения: от 5 кредитов\n• Видео: от 15 кредитов\n• Upscale: 1 кредит',
-                'faq_credits': '🎁 *Кредиты* можно получить:\n• При регистрации (10 kr)\n• Приглашая друзей (+10 kr)\n• Покупая пакеты в приложении',
-                'faq_referral': '🤝 *Рефералка:*\nОтправьте другу ссылку (из меню "Пригласи друга"). Когда он перейдет по ней, вы получите бонусы!',
-                'faq_miniapp': '📱 *Mini App* позволяет:\n• Видеть историю генераций\n• Удобно выбирать модели\n• Смотреть баланс\n• Применять шаблоны',
-                'faq_support': '🆘 Если что-то не работает, пишите в @pixel_communityy'
-            };
-            if (faqMap[data]) {
-                bot.sendMessage(chatId, faqMap[data], { parse_mode: 'Markdown' });
-            }
-        }
-
-        // Templates handlers removed as per user request
-
-
-        else if (data === 'goto_gen') {
-            const draft = userDrafts.get(chatId);
-            if (!draft || (!draft.prompt && (!draft.images || draft.images.length === 0))) {
-                return bot.sendMessage(chatId, '⚠️ Сначала отправьте фото или опишите задачу текстом.');
-            }
-
-            // Step 1: Ask Type
-            bot.sendMessage(chatId, '📂 *Выберите тип контента:*', {
-                parse_mode: 'Markdown',
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: '🖼 Фото', callback_data: 'set_type_image' }, { text: '🎥 Видео', callback_data: 'set_type_video' }],
-                        [{ text: '🎵 Аудио', callback_data: 'set_type_audio' }]
-                    ]
-                }
-            });
-        }
-
-        // STEP 2: SELECT TYPE
-        else if (data.startsWith('set_type_')) {
-            const type = data.replace('set_type_', '');
-            const draft = userDrafts.get(chatId) || {};
-            draft.type = type;
-            userDrafts.set(chatId, draft);
-
-            // Filter models from Model Catalog
-            const models = Object.entries(MODEL_CATALOG)
-                .filter(([_, m]) => m.type === type)
-                .map(([id, m]) => ({ text: `${m.name} (${m.cost}Kr)`, callback_data: `set_model_${id}` }));
-
-            if (models.length === 0) {
-                return bot.sendMessage(chatId, '😔 В этой категории пока нет моделей.', {
-                    reply_markup: { inline_keyboard: [[{ text: '🔙 Назад', callback_data: 'goto_gen' }]] }
-                });
-            }
-
-            // Chunk buttons
-            const keyboard = [];
-            for (let i = 0; i < models.length; i += 2) keyboard.push(models.slice(i, i + 2));
-            keyboard.push([{ text: '🔙 Назад', callback_data: 'goto_gen' }]);
-
-            bot.editMessageText(`📂 *Выберите модель для ${type === 'image' ? 'фото' : type === 'video' ? 'видео' : 'аудио'}:*`, {
-                chat_id: chatId,
-                message_id: query.message.message_id,
-                parse_mode: 'Markdown',
-                reply_markup: { inline_keyboard: keyboard }
-            });
-        }
-
-        // STEP 3: SELECT MODEL -> GENERATE
-        else if (data.startsWith('set_model_')) {
-            const modelId = data.replace('set_model_', '');
-            const draft = userDrafts.get(chatId);
-            if (!draft) return bot.sendMessage(chatId, '⚠️ Сессия истекла. Начните заново.');
-
-            draft.model = modelId;
-            userDrafts.set(chatId, draft);
-
-            const modelName = MODEL_CATALOG[modelId]?.name || modelId;
-            const cost = MODEL_CATALOG[modelId]?.cost || 0;
-
-            bot.sendMessage(chatId, `🎨 *Начинаю генерацию...*\n🤖 Модель: ${modelName}\n💰 Стоимость: ${cost} Kr\n\n⏳ Ожидайте результат...`, { parse_mode: 'Markdown' });
-
-            try {
-                const { data: user } = await supabase.from('users').select('id').eq('telegram_id', chatId).single();
-
-                const result = await aiService.generateImage(draft.prompt || 'Art', modelId, {
-                    userId: user?.id,
-                    telegramId: chatId,
-                    aspect_ratio: draft.aspectRatio || '1:1',
-                    source_files: draft.images
-                });
-
-                if (result.success) {
-                    if (result.imageUrl && !result.imageUrl.startsWith('Error')) {
-                        const caption = `✨ Готово! (${modelName})\n\n@pixel_ai_bot`;
-                        const mkp = { inline_keyboard: [[{ text: '❤️', callback_data: 'like' }, { text: '🔄 Еще раз', callback_data: 'goto_gen' }]] };
-
-                        const isVideo = draft.type === 'video' || result.imageUrl.match(/\.(mp4|mov|webm)$/i);
-                        const isAudio = draft.type === 'audio' || result.imageUrl.match(/\.(mp3|wav)$/i);
-
-                        if (isVideo) await bot.sendVideo(chatId, result.imageUrl, { caption, reply_markup: mkp });
-                        else if (isAudio) await bot.sendAudio(chatId, result.imageUrl, { caption, reply_markup: mkp });
-                        else await bot.sendPhoto(chatId, result.imageUrl, { caption, reply_markup: mkp });
-                    }
-                } else {
-                    bot.sendMessage(chatId, `❌ Ошибка: ${result.error || 'Server Error'}`);
-                }
-            } catch (err) {
-                console.error('Gen Error:', err);
-                bot.sendMessage(chatId, '❌ Произошла ошибка при генерации.');
-            }
-        }
-
-        else if (data === 'improve_prompt') {
-            const draft = userDrafts.get(chatId);
-            if (!draft || (!draft.prompt && (!draft.images || draft.images.length === 0))) {
-                return bot.sendMessage(chatId, '⚠️ Сначала отправьте фото или опишите задачу текстом.');
-            }
-
-            const original = draft.prompt || "Photo";
-            const improvements = ['cinematic lighting', '8k resolution', 'highly detailed', 'masterpiece', 'vivid colors', 'sharp focus', 'professional photography', 'dramatic atmosphere'];
-            // Pick 3 random
-            const selected = improvements.sort(() => 0.5 - Math.random()).slice(0, 3);
-            const improved = `${original}, ${selected.join(', ')}`;
-
-            draft.improvedPrompt = improved;
-            userDrafts.set(chatId, draft);
-
-            bot.sendMessage(chatId, `✨ *Вариант улучшения:*\n\n"${improved}"\n\nКакой используем?`, {
-                parse_mode: 'Markdown',
-                reply_markup: {
-                    inline_keyboard: [
-                        [{ text: '✅ Использовать этот', callback_data: 'use_improved' }],
-                        [{ text: '🔙 Оставить мой', callback_data: 'use_original' }]
-                    ]
-                }
-            });
-        }
-
-        else if (data === 'use_improved') {
-            const draft = userDrafts.get(chatId);
-            if (draft) {
-                draft.prompt = draft.improvedPrompt;
-                userDrafts.set(chatId, draft);
-                bot.sendMessage(chatId, '✅ Промпт обновлен!', {
-                    reply_markup: { inline_keyboard: [[{ text: '🚀 Перейти к генерации', callback_data: 'goto_gen' }]] }
-                });
-            }
-        }
-
-        else if (data === 'use_original') {
-            bot.sendMessage(chatId, '👌 Используем ваш вариант.', {
-                reply_markup: { inline_keyboard: [[{ text: '🚀 Перейти к генерации', callback_data: 'goto_gen' }]] }
-            });
-        }
-
-        else if (data === 'back_to_menu') {
-            sendWelcome(chatId);
-        }
-
-    } catch (error) {
-        console.error('Callback Error:', error);
-    }
-});
-
-// Handle Standard Keyboard Buttons
-bot.on('message', async (msg) => {
-    const chatId = msg.chat.id;
-    const text = msg.text || msg.caption;
-
-    await botAnalytics.upsertUser(msg.from);
-
-    if (text && text.startsWith('/')) return; // Handled by onText
-
-    // 1. Menu Buttons Handling
-    if (text === '🎨 Генерация') {
-        await botAnalytics.trackEvent(msg.from.id, 'button_click', { button: 'generate_art_menu' });
-        bot.sendMessage(chatId, '🎨 *Режим генерации*\n\nПросто напишите, что вы хотите увидеть, или отправьте фото для обработки.\n\nНапример:\n• "Кот в скафандре на Марсе"\n• (Отправьте фото) и подпишите "Сделай в стиле аниме"', { parse_mode: 'Markdown' });
-        return;
-    }
-
-    if (text === 'Баланс ⚡') {
-        await botAnalytics.trackEvent(msg.from.id, 'button_click', { button: 'balance' });
-        const balance = await getUserBalance(msg.from.id);
-
-        bot.sendMessage(chatId, `🌟 *Ваш баланс: ${balance} кредитов.* \n\nСтоимость генерации:\n- Фото: 5 кредитов\n- Видео: от 15 кредитов`, {
-            parse_mode: 'Markdown',
-            reply_markup: {
-                inline_keyboard: [[{ text: 'Пополнить ⚡', callback_data: 'pay_sbp' }]]
-            }
-        });
-        return;
-    }
-
-    if (text === 'Пригласи друга 🤝') {
-        await botAnalytics.trackEvent(msg.from.id, 'button_click', { button: 'invite' });
-        bot.sendMessage(chatId, inviteMessage(msg.from.id), { parse_mode: 'Markdown' });
-        return;
-    }
-
-    if (text === 'Сообщество 👥') {
-        await botAnalytics.trackEvent(msg.from.id, 'button_click', { button: 'community' });
-        bot.sendMessage(chatId, communityMessage, { parse_mode: 'Markdown' });
-        return;
-    }
-
-    if (text === 'Главное меню 🏠') {
-        sendWelcome(chatId);
-        return;
-    }
-
-    if (text === 'Трендовые фото 🔥') {
-        await botAnalytics.trackEvent(msg.from.id, 'button_click', { button: 'trending' });
-        bot.sendMessage(chatId, trendingMessage, {
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: 'Открыть приложение 📱', web_app: { url: process.env.WEB_APP_URL || 'https://bazzar-pixel.vercel.app' } }]
-                ]
-            }
-        });
-        return;
-    }
-
-    // Templates button handling removed
-
-
-    // 2. Ignore Commands & Empty Text
-    if (!text || text.startsWith('/')) return;
-    if (msg.photo) return; // Handled by on('photo')
-
-    // 3. GENERATION FLOW (Drafts)
-    let draft = userDrafts.get(chatId) || { images: [], model: 'nano_banana', aspectRatio: '1:1' };
-
-    // Handle Editing Prompt input
-    if (draft.state === 'waiting_for_edit_prompt') {
-        draft.prompt = text;
-        draft.selectedPrompt = text;
-        draft.state = 'ready';
-        userDrafts.set(chatId, draft);
-
-        return bot.sendMessage(chatId, `Правки приняты! \nВаш новый промпт: "${text}"`, {
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: '🚀 Перейти к генерации', callback_data: 'goto_gen' }],
-                    [{ text: '✨ Улучшить промпт', callback_data: 'improve_prompt' }]
-                ]
-            }
-        });
-    }
-
-    // New prompt overrides old
-    draft.prompt = text;
-    draft.selectedPrompt = text;
-    draft.improvedPrompt = null;
-    userDrafts.set(chatId, draft);
-
-    await bot.sendMessage(chatId, `Ваш промпт: ${text}\n\nТеперь вы можете отправить фото, чтобы прикрепить их, или начните генерацию.`, {
-        reply_markup: {
-            inline_keyboard: [
-                [{ text: '🚀 Перейти к генерации', callback_data: 'goto_gen' }],
-                [{ text: '✨ Улучшить промпт', callback_data: 'improve_prompt' }]
-            ]
-        }
-    });
-});
-
-// --- HELPER: Upload Telegram File to Supabase ---
-async function uploadTelegramFileToSupabase(fileLink) {
-    try {
-        const response = await fetch(fileLink);
-        const arrayBuffer = await response.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        const filename = `user_upload_${Date.now()}.jpg`;
-
-        const { error } = await supabase.storage
-            .from('uploads')
-            .upload(filename, buffer, { contentType: 'image/jpeg' });
-
-        if (error) throw error;
-
-        const { data } = supabase.storage.from('uploads').getPublicUrl(filename);
-        return data.publicUrl;
-    } catch (e) {
-        console.error('Upload Error:', e);
-        return null; // Fallback to original link if upload fails?
-    }
-}
-
-bot.on('photo', async (msg) => {
-    const chatId = msg.chat.id;
-    if (!msg.photo) return;
-
-    // Get largest photo
-    const photo = msg.photo[msg.photo.length - 1];
-    const fileId = photo.file_id;
-
-    let draft = userDrafts.get(chatId);
-    if (!draft) {
-        draft = { prompt: "image based on attachment", selectedPrompt: "image based on attachment", images: [], model: 'nano_banana', aspectRatio: '1:1' };
-    }
-
-    draft.width = photo.width;
-    draft.height = photo.height;
-
-    if (msg.caption) {
-        draft.prompt = msg.caption;
-        draft.selectedPrompt = msg.caption;
-    }
-
-    try {
-        const fileLink = await bot.getFileLink(fileId);
-
-        // Upload to Supabase to ensure permanent/accessible URL for AI
-        const supabaseUrl = await uploadTelegramFileToSupabase(fileLink);
-        const finalUrl = supabaseUrl || fileLink; // Fallback
-
-        draft.images.push(finalUrl);
-        userDrafts.set(chatId, draft);
-
-        // Template photo logic removed
-
-
-        await bot.sendMessage(chatId, `📸 Фото добавлено! (Всего: ${draft.images.length})\n\nВаш промпт: ${draft.prompt}`, {
-            reply_markup: {
-                inline_keyboard: [
-                    [{ text: '🚀 Перейти к генерации', callback_data: 'goto_gen' }],
-                    [{ text: '✨ Улучшить промпт (English)', callback_data: 'improve_prompt' }]
-                ]
-            }
-        });
-    } catch (e) {
-        console.error('Photo Error:', e);
-        bot.sendMessage(chatId, 'Ошибка при обработке фото.');
-    }
-});
-
-// Display stats on startup
-(async () => {
-    const totalUsers = await botAnalytics.getTotalUsers();
-    console.log('🤖 Bot is running...');
-    console.log(`📊 Total users: ${totalUsers} `);
-})();
+// --- END OF CORE LOGIC ---
 
 // Export app for Vercel serverless functions
 export default app;
