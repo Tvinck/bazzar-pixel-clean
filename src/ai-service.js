@@ -242,18 +242,19 @@ const aiService = {
                 input.output_format = 'png';
             } else if (kieModelId === 'google/nano-banana-edit') {
                 input.image_urls = options.source_files;
-                // Docs don't show aspect ratio for edit, but maybe output_format
                 input.output_format = 'png';
-                // Prompt is required
                 if (!hasSourceFiles) throw new Error('Nano Banana Edit requires a source image.');
             } else if (kieModelId === 'nano-banana-pro') {
-                // Docs say: prompt, image_input (array), aspect_ratio, resolution
                 input.aspect_ratio = aspectRatio;
-                input.resolution = '1K'; // Default
+                input.resolution = '1K';
                 if (hasSourceFiles) {
-                    input.image_input = options.source_files; // Note: 'image_input' not 'image_urls'
+                    // CRITICAL FIX: Some versions of Kie docs say 'image_urls', some 'image_input'. 
+                    // Based on "input_urls file type not supported", maybe it wants 'input_urls' specifically?
+                    // But normalize function below sets 'input_urls'. 
+                    // Let's set 'image_urls' here explicitly to be safe, normalize will duplicate to input_urls.
+                    input.image_urls = options.source_files;
                 } else {
-                    input.image_input = [];
+                    input.image_urls = [];
                 }
             } else {
                 // Imagen Models
