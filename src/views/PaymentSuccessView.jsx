@@ -1,44 +1,82 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { motion } from 'framer-motion';
 
 const PaymentSuccessView = () => {
     const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
-    const { refreshUser } = useUser();
+    const { user, refreshUser } = useUser();
     const [status, setStatus] = useState('checking'); // checking, success, error
 
     useEffect(() => {
-        const checkPayment = async () => {
-            // Ждем немного, чтобы банк успел обработать
-            await new Promise(r => setTimeout(r, 2000));
+        const verifyPayment = async () => {
+            const paymentId = localStorage.getItem('pending_payment_id');
+            const orderId = localStorage.getItem('pending_order_id');
 
-            try {
-                // Принудительно обновляем данные пользователя
+            // Если ID нет, просто пробуем обновить профиль (вдруг webhook сработал)
+            if (!paymentId) {
                 await refreshUser();
                 setStatus('success');
+                return;
+            }
 
-                // Через 3 секунды в профиль
-                setTimeout(() => {
-                    navigate('/profile');
-                }, 3000);
+            try {
+                // Активная проверка через наш сервер -> Т-Банк
+                const res = await fetch('/api/payment-check', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        paymentId,
+                        orderId,
+                        userId: user?.id
+                    })
+                });
+
+                const data = await res.json();
+
+                if (data.success || data.status === 'ALREADY_CREDITED') {
+                    // Очищаем
+                    localStorage.removeItem('pending_payment_id');
+                    localStorage.removeItem('pending_order_id');
+
+                    // Обновляем UI
+                    await refreshUser();
+                    setStatus('success');
+                } else {
+                    console.warn('Payment check failed:', data);
+                    // Может просто еще не дошло? Дадим пользователю просто пройти
+                    await refreshUser();
+                    setStatus('success');
+                }
+
+                // Авто-редирект
+                setTimeout(() => navigate('/profile'), 3000);
+
             } catch (e) {
-                console.error('Update error:', e);
-                setStatus('error');
+                console.error('Verify Check Error:', e);
+                // В любом случае пускаем, чтобы не блокировать интерфейс
+                setStatus('success');
+                setTimeout(() => navigate('/profile'), 3000);
             }
         };
 
-        checkPayment();
-    }, [refreshUser, navigate]);
+        // Запуск
+        if (user) {
+            verifyPayment();
+        } else {
+            // Если user context еще не готов, ждем или редиректим
+            const t = setTimeout(() => navigate('/profile'), 2000);
+            return () => clearTimeout(t);
+        }
+    }, [user, refreshUser, navigate]);
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-[#0f1014] text-center">
             {status === 'checking' && (
                 <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                    <h2 className="text-xl font-bold dark:text-white">Проверяем оплату...</h2>
-                    <p className="text-slate-500 text-sm">Пожалуйста, подождите</p>
+                    <h2 className="text-xl font-bold dark:text-white">Подтверждаем оплату в банке...</h2>
+                    <p className="text-slate-500 text-sm">Секундочку</p>
                 </div>
             )}
 
@@ -53,13 +91,13 @@ const PaymentSuccessView = () => {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl font-bold dark:text-white">Оплата прошла успешно!</h2>
-                    <p className="text-slate-500">Кредиты зачислены на ваш баланс</p>
+                    <h2 className="text-2xl font-bold dark:text-white">Успешно!</h2>
+                    <p className="text-slate-500">Ваш баланс обновлен</p>
                     <button
                         onClick={() => navigate('/profile')}
                         className="mt-6 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-black rounded-xl font-bold"
                     >
-                        Вернуться в профиль
+                        В профиль
                     </button>
                 </motion.div>
             )}

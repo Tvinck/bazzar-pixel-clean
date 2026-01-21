@@ -27,6 +27,12 @@ const TBankWidget = ({ amount, description, userId, telegramId, userEmail }) => 
             const data = await res.json();
 
             if (data.paymentUrl) {
+                // Save context for success check
+                if (data.paymentId) {
+                    localStorage.setItem('pending_payment_id', data.paymentId);
+                    localStorage.setItem('pending_order_id', data.orderId);
+                }
+
                 // Open the payment page directly
                 if (window.Telegram?.WebApp) {
                     window.Telegram.WebApp.openLink(data.paymentUrl);
