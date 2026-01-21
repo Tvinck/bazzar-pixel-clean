@@ -16,6 +16,10 @@
         {
             "source": "/api/staff/(.*)",
             "destination": "/api/index.js"
+        },
+        {
+            "source": "/((?!api/|_next/|static/|assets/|favicon.ico|.*\\..*).*)",
+            "destination": "/index.html"
         }
     ]
 }
