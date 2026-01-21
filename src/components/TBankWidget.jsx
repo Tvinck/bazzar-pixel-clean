@@ -37,10 +37,10 @@ const TBankWidget = ({ amount, description, userId, telegramId, userEmail }) => 
             const initConfig = {
                 terminalKey: '1768938209983',
                 product: 'eacq',
+                methods: ['sbp', 'tinkoff_pay', 'card'],
                 features: {
                     payment: {
                         container: containerRef.current,
-                        // Explicitly request these methods to be shown
                         methods: ['sbp', 'tinkoff_pay', 'card'],
                         paymentStartCallback: async () => {
                             const res = await fetch('/api/payment-init', {
@@ -61,7 +61,6 @@ const TBankWidget = ({ amount, description, userId, telegramId, userEmail }) => 
                         }
                     },
                     iframe: {
-                        // Support for card payments in iframe if buttons fail
                         container: null
                     }
                 }
@@ -70,7 +69,6 @@ const TBankWidget = ({ amount, description, userId, telegramId, userEmail }) => 
             const integration = await window.PaymentIntegration.init(initConfig);
             integrationRef.current = integration;
 
-            // Debug: what methods are actually available for this terminal?
             console.log('✅ T-Bank Integration Object:', integration);
             console.log('✅ Available methods:', integration.methods || 'auto');
         } catch (err) {
