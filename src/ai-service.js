@@ -351,7 +351,8 @@ const aiService = {
                 body: JSON.stringify({
                     provider: 'kie',
                     model: requestBody.model,
-                    input: requestBody.input
+                    input: requestBody.input,
+                    userId: options.userId // Pass User ID for Billing
                 })
             });
         } else {
@@ -366,9 +367,17 @@ const aiService = {
         }
 
         if (!createRes.ok) {
-            const errorText = await createRes.text();
+            let errorText;
+            try {
+                // Try to parse JSON error first
+                const errJson = await createRes.json();
+                errorText = errJson.error || errJson.message || JSON.stringify(errJson);
+            } catch (e) {
+                // Fallback to text
+                errorText = await createRes.text();
+            }
             console.error('❌ Kie.ai API Error:', errorText);
-            throw new Error(`Kie.ai API error: ${createRes.status} - ${errorText}`);
+            throw new Error(errorText || `API Error: ${createRes.status}`);
         }
 
         const responseData = await createRes.json();

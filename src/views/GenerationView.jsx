@@ -388,12 +388,11 @@ const GenerationView = () => {
                     }
                 }
 
-                result = await aiService.generateImage(promptText, {
-                    model,
+                result = await aiService.generateImage(promptText, model, {
                     aspectRatio,
                     count: genCount,
-                    source_files: sourceFiles, // Pass image files
-                    video_files: videoFiles,   // Pass video files
+                    source_files: sourceFiles,
+                    video_files: videoFiles,
                     userId: apiUser?.id,
                     telegramId: telegramId,
                     ...customValues
