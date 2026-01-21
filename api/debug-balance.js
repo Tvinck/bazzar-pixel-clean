@@ -6,25 +6,31 @@ const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzd
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 export default async function handler(req, res) {
-    const results = {};
+    const userId = 'd0860ae5-f181-4a36-8eda-8bdecac359b7';
 
-    // Check profile with telegram_id
-    const { data: byTelegram, error: err1 } = await supabase
-        .from('profiles')
-        .select('id, telegram_id, username, balance')
-        .eq('telegram_id', '50823401');
+    // 1. Check in 'users' table
+    const { data: user } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
 
-    results.byTelegramId = { data: byTelegram, error: err1 };
+    // 2. Check in 'user_stats'
+    const { data: stats } = await supabase
+        .from('user_stats')
+        .select('*')
+        .eq('user_id', userId)
+        .maybeSingle();
 
-    // Get ALL profiles with balance > 0 (to find the one with 50)
-    const { data: allWithBalance, error: err2 } = await supabase
-        .from('profiles')
-        .select('id, telegram_id, username, balance')
-        .gt('balance', 0)
-        .order('balance', { ascending: false })
-        .limit(10);
+    // 3. Keep existing debug for telegram_id
+    const { data: byTelegram } = await supabase
+        .from('users')
+        .select('*')
+        .eq('telegram_id', '50823401')
+        .maybeSingle();
 
-    results.allProfilesWithBalance = { data: allWithBalance, error: err2 };
-
-    res.json(results);
+    res.json({
+        target_user: { user, stats },
+        by_telegram_id: byTelegram
+    });
 }
