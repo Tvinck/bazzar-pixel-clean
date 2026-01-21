@@ -1,3 +1,5 @@
+import crypto from 'node:crypto';
+import https from 'node:https';
 import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL = 'https://ktookvpqtmzfccojarwm.supabase.co';

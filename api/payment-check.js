@@ -1,5 +1,5 @@
-import crypto from 'crypto';
-import https from 'https';
+import crypto from 'node:crypto';
+import https from 'node:https';
 import { createClient } from '@supabase/supabase-js';
 
 // --- CONFIGURATION ---
