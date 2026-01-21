@@ -8,39 +8,23 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 export default async function handler(req, res) {
     const results = {};
 
-    // Check profile with telegram_id (using 'balance' column)
-    const { data: byTelegramBalance, error: err1 } = await supabase
+    // Check profile with telegram_id
+    const { data: byTelegram, error: err1 } = await supabase
         .from('profiles')
         .select('id, telegram_id, username, balance')
         .eq('telegram_id', '50823401');
 
-    results.byTelegramId_balance = { data: byTelegramBalance, error: err1 };
+    results.byTelegramId = { data: byTelegram, error: err1 };
 
-    // Check profile with telegram_id (using 'credits' column if exists)
-    const { data: byTelegramCredits, error: err2 } = await supabase
+    // Get ALL profiles with balance > 0 (to find the one with 50)
+    const { data: allWithBalance, error: err2 } = await supabase
         .from('profiles')
-        .select('id, telegram_id, username, credits')
-        .eq('telegram_id', '50823401');
+        .select('id, telegram_id, username, balance')
+        .gt('balance', 0)
+        .order('balance', { ascending: false })
+        .limit(10);
 
-    results.byTelegramId_credits = { data: byTelegramCredits, error: err2 };
-
-    // Check all profiles with credits = 50
-    const { data: by50credits, error: err3 } = await supabase
-        .from('profiles')
-        .select('id, telegram_id, username, credits')
-        .eq('credits', 50);
-
-    results.withCredits50 = { data: by50credits, error: err3 };
-
-    // Check profiles without telegram_id but with credits > 0
-    const { data: noTelegramCredits, error: err4 } = await supabase
-        .from('profiles')
-        .select('id, telegram_id, username, credits')
-        .is('telegram_id', null)
-        .gt('credits', 0)
-        .limit(5);
-
-    results.noTelegramIdWithCredits = { data: noTelegramCredits, error: err4 };
+    results.allProfilesWithBalance = { data: allWithBalance, error: err2 };
 
     res.json(results);
 }
