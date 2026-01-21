@@ -1,3 +1,4 @@
+// PaymentDrawer Updated: 2026-01-21 14:00
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Check, ChevronRight, Zap, ShieldCheck, X, CreditCard, TicketPercent, Wallet, Gift, Star } from 'lucide-react';
