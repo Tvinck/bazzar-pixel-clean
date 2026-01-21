@@ -185,7 +185,7 @@ export default async function handler(req, res) {
             }
 
             // Upstream Error Check
-            const isError = (json.code !== undefined && json.code !== 0) || (json.error);
+            const isError = (json.code !== undefined && json.code !== 0 && json.code !== 200) || (json.error);
 
             if (isError && shouldCharge) {
                 await callRpc('refund_user_credits', { p_user_id: userId, p_amount: cost });

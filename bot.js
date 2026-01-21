@@ -224,7 +224,7 @@ const communityMessage = `🚀 *Присоединяйтесь к нашему �
 
 const trendingMessage = `🔥 *Тренды Pixel AI*\n\nСмотрите лучшие работы пользователей в нашем приложении! 👇`;
 
-const isPolling = process.env.POLLING === 'true';
+const isPolling = process.env.POLLING === 'true' && !process.env.VERCEL;
 console.log('🤖 Bot Init. Polling:', isPolling);
 
 // Ensure Storage Buckets are Public (Global Visibility Fix)
@@ -279,33 +279,49 @@ async function uploadTelegramFileToSupabase(fileLink) {
 }
 
 // --- SYSTEM INITIALIZATION ---
-console.log('📡 Initializing System...');
-try {
-    await ensureBucketsPublic();
+let isInitialized = false;
 
-    const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    if (!botToken) {
-        throw new Error('TELEGRAM_BOT_TOKEN is missing in environment variables');
+export async function initializeSystem() {
+    if (isInitialized) return { bot, app, queue };
+
+    console.log('📡 Initializing System...');
+    try {
+        await ensureBucketsPublic();
+
+        const botToken = process.env.TELEGRAM_BOT_TOKEN;
+        if (!botToken) {
+            throw new Error('TELEGRAM_BOT_TOKEN is missing in environment variables');
+        }
+
+        bot = new TelegramBot(botToken, { polling: isPolling });
+        console.log('🤖 Telegram Bot instance created.');
+
+        queue = await initQueue(bot);
+        console.log('📦 Job Queue initialized.');
+
+        setupRoutes(app, bot, queue);
+        console.log('🛣️ Routes attached.');
+
+        setupBotHandlers(bot);
+        console.log('🎮 Bot Handlers registered.');
+
+        isInitialized = true;
+        return { bot, app, queue };
+    } catch (err) {
+        console.error('💥 SYSTEM INIT FAILED:', err);
+        throw err;
     }
+}
 
-    bot = new TelegramBot(botToken, { polling: isPolling });
-    console.log('🤖 Telegram Bot instance created.');
-
-    queue = await initQueue(bot);
-    console.log('📦 Job Queue initialized.');
-
-    setupRoutes(app, bot, queue);
-    console.log('🛣️ Routes attached.');
-
-    setupBotHandlers(bot);
-    console.log('🎮 Bot Handlers registered.');
-
-    if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
-        const PORT = process.env.PORT || 3000;
+// Start server standalone if not on Vercel
+if (!process.env.VERCEL && process.env.NODE_ENV !== 'production') {
+    const PORT = process.env.PORT || 3000;
+    initializeSystem().then(({ app }) => {
         app.listen(PORT, () => console.log(`🚀 Bot Server running on port ${PORT}`));
-    }
-} catch (err) {
-    console.error('💥 SYSTEM INIT FAILED:', err);
+    }).catch(err => {
+        console.error('Fatal crash on startup:', err);
+        process.exit(1);
+    });
 }
 
 // Handler functions below...
@@ -1327,5 +1343,13 @@ const sendWelcome = (chatId) => {
 
 // --- END OF CORE LOGIC ---
 
-// Export app for Vercel serverless functions
-export default app;
+// Export a wrapper for Vercel to ensure initialization
+export default async (req, res) => {
+    try {
+        const { app } = await initializeSystem();
+        return app(req, res);
+    } catch (err) {
+        console.error('Vercel Handler Error:', err);
+        res.status(500).json({ error: 'Initialization failed', message: err.message });
+    }
+};

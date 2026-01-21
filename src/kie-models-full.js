@@ -200,6 +200,27 @@ export const KIE_MODELS_FULL = {
         modes: ['720p', '1080p'],
         maxDuration: 30,
         description: 'Переносит движения из видео-шаблона на фото клиента'
+    },
+
+    // ============================================
+    // ИЗОБРАЖЕНИЯ - NANO BANANA (Google)
+    // ============================================
+    'nano_banana': {
+        name: 'Nano Banana',
+        kieId: 'nano-banana',
+        credits: 10,
+        type: 'image',
+        speed: 'very_fast',
+        aspectRatios: ['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9', 'auto']
+    },
+    'nano_banana_pro': {
+        name: 'Nano Banana Pro',
+        kieId: 'nano-banana-pro',
+        credits: 25,
+        type: 'image',
+        speed: 'fast',
+        quality: ['1K', '2K', '4K'],
+        aspectRatios: ['1:1', '2:3', '3:2', '3:4', '4:3', '4:5', '5:4', '9:16', '16:9', '21:9', 'auto']
     }
 };
 
@@ -220,9 +241,9 @@ export function getKieModelsByType(type) {
 
 // Маппинг старых ID на новые
 export const MODEL_ID_MAPPING = {
-    // Старые nano banana модели
-    'nano_banana': 'grok_text',
-    'nano_banana_pro': 'seedream_v4_text',
+    // Nano Banana модели
+    'nano_banana': 'nano_banana',
+    'nano_banana_pro': 'nano_banana_pro',
 
     // Старые модели
     'gpt4o_image': 'gpt_image_15_text',

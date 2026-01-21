@@ -5,8 +5,8 @@ export const GOOGLE_API_KEYS = [
 
 export const AI_MODELS = {
     TEXT: 'gemini-1.5-flash',
-    IMAGE_FAST: 'google/nano-banana', // DefApi Proxy Model ID
-    IMAGE_PRO: 'google/nano-banana-pro' // DefApi Proxy Model ID
+    IMAGE_FAST: 'nano-banana',
+    IMAGE_PRO: 'nano-banana-pro'
 };
 
 export const DEFAPI_BASE_URL = 'https://api.defapi.org/api';
