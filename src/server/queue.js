@@ -1,4 +1,6 @@
-import PgBoss from 'pg-boss';
+import { createRequire } from 'module';
+const require = createRequire(import.meta.url);
+const PgBoss = require('pg-boss');
 
 import { aiService } from '../ai-service.js';
 import { supabase } from '../../bot-supabase.js';
