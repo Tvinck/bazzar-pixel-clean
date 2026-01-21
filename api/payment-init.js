@@ -21,20 +21,33 @@ export default async function handler(req, res) {
         const PASSWORD = '7XEqsWfjryCnqCck';
         const API_URL = 'https://securepay.tinkoff.ru/v2/Init';
 
-        // Amount in Kopeeks (cents)
-        const amountKopeeks = Math.round(amount * 100);
-        // OrderId MUST be <= 20 chars for T-Bank
-        const orderId = `P_${Date.now().toString().slice(-8)}_${Math.floor(Math.random() * 1000)}`;
+        // 1. Prepare Data
+        const amountKopeeks = Math.round(Number(amount) * 100);
+        // Pure numeric OrderId (max 20 chars)
+        const orderId = `${Date.now()}${Math.floor(Math.random() * 1000)}`.slice(0, 20);
 
-        // 1. Prepare Request Body
+        // 2. Token calculation (Strict fields order per T-Bank V2)
+        const tokenParams = {
+            TerminalKey: TERMINAL_KEY,
+            Amount: amountKopeeks,
+            OrderId: orderId,
+            Password: PASSWORD
+        };
+
+        const keys = Object.keys(tokenParams).sort();
+        let tokenStr = '';
+        for (const key of keys) {
+            tokenStr += String(tokenParams[key]);
+        }
+        const token = crypto.createHash('sha256').update(tokenStr).digest('hex');
+
+        // 3. Final Request Body (Only what we signed + Token + DATA)
         const requestBody = {
             TerminalKey: TERMINAL_KEY,
             Amount: amountKopeeks,
             OrderId: orderId,
-            Description: description || 'Pixel AI Credits',
-            NotificationURL: 'https://bazzar-pixel-clean-4zm4.vercel.app/api/payment-webhook',
-            SuccessURL: `https://${req.headers.host}/profile`,
-            FailURL: `https://${req.headers.host}/profile`,
+            Description: (description || 'Pixel AI Credits').slice(0, 250),
+            Token: token,
             DATA: {
                 userId: userId,
                 telegramId: req.body.telegramId,
@@ -42,21 +55,7 @@ export default async function handler(req, res) {
             }
         };
 
-        // 2. Generate Signature (Token)
-        const paramsForToken = { ...requestBody };
-        delete paramsForToken.DATA;
-        delete paramsForToken.Token;
-        paramsForToken.Password = PASSWORD;
-
-        // Sort keys and concatenate values (all converted to string)
-        const keys = Object.keys(paramsForToken).sort();
-        let tokenStr = '';
-        for (const key of keys) {
-            tokenStr += String(paramsForToken[key]);
-        }
-        requestBody.Token = crypto.createHash('sha256').update(tokenStr).digest('hex');
-
-        console.log('Payment Init Request:', JSON.stringify(requestBody));
+        console.log('Final Request Body:', JSON.stringify(requestBody));
 
         // 4. Send Request
         const responseData = await new Promise((resolve, reject) => {
@@ -85,17 +84,17 @@ export default async function handler(req, res) {
             request.end();
         });
 
-        console.log('Payment Init Response:', responseData);
+        console.log('T-Bank Response:', responseData);
 
         if (responseData.Success === false) {
-            const errorMsg = responseData.Message || 'Ошибка терминала';
-            const errorCode = responseData.ErrorCode || 'Unknown';
+            const errorMsg = responseData.Message || 'Ошибка параметров';
+            const errorCode = responseData.ErrorCode || '309';
 
             console.warn(`❌ T-Bank Init Failed: [${errorCode}] ${errorMsg}`);
 
             // Return error to frontend so user can see it
             return res.json({
-                error: `Ошибка Банка: ${errorMsg} (Код: ${errorCode})`,
+                error: `Ошибка Банка: ${errorMsg} (Код: ${errorCode}). Убедитесь, что терминал активен.`,
                 success: false,
                 isMock: false
             });
