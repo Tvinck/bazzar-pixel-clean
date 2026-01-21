@@ -23,7 +23,8 @@ export default async function handler(req, res) {
 
         // Amount in Kopeeks (cents)
         const amountKopeeks = Math.round(amount * 100);
-        const orderId = `ORDER_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+        // OrderId MUST be <= 20 chars for T-Bank
+        const orderId = `P_${Date.now().toString().slice(-8)}_${Math.floor(Math.random() * 1000)}`;
 
         // Base Params for Signature
         const paramsForSignature = {
@@ -93,7 +94,9 @@ export default async function handler(req, res) {
         console.log('Payment Init Response:', responseData);
 
         if (responseData.Success === false) {
-            console.warn('⚠️ Payment Init Failed (likely credentials). Switching to MOCK flow for DEMO.');
+            console.warn(`❌ T-Bank Init Failed: [${responseData.ErrorCode}] ${responseData.Message}`);
+            console.warn('Full Response:', JSON.stringify(responseData));
+            console.warn('Switching to MOCK flow for DEMO.');
 
             // Construct Mock URL
             // Assuming userId needs to be passed if used in success handler
