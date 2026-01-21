@@ -13,12 +13,30 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    const { paymentId, orderId } = req.body;
+    let { paymentId, orderId, userId } = req.body;
 
-    if (!paymentId) return res.status(400).json({ error: 'No PaymentId provided' });
+    // 0. Fallback: Find PaymentId by OrderId if missing
+    if (!paymentId && orderId) {
+        console.log(`🔎 Looking up PaymentId for Order: ${orderId}`);
+        const { data: tx } = await supabase
+            .from('transactions')
+            .select('*') // need metadata
+            .eq('type', 'pending_init') // optimized filter
+            .filter('metadata->>OrderId', 'eq', orderId)
+            .maybeSingle();
+
+        if (tx && tx.metadata?.PaymentId) {
+            paymentId = tx.metadata.PaymentId;
+            console.log(`✅ Found PaymentId: ${paymentId}`);
+            // Also trust the userId from the pending tx if not provided
+            if (!userId && tx.user_id) userId = tx.user_id;
+        }
+    }
+
+    if (!paymentId) return res.status(400).json({ error: 'No PaymentId found' });
 
     try {
-        console.log(`🔎 Checking Payment status for: ${paymentId} / ${orderId}`);
+        console.log(`🔎 Checking Payment status for: ${paymentId}`);
 
         // 1. Generate Token for GetState
         // Params: TerminalKey, PaymentId, Password

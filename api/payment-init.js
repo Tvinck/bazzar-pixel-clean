@@ -1,8 +1,12 @@
-import crypto from 'crypto';
-import https from 'https';
+import { createClient } from '@supabase/supabase-js';
+
+const SUPABASE_URL = 'https://ktookvpqtmzfccojarwm.supabase.co';
+const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODMxMzc2NSwiZXhwIjoyMDgzODg5NzY1fQ.L99oEJS40e0R_l05Jm2kZkItJKdaPAEYrGM0WQ0y08Y';
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
 export default async function handler(req, res) {
-    // CORS
+    // ... (CORS headers remain)
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
@@ -19,7 +23,6 @@ export default async function handler(req, res) {
         // PRODUCTION CREDENTIALS
         const TERMINAL_KEY = '1768938209983';
         const PASSWORD = '7XEqsWfjryCnqCck';
-        const API_URL = 'https://securepay.tinkoff.ru/v2/Init';
 
         // 1. Prepare Data
         const amountKopeeks = Math.round(Number(amount) * 100);
@@ -33,8 +36,8 @@ export default async function handler(req, res) {
             OrderId: orderId,
             Description: desc,
             NotificationURL: `https://${req.headers.host}/api/payment-webhook`,
-            // Redirect back to Telegram Bot, which opens the Mini App
-            SuccessURL: 'https://t.me/Pixel_ai_bot?startapp=payment_success',
+            // Redirect back to Telegram Bot with OrderId beacon
+            SuccessURL: `https://t.me/Pixel_ai_bot?startapp=payment_success__${orderId}`,
             FailURL: 'https://t.me/Pixel_ai_bot?startapp=payment_fail',
             DATA: {
                 userId: userId,
@@ -57,7 +60,7 @@ export default async function handler(req, res) {
             }
         };
 
-        // 3. Token calculation (Include all root fields except objects/Token)
+        // ... (Token calculation remains same)
         const tokenParams = {};
         for (const key in requestBody) {
             if (['Token', 'DATA', 'Receipt'].includes(key)) continue;
@@ -72,7 +75,7 @@ export default async function handler(req, res) {
         }
         requestBody.Token = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
-        // 4. Send Request
+        // ... (Send Request remains same)
         const responseData = await new Promise((resolve, reject) => {
             const reqData = JSON.stringify(requestBody);
             const request = https.request({
@@ -97,12 +100,31 @@ export default async function handler(req, res) {
         });
 
         if (responseData.Success) {
+            // FIRE AND FORGET: Save pending transaction so we can verify by OrderId later
+            if (userId) {
+                await supabase.from('transactions').insert({
+                    user_id: userId.length > 20 ? userId : undefined, // Only if UUID
+                    // If user_id is telegram ID string, we might skip direct FK or need mapping. 
+                    // For safety, let's just use metadata to store identifiers if FK fails.
+                    amount: 0,
+                    type: 'pending_init',
+                    description: `Init: ${amount}₽`,
+                    metadata: {
+                        PaymentId: responseData.PaymentId,
+                        OrderId: orderId,
+                        TelegramId: req.body.telegramId
+                    },
+                    created_at: new Date().toISOString()
+                });
+            }
+
             return res.json({
                 paymentUrl: responseData.PaymentURL,
                 paymentId: responseData.PaymentId,
                 orderId: orderId
             });
         } else {
+
             return res.json({
                 success: false,
                 error: responseData.Message || 'Ошибка инициализации'

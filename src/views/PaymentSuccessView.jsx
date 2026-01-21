@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
 import { motion } from 'framer-motion';
 
 const PaymentSuccessView = () => {
     const navigate = useNavigate();
+    const location = useLocation(); // Add location
     const { user, refreshUser } = useUser();
-    const [status, setStatus] = useState('checking'); // checking, success, error
+    const [status, setStatus] = useState('checking');
 
     useEffect(() => {
         const verifyPayment = async () => {
+            // Priority: 1. Deep Link State, 2. Local Storage
+            const orderId = location.state?.orderId || localStorage.getItem('pending_order_id');
             const paymentId = localStorage.getItem('pending_payment_id');
-            const orderId = localStorage.getItem('pending_order_id');
 
-            // Если ID нет, просто пробуем обновить профиль (вдруг webhook сработал)
-            if (!paymentId) {
+            // Если ID нет вообще, просто пробуем обновить профиль
+            if (!paymentId && !orderId) {
                 await refreshUser();
                 setStatus('success');
                 return;

@@ -85,8 +85,10 @@ function AppContent() {
 
       // Check for start_param (Deep Linking)
       const startParam = tg.initDataUnsafe?.start_param;
-      if (startParam === 'payment_success') {
-        navigate('/payment/success');
+      if (startParam && startParam.startsWith('payment_success')) {
+        const parts = startParam.split('__');
+        const orderId = parts[1];
+        navigate('/payment/success', { state: { orderId } });
       }
 
       try {
