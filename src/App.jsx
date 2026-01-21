@@ -38,6 +38,8 @@ const AvatarTrainer = React.lazy(() => import('./components/tools/AvatarTrainer'
 const OnboardingOverlay = React.lazy(() => import('./components/OnboardingOverlay'));
 const DailyBonusModal = React.lazy(() => import('./components/DailyBonusModal'));
 const NotificationsPanel = React.lazy(() => import('./components/NotificationsPanel'));
+const GenerationLoader = React.lazy(() => import('./components/GenerationLoader'));
+const GenerationResult = React.lazy(() => import('./components/GenerationResult'));
 
 function AppContent() {
   const navigate = useNavigate();
@@ -306,9 +308,36 @@ function AppContent() {
           onClose={() => setIsNotificationsOpen(false)}
         />
       </Suspense>
+
+      {/* Global Generation UI (Moved here to fix React Error #310) */}
+      <GlobalGenerationOverlay />
     </div>
   );
 }
+
+const GlobalGenerationOverlay = () => {
+  const { activeGeneration, closeGlobalGen } = useUser();
+  if (!activeGeneration.showLoader && !activeGeneration.resultData) return null;
+
+  return (
+    <Suspense fallback={null}>
+      {activeGeneration.showLoader && (
+        <GenerationLoader
+          type={activeGeneration.type}
+          estimatedTime={activeGeneration.estimatedTime}
+        />
+      )}
+      {activeGeneration.resultData && (
+        <GenerationResult
+          result={activeGeneration.resultData}
+          type={activeGeneration.type}
+          onClose={closeGlobalGen}
+          onRemix={closeGlobalGen}
+        />
+      )}
+    </Suspense>
+  );
+};
 
 function App() {
   return (

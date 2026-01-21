@@ -23,6 +23,14 @@ export const UserProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [telegramId, setTelegramId] = useState(null);
 
+    // Global Generation State for UI stability (Preventing React Error #310)
+    const [activeGeneration, setActiveGeneration] = useState({
+        showLoader: false,
+        resultData: null,
+        type: 'image',
+        estimatedTime: 15
+    });
+
     // Initial load
     useEffect(() => {
         const initUser = async () => {
@@ -142,6 +150,33 @@ export const UserProvider = ({ children }) => {
         }
     }, [user, stats.current_balance]);
 
+    // Generation State Control
+    const startGlobalGen = useCallback((type, estimatedTime) => {
+        setActiveGeneration({
+            showLoader: true,
+            resultData: null,
+            type: type || 'image',
+            estimatedTime: estimatedTime || 15
+        });
+    }, []);
+
+    const setGlobalGenResult = useCallback((result) => {
+        setActiveGeneration(prev => ({
+            ...prev,
+            showLoader: false,
+            resultData: result
+        }));
+    }, []);
+
+    const closeGlobalGen = useCallback(() => {
+        setActiveGeneration({
+            showLoader: false,
+            resultData: null,
+            type: 'image',
+            estimatedTime: 15
+        });
+    }, []);
+
     const value = {
         user,
         stats,
@@ -149,7 +184,11 @@ export const UserProvider = ({ children }) => {
         telegramId,
         refreshUser,
         addBalance,
-        pay
+        pay,
+        activeGeneration,
+        startGlobalGen,
+        setGlobalGenResult,
+        closeGlobalGen
     };
 
     return (

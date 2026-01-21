@@ -44,7 +44,14 @@ const TemplateView = () => {
     const location = useLocation();
     const { t } = useLanguage();
     const { playClick, playSuccess } = useSound();
-    const { user, pay, addBalance } = useUser();
+    const {
+        user,
+        pay,
+        addBalance,
+        startGlobalGen,
+        setGlobalGenResult,
+        closeGlobalGen
+    } = useUser();
     const toaster = useToast();
 
     const [template, setTemplate] = useState(null);
@@ -151,9 +158,6 @@ const TemplateView = () => {
         setFormValues(prev => ({ ...prev, [id]: value }));
     };
 
-    const [showLoader, setShowLoader] = useState(false);
-    const [resultData, setResultData] = useState(null);
-
     const handleGenerate = async () => {
         const validFiles = selectedFiles.filter(f => f).length;
         if (validFiles < requiredFilesCount) return;
@@ -165,7 +169,12 @@ const TemplateView = () => {
 
         playSuccess();
         setIsProcessing(true);
-        setShowLoader(true);
+
+        // Trigger GLOBAL LOADER
+        startGlobalGen(
+            isVideoTemplate ? 'video' : 'image',
+            isVideoTemplate ? 120 : 15
+        );
 
         try {
             // 2. Prepare Prompt
@@ -246,18 +255,16 @@ const TemplateView = () => {
                 console.log('✅ Generation flow complete.');
 
                 if (isVideoTemplate) {
-                    setShowLoader(false);
+                    closeGlobalGen();
                     toaster.success('Видео генерируется! Результат придет в бот.');
                     navigate('/history');
                 } else {
-                    setShowLoader(false);
-                    // Show Result Screen
-                    setResultData({
+                    // Show GLOBAL RESULT
+                    setGlobalGenResult({
                         url: result.imageUrl,
-                        id: 'gen_' + Date.now(), // Mock ID
+                        id: 'gen_' + Date.now(),
                         prompt: finalPrompt
                     });
-                    // Note: We don't navigate to history immediately for images, we let them see result
                 }
             } else {
                 throw new Error(result.error || 'Generation failed');
@@ -265,7 +272,7 @@ const TemplateView = () => {
 
         } catch (error) {
             console.error('Generation Error:', error);
-            setShowLoader(false); // Hide loader on error
+            closeGlobalGen();
             const errMsg = error.message || '';
 
             if (errMsg.includes('Insufficient') || errMsg.includes('Payment Required') || errMsg.includes('402')) {
@@ -368,23 +375,6 @@ const TemplateView = () => {
                     {isProcessing ? 'Генерируем...' : 'Сгенерировать'}
                 </AnimatedButton>
             </div>
-
-            {showLoader && (
-                <GenerationLoader
-                    key="loader"
-                    type={template.mediaType === 'video' ? 'video' : 'image'}
-                    estimatedTime={template.mediaType === 'video' ? 120 : 15}
-                />
-            )}
-            {resultData && (
-                <GenerationResult
-                    key="result"
-                    result={resultData}
-                    type="image"
-                    onClose={() => setResultData(null)}
-                    onRemix={() => setResultData(null)}
-                />
-            )}
         </motion.div>
     );
 };

@@ -349,11 +349,18 @@ const GenerationView = () => {
     };
 
     // User Context
-    const { user: apiUser, pay, addBalance, stats: userStats, telegramId } = useUser();
+    const {
+        user: apiUser,
+        pay,
+        addBalance,
+        stats: userStats,
+        telegramId,
+        startGlobalGen,
+        setGlobalGenResult,
+        closeGlobalGen
+    } = useUser();
 
-    // UX State
-    const [showLoader, setShowLoader] = useState(false);
-    const [resultData, setResultData] = useState(null);
+    // UX State (Local UX removed - now managed globally)
 
     const handleGenerate = async () => {
         // Validation
@@ -370,14 +377,14 @@ const GenerationView = () => {
             return;
         }
 
-        // --- PAYMENT LOGIC ---
-        // Basic logic: 1 credit per generation (server handles main checks)
-        // const COST = 1 * genCount; 
-
         playClick();
         setIsProcessing(true);
-        setShowLoader(true); // START LOADER
-        // toast.info('Начинаем генерацию...'); // Removed in favor of full screen loader
+
+        // Trigger GLOBAL LOADER
+        startGlobalGen(
+            currentModeKey.includes('video') ? 'video' : 'image',
+            currentModeKey.includes('video') ? (model.includes('kling') ? 120 : 60) : 15
+        );
 
         try {
             let result;
@@ -405,7 +412,7 @@ const GenerationView = () => {
                         if (images.length === 0 || videos.length === 0) {
                             toast.error('Для Kling Motion нужно загрузить 1 фото и 1 видео!');
                             setIsProcessing(false);
-                            setShowLoader(false);
+                            closeGlobalGen();
                             return;
                         }
 
@@ -414,7 +421,7 @@ const GenerationView = () => {
                     } else {
                         toast.error('Загрузите фото и видео для Kling Motion!');
                         setIsProcessing(false);
-                        setShowLoader(false);
+                        closeGlobalGen();
                         return;
                     }
                 }
@@ -431,19 +438,6 @@ const GenerationView = () => {
             }
 
             if (result.success) {
-                // Save to DB
-                /* 
-                   Note: Ideally, server should save. But if client saves, we get ID back.
-                   Let's assume galleryAPI.saveCreation returns the saved object or ID.
-                   If not, we construct a mock object or fetch it.
-                   Actually, aiService.generateImage returns { imageUrl, id? } usually.
-                */
-
-                // Hack: We need an ID to publish. If result doesn't have it, we generate a temp one, 
-                // but publishing requires real DB row. 
-                // Assuming galleryAPI.saveCreation saves to Supabase and we can fetch latest?
-                // Let's rely on updated galleryAPI or just save here and use the RETURNED ID if possible.
-
                 const savedRecord = await galleryAPI.saveCreation({
                     userId: apiUser.id,
                     generationId: result.id || 'gen_' + Date.now(),
@@ -458,22 +452,18 @@ const GenerationView = () => {
                     aspectRatio: aspectRatio
                 });
 
-                // Notify Bot (Optional)
-                // ... fetch call ...
-
                 playSuccess();
-                setShowLoader(false); // Stop Loader
 
-                // Show Result Screen
-                setResultData({
+                // Show GLOBAL RESULT
+                setGlobalGenResult({
                     url: result.imageUrl,
-                    id: savedRecord?.id || result.id, // Prefer real DB ID
+                    id: savedRecord?.id || result.id,
                     prompt: inputs['prompt']
                 });
 
             } else {
                 // Error handling
-                setShowLoader(false);
+                closeGlobalGen();
                 const errorMsg = result.error || 'Unknown error';
                 if (errorMsg.toLowerCase().includes('credit') || errorMsg.toLowerCase().includes('balance')) {
                     toast.error('⚠️ Недостаточно средств.', { duration: 5000 });
@@ -484,7 +474,7 @@ const GenerationView = () => {
 
         } catch (e) {
             console.error(e);
-            setShowLoader(false);
+            closeGlobalGen();
             const errorMsg = e.message || 'Unknown error';
             if (errorMsg.toLowerCase().includes('credit') || errorMsg.toLowerCase().includes('balance')) {
                 toast.error('⚠️ Ошибка оплаты.', { duration: 5000 });
@@ -968,25 +958,6 @@ const GenerationView = () => {
                     {canAfford ? `Сгенерировать ${modeConfig.hasCount ? `(${genCount})` : ''}` : 'Недостаточно средств'}
                 </motion.button>
             </div>
-
-            {showLoader && (
-                <GenerationLoader
-                    key="loader"
-                    type={currentModeKey.includes('video') ? 'video' : 'image'}
-                    estimatedTime={currentModeKey.includes('video') ? (model.includes('kling') ? 120 : 60) : 15}
-                />
-            )}
-            {resultData && (
-                <GenerationResult
-                    key="result"
-                    result={resultData}
-                    type={currentModeKey.includes('video') ? 'video' : 'image'}
-                    onClose={() => setResultData(null)}
-                    onRemix={() => {
-                        setResultData(null);
-                    }}
-                />
-            )}
         </motion.div>
     );
 };
