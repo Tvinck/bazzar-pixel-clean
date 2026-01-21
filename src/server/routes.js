@@ -4,6 +4,7 @@ import { aiService } from '../ai-service.js';
 import { MODEL_CATALOG, PRICING } from '../config/models.js';
 import { verifyTelegramWebAppData } from './utils.js';
 import { addGenerationJob } from './queue.js';
+import sharp from 'sharp';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
@@ -90,18 +91,25 @@ export const setupRoutes = (app, bot) => {
                 console.log(`📂 Uploading ${req.files.length} files to Supabase...`);
                 try {
                     for (const file of req.files) {
+                        let processedBuffer = file.buffer;
+                        let processedMime = file.mimetype;
                         let safeName = file.originalname.replace(/[^a-zA-Z0-9.\-_]/g, '');
 
-                        // Kie.ai Compatibility: Force .jpg extension for images
+                        // Kie.ai Compatibility: Convert all images to actual JPEG bits
                         if (file.mimetype.startsWith('image/')) {
-                            const nameParts = safeName.split('.');
-                            if (nameParts.length > 1) {
-                                const ext = nameParts.pop().toLowerCase();
-                                if (ext === 'jpeg' || ext === 'webp' || ext === 'heic') {
-                                    safeName = nameParts.join('.') + '.jpg';
-                                }
-                            } else {
-                                safeName = safeName + '.jpg';
+                            try {
+                                console.log(`✨ Converting upload ${file.mimetype} to JPEG for Kie...`);
+                                processedBuffer = await sharp(file.buffer)
+                                    .jpeg({ quality: 90, mozjpeg: true })
+                                    .toBuffer();
+                                processedMime = 'image/jpeg';
+
+                                // Reset filename extension
+                                const nameParts = safeName.split('.');
+                                if (nameParts.length > 1) nameParts.pop();
+                                safeName = nameParts.join('.') + '.jpg';
+                            } catch (e) {
+                                console.error('Sharp conversion failed in routes:', e);
                             }
                         }
 
@@ -109,8 +117,8 @@ export const setupRoutes = (app, bot) => {
 
                         const { error } = await supabase.storage
                             .from('uploads')
-                            .upload(fileName, file.buffer, {
-                                contentType: file.mimetype,
+                            .upload(fileName, processedBuffer, {
+                                contentType: processedMime,
                                 upsert: false
                             });
 
