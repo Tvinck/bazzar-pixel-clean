@@ -26,13 +26,11 @@ export default async function handler(req, res) {
         // OrderId MUST be <= 20 chars for T-Bank
         const orderId = `P_${Date.now().toString().slice(-8)}_${Math.floor(Math.random() * 1000)}`;
 
-        // Base Params for Signature
+        // 1. Params for Signature (ONLY REQUIRED FIELDS PER T-BANK V2 SPEC)
         const paramsForSignature = {
-            Amount: amountKopeeks,
-            Description: description || 'Credits TopUp',
-            OrderId: orderId,
             TerminalKey: TERMINAL_KEY,
-            NotificationURL: 'https://bazzar-pixel-clean-4zm4.vercel.app/api/payment-webhook',
+            Amount: amountKopeeks,
+            OrderId: orderId,
             Password: PASSWORD
         };
 
@@ -44,7 +42,7 @@ export default async function handler(req, res) {
         }
         const token = crypto.createHash('sha256').update(tokenStr).digest('hex');
 
-        // 3. Final Request Body
+        // 3. Final Request Body (All fields required for Init)
         const requestBody = {
             TerminalKey: TERMINAL_KEY,
             Amount: amountKopeeks,
