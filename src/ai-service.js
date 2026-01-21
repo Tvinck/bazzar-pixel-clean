@@ -168,7 +168,7 @@ const aiService = {
         const KIE_MAP = {
             // Google Family
             'nano_banana': 'google/nano-banana',
-            'nano_banana_pro': 'nano-banana-pro',
+            'nano_banana_pro': 'google/nano-banana-pro',
             'nano_banana_edit': 'google/nano-banana-edit',
             'imagen4_fast': 'google/imagen4-fast',
             'imagen4': 'google/imagen4',
@@ -324,22 +324,32 @@ const aiService = {
             const files = options.source_files || [];
 
             // Dual-parameter safety for all image-to-image models
-            // Standardize on image_urls for most, only use input_urls if not google
-            if (targetModel.includes('image-to-image') || targetModel.includes('edit') || targetModel.includes('kling')) {
+            // Standardize on image_urls for most, only use input_urls if not google/kling
+            if (targetModel.includes('image-to-image') || targetModel.includes('edit') || targetModel.includes('kling') || targetModel.includes('nano-banana')) {
                 if (files.length > 0) {
                     normalized.image_urls = files;
+
                     // Only add input_urls for models that are known to prefer it (DefAPI style / Non-Google)
-                    if (!targetModel.includes('google') && !targetModel.includes('kling')) {
+                    // Robust check for Google family even if 'google/' prefix is missing
+                    const isGoogle = targetModel.includes('google') || targetModel.includes('nano-banana') || targetModel.includes('imagen');
+                    const isKling = targetModel.includes('kling');
+
+                    if (!isGoogle && !isKling) {
                         normalized.input_urls = files;
+                    } else {
+                        // Explicitly delete input_urls if it somehow leaked in
+                        delete normalized.input_urls;
                     }
                 }
             }
 
-            // Singular vs Plural safety (Some newer Kie endpoints for Flux expect singular string)
-            if (targetModel.includes('flux') && files.length === 1) {
-                normalized.image_url = files[0];
-            } else if (targetModel.includes('google') && files.length === 1) {
-                normalized.image_url = files[0]; // Extra safety for some Google Image-to-Image variants
+            // Singular vs Plural safety (Some newer Kie endpoints for Flux/Google expect singular string)
+            if (files.length === 1) {
+                if (targetModel.includes('flux')) {
+                    normalized.image_url = files[0];
+                } else if (targetModel.includes('google') || targetModel.includes('nano-banana') || targetModel.includes('imagen')) {
+                    normalized.image_url = files[0];
+                }
             }
 
             return normalized;
@@ -361,7 +371,9 @@ const aiService = {
         */
 
         if (!isBrowser) {
-            console.log(`📡 [Kie Worker] Request Body:`, JSON.stringify(requestBody, null, 2));
+            console.log(`📡 [Kie Worker] Target Model: ${kieModelId}`);
+            console.log(`📡 [Kie Worker] Final Input Body:`, JSON.stringify(finalInput, null, 2));
+            console.log(`📡 [Kie Worker] Full Request Body:`, JSON.stringify(requestBody, null, 2));
         } else {
             console.log('📤 Kie.ai Request:', JSON.stringify(requestBody, null, 2));
         }
