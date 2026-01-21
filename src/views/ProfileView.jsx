@@ -53,21 +53,47 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
         }
     });
 
-    // Transactions State
+    // Transactions & Subscription State
     const [transactions, setTransactions] = useState([]);
     const [isTxLoading, setIsTxLoading] = useState(false);
+    const [subscription, setSubscription] = useState(null);
     const [paymentAmount, setPaymentAmount] = useState(null);
 
     useEffect(() => {
         if (activeSection === 'account' && window.Telegram?.WebApp?.initData) {
             setIsTxLoading(true);
+
+            // 1. Fetch Transactions
             fetch(`/api/transactions?initData=${encodeURIComponent(window.Telegram.WebApp.initData)}`)
                 .then(res => res.json())
                 .then(data => { if (data.success) setTransactions(data.transactions); })
                 .catch(console.error)
                 .finally(() => setIsTxLoading(false));
+
+            // 2. Fetch Subscription
+            if (userData?.id) {
+                fetch(`/api/subscription?userId=${userData.id}`)
+                    .then(res => res.json())
+                    .then(data => setSubscription(data.subscription))
+                    .catch(console.error);
+            }
         }
-    }, [activeSection]);
+    }, [activeSection, userData]);
+
+    const handleCancelSubscription = async () => {
+        if (!window.confirm('Вы уверены, что хотите отменить подписку?')) return;
+        try {
+            await fetch('/api/subscription', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ action: 'cancel', userId: userData?.id })
+            });
+            setSubscription(null);
+            alert('Подписка отменена');
+        } catch (e) {
+            alert('Ошибка отмены');
+        }
+    };
 
     const handleTaskComplete = (taskId, reward, link, action) => {
         playClick();
@@ -220,6 +246,39 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
     const renderAccountView = () => (
         <div className="space-y-4">
             <h3 className="font-display font-bold text-xl mb-4 text-slate-900 dark:text-white">Аккаунт и подписка</h3>
+
+            {/* Active Subscription Card */}
+            <div className="bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl p-5 text-white shadow-lg relative overflow-hidden">
+                <div className="relative z-10">
+                    <div className="flex justify-between items-start mb-2">
+                        <h4 className="font-bold flex items-center gap-2"><Sparkles size={18} /> Моя подписка</h4>
+                        {subscription && <span className="bg-white/20 text-[10px] font-bold px-2 py-0.5 rounded-full">ACTIVE</span>}
+                    </div>
+
+                    {subscription ? (
+                        <div>
+                            <div className="text-3xl font-black mb-1">{subscription.amount} ₽ <span className="text-sm font-medium opacity-70">/мес</span></div>
+                            <div className="text-xs opacity-70 mb-4">Следующее списание: {new Date(subscription.current_period_end || Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}</div>
+                            <button
+                                onClick={handleCancelSubscription}
+                                className="bg-white/20 hover:bg-white/30 text-white text-xs font-bold py-2 px-4 rounded-xl w-full transition-colors"
+                            >
+                                Отменить подписку
+                            </button>
+                        </div>
+                    ) : (
+                        <div>
+                            <p className="text-sm opacity-90 mb-4">У вас нет активной подписки. Оформите Pro тариф для выгоды.</p>
+                            <button
+                                onClick={() => { playClick(); setPaymentAmount(499); }}
+                                className="bg-white text-indigo-600 font-bold py-2 px-4 rounded-xl w-full text-sm shadow-xl active:scale-95 transition-transform"
+                            >
+                                Оформить подписку
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
 
             {/* Email Input */}
             <div className="bg-white dark:bg-slate-800 p-4 rounded-2xl shadow-sm">

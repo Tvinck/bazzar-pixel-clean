@@ -4,7 +4,7 @@ import React, { useState } from 'react';
  * Simple T-Bank Payment Button
  * Opens the official payment page in a new window/tab
  */
-const TBankWidget = ({ amount, description, userId, telegramId, userEmail }) => {
+const TBankWidget = ({ amount, description, userId, telegramId, userEmail, recurrent }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
@@ -20,7 +20,8 @@ const TBankWidget = ({ amount, description, userId, telegramId, userEmail }) => 
                     description,
                     userId,
                     telegramId,
-                    userEmail
+                    userEmail,
+                    recurrent // Pass flag
                 })
             });
 

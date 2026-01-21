@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { amount, description, userId, userEmail } = req.body;
+        const { amount, description, userId, userEmail, recurrent } = req.body;
 
         // DEMO CREDENTIALS
         const TERMINAL_KEY = '1768938209941DEMO';
@@ -61,6 +61,12 @@ export default async function handler(req, res) {
                 ]
             }
         };
+
+        // If Recurring, add Recurrent flag and CustomerKey
+        if (recurrent) {
+            requestBody.Recurrent = 'Y';
+            requestBody.CustomerKey = String(userId || req.body.telegramId); // Must be user unique ID
+        }
 
         // 3. Calc Token
         const tokenParams = {};

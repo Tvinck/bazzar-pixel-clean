@@ -338,15 +338,25 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                         </label>
 
                                         {selectedPlan.isSubscription && (
-                                            <label className="flex items-start gap-3 p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 cursor-pointer">
-                                                <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors flex-shrink-0 ${subscriptionAccepted ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300 dark:border-slate-600'}`}>
-                                                    {subscriptionAccepted && <Check size={14} className="text-white" strokeWidth={3} />}
+                                            <div className="bg-slate-100 dark:bg-slate-900/50 rounded-2xl p-4 border border-slate-200 dark:border-slate-700">
+                                                <label className="flex items-start gap-3 cursor-pointer">
+                                                    <div className={`w-6 h-6 rounded-lg border-2 flex items-center justify-center transition-colors flex-shrink-0 mt-0.5 ${subscriptionAccepted ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300 dark:border-slate-600'}`}>
+                                                        {subscriptionAccepted && <Check size={14} className="text-white" strokeWidth={3} />}
+                                                    </div>
+                                                    <input type="checkbox" className="hidden" checked={subscriptionAccepted} onChange={() => setSubscriptionAccepted(!subscriptionAccepted)} />
+                                                    <div className="text-xs text-slate-600 dark:text-slate-300 leading-snug">
+                                                        <span className="font-bold block mb-1">Согласие на подписку</span>
+                                                        Я соглашаюсь на автоматическое списание <b>{isPromoApplied ? Math.round(getPrice(selectedPlan) * 0.9) : getDisplayPrice(selectedPlan)}</b> каждые <b>30 дней</b> до момента отмены.
+                                                    </div>
+                                                </label>
+
+                                                <div className="mt-4 pt-3 border-t border-slate-200 dark:border-slate-700">
+                                                    <p className="text-[10px] text-slate-500 leading-relaxed">
+                                                        Управление подпиской доступно в профиле.<br />
+                                                        Для отмены или возврата средств напишите в поддержку: <a href="https://t.me/BAZZAR_HELP" onClick={(e) => { e.stopPropagation(); window.Telegram?.WebApp?.openTelegramLink('https://t.me/BAZZAR_HELP'); }} className="text-indigo-500 font-bold hover:underline">@BAZZAR_HELP</a>
+                                                    </p>
                                                 </div>
-                                                <input type="checkbox" className="hidden" checked={subscriptionAccepted} onChange={() => setSubscriptionAccepted(!subscriptionAccepted)} />
-                                                <p className="text-xs text-slate-500 leading-snug">
-                                                    Автосписание {billingCycle === 'yearly' ? 'раз в год' : 'каждые 30 дней'}.
-                                                </p>
-                                            </label>
+                                            </div>
                                         )}
 
                                         {/* Official T-Bank Widget Integration */}
@@ -357,6 +367,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                 userId={user?.id}
                                                 telegramId={window.Telegram?.WebApp?.initDataUnsafe?.user?.id}
                                                 userEmail={user?.email || 'no-email@telegram.org'}
+                                                recurrent={selectedPlan.isSubscription && subscriptionAccepted}
                                             />
                                         )}
                                     </div>
