@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
     X, ChevronLeft, ChevronDown, Sparkles, Trash2, Check, Upload, Flame,
@@ -177,7 +177,7 @@ const getModes = (t) => ({
     }
 });
 
-const GenerationView = () => {
+const GenerationView = ({ onOpenPayment }) => {
     const navigate = useNavigate();
     const { type: paramType } = useParams();
     const location = useLocation();
@@ -200,7 +200,7 @@ const GenerationView = () => {
     const [selectedImages, setSelectedImages] = useState([]);
     const [previewUrls, setPreviewUrls] = useState([]);
     const [customValues, setCustomValues] = useState({});
-    const [isPublicResult, setIsPublicResult] = useState(false); // Default false (Private)
+    const [isPublicResult, setIsPublicResult] = useState(false);
 
     const [isTypeOpen, setIsTypeOpen] = useState(false);
     const [isModelOpen, setIsModelOpen] = useState(false);
@@ -208,24 +208,21 @@ const GenerationView = () => {
 
     const fileInputRef = useRef(null);
 
-    // --- CONFIG LOADING (Single Source of Truth) ---
-    // --- CONFIG LOADING (Supabase) ---
+    // --- CONFIG LOADING ---
     const [serverConfig, setServerConfig] = useState({ models: {} });
     useEffect(() => {
         const loadConfig = async () => {
             try {
                 const modelsList = await aiService.getModels();
-                // Convert array to map for O(1) lookup
                 const modelsMap = {};
                 if (Array.isArray(modelsList)) {
                     modelsList.forEach(m => {
                         modelsMap[m.id] = m;
                     });
                 }
-                console.log('✅ Loaded Config from DB:', modelsMap);
                 setServerConfig({ models: modelsMap });
             } catch (err) {
-                console.error('❌ Failed to load config:', err);
+                console.error('Failed to load config:', err);
             }
         };
         loadConfig();
@@ -236,25 +233,20 @@ const GenerationView = () => {
     const refImageInput = useRef(null);
     const refVideoInput = useRef(null);
 
-    // Sync Kling Files to selectedImages
     useEffect(() => {
         if (model === 'kling_motion_control') {
             const files = [];
             if (klingFiles.image) files.push(klingFiles.image);
             if (klingFiles.video) files.push(klingFiles.video);
-            // Avoid loop if content matches (simple check)
             if (files.length !== selectedImages.length || files[0] !== selectedImages[0]) {
                 setSelectedImages(files);
-                // Also generate previews
                 const urls = files.map(f => URL.createObjectURL(f));
                 setPreviewUrls(urls);
             }
         }
-    }, [klingFiles, model]); // selectedImages omitted to avoid loop
+    }, [klingFiles, model]);
 
     useEffect(() => {
-        // Reset Logic
-        // Check if a model is passed via navigation state (e.g. from CreateView)
         const targetModel = location.state?.model;
         const validModel = modeConfig.models?.find(m => m.id === targetModel);
 
@@ -265,7 +257,6 @@ const GenerationView = () => {
         }
 
         if (!modeConfig.isMenu) {
-            // Keep images if switching between similar modes? No, distinct is safer.
             setSelectedImages([]);
             setPreviewUrls([]);
         }
@@ -313,7 +304,6 @@ const GenerationView = () => {
     const toast = useToast();
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // Helper to compress and convert to base64
     const fileToBase64 = (blobUrl) => {
         return new Promise((resolve, reject) => {
             const img = new Image();
@@ -323,24 +313,15 @@ const GenerationView = () => {
                 let width = img.width;
                 let height = img.height;
                 const MAX_SIZE = 1024;
-
                 if (width > height) {
-                    if (width > MAX_SIZE) {
-                        height *= MAX_SIZE / width;
-                        width = MAX_SIZE;
-                    }
+                    if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; }
                 } else {
-                    if (height > MAX_SIZE) {
-                        width *= MAX_SIZE / height;
-                        height = MAX_SIZE;
-                    }
+                    if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; }
                 }
-
                 canvas.width = width;
                 canvas.height = height;
                 const ctx = canvas.getContext('2d');
                 ctx.drawImage(img, 0, 0, width, height);
-                // Get base64 (remove prefix)
                 const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
                 resolve(dataUrl.split(',')[1]);
             };
@@ -348,7 +329,6 @@ const GenerationView = () => {
         });
     };
 
-    // User Context
     const {
         user: apiUser,
         pay,
@@ -360,10 +340,32 @@ const GenerationView = () => {
         closeGlobalGen
     } = useUser();
 
-    // UX State (Local UX removed - now managed globally)
+    // Cost Calculation Logic
+    const getCost = () => {
+        if (serverConfig && serverConfig.models && serverConfig.models[model]) {
+            let cost = serverConfig.models[model].cost;
+            return cost * genCount;
+        }
+        let cost = 1;
+        if (currentModeKey === 'replace-object' || currentModeKey === 'remove-object' || currentModeKey === 'add-object') return 2;
+        if (currentModeKey === 'describe') return 1;
+
+        const mId = model.toLowerCase();
+        if (['seedream_3', 'grok_text', 'recraft_remove_bg', 'recraft_upscale', 'grok_upscale'].includes(mId)) cost = 1;
+        else if (['seedream_45_text', 'gpt_image_15_text', 'gpt_image_15_edit', 'z_image', 'ideogram_reframe', 'seedream_v4_text', 'seedream_v4_edit', 'seedream_45_edit', 'grok_image'].includes(mId)) cost = 2;
+        else if (['flux_flex', 'flux_pro'].includes(mId)) cost = 3;
+        else if (mId === 'kling_motion_control') cost = 8;
+        else if (mId === 'grok_text_video') cost = 10;
+        else if (mId === 'grok_image_video') cost = 12;
+        else if (mId.includes('veo') || mId.includes('sora')) cost = 15;
+        else if (mId.includes('suno') || mId.includes('chip')) cost = 5;
+        return cost * genCount;
+    };
+
+    const cost = getCost();
+    const canAfford = (userStats?.current_balance || 0) >= cost;
 
     const handleGenerate = async () => {
-        // Validation
         const requiredInputs = modeConfig.inputs?.filter(i => i.required) || [];
         for (const input of requiredInputs) {
             if (!inputs[input.id]?.trim()) {
@@ -377,10 +379,19 @@ const GenerationView = () => {
             return;
         }
 
+        if (!canAfford) {
+            playClick();
+            toast.error(`Недостаточно кредитов! Нужно: ${cost}`, {
+                icon: '⚡',
+                duration: 4000
+            });
+            onOpenPayment?.();
+            return;
+        }
+
         playClick();
         setIsProcessing(true);
 
-        // Trigger GLOBAL LOADER
         startGlobalGen(
             currentModeKey.includes('video') ? 'video' : 'image',
             currentModeKey.includes('video') ? (model.includes('kling') ? 120 : 60) : 15
@@ -388,87 +399,55 @@ const GenerationView = () => {
 
         try {
             let result;
-
-            // Tools Logic (Text-based Instruct)
             if (['Replace Object', 'Remove Object', 'Add Object'].includes(currentModeKey)) {
                 const base64Img = await fileToBase64(previewUrls[0]);
                 const instructions = { ...inputs, ...customValues, mode: currentModeKey };
                 result = await aiService.instructEdit(base64Img, instructions);
             }
-            // Standard Generation
             else {
                 const promptText = inputs['prompt'] || '';
-
-                // Prepare source files
                 let sourceFiles = selectedImages.length > 0 ? selectedImages : null;
                 let videoFiles = null;
 
-                // Special handling for Kling Motion Control
                 if (model === 'kling_motion_control') {
                     if (sourceFiles) {
                         const images = sourceFiles.filter(f => f.type.startsWith('image/'));
                         const videos = sourceFiles.filter(f => f.type.startsWith('video/'));
-
                         if (images.length === 0 || videos.length === 0) {
                             toast.error('Для Kling Motion нужно загрузить 1 фото и 1 видео!');
-                            setIsProcessing(false);
-                            closeGlobalGen();
-                            return;
+                            setIsProcessing(false); closeGlobalGen(); return;
                         }
-
-                        sourceFiles = images;
-                        videoFiles = videos;
+                        sourceFiles = images; videoFiles = videos;
                     } else {
                         toast.error('Загрузите фото и видео для Kling Motion!');
-                        setIsProcessing(false);
-                        closeGlobalGen();
-                        return;
+                        setIsProcessing(false); closeGlobalGen(); return;
                     }
                 }
 
                 result = await aiService.generateImage(promptText, model, {
-                    aspectRatio,
-                    count: genCount,
-                    source_files: sourceFiles,
-                    video_files: videoFiles,
-                    userId: apiUser?.id,
-                    telegramId: telegramId,
-                    ...customValues
+                    aspectRatio, count: genCount, source_files: sourceFiles, video_files: videoFiles,
+                    userId: apiUser?.id, telegramId: telegramId, ...customValues
                 });
             }
 
             if (result.success) {
-                // If backend already saved (sync fallback), it returns the record ID
                 let savedRecordId = result.id;
-
                 if (!savedRecordId) {
                     const savedRecord = await galleryAPI.saveCreation({
-                        userId: apiUser.id,
-                        generationId: result.id || 'gen_' + Date.now(),
-                        title: inputs['prompt'] ? inputs['prompt'].slice(0, 30) + '...' : 'Generated Image',
+                        userId: apiUser.id, generationId: result.id || 'gen_' + Date.now(),
+                        title: inputs['prompt'] ? inputs['prompt'].slice(0, 30) + '...' : 'Generated',
                         description: inputs['prompt'] || 'Generated Content',
-                        imageUrl: result.imageUrl,
-                        thumbnailUrl: result.imageUrl,
+                        imageUrl: result.imageUrl, thumbnailUrl: result.imageUrl,
                         type: currentModeKey.includes('Video') ? 'video' : 'image',
-                        prompt: inputs['prompt'],
-                        tags: [currentModeKey, model],
-                        isPublic: isPublicResult,
-                        aspectRatio: aspectRatio
+                        prompt: inputs['prompt'], tags: [currentModeKey, model],
+                        isPublic: isPublicResult, aspectRatio: aspectRatio
                     });
                     savedRecordId = savedRecord?.data?.id || savedRecord?.id;
                 }
-
                 playSuccess();
-
-                // Show GLOBAL RESULT
-                setGlobalGenResult({
-                    url: result.imageUrl,
-                    id: savedRecordId || result.id,
-                    prompt: inputs['prompt']
-                });
+                setGlobalGenResult({ url: result.imageUrl, id: savedRecordId || result.id, prompt: inputs['prompt'] });
 
             } else {
-                // Error handling
                 closeGlobalGen();
                 const errorMsg = result.error || 'Unknown error';
                 if (errorMsg.toLowerCase().includes('credit') || errorMsg.toLowerCase().includes('balance')) {
@@ -548,47 +527,6 @@ const GenerationView = () => {
             </motion.div>
         );
     }
-
-    // Cost Calculation Logic
-    const getCost = () => {
-        // 1. DYNAMIC PRICING FROM SERVER
-        if (serverConfig && serverConfig.models && serverConfig.models[model]) {
-            let cost = serverConfig.models[model].cost;
-            return cost * genCount;
-        }
-
-        // 2. Fallback Cost Logic
-        let cost = 1; // Default low cost
-
-        // Mode specific base costs
-        if (currentModeKey === 'replace-object' || currentModeKey === 'remove-object' || currentModeKey === 'add-object') {
-            return 2; // Edits
-        }
-        if (currentModeKey === 'describe') {
-            return 1;
-        }
-
-        const mId = model.toLowerCase();
-
-        // IMAGE MODELS
-        if (['seedream_3', 'grok_text', 'recraft_remove_bg', 'recraft_upscale', 'grok_upscale'].includes(mId)) cost = 1;
-        else if (['seedream_45_text', 'gpt_image_15_text', 'gpt_image_15_edit', 'z_image', 'ideogram_reframe', 'seedream_v4_text', 'seedream_v4_edit', 'seedream_45_edit', 'grok_image'].includes(mId)) cost = 2;
-        else if (['flux_flex', 'flux_pro'].includes(mId)) cost = 3;
-
-        // VIDEO MODELS
-        else if (mId === 'kling_motion_control') cost = 8;
-        else if (mId === 'grok_text_video') cost = 10;
-        else if (mId === 'grok_image_video') cost = 12;
-        else if (mId.includes('veo') || mId.includes('sora')) cost = 15; // Legacy placeholders
-
-        // AUDIO
-        else if (mId.includes('suno') || mId.includes('chip')) cost = 5;
-
-        return cost * genCount;
-    };
-
-    const cost = getCost();
-    const canAfford = (userStats?.current_balance || 0) >= cost;
 
     // --- RENDER FORM VIEW ---
     return (
@@ -931,38 +869,48 @@ const GenerationView = () => {
             {/* Footer */}
             <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe-bottom bg-slate-50 dark:bg-[#09090b] border-t border-slate-200 dark:border-white/5 z-[100] pointer-events-auto transition-colors duration-300">
 
-                {/* Public Toggle */}
-                <div onClick={() => { setIsPublicResult(!isPublicResult); playClick(); }} className="flex items-center justify-center gap-2 mb-3 cursor-pointer opacity-80 hover:opacity-100 transition-opacity">
-                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isPublicResult ? 'bg-indigo-500 border-indigo-500' : 'border-slate-400 dark:border-slate-500'}`}>
-                        {isPublicResult && <Check size={10} className="text-white" strokeWidth={4} />}
+                {/* Public Toggle & Compact Balance */}
+                <div className="flex items-center justify-between mb-3 px-2">
+                    <div onClick={() => { setIsPublicResult(!isPublicResult); playClick(); }} className="flex items-center gap-2 cursor-pointer opacity-80 hover:opacity-100 transition-opacity group">
+                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isPublicResult ? 'bg-indigo-500 border-indigo-500' : 'border-slate-400 dark:border-slate-500 group-hover:border-indigo-400'}`}>
+                            {isPublicResult && <Check size={10} className="text-white" strokeWidth={4} />}
+                        </div>
+                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide group-hover:text-indigo-500 transition-colors">В ленту</span>
                     </div>
-                    <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide">Опубликовать в идеи</span>
                 </div>
 
-                {/* Cost Display */}
-                <div className="flex justify-center mb-2 items-center gap-2 text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    <span>Стоимость:</span>
-                    <span className="text-amber-500 flex items-center gap-1 bg-amber-500/10 px-2 py-0.5 rounded-full">
-                        {cost} <Zap size={10} className="fill-current" />
-                    </span>
-                    <span className="text-slate-300 dark:text-slate-600">|</span>
-                    <span>Баланс:</span>
-                    <span className={`${canAfford ? 'text-slate-700 dark:text-slate-300' : 'text-red-500'}`}>
-                        {userStats?.current_balance || 0}
-                    </span>
-                </div>
+                <div className="flex gap-3">
+                    {/* Cost Pill */}
+                    <div className={`px-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border flex-shrink-0 min-w-[80px] ${canAfford ? 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-500'}`}>
+                        {cost} <Zap size={16} className={canAfford ? "text-indigo-500 fill-indigo-500" : "fill-current"} />
+                    </div>
 
-                <motion.button
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleGenerate}
-                    disabled={!canAfford}
-                    className={`w-full h-14 rounded-2xl flex items-center justify-center gap-2 shadow-lg font-bold text-base transition-all
-                        ${canAfford ? 'bg-gradient-to-r from-amber-300 to-amber-500 shadow-amber-500/20 text-[#321805]' : 'bg-slate-200 dark:bg-slate-800 text-slate-400 cursor-not-allowed'}
-                    `}
-                >
-                    <Sparkles size={20} className={canAfford ? "text-[#321805]" : "text-slate-400"} strokeWidth={2.5} />
-                    {canAfford ? `Сгенерировать ${modeConfig.hasCount ? `(${genCount})` : ''}` : 'Недостаточно средств'}
-                </motion.button>
+                    {/* Generate / Pay Button */}
+                    <motion.button
+                        whileTap={{ scale: 0.98 }}
+                        disabled={isProcessing}
+                        onClick={handleGenerate}
+                        className={`flex-1 h-14 rounded-2xl flex items-center justify-center gap-2 shadow-lg font-bold text-base transition-all
+                                ${canAfford
+                                ? 'bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 shadow-amber-500/20 text-[#321805]'
+                                : 'bg-slate-900 dark:bg-white text-white dark:text-black shadow-lg'}
+                            `}
+                    >
+                        {isProcessing ? (
+                            <span className="animate-pulse">Creating...</span>
+                        ) : canAfford ? (
+                            <>
+                                <Sparkles size={20} className="text-[#321805]" strokeWidth={2.5} />
+                                <span>Генерировать</span>
+                            </>
+                        ) : (
+                            <>
+                                <Zap size={20} className="fill-current" />
+                                <span>Пополнить</span>
+                            </>
+                        )}
+                    </motion.button>
+                </div>
             </div>
         </motion.div>
     );

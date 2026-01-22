@@ -110,6 +110,8 @@ const aiService = {
 
             // Prepare files
             let processedFiles = [];
+            let processedVideoFiles = []; // Declare video files array
+
             if (options.source_files && Array.isArray(options.source_files)) {
                 processedFiles = await Promise.all(options.source_files.map(async (f) => {
                     if (f instanceof File) return await processFile(f);
@@ -117,15 +119,18 @@ const aiService = {
                 }));
             }
             if (options.video_files && Array.isArray(options.video_files)) {
-                // Just pass video paths references or base64 if needed, but usually videos are large.
-                // Assuming video_files are paths/urls here for templates. 
-                // If File objects, we'd need base64 too, but let's stick to logic above for source_files compatibility.
+                // Process video files to Base64 (Data URIs)
+                processedVideoFiles = await Promise.all(options.video_files.map(async (f) => {
+                    if (f instanceof File) return await processFile(f);
+                    return f;
+                }));
             }
 
             // Call KIE Implementation using Client-side Proxy logic
             return await aiService.generateWithKie(prompt, modelId, {
                 ...options,
-                source_files: processedFiles
+                source_files: processedFiles,
+                video_files: processedVideoFiles // Pass processed videos
             });
         }
 
@@ -296,11 +301,14 @@ const aiService = {
             if (modelId === 'kling_motion_control' && options.video_files?.length > 0) {
                 // Kling Motion Control: image_urls (image) + video_urls (driver)
                 input.input_urls = options.source_files;
-                input.video_urls = options.video_files;
-                input.character_orientation = 'video';
-                input.mode = '720p';
 
-                // Remove generic prompt if empty, but docs say prompt is string max 2500.
+                // KIE/Kling often expects 'video_url' or 'video' for the driving video
+                // Passing as 'video' to satisfy "input.video" validation error
+                input.video = options.video_files[0];
+
+                input.character_orientation = 'video'; // match movement
+                input.mode = 'std'; // 720p or std
+
                 if (!input.prompt) input.prompt = 'animate';
             } else if (hasSourceFiles) {
                 // Standard Image-to-Video

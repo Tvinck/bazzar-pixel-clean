@@ -241,7 +241,7 @@ function AppContent() {
 
             {/* Full Pages */}
             <Route path="/create" element={<CreateView />} />
-            <Route path="/generate/:type" element={<GenerationView />} />
+            <Route path="/generate/:type" element={<GenerationView onOpenPayment={openPayment} />} />
             <Route path="/template/:id" element={<TemplateView />} />
             <Route path="/user/:userId" element={<UserProfileView />} />
             <Route path="/admin" element={<AdminView />} />
