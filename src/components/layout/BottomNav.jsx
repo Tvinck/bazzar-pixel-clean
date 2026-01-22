@@ -4,62 +4,75 @@ import { Home, Compass, Sparkles, History, User } from 'lucide-react';
 
 const BottomNav = ({ activeTab, onTabChange, onCreateClick, isVisible = true, zIndex = 50 }) => {
     return (
-        <div style={{ zIndex }} className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 pb-safe ${!isVisible ? 'translate-y-[200%]' : 'translate-y-0'}`}>
-            <nav className="bg-white/95 dark:bg-black/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/5 pb-2 pt-2 px-2 flex justify-around items-end shadow-2xl">
+        <div style={{ zIndex }} className={`fixed bottom-4 left-4 right-4 transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${!isVisible ? 'translate-y-[150%]' : 'translate-y-0'}`}>
+            <nav className="bg-white/90 dark:bg-[#121212]/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/10 rounded-[2rem] px-2 py-3 shadow-2xl shadow-indigo-500/10 flex justify-between items-center relative">
 
                 {/* Home */}
-                <button
+                <NavButton
+                    icon={Home}
+                    label="Главная"
+                    isActive={activeTab === 'home'}
                     onClick={() => onTabChange('home')}
-                    className={`flex flex-col items-center gap-1 p-2 min-w-[64px] transition-colors ${activeTab === 'home' ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/60'}`}
-                >
-                    <Home size={24} strokeWidth={activeTab === 'home' ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">Главная</span>
-                </button>
+                />
 
-                {/* Ideas (Gallery) */}
-                <button
+                {/* Gallery */}
+                <NavButton
+                    icon={Compass}
+                    label="Галерея"
+                    isActive={activeTab === 'gallery'}
                     onClick={() => onTabChange('gallery')}
-                    className={`flex flex-col items-center gap-1 p-2 min-w-[64px] transition-colors ${activeTab === 'gallery' ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/60'}`}
-                >
-                    <Compass size={24} strokeWidth={activeTab === 'gallery' ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">Идеи</span>
-                </button>
+                />
 
-                {/* Create (Prominent) */}
-                <div className="relative -top-5">
+                {/* Create (Floating Center) */}
+                <div className="relative -top-8 mx-2">
                     <motion.button
-                        whileTap={{ scale: 0.95 }}
+                        whileTap={{ scale: 0.9 }}
                         onClick={onCreateClick}
-                        className="flex flex-col items-center gap-1 group"
+                        className="w-16 h-16 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-xl shadow-indigo-500/40 ring-4 ring-[#F8F9FC] dark:ring-[#0f1014] relative z-20 group"
                     >
-                        <div className="w-14 h-14 bg-gradient-to-tr from-amber-300 to-amber-500 rounded-[18px] flex items-center justify-center shadow-lg shadow-amber-500/20 ring-4 ring-white dark:ring-black">
-                            <Sparkles size={28} className="text-[#321805]" strokeWidth={2.5} />
-                        </div>
-                        <span className="text-[10px] font-bold text-amber-500 dark:text-amber-400 group-hover:text-amber-600 dark:group-hover:text-amber-300 transition-colors">Создать</span>
+                        <Sparkles size={28} className="text-white fill-white animate-pulse-slow" />
+                        <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                     </motion.button>
                 </div>
 
                 {/* History */}
-                <button
+                <NavButton
+                    icon={History}
+                    label="История"
+                    isActive={activeTab === 'history'}
                     onClick={() => onTabChange('history')}
-                    className={`flex flex-col items-center gap-1 p-2 min-w-[64px] transition-colors ${activeTab === 'history' ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/60'}`}
-                >
-                    <History size={24} strokeWidth={activeTab === 'history' ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">История</span>
-                </button>
+                />
 
                 {/* Profile */}
-                <button
+                <NavButton
+                    icon={User}
+                    label="Профиль"
+                    isActive={activeTab === 'profile'}
                     onClick={() => onTabChange('profile')}
-                    className={`flex flex-col items-center gap-1 p-2 min-w-[64px] transition-colors ${activeTab === 'profile' ? 'text-slate-900 dark:text-white' : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/60'}`}
-                >
-                    <User size={24} strokeWidth={activeTab === 'profile' ? 2.5 : 2} />
-                    <span className="text-[10px] font-medium">Профиль</span>
-                </button>
-
+                />
             </nav>
         </div>
     );
 };
+
+const NavButton = ({ icon: Icon, label, isActive, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`flex-1 flex flex-col items-center gap-1 min-w-[50px] relative transition-colors duration-300 ${isActive ? 'text-indigo-500 dark:text-white' : 'text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300'}`}
+    >
+        <div className="relative">
+            <Icon size={24} strokeWidth={isActive ? 2.5 : 2} className="transition-all duration-300" />
+            {isActive && (
+                <motion.div
+                    layoutId="activeTabDot"
+                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-500 dark:bg-white rounded-full"
+                />
+            )}
+        </div>
+        <span className={`text-[9px] font-bold transition-all duration-300 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 hidden'}`}>
+            {label}
+        </span>
+    </button>
+);
 
 export default BottomNav;

@@ -49,45 +49,44 @@ const GalleryView = ({ onRemix }) => {
     return (
         <div className="min-h-screen bg-slate-50 dark:bg-black text-slate-900 dark:text-white pb-24 transition-colors duration-300">
             {/* Header Section */}
-            <div className="pt-safe-top px-4 pb-2 bg-slate-50/95 dark:bg-black/95 backdrop-blur-sm sticky top-0 z-30 border-b border-slate-200 dark:border-white/5 transition-colors duration-300">
-                <h1 className="text-3xl font-bold mb-4 mt-2">Галерея</h1>
+            <div className="pt-safe-top px-4 pb-4 bg-slate-50/80 dark:bg-[#0f1014]/80 backdrop-blur-xl sticky top-0 z-30 transition-colors duration-300">
+                <div className="flex items-center justify-between mb-4 mt-2">
+                    <h1 className="text-2xl font-black font-display tracking-tight">Галерея</h1>
+                </div>
 
                 {/* Row 1: Main Filters (Pills) */}
-                <div className="flex gap-2 mb-4 overflow-x-auto no-scrollbar">
-                    <button
-                        onClick={() => setActiveTab('all')}
-                        className={`px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors border ${activeTab === 'all' ? 'bg-slate-900 text-white dark:bg-[#FFF0E6] dark:text-black border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-white/10 dark:text-white dark:border-transparent dark:hover:bg-white/20'}`}
-                    >
-                        Все
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('new')}
-                        className={`px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors border ${activeTab === 'new' ? 'bg-slate-900 text-white dark:bg-[#FFF0E6] dark:text-black border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-white/10 dark:text-white dark:border-transparent dark:hover:bg-white/20'}`}
-                    >
-                        Новые
-                    </button>
-                    <button
-                        onClick={() => setActiveTab('liked')}
-                        className={`px-5 py-2 rounded-full text-sm font-semibold whitespace-nowrap transition-colors border ${activeTab === 'liked' ? 'bg-slate-900 text-white dark:bg-[#FFF0E6] dark:text-black border-transparent' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 dark:bg-white/10 dark:text-white dark:border-transparent dark:hover:bg-white/20'}`}
-                    >
-                        Мои лайки
-                    </button>
+                <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar scroll-smooth">
+                    {['all', 'new', 'liked'].map((tab) => {
+                        const labels = { all: 'В популярном', new: 'Свежее', liked: 'Избранное' };
+                        const isActive = activeTab === tab;
+                        return (
+                            <button
+                                key={tab}
+                                onClick={() => setActiveTab(tab)}
+                                className={`px-5 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 ${isActive
+                                        ? 'bg-slate-900 text-white dark:bg-white dark:text-black shadow-lg shadow-black/5 dark:shadow-white/10 scale-105'
+                                        : 'bg-white text-slate-500 hover:bg-slate-100 dark:bg-white/5 dark:text-slate-400 dark:hover:bg-white/10'
+                                    }`}
+                            >
+                                {labels[tab]}
+                            </button>
+                        );
+                    })}
                 </div>
 
                 {/* Row 2: Categories (Horizontal Scroll) */}
-                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium bg-white border border-slate-200 text-slate-700 dark:bg-white/10 dark:border-white/20 dark:text-white whitespace-nowrap transition-colors">
-                        <Box size={14} /> Все
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:border-white/5 dark:bg-white/5 dark:text-white/60 dark:hover:text-white dark:hover:bg-white/10 whitespace-nowrap transition-colors">
-                        <Gift size={14} /> Новый год
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:border-white/5 dark:bg-white/5 dark:text-white/60 dark:hover:text-white dark:hover:bg-white/10 whitespace-nowrap transition-colors">
-                        <HeartHandshake size={14} /> Для двоих
-                    </button>
-                    <button className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium border border-slate-200 bg-white text-slate-500 hover:text-slate-900 hover:bg-slate-50 dark:border-white/5 dark:bg-white/5 dark:text-white/60 dark:hover:text-white dark:hover:bg-white/10 whitespace-nowrap transition-colors">
-                        <Users size={14} /> Семейные
-                    </button>
+                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 mask-linear-fade">
+                    {[
+                        { icon: Box, label: 'Все' },
+                        { icon: Sparkles, label: 'Аниме' },
+                        { icon: HeartHandshake, label: 'Пары' },
+                        { icon: Gift, label: 'Арты' },
+                        { icon: Users, label: 'Люди' }
+                    ].map((cat, i) => (
+                        <button key={i} className="flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold bg-white/50 border border-slate-200/50 text-slate-600 dark:bg-white/5 dark:border-white/5 dark:text-slate-300 hover:scale-105 transition-transform whitespace-nowrap">
+                            <cat.icon size={14} className={i === 0 ? "text-indigo-500" : "opacity-70"} /> {cat.label}
+                        </button>
+                    ))}
                 </div>
             </div>
 
