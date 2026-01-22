@@ -29,12 +29,28 @@ const GalleryView = ({ onRemix }) => {
     const handleLike = async (creationId) => {
         const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'test-user-id';
         const creation = creations.find(c => c.id === creationId);
-        if (creation) {
-            if (creation.user_liked) {
+
+        if (!creation) return;
+
+        // Optimistic Update for UI (including Modal)
+        const isLiked = creation.user_liked;
+        const newLikes = isLiked ? (creation.likes - 1) : (creation.likes + 1);
+
+        // 1. Update Selected Creation (if open)
+        if (selectedCreation && selectedCreation.id === creationId) {
+            setSelectedCreation(prev => ({ ...prev, user_liked: !isLiked, likes: newLikes }));
+        }
+
+        // 2. Perform API Call
+        try {
+            if (isLiked) {
                 await galleryAPI.unlikeCreation(creationId, userId);
             } else {
                 await galleryAPI.likeCreation(creationId, userId);
             }
+        } catch (error) {
+            console.error('Like failed:', error);
+            // Revert on error (optional, but good practice)
         }
     };
 
@@ -64,8 +80,8 @@ const GalleryView = ({ onRemix }) => {
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
                                 className={`px-5 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 ${isActive
-                                        ? 'bg-slate-900 text-white dark:bg-white dark:text-black shadow-lg shadow-black/5 dark:shadow-white/10 scale-105'
-                                        : 'bg-white text-slate-500 hover:bg-slate-100 dark:bg-white/5 dark:text-slate-400 dark:hover:bg-white/10'
+                                    ? 'bg-slate-900 text-white dark:bg-white dark:text-black shadow-lg shadow-black/5 dark:shadow-white/10 scale-105'
+                                    : 'bg-white text-slate-500 hover:bg-slate-100 dark:bg-white/5 dark:text-slate-400 dark:hover:bg-white/10'
                                     }`}
                             >
                                 {labels[tab]}
