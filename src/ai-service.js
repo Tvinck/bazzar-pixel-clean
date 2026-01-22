@@ -294,7 +294,8 @@ const aiService = {
         }
         // --- KLING / VIDEO FAMILY ---
         else if (modelId === 'kling_motion_control' || kieModelId.includes('kling')) {
-            input.prompt = prompt || 'Animate this image';
+            // Kling usually doesn't need a prompt if driving with video, but we provide a default
+            input.prompt = prompt || 'Animate this character matching the reference video';
             input.aspect_ratio = aspectRatio;
 
             // Kling Motion Control specific inputs
@@ -302,21 +303,24 @@ const aiService = {
                 const img = options.source_files[0];
                 const vid = options.video_files[0];
 
-                // Map ALL possible fields to ensure KIE finds what it needs
-                input.image = img;
+                // Clean Schema for KIE 'kling-2.6/motion-control'
+                // Based on "This field is required", it likely wants specific keys.
+                // Standard KIE convention for separate inputs:
                 input.image_url = img;
-
-                input.video = vid;
                 input.video_url = vid;
-                input.input_video = vid;
 
+                // Redundancy for older runners
+                input.input_urls = [img];
+
+                // Specific Params
                 input.character_orientation = 'video';
                 input.mode = 'std';
 
-                // Cleanup generic field to avoid conflict
-                if (input.input_urls) delete input.input_urls;
-
-                if (!input.prompt) input.prompt = 'animate';
+                // Ensure we don't have conflicting keys
+                delete input.image;
+                delete input.video;
+                delete input.input_video;
+                delete input.input_image;
             } else if (hasSourceFiles) {
                 // Standard Image-to-Video
                 input.input_urls = options.source_files;
