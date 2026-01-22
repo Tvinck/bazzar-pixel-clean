@@ -299,15 +299,22 @@ const aiService = {
 
             // Kling Motion Control specific inputs
             if (modelId === 'kling_motion_control' && options.video_files?.length > 0) {
-                // Kling Motion Control: image_urls (image) + video_urls (driver)
-                input.input_urls = options.source_files;
+                const img = options.source_files[0];
+                const vid = options.video_files[0];
 
-                // KIE/Kling often expects 'video_url' or 'video' for the driving video
-                // Passing as 'video' to satisfy "input.video" validation error
-                input.video = options.video_files[0];
+                // Map ALL possible fields to ensure KIE finds what it needs
+                input.image = img;
+                input.image_url = img;
 
-                input.character_orientation = 'video'; // match movement
-                input.mode = 'std'; // 720p or std
+                input.video = vid;
+                input.video_url = vid;
+                input.input_video = vid;
+
+                input.character_orientation = 'video';
+                input.mode = 'std';
+
+                // Cleanup generic field to avoid conflict
+                if (input.input_urls) delete input.input_urls;
 
                 if (!input.prompt) input.prompt = 'animate';
             } else if (hasSourceFiles) {
@@ -702,10 +709,48 @@ const aiService = {
             });
         }
 
+        // Handle VIDEO files (Same logic to support FormData upload)
+        if (options.video_files && Array.isArray(options.video_files)) {
+            options.video_files.forEach((file, i) => {
+                // Logic mostly mirrors source_files but ensures video MIME types
+                if (file instanceof File) {
+                    formData.append('files', file, file.name);
+                } else if (typeof file === 'string') {
+                    try {
+                        let base64 = file;
+                        let mime = 'video/mp4'; // guess
+
+                        if (file.startsWith('data:')) {
+                            const parts = file.split(',');
+                            if (parts.length > 1) {
+                                const match = parts[0].match(/:(.*?);/);
+                                mime = match ? match[1] : 'video/mp4';
+                                base64 = parts[1];
+                            }
+                        }
+
+                        const bstr = atob(base64);
+                        let n = bstr.length;
+                        const u8arr = new Uint8Array(n);
+                        while (n--) {
+                            u8arr[n] = bstr.charCodeAt(n);
+                        }
+                        const blob = new Blob([u8arr], { type: mime });
+                        const extension = mime.split('/')[1] || 'mp4';
+                        formData.append('files', blob, `video_${i}.${extension}`);
+                        console.log(`📎 Appended VIDEO file ${i} (${mime}) from base64`);
+                    } catch (e) {
+                        console.warn(`⚠️ Failed to parse video ${i} as base64`, e);
+                    }
+                }
+            });
+        }
+
         // Pass other options as JSON string
         formData.append('options', JSON.stringify({
             ...options,
-            source_files: undefined // Already handled via formData.append('files', ...)
+            source_files: undefined, // Already excluded
+            video_files: undefined // Exclude videos from JSON since they are uploaded
         }));
 
         const createRes = await fetch('/api/generate', {
