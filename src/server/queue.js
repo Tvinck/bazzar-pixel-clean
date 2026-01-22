@@ -39,7 +39,7 @@ export const initQueue = async (bot) => {
 
                     const { error: saveErr } = await supabase.from('creations').insert({
                         user_id: userId,
-                        generation_id: 'job_' + jobId,
+                        generation_id: jobId, // Use raw UUID from pg-boss
                         title: prompt ? prompt.slice(0, 50) : 'Bot Generation',
                         description: prompt || 'Created via Bot',
                         image_url: result.imageUrl,
@@ -49,7 +49,12 @@ export const initQueue = async (bot) => {
                         is_public: false,
                         tags: [type, 'bot']
                     });
-                    if (saveErr) console.error('⚠️ Failed to save bot creation to DB:', saveErr);
+                    if (saveErr) {
+                        console.error('⚠️ Failed to save bot creation to DB:', saveErr);
+                        if (saveErr.code === '22P02') {
+                            console.warn('💡 Tip: Run FIX_CREATIONS_UUID.sql if you want to use custom ID formats.');
+                        }
+                    }
                 }
 
                 // 3. Notify User (Telegram)

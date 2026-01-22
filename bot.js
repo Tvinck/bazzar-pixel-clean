@@ -80,8 +80,15 @@ async function ensureVideoResolution(filePath) {
 
             const { width, height } = videoStream;
 
+            // Optimization: Skip if resolution is already sufficient (>= 720p) and format is likely compatible
+            const isMp4 = filePath.toLowerCase().endsWith('.mp4');
+            if (width && height && Math.min(width, height) >= 720 && isMp4) {
+                console.log(`✅ Video ${path.basename(filePath)} is already ${width}x${height} (>=720p). Skipping upscale.`);
+                return resolve(filePath);
+            }
+
             // Always normalize and upscale to ensure MP4/H.264/720p compliance
-            console.log(`Processing video ${path.basename(filePath)} (${width}x${height})...`);
+            console.log(`Processing video ${path.basename(filePath)} (${width}x${height}) -> Upscaling/Normalizing...`);
 
             // Output to temp (Force .mp4)
             const tempOut = path.join(os.tmpdir(), `upscaled_${Date.now()}_${path.parse(filePath).name}.mp4`);
@@ -109,6 +116,10 @@ async function ensureVideoResolution(filePath) {
                 })
                 .on('error', (e) => {
                     console.error('Upscale failed:', e);
+                    // Ensure partial file is removed
+                    if (fs.existsSync(tempOut)) {
+                        try { fs.unlinkSync(tempOut); } catch (delErr) { }
+                    }
                     resolve(filePath); // Fallback
                 });
         });
@@ -238,6 +249,10 @@ export async function ensureBucketsPublic() {
         console.log('✅ Storage buckets visibility verified.');
     } catch (err) {
         console.error('⚠️ Failed to verify bucket visibility:', err.message);
+        const adminId = process.env.ADMIN_ID;
+        if (bot && adminId) {
+            bot.sendMessage(adminId, `🚨 *System Alert*\nBucket Visibility Check Failed!\nError: \`${err.message}\``, { parse_mode: 'Markdown' }).catch(() => { });
+        }
     }
 }
 
@@ -438,7 +453,22 @@ function setupBotHandlers(b) {
                 const draft = userDrafts.get(chatId);
                 if (!draft) return b.sendMessage(chatId, '⚠️ Сессия истекла.');
                 b.sendMessage(chatId, `🎨 *Генерация...*`);
-                const result = await aiService.generateImage(draft.prompt || 'Art', modelId, { telegramId: chatId, source_files: draft.images });
+
+                // ✨ MAGIC PROMPT: Enhance short textual prompts for better quality
+                let finalPrompt = draft.prompt || 'Art';
+                if ((!draft.images || draft.images.length === 0) && finalPrompt.length < 300) {
+                    try {
+                        const enhanced = await aiService.enhancePrompt(finalPrompt);
+                        if (enhanced !== finalPrompt) {
+                            finalPrompt = enhanced;
+                            console.log(`✨ Applied Magic Prompt: ${finalPrompt}`);
+                        }
+                    } catch (magicErr) {
+                        console.warn('Magic Prompt skipped:', magicErr);
+                    }
+                }
+
+                const result = await aiService.generateImage(finalPrompt, modelId, { telegramId: chatId, source_files: draft.images });
                 if (result.success) {
                     if (result.imageUrl.match(/\.(mp4|mov|webm)$/i)) await b.sendVideo(chatId, result.imageUrl);
                     else await b.sendPhoto(chatId, result.imageUrl);
@@ -683,8 +713,13 @@ app.post('/api/jobs/create', async (req, res) => {
                         if (fs.existsSync(localPath)) {
                             // 1. Ensure Resolution
                             let fileToUpload = localPath;
+                            let isTempFile = false; // Track if we created a temp file
                             try {
-                                fileToUpload = await ensureVideoResolution(localPath);
+                                const resolvedPath = await ensureVideoResolution(localPath);
+                                if (resolvedPath !== localPath) {
+                                    fileToUpload = resolvedPath;
+                                    isTempFile = true;
+                                }
                             } catch (vidErr) {
                                 console.error('Resolution check failed:', vidErr);
                             }
@@ -697,6 +732,16 @@ app.post('/api/jobs/create', async (req, res) => {
                             const { error: upErr } = await supabase.storage
                                 .from('uploads')
                                 .upload(filename, buffer, { contentType: mime, upsert: false });
+
+                            // CLEANUP TEMP FILE
+                            if (isTempFile) {
+                                try {
+                                    fs.unlinkSync(fileToUpload);
+                                    console.log('🧹 Cleaned up temp video:', fileToUpload);
+                                } catch (e) {
+                                    console.error('⚠️ Failed to cleanup temp video:', e);
+                                }
+                            }
 
                             if (!upErr) {
                                 const { data: pubData } = supabase.storage.from('uploads').getPublicUrl(filename);

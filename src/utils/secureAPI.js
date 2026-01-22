@@ -5,7 +5,7 @@
 // import rateLimiter from './rateLimiter';
 // import csrfProtection from './csrf';
 import { validatePrompt, sanitizeText } from './validation';
-import React from 'react';
+// React import removed
 
 class SecureAPIClient {
     constructor(baseURL = '/api') {
@@ -43,6 +43,9 @@ class SecureAPIClient {
             ...options,
             headers: {
                 'Content-Type': 'application/json',
+                ...(typeof window !== 'undefined' && window.Telegram?.WebApp?.initData
+                    ? { 'x-telegram-init-data': window.Telegram.WebApp.initData }
+                    : {}),
                 ...headers
             },
             credentials: 'same-origin',
@@ -229,36 +232,6 @@ const apiClient = new SecureAPIClient();
 
 export default apiClient;
 
-/**
- * React Hook для безопасных API запросов
- */
-export const useSecureAPI = () => {
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError] = React.useState(null);
-
-    const request = async (method, endpoint, data, options) => {
-        setLoading(true);
-        setError(null);
-
-        try {
-            const result = await apiClient[method](endpoint, data, options);
-            return result;
-        } catch (err) {
-            setError(err.message);
-            throw err;
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return {
-        loading,
-        error,
-        get: (endpoint, options) => request('get', endpoint, null, options),
-        post: (endpoint, data, options) => request('post', endpoint, data, options),
-        put: (endpoint, data, options) => request('put', endpoint, data, options),
-        delete: (endpoint, options) => request('delete', endpoint, null, options)
-    };
-};
+// React imports and hook removed. Use src/hooks/useSecureAPI.js instead.
 
 

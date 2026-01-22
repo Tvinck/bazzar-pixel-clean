@@ -80,15 +80,30 @@ const CreationModal = ({ creation, isOpen, onClose, onLike, onNext, onPrev, hasN
                     >
                         {/* Image Container */}
                         <div className="relative flex-1 bg-black flex items-center justify-center overflow-hidden group">
-                            <motion.img
-                                key={creation.id} // Re-animate on change
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ duration: 0.3 }}
-                                src={creation.image_url || creation.thumbnail_url}
-                                alt={creation.title || 'Creation'}
-                                className="w-full h-full object-contain"
-                            />
+                            {(creation.type === 'video' || creation.image_url?.match(/\.(mp4|mov|webm)$/i)) ? (
+                                <motion.video
+                                    key={creation.id}
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.3 }}
+                                    src={creation.image_url}
+                                    className="w-full h-full object-contain"
+                                    controls
+                                    autoPlay
+                                    loop
+                                    playsInline
+                                />
+                            ) : (
+                                <motion.img
+                                    key={creation.id} // Re-animate on change
+                                    initial={{ opacity: 0 }}
+                                    animate={{ opacity: 1 }}
+                                    transition={{ duration: 0.3 }}
+                                    src={creation.image_url || creation.thumbnail_url}
+                                    alt={creation.title || 'Creation'}
+                                    className="w-full h-full object-contain"
+                                />
+                            )}
 
                             {/* Navigation Arrows (Desktop / Visible on tap) */}
                             {hasPrev && (

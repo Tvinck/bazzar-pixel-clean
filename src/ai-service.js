@@ -785,6 +785,64 @@ const aiService = {
         console.log(`🚂 Training Stub: ${triggerWord} with ${images.length} images`);
         await new Promise(r => setTimeout(r, 2000));
         return { success: true, taskId: 'mock_train_' + Date.now() };
+    },
+
+    // ============================================
+    // MAGIC PROMPT (LLM Enhancement)
+    // ============================================
+    enhancePrompt: async (originalPrompt) => {
+        if (!originalPrompt || originalPrompt.length > 300) return originalPrompt; // Don't touch long prompts
+
+        const apiKey = !isBrowser ? (getEnv('KIE_API_KEY') || HARDCODED_KIE_KEY) : null;
+        if (!apiKey) return originalPrompt;
+
+        console.log(`✨ Enhancing prompt: "${originalPrompt}"...`);
+
+        try {
+            // Using KIE's OpenAI-compatible endpoint
+            const res = await fetch('https://api.kie.ai/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    model: 'gpt-4o-mini', // Fast & Cheap
+                    messages: [
+                        {
+                            role: "system",
+                            content: "You are an expert AI art prompter. Take the user's simple concept and rewrite it into a detailed, high-quality image generation prompt. Include details about lighting, style (photorealistic/cinematic), camera angles, and rendering engine (Unreal Engine 5, Octane Render). Keep it under 40 words. Output ONLY the raw prompt text, no intro/outro."
+                        },
+                        {
+                            role: "user",
+                            content: originalPrompt
+                        }
+                    ],
+                    max_tokens: 150,
+                    temperature: 0.7
+                })
+            });
+
+            if (!res.ok) {
+                const errText = await res.text();
+                // If 404, maybe KIE doesn't support chat at this endpoint.
+                if (res.status === 404) console.warn('⚠️ KIE Chat API 404. Skipping enhancement.');
+                else console.warn(`⚠️ Prompt enhancement failed (${res.status}): ${errText}`);
+                return originalPrompt;
+            }
+
+            const data = await res.json();
+            const enhanced = data.choices?.[0]?.message?.content?.trim();
+
+            if (enhanced) {
+                console.log(`✨ Enhanced: "${enhanced}"`);
+                return enhanced;
+            }
+        } catch (e) {
+            console.error('⚠️ Enhancement error:', e.message);
+        }
+
+        return originalPrompt;
     }
 };
 

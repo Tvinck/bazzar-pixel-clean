@@ -1,5 +1,6 @@
 import https from 'https';
-import { URL } from 'url';
+import { URL, URLSearchParams } from 'url';
+import crypto from 'crypto';
 
 /**
  * Zero-Dependency Helper for HTTP(S) Requests
@@ -42,6 +43,43 @@ const makeRequest = (url, method, body, headers = {}) => {
             reject(e);
         }
     });
+};
+
+/**
+ * Validates Telegram Web App Data (Signature Verification)
+ */
+const validateTelegramData = (initData, botToken) => {
+    if (!initData || !botToken) return { valid: false };
+
+    try {
+        const urlParams = new URLSearchParams(initData);
+        const hash = urlParams.get('hash');
+        if (!hash) return { valid: false };
+
+        urlParams.delete('hash');
+
+        const dataCheckArr = [];
+        for (const [key, value] of urlParams.entries()) {
+            dataCheckArr.push(`${key}=${value}`);
+        }
+        dataCheckArr.sort();
+        const dataCheckString = dataCheckArr.join('\n');
+
+        const secretKey = crypto.createHmac('sha256', 'WebAppData').update(botToken).digest();
+        const calculatedHash = crypto.createHmac('sha256', secretKey).update(dataCheckString).digest('hex');
+
+        if (calculatedHash === hash) {
+            // Extract user data
+            const userStr = urlParams.get('user');
+            if (userStr) {
+                return { valid: true, user: JSON.parse(userStr) };
+            }
+        }
+        return { valid: false };
+    } catch (e) {
+        console.error('Validation Error:', e);
+        return { valid: false };
+    }
 };
 
 /**
@@ -94,7 +132,7 @@ export default async function handler(req, res) {
 
         if (req.method === 'OPTIONS') return res.status(200).end();
 
-        const KIE_KEY_HARDCODED = '365b6afae3b952cef9297bbc5384ec8e';
+        const KIE_KEY_HARDCODED = process.env.KIE_API_KEY;
 
         const { action } = req.query || {};
 
@@ -108,10 +146,48 @@ export default async function handler(req, res) {
 
             // --- 1. BILLING CHECK ---
             let cost = 0;
-            let shouldCharge = !!(userId && userId !== 'browser_user');
+            let shouldCharge = true;
+            let validatedUserId = null;
 
-            // Log for debugging
-            console.log(`[Proxy] Request: User=${userId}, Model=${model}, Charge=${shouldCharge}`);
+            // Security: Validate InitData if present
+            const initData = req.headers['x-telegram-init-data'];
+            if (initData) {
+                const validation = validateTelegramData(initData, process.env.TELEGRAM_BOT_TOKEN);
+                if (validation.valid && validation.user) {
+                    validatedUserId = validation.user.id;
+                    console.log(`✅ [Proxy] Authorized Request for User: ${validatedUserId}`);
+                } else {
+                    console.warn(`⚠️ [Proxy] Invalid InitData Signature! Potential spoofing.`);
+                }
+            }
+
+            // Fallback for Dev/Browser ONLY
+            if (!validatedUserId) {
+                if (userId === 'browser_user' || !process.env.TELEGRAM_BOT_TOKEN) {
+                    // LEGITIMATE DEV USE (No Charge)
+                    shouldCharge = false;
+                    console.log('[Proxy] Dev/Browser mode detected. Billing disabled.');
+                } else {
+                    // PRODUCTION SECURITY BLOCKS:
+                    // If we are here, it means:
+                    // 1. Not a dev user ('browser_user')
+                    // 2. We HAVE a bot token (Production)
+                    // 3. But InitData was missing or invalid.
+
+                    // REJECT THE REQUEST. Do not trust body.userId.
+                    console.error(`⛔ [Proxy] Security Block: User ${userId} tried to bypass signature check.`);
+                    return res.status(401).json({
+                        error: 'Authentication Failed. Missing or Invalid Telegram Signature (InitData).',
+                        code: 'auth_failed'
+                    });
+                }
+            }
+
+            // Use the trusted ID if available
+            const finalUserId = validatedUserId || userId;
+            shouldCharge = !!(finalUserId && finalUserId !== 'browser_user');
+
+            console.log(`[Proxy] Request: User=${finalUserId}, Model=${model}, Charge=${shouldCharge}`);
 
             if (shouldCharge) {
                 // Get Dynamic Cost

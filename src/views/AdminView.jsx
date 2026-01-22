@@ -6,9 +6,11 @@ import { Plus, Trash2, ShieldAlert, Zap, Globe, Image as ImageIcon, Video, X, Us
 const AdminView = () => {
     const { user, profile } = useUser();
     const [isAdmin, setIsAdmin] = useState(false);
-    const [activeTab, setActiveTab] = useState('templates'); // 'templates' | 'models' | 'users'
+    const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' | 'monitoring' | 'templates' | 'models' | 'users'
 
     // Data
+    const [stats, setStats] = useState({ users: 0, models: 0, templates: 0, gens24h: 0 });
+    const [recentGenerations, setRecentGenerations] = useState([]);
     const [templates, setTemplates] = useState([]);
     const [models, setModels] = useState([]);
     const [users, setUsers] = useState([]);
@@ -17,10 +19,10 @@ const AdminView = () => {
 
     // Edit State
     const [editingTemplate, setEditingTemplate] = useState(null);
-    const [editingUser, setEditingUser] = useState(null); // For balance edit
+    const [editingUser, setEditingUser] = useState(null);
 
     useEffect(() => {
-        const WHITELIST_IDS = ['13658f8b-3f48-4394-a320-dd8e2277d079'];
+        const WHITELIST_IDS = ['13658f8b-3f48-4394-a320-dd8e2277d079']; // Hardcoded Super Admin
 
         if (profile?.role === 'admin' || (user?.id && WHITELIST_IDS.includes(user.id))) {
             setIsAdmin(true);
@@ -36,17 +38,34 @@ const AdminView = () => {
 
     const fetchData = async () => {
         setIsLoading(true);
-        const { data: tData } = await supabase.from('templates').select('*').order('created_at', { ascending: false });
-        const { data: mData } = await supabase.from('ai_models').select('*').order('id');
-        const { data: uData } = await supabase.from('profiles').select('*').order('balance', { ascending: false }).limit(50);
+        // Parallel fetching
+        const pTemplates = supabase.from('templates').select('*').order('created_at', { ascending: false });
+        const pModels = supabase.from('ai_models').select('*').order('id');
+        const pUsers = supabase.from('profiles').select('*').order('balance', { ascending: false }).limit(50);
+        const pGens = supabase.from('creations').select('*, user:users(username, avatar_url)').order('created_at', { ascending: false }).limit(40);
+        const pCountUsers = supabase.from('profiles').select('id', { count: 'exact', head: true });
 
-        if (tData) setTemplates(tData);
-        if (mData) setModels(mData);
-        if (uData) setUsers(uData);
+        // Mock 24h count or real if manageable (using head)
+        // const pCountGens24h = supabase.from('creations').select('id', { count: 'exact', head: true }).gte('created_at', new Date(Date.now() - 86400000).toISOString());
+
+        const [tRes, mRes, uRes, gRes, cUserRes] = await Promise.all([pTemplates, pModels, pUsers, pGens, pCountUsers]);
+
+        if (tRes.data) setTemplates(tRes.data);
+        if (mRes.data) setModels(mRes.data);
+        if (uRes.data) setUsers(uRes.data);
+        if (gRes.data) setRecentGenerations(gRes.data);
+
+        setStats({
+            users: cUserRes.count || 0,
+            models: mRes.data?.length || 0,
+            templates: tRes.data?.length || 0,
+            gens24h: gRes.data?.length || 0 // Just showing recent count for now
+        });
+
         setIsLoading(false);
     };
 
-    // --- TEMPLATE ACTIONS ---
+    // --- ACTIONS ---
     const handleSaveTemplate = async (tpl) => {
         const isNew = !tpl.id;
         const payload = {
@@ -86,37 +105,29 @@ const AdminView = () => {
         fetchData();
     };
 
-    // --- MODEL ACTIONS ---
     const handleUpdateModel = async (id, changes) => {
         const { error } = await supabase.from('ai_models').update(changes).eq('id', id);
         if (!error) fetchData();
         else alert('Ошибка при обновлении модели: ' + error.message);
     };
 
-    // --- USER ACTIONS ---
     const handleUpdateBalance = async (userId, newBalance) => {
         const val = parseInt(newBalance);
         if (isNaN(val)) return;
-
         const { error } = await supabase.from('profiles').update({ balance: val }).eq('id', userId);
-        if (error) {
-            alert('Ошибка баланса: ' + error.message);
-        } else {
+        if (error) alert('Ошибка: ' + error.message);
+        else {
             setEditingUser(null);
-            // Local update
-            setUsers(users.map(u => u.id === userId ? { ...u, balance: val } : u));
+            fetchData();
         }
     };
-
-    // --- RENDER ---
 
     if (!isAdmin) {
         return (
             <div className="flex flex-col items-center justify-center h-[60vh] text-slate-500 opacity-50">
                 <ShieldAlert size={48} className="mb-4 text-red-500" />
                 <h2 className="text-xl font-bold">Доступ ограничен</h2>
-                <p className="text-xs text-center max-w-xs mt-2">Панель управления доступна только для персонала Studio.</p>
-                <button className="mt-8 text-[10px] underline" onClick={() => { setIsAdmin(true); fetchData(); }}>[Force Dev Login]</button>
+                <button className="mt-8 text-[10px] underline" onClick={() => { setIsAdmin(true); fetchData(); }}>[Dev Override]</button>
             </div>
         );
     }
@@ -128,7 +139,7 @@ const AdminView = () => {
     );
 
     return (
-        <div className="pb-32 px-4 pt-6">
+        <div className="pb-32 px-4 pt-6 max-w-7xl mx-auto">
             <h1 className="text-3xl font-black font-display mb-8 flex items-center gap-3">
                 <div className="w-10 h-10 bg-indigo-500 text-white flex items-center justify-center rounded-xl shadow-lg shadow-indigo-500/30">
                     <ShieldAlert size={20} />
@@ -136,27 +147,74 @@ const AdminView = () => {
                 Staff Panel
             </h1>
 
-            {/* Tabs */}
-            <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl mb-6">
-                <button
-                    onClick={() => setActiveTab('templates')}
-                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${activeTab === 'templates' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-500' : 'text-slate-400'}`}
-                >
-                    Шаблоны
-                </button>
-                <button
-                    onClick={() => setActiveTab('models')}
-                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${activeTab === 'models' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-500' : 'text-slate-400'}`}
-                >
-                    AI Модели
-                </button>
-                <button
-                    onClick={() => setActiveTab('users')}
-                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${activeTab === 'users' ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-500' : 'text-slate-400'}`}
-                >
-                    Юзеры
-                </button>
+            {/* Navigation */}
+            <div className="flex bg-slate-100 dark:bg-slate-800 p-1.5 rounded-2xl mb-8 overflow-x-auto">
+                {[
+                    { id: 'dashboard', label: 'Dashboard', icon: Zap },
+                    { id: 'monitoring', label: 'Monitor', icon: Video },
+                    { id: 'templates', label: 'Шаблоны', icon: ImageIcon },
+                    { id: 'models', label: 'AI Модели', icon: Edit2 },
+                    { id: 'users', label: 'Юзеры', icon: Users },
+                ].map(tab => (
+                    <button
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
+                        className={`
+                            flex items-center justify-center gap-2 px-6 py-3 text-sm font-bold rounded-xl transition-all whitespace-nowrap
+                            ${activeTab === tab.id
+                                ? 'bg-white dark:bg-slate-700 shadow-sm text-indigo-500'
+                                : 'text-slate-400 hover:text-slate-600 dark:hover:text-slate-300'}
+                        `}
+                    >
+                        <tab.icon size={16} />
+                        {tab.label}
+                    </button>
+                ))}
             </div>
+
+            {/* --- DASHBOARD --- */}
+            {activeTab === 'dashboard' && (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-in fade-in slide-in-from-bottom-4">
+                    <StatsWidget label="Total Users" value={stats.users} icon={<Users size={20} />} color="blue" />
+                    <StatsWidget label="Active Models" value={stats.models} icon={<Zap size={20} />} color="amber" />
+                    <StatsWidget label="Templates" value={stats.templates} icon={<ImageIcon size={20} />} color="purple" />
+                    <StatsWidget label="Recent Gens" value={stats.gens24h} icon={<Video size={20} />} color="green" />
+                </div>
+            )}
+
+            {/* --- MONITORING (FEED) --- */}
+            {activeTab === 'monitoring' && (
+                <div className="animate-in fade-in slide-in-from-bottom-4">
+                    <div className="flex justify-between items-center mb-6">
+                        <h2 className="text-xl font-bold">Последние генерации</h2>
+                        <button onClick={fetchData} className="text-xs bg-slate-100 dark:bg-slate-800 px-3 py-2 rounded-lg font-bold hover:bg-slate-200 transition-colors">Обновить</button>
+                    </div>
+                    <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        {recentGenerations.map(gen => (
+                            <div key={gen.id} className="group relative aspect-square bg-slate-100 dark:bg-slate-800 rounded-xl overflow-hidden">
+                                {gen.type === 'video' ? (
+                                    <video src={gen.image_url} className="w-full h-full object-cover" muted loop onMouseOver={e => e.target.play()} onMouseOut={e => e.target.pause()} />
+                                ) : (
+                                    <img src={gen.image_url} className="w-full h-full object-cover" loading="lazy" />
+                                )}
+                                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+                                    <p className="text-white text-xs font-medium line-clamp-2 mb-1">{gen.prompt}</p>
+                                    <div className="flex items-center gap-1.5">
+                                        <div className="w-4 h-4 rounded-full bg-white/20 overflow-hidden">
+                                            {gen.user?.avatar_url ? <img src={gen.user.avatar_url} /> : <div className="bg-indigo-500 w-full h-full" />}
+                                        </div>
+                                        <span className="text-[10px] text-white/80 truncate">@{gen.user?.username || 'anon'}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center mt-2">
+                                        <span className="text-[9px] bg-white/20 text-white px-1.5 py-0.5 rounded uppercase">{gen.type || 'img'}</span>
+                                        <span className="text-[9px] text-white/60">{new Date(gen.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* --- TEMPLATES LIST --- */}
             {activeTab === 'templates' && (
@@ -200,7 +258,7 @@ const AdminView = () => {
             {activeTab === 'models' && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
                     <div className="bg-blue-50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-900/30 text-xs text-blue-600 dark:text-blue-300 mb-4">
-                        💡 Здесь вы можете менять стоимость генерации для разных моделей ИИ.
+                        💡 Управление ценами моделей ИИ (кредиты за 1 генерацию).
                     </div>
 
                     {models.map(m => (
@@ -244,7 +302,7 @@ const AdminView = () => {
             {/* --- USERS LIST --- */}
             {activeTab === 'users' && (
                 <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4">
-                    <div className="relative">
+                    <div className="relative mb-4">
                         <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
                         <input
                             className="w-full bg-white dark:bg-slate-800 py-3 pl-12 pr-4 rounded-2xl text-sm font-medium outline-none focus:ring-2 focus:ring-indigo-500/20"
@@ -371,11 +429,9 @@ const AdminView = () => {
                                 <label className="label mb-2">Выберите AI Модель</label>
                                 <select className="input-field py-3" value={editingTemplate.model_id || 'flux-pro'} onChange={e => setEditingTemplate({ ...editingTemplate, model_id: e.target.value })}>
                                     {models.map(m => <option key={m.id} value={m.id}>{m.display_name} ({m.cost} ⚡)</option>)}
-                                    <option value="flux-pro">Flux Pro (Default)</option>
-                                    <option value="flux-schnell">Flux Schnell</option>
-                                    <option value="kling">Kling AI Video</option>
-                                    <option value="runway-gen3-alpha">Runway Gen-3</option>
-                                    <option value="midjourney-v6">Midjourney V6</option>
+                                    {/* Fallbacks if models not loaded yet */}
+                                    <option value="flux-pro">Flux Pro</option>
+                                    <option value="kling">Kling Video</option>
                                 </select>
                             </div>
                         </div>
@@ -396,6 +452,30 @@ const AdminView = () => {
                     @apply bg-slate-50 dark:bg-slate-800 border-none focus:ring-2 focus:ring-indigo-500 rounded-xl px-4 py-3 w-full text-sm font-medium text-slate-900 dark:text-white outline-none transition-all placeholder:text-slate-300;
                 }
             `}</style>
+        </div>
+    );
+};
+
+// Mini Widget Component
+const StatsWidget = ({ label, value, icon, color }) => {
+    const bgColors = {
+        blue: 'bg-blue-500',
+        amber: 'bg-amber-500',
+        purple: 'bg-purple-500',
+        green: 'bg-green-500'
+    };
+
+    return (
+        <div className="bg-white dark:bg-slate-800 p-5 rounded-[1.5rem] shadow-sm flex flex-col justify-between h-32">
+            <div className="flex justify-between items-start">
+                <span className="font-bold text-slate-400 text-xs uppercase tracking-wider">{label}</span>
+                <div className={`w-8 h-8 rounded-full ${bgColors[color] || 'bg-slate-500'} text-white flex items-center justify-center shadow-lg hover:scale-110 transition-transform`}>
+                    {icon}
+                </div>
+            </div>
+            <div className="text-3xl font-black text-slate-900 dark:text-white">
+                {value}
+            </div>
         </div>
     );
 };

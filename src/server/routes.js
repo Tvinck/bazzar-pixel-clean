@@ -15,11 +15,11 @@ export const setupRoutes = (app, bot, boss) => {
         const { id } = req.params;
         try {
             // 1. Check if it's already in creations (Success)
-            // We prefix jobId with 'job_' when saving to creations table
+            // We check the record by it's generation_id (which is a UUID in the queue case)
             const { data: creation } = await supabase
                 .from('creations')
                 .select('*')
-                .eq('generation_id', 'job_' + id)
+                .eq('generation_id', id)
                 .maybeSingle();
 
             if (creation) {
@@ -227,7 +227,9 @@ export const setupRoutes = (app, bot, boss) => {
                     const isVideoResult = (type.includes('video') || (result.imageUrl && result.imageUrl.match(/\.(mp4|mov)$/i)));
                     const { data: savedData, error: saveErr } = await supabase.from('creations').insert({
                         user_id: userId,
-                        generation_id: 'sync_' + Date.now(),
+                        // Set to null to avoid UUID type error if it's not a real job.
+                        // If we ever want to store a reference here, it MUST be a valid UUID or column must be TEXT.
+                        generation_id: null,
                         title: prompt ? prompt.slice(0, 50) : 'Web Generation',
                         description: prompt || 'Created via Web',
                         image_url: result.imageUrl,
@@ -238,7 +240,13 @@ export const setupRoutes = (app, bot, boss) => {
                         tags: [type, 'web']
                     }).select('id').maybeSingle();
 
-                    if (saveErr) console.error('⚠️ Sync History Save Error:', saveErr);
+                    if (saveErr) {
+                        console.error('⚠️ Sync History Save Error:', saveErr);
+                        // If it's a UUID error, we might need the migration
+                        if (saveErr.code === '22P02') {
+                            console.warn('💡 Recommendation: Run FIX_CREATIONS_UUID.sql to allow "sync_" prefix in generations_id');
+                        }
+                    }
                     if (savedData) result.id = savedData.id;
                 }
 
