@@ -335,6 +335,12 @@ const aiService = {
         }
         // 3. Final Regularization for Kie.ai API quirks
         const normalizeKieInput = (targetInput, targetModel) => {
+            // SPECIAL CASE: Kling Motion Control (Strict Schema)
+            // We manually constructed the perfect payload above. Do not touch it.
+            if (targetModel.includes('motion-control') || targetModel === 'kling_motion_control') {
+                return targetInput;
+            }
+
             const normalized = { ...targetInput };
             const files = options.source_files || [];
 
