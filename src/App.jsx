@@ -227,7 +227,7 @@ function AppContent() {
           <Routes>
             {/* Main Tabs */}
             <Route path="/" element={<HomeView onOpenCreation={openCreation} onOpenTemplate={openTemplate} onOpenLeaderboard={openLeaderboard} />} />
-            <Route path="/gallery" element={<GalleryView onRemix={(prompt) => openCreation('image-gen', prompt)} />} />
+            <Route path="/gallery" element={<GalleryView onRemix={(creation) => openCreation('image-gen', creation.prompt)} />} />
             <Route path="/history" element={<HistoryView />} />
             <Route path="/profile" element={<ProfileView isDark={isDarkMode} onOpenPayment={openPayment} />} />
 

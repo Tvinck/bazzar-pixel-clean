@@ -8,7 +8,50 @@ import sharp from 'sharp';
 
 const upload = multer({ storage: multer.memoryStorage() });
 
-export const setupRoutes = (app, bot) => {
+export const setupRoutes = (app, bot, boss) => {
+
+    // --- Job Status Endpoint ---
+    app.get('/api/jobs/:id', async (req, res) => {
+        const { id } = req.params;
+        try {
+            // 1. Check if it's already in creations (Success)
+            // We prefix jobId with 'job_' when saving to creations table
+            const { data: creation } = await supabase
+                .from('creations')
+                .select('*')
+                .eq('generation_id', 'job_' + id)
+                .maybeSingle();
+
+            if (creation) {
+                return res.json({ job: { status: 'completed', result_url: creation.image_url } });
+            }
+
+            // 2. Check for balance refunds (Failure)
+            const { data: refund } = await supabase
+                .from('transactions')
+                .select('*')
+                .eq('description', `Refund: Job ${id} Failed`)
+                .maybeSingle();
+
+            if (refund) {
+                return res.json({ job: { status: 'failed', error_message: 'Generation failed and credits were refunded' } });
+            }
+
+            // 3. Fallback: Check PgBoss directly if we have it
+            if (boss) {
+                // If the job is still in boss, it's pending/active
+                // pg-boss doesn't have a simple getJob status method for arbitrary IDs easily,
+                // but we can query the internal table if needed.
+                // For now, if it's not finished, it's 'active'.
+            }
+
+            res.json({ job: { status: 'active' } });
+
+        } catch (e) {
+            console.error('Job Status Error:', e);
+            res.status(500).json({ error: 'Internal status check failed' });
+        }
+    });
 
     // --- Config Endpoint ---
     app.get('/api/config', (req, res) => {

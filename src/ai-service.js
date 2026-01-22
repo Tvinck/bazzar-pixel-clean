@@ -642,41 +642,73 @@ const aiService = {
     // ============================================
     // ASYNC JOB QUEUE (Browser)
     // ============================================
-    generateImageAsync: async (prompt, modelId = 'nano_banana', options = {}) => {
+    generateImageAsync: async (prompt, type = 'image', options = {}) => {
         if (!isBrowser) {
             throw new Error('generateImageAsync is only available in browser mode');
         }
 
-        const createRes = await fetch('/api/jobs/create', {
+        // Prepare FormData for /api/generate
+        const formData = new FormData();
+        formData.append('prompt', prompt);
+        formData.append('type', type);
+        formData.append('userId', options.userId || 'browser_user');
+        formData.append('initData', window.Telegram?.WebApp?.initData || '');
+
+        // Handle source files if they are File objects
+        if (options.source_files && Array.isArray(options.source_files)) {
+            options.source_files.forEach((file, i) => {
+                if (file instanceof File) {
+                    formData.append('files', file, file.name);
+                } else if (typeof file === 'string' && file.startsWith('data:')) {
+                    // It's a base64 string (from TemplateView)
+                    // We can just pass it in options if the server handles it, 
+                    // but routes.js expects req.files. 
+                    // Let's convert base64 to Blob
+                    const arr = file.split(',');
+                    const mime = arr[0].match(/:(.*?);/)[1];
+                    const bstr = atob(arr[1]);
+                    let n = bstr.length;
+                    const u8arr = new Uint8Array(n);
+                    while (n--) u8arr[n] = bstr.charCodeAt(n);
+                    const blob = new Blob([u8arr], { type: mime });
+                    formData.append('files', blob, `source_${i}.jpg`);
+                }
+            });
+        }
+
+        // Pass other options as JSON string
+        formData.append('options', JSON.stringify({
+            ...options,
+            source_files: undefined // Already handled via formData.append('files', ...)
+        }));
+
+        const createRes = await fetch('/api/generate', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                userId: options.userId || 'browser_user',
-                prompt: prompt,
-                modelId: modelId,
-                configuration: options,
-                sourceFiles: options.source_files || [],
-                jobType: 'image'
-            })
+            body: formData
         });
 
         if (!createRes.ok) {
             const err = await createRes.json();
-            throw new Error(err.error || 'Failed to create job');
+            throw new Error(err.error || 'Failed to start generation');
         }
 
-        const { jobId } = await createRes.json();
-        console.log(`📋 Job created: ${jobId}`);
+        const data = await createRes.json();
+        const jobId = data.jobId;
+
+        if (!jobId) {
+            if (data.data?.imageUrl) return { success: true, imageUrl: data.data.imageUrl };
+            throw new Error('No Job ID returned from server');
+        }
+
+        console.log(`📋 Job started: ${jobId}`);
 
         // Poll for completion
-        const maxAttempts = 400; // 400 * 3s = 20 minutes
+        const maxAttempts = 400; // 20 minutes
         for (let i = 0; i < maxAttempts; i++) {
             await new Promise(r => setTimeout(r, 3000));
 
             const statusRes = await fetch(`/api/jobs/${jobId}`);
-            if (!statusRes.ok) {
-                throw new Error('Failed to fetch job status');
-            }
+            if (!statusRes.ok) throw new Error('Failed to fetch job status');
 
             const { job } = await statusRes.json();
             console.log(`⏳ Job ${jobId} status: ${job.status}`);
@@ -684,7 +716,6 @@ const aiService = {
             if (job.status === 'completed') {
                 return {
                     success: true,
-                    result: [job.result_url],
                     imageUrl: job.result_url,
                     meta: { jobId: jobId }
                 };
@@ -695,7 +726,7 @@ const aiService = {
             }
         }
 
-        throw new Error('Job timeout - took longer than 3 minutes');
+        throw new Error('Job timeout - took longer than 20 minutes');
     },
 
     // Helper for Templates (Frontend)
