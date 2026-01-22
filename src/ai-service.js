@@ -654,24 +654,40 @@ const aiService = {
         formData.append('userId', options.userId || 'browser_user');
         formData.append('initData', window.Telegram?.WebApp?.initData || '');
 
-        // Handle source files if they are File objects
+        // Handle source files if they are File objects or base64 strings
         if (options.source_files && Array.isArray(options.source_files)) {
             options.source_files.forEach((file, i) => {
                 if (file instanceof File) {
                     formData.append('files', file, file.name);
-                } else if (typeof file === 'string' && file.startsWith('data:')) {
-                    // It's a base64 string (from TemplateView)
-                    // We can just pass it in options if the server handles it, 
-                    // but routes.js expects req.files. 
-                    // Let's convert base64 to Blob
-                    const arr = file.split(',');
-                    const mime = arr[0].match(/:(.*?);/)[1];
-                    const bstr = atob(arr[1]);
-                    let n = bstr.length;
-                    const u8arr = new Uint8Array(n);
-                    while (n--) u8arr[n] = bstr.charCodeAt(n);
-                    const blob = new Blob([u8arr], { type: mime });
-                    formData.append('files', blob, `source_${i}.jpg`);
+                } else if (typeof file === 'string') {
+                    try {
+                        let base64 = file;
+                        let mime = 'image/jpeg';
+
+                        if (file.startsWith('data:')) {
+                            const parts = file.split(',');
+                            if (parts.length > 1) {
+                                const match = parts[0].match(/:(.*?);/);
+                                mime = match ? match[1] : 'image/jpeg';
+                                base64 = parts[1];
+                            }
+                        }
+
+                        // Convert base64 to Blob
+                        const bstr = atob(base64);
+                        let n = bstr.length;
+                        const u8arr = new Uint8Array(n);
+                        while (n--) {
+                            u8arr[n] = bstr.charCodeAt(n);
+                        }
+                        const blob = new Blob([u8arr], { type: mime });
+                        const extension = mime.split('/')[1] || 'jpg';
+                        formData.append('files', blob, `source_${i}.${extension}`);
+                        console.log(`📎 Appended file ${i} (${mime}) from base64`);
+                    } catch (e) {
+                        console.warn(`⚠️ Failed to parse file ${i} as base64:`, e.message);
+                        // If it's not base64, maybe it's a URL. We'll let the backend handle it via options if needed.
+                    }
                 }
             });
         }
@@ -688,8 +704,15 @@ const aiService = {
         });
 
         if (!createRes.ok) {
-            const err = await createRes.json();
-            throw new Error(err.error || 'Failed to start generation');
+            let errorMsg = 'Generation request failed';
+            try {
+                const err = await createRes.json();
+                errorMsg = err.error || errorMsg;
+            } catch (jsonErr) {
+                // If not JSON, it might be a 404/500 HTML page from Vercel/Express
+                errorMsg = `Server Error (${createRes.status}): ${createRes.statusText}`;
+            }
+            throw new Error(errorMsg);
         }
 
         const data = await createRes.json();
@@ -708,7 +731,11 @@ const aiService = {
             await new Promise(r => setTimeout(r, 3000));
 
             const statusRes = await fetch(`/api/jobs/${jobId}`);
-            if (!statusRes.ok) throw new Error('Failed to fetch job status');
+            if (!statusRes.ok) {
+                // For polling, we might be more lenient or throw
+                console.warn(`Polling status failed (${statusRes.status})`);
+                continue;
+            }
 
             const { job } = await statusRes.json();
             console.log(`⏳ Job ${jobId} status: ${job.status}`);
