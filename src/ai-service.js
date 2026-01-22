@@ -241,7 +241,7 @@ const aiService = {
                 input.image_size = aspectRatio; // Uses 'image_size' enum
                 input.output_format = 'png';
             } else if (kieModelId === 'google/nano-banana-edit') {
-                input.image_urls = options.source_files;
+                input.input_urls = options.source_files;
                 input.output_format = 'png';
                 if (!hasSourceFiles) throw new Error('Nano Banana Edit requires a source image.');
             } else if (kieModelId === 'nano-banana-pro') {
@@ -266,7 +266,7 @@ const aiService = {
 
             if (kieModelId.includes('image-to-image')) {
                 if (!hasSourceFiles) throw new Error(`${kieModelId} requires input images.`);
-                input.image_urls = options.source_files;
+                input.input_urls = options.source_files;
             }
         }
         // --- GROK FAMILY ---
@@ -275,8 +275,8 @@ const aiService = {
                 input.aspect_ratio = aspectRatio;
             } else if (kieModelId === 'grok-imagine/image-to-image') {
                 if (!hasSourceFiles) throw new Error('Grok Image-to-Image requires an input image.');
-                // Docs example shows array for 'image_urls' with maxItems: 1
-                input.image_urls = [options.source_files[0]];
+                // Docs example shows array for 'image_urls' or 'input_urls'
+                input.input_urls = [options.source_files[0]];
                 // Docs DO NOT show aspect_ratio for Grok Img2Img in example, but schema might allow it. 
                 // Let's omit it to be safe as per strict example.
             } else if (kieModelId === 'grok-imagine/upscale') {
@@ -295,7 +295,7 @@ const aiService = {
             // Kling Motion Control specific inputs
             if (modelId === 'kling_motion_control' && options.video_files?.length > 0) {
                 // Kling Motion Control: image_urls (image) + video_urls (driver)
-                input.image_urls = options.source_files;
+                input.input_urls = options.source_files;
                 input.video_urls = options.video_files;
                 input.character_orientation = 'video';
                 input.mode = '720p';
@@ -304,14 +304,14 @@ const aiService = {
                 if (!input.prompt) input.prompt = 'animate';
             } else if (hasSourceFiles) {
                 // Standard Image-to-Video
-                input.image_urls = options.source_files;
+                input.input_urls = options.source_files;
             }
         }
         // --- GPT FAMILY ---
         else if (kieModelId.startsWith('gpt-image/')) {
             if (kieModelId.includes('image-to-image')) {
                 if (!hasSourceFiles) throw new Error('GPT Image-to-Image requires input images.');
-                input.image_urls = options.source_files;
+                input.input_urls = options.source_files;
             }
         }
         // 3. Final Regularization for Kie.ai API quirks
@@ -319,17 +319,19 @@ const aiService = {
             const normalized = { ...targetInput };
             const files = options.source_files || [];
 
-            // Absolute standard: use ONLY image_urls and image_url.
-            // EXCEPT for models that explicitly require image_input (like nano-banana-pro)
-            if (targetModel !== 'nano-banana-pro') {
-                delete normalized.input_urls;
-
-                if (files.length > 0) {
+            if (files.length > 0) {
+                // For nano-banana-pro, use only image_input to be safe.
+                if (targetModel === 'nano-banana-pro') {
+                    normalized.image_input = files;
+                } else {
+                    // For most other models, provide BOTH image_urls and input_urls 
+                    // to satisfy different schema versions on internal KIE runners.
                     normalized.image_urls = files;
+                    normalized.input_urls = files;
 
-                    // Singular vs Plural safety for specific models
                     if (files.length === 1) {
                         normalized.image_url = files[0];
+                        normalized.input_url = files[0];
                     }
                 }
             }
