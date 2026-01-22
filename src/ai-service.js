@@ -303,22 +303,20 @@ const aiService = {
                 const img = options.source_files[0];
                 const vid = options.video_files[0];
 
-                // Clean Schema for KIE 'kling-2.6/motion-control'
-                // Based on "This field is required", it likely wants specific keys.
-                // Standard KIE convention for separate inputs:
+                // Schema fix based on "input.video" error hint
+                // The API previously complained "input.video: Does not match format uri", implying 'video' is the required key.
+                input.image = img;
+                input.video = vid;
+
+                // Keep snake_case aliases just in case, but prioritize the simple keys
                 input.image_url = img;
                 input.video_url = vid;
-
-                // Redundancy for older runners
-                input.input_urls = [img];
 
                 // Specific Params
                 input.character_orientation = 'video';
                 input.mode = 'std';
 
-                // Ensure we don't have conflicting keys
-                delete input.image;
-                delete input.video;
+                // Ensure we don't have conflicting keys that might confuse the validator
                 delete input.input_video;
                 delete input.input_image;
             } else if (hasSourceFiles) {
