@@ -167,8 +167,8 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                 </div>
 
                                 {/* Content Grid */}
-                                <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar">
-                                    <div className="space-y-3">
+                                <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar overscroll-contain">
+                                    <div className="space-y-3 min-h-[300px]">
                                         {(activeTab === 'packs' ? PACKS : SUBSCRIPTIONS).map((plan, idx) => (
                                             <motion.div
                                                 initial={{ opacity: 0, y: 10 }}

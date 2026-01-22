@@ -134,13 +134,15 @@ function AppContent() {
     // Handle back button click
     const handleBackButton = () => {
       console.log('🔙 Telegram back button pressed');
-      navigate(-1); // Go back in history
+      if (location.pathname !== '/') {
+        navigate(-1);
+      }
     };
 
-    window.addEventListener('telegram-back-button', handleBackButton);
+    tg.onEvent('backButtonClicked', handleBackButton);
 
     // Control back button visibility based on route
-    const mainRoutes = ['/', '/create', '/gallery', '/history', '/profile'];
+    const mainRoutes = ['/', '/gallery', '/history', '/profile'];
     const isMainRoute = mainRoutes.includes(location.pathname);
 
     if (isMainRoute) {
@@ -149,10 +151,15 @@ function AppContent() {
       tg.BackButton.show();
     }
 
+    // Set Header Color to match Theme
+    const headerColor = isDarkMode ? '#0f1014' : '#ffffff';
+    if (tg.setHeaderColor) tg.setHeaderColor(headerColor);
+    if (tg.setBackgroundColor) tg.setBackgroundColor(headerColor);
+
     return () => {
-      window.removeEventListener('telegram-back-button', handleBackButton);
+      tg.offEvent('backButtonClicked', handleBackButton);
     };
-  }, [location.pathname, navigate]);
+  }, [location.pathname, navigate, isDarkMode]);
 
   const triggerHaptic = useCallback((style) => {
     if (window.Telegram?.WebApp?.HapticFeedback) {
@@ -166,8 +173,9 @@ function AppContent() {
 
     // Force header color update
     if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.setHeaderColor?.('#0f1014');
-      window.Telegram.WebApp.setBackgroundColor?.('#0f1014');
+      const headerColor = document.documentElement.classList.contains('dark') ? '#0f1014' : '#ffffff';
+      window.Telegram.WebApp.setHeaderColor?.(headerColor);
+      window.Telegram.WebApp.setBackgroundColor?.(headerColor);
     }
 
     navigate(tab === 'home' ? '/' : `/${tab}`);
