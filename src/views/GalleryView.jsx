@@ -5,9 +5,11 @@ import { Heart, Box, Gift, HeartHandshake, Users, Sparkles } from 'lucide-react'
 import galleryAPI from '../lib/galleryAPI';
 import IdeaDetailModal from '../components/IdeaDetailModal';
 import { useInfiniteCreations } from '../hooks/useGallery';
+import { useUser } from '../context/UserContext';
 import OptimizedImage from '../components/ui/OptimizedImage';
 
 const GalleryView = ({ onRemix }) => {
+    const { user } = useUser();
     const [activeTab, setActiveTab] = useState('all');
     const [selectedCreation, setSelectedCreation] = useState(null);
 
@@ -27,7 +29,12 @@ const GalleryView = ({ onRemix }) => {
     const creations = data ? data.pages.flat() : [];
 
     const handleLike = async (creationId) => {
-        const userId = window.Telegram?.WebApp?.initDataUnsafe?.user?.id || 'test-user-id';
+        const userId = user?.id; // Authenticated User ID
+        if (!userId) {
+            console.error("Cannot like: Missing User ID");
+            return;
+        }
+
         const creation = creations.find(c => c.id === creationId);
 
         if (!creation) return;
