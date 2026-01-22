@@ -56,82 +56,19 @@ const aiService = {
     generateImage: async (prompt, modelId = 'nano_banana', options = {}) => {
         // 1. Browser: Use Async Job Queue (Vercel Friendly)
         if (isBrowser) {
-            console.log('🌐 Browser Mode: Starting Async Generation...');
-
-            // Helper to convert File to Base64
-            // Helper to compress and convert File to Base64
-            const processFile = (file) => new Promise((resolve, reject) => {
-                // If not image, return simple base64 (e.g. small text files?) or reject?
-                // Assuming mostly images for now. 
-                if (!file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.readAsDataURL(file);
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = reject;
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = (event) => {
-                    const img = new Image();
-                    img.onload = () => {
-                        const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-                        const MAX_SIZE = 1024;
-
-                        // Resize logic
-                        if (width > height) {
-                            if (width > MAX_SIZE) {
-                                height *= MAX_SIZE / width;
-                                width = MAX_SIZE;
-                            }
-                        } else {
-                            if (height > MAX_SIZE) {
-                                width *= MAX_SIZE / height;
-                                height = MAX_SIZE;
-                            }
-                        }
-
-                        canvas.width = width;
-                        canvas.height = height;
-                        const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        // Compress to JPEG 0.8 which is very efficient
-                        resolve(canvas.toDataURL('image/jpeg', 0.8));
-                    };
-                    img.onerror = reject;
-                    img.src = event.target.result;
-                };
-                reader.onerror = reject;
-            });
-
-            // Prepare files
-            let processedFiles = [];
-            let processedVideoFiles = []; // Declare video files array
-
-            if (options.source_files && Array.isArray(options.source_files)) {
-                processedFiles = await Promise.all(options.source_files.map(async (f) => {
-                    if (f instanceof File) return await processFile(f);
-                    return f;
-                }));
+            console.log('🌐 Browser Mode: Delegating to Async Job Queue...');
+            // We delegate to generateImageAsync which handles FormData upload (File -> URL)
+            // This is critical for Video templates where Base64 is too large for Proxy.
+            // It also ensures consistent behavior with the backend queue.
+            try {
+                // Pass modelId as 'type' or in options, generateImageAsync signature is (prompt, type, options)
+                // We treat modelId as the specific model, type is broadly 'image' or 'video' but routes.js handles cost via modelKey.
+                // Let's pass modelId as type to ensure pricing lookup works, or pass it in options.modelId
+                return await aiService.generateImageAsync(prompt, modelId, { ...options, modelId });
+            } catch (e) {
+                console.error('Async Generation Error:', e);
+                return { success: false, error: e.message };
             }
-            if (options.video_files && Array.isArray(options.video_files)) {
-                // Process video files to Base64 (Data URIs)
-                processedVideoFiles = await Promise.all(options.video_files.map(async (f) => {
-                    if (f instanceof File) return await processFile(f);
-                    return f;
-                }));
-            }
-
-            // Call KIE Implementation using Client-side Proxy logic
-            return await aiService.generateWithKie(prompt, modelId, {
-                ...options,
-                source_files: processedFiles,
-                video_files: processedVideoFiles // Pass processed videos
-            });
         }
 
 
