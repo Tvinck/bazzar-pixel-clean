@@ -22,7 +22,7 @@ export const initQueue = async (bot) => {
 
         // --- WORKER ---
         await boss.work('generate-image', async (job) => {
-            const { prompt, type, options, cost } = job.data;
+            const { prompt, type, options, cost, userId } = job.data;
             const jobId = job.id;
 
             console.log(`⚙️ [Job ${jobId}] Processing: ${type}`);
@@ -34,11 +34,11 @@ export const initQueue = async (bot) => {
                 if (!result.success) throw new Error(result.error || 'Generation failed');
 
                 // 2. Save to History (DB)
-                if (options.userId) {
+                if (userId) {
                     const isVideoResult = (type.includes('video') || (result.imageUrl && result.imageUrl.match(/\.(mp4|mov)$/i)));
 
                     const { error: saveErr } = await supabase.from('creations').insert({
-                        user_id: options.userId,
+                        user_id: userId,
                         generation_id: 'job_' + jobId,
                         title: prompt ? prompt.slice(0, 50) : 'Bot Generation',
                         description: prompt || 'Created via Bot',

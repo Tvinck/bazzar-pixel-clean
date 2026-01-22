@@ -438,26 +438,32 @@ const GenerationView = () => {
             }
 
             if (result.success) {
-                const savedRecord = await galleryAPI.saveCreation({
-                    userId: apiUser.id,
-                    generationId: result.id || 'gen_' + Date.now(),
-                    title: inputs['prompt'] ? inputs['prompt'].slice(0, 30) + '...' : 'Generated Image',
-                    description: inputs['prompt'] || 'Generated Content',
-                    imageUrl: result.imageUrl,
-                    thumbnailUrl: result.imageUrl,
-                    type: currentModeKey.includes('Video') ? 'video' : 'image',
-                    prompt: inputs['prompt'],
-                    tags: [currentModeKey, model],
-                    isPublic: isPublicResult,
-                    aspectRatio: aspectRatio
-                });
+                // If backend already saved (sync fallback), it returns the record ID
+                let savedRecordId = result.id;
+
+                if (!savedRecordId) {
+                    const savedRecord = await galleryAPI.saveCreation({
+                        userId: apiUser.id,
+                        generationId: result.id || 'gen_' + Date.now(),
+                        title: inputs['prompt'] ? inputs['prompt'].slice(0, 30) + '...' : 'Generated Image',
+                        description: inputs['prompt'] || 'Generated Content',
+                        imageUrl: result.imageUrl,
+                        thumbnailUrl: result.imageUrl,
+                        type: currentModeKey.includes('Video') ? 'video' : 'image',
+                        prompt: inputs['prompt'],
+                        tags: [currentModeKey, model],
+                        isPublic: isPublicResult,
+                        aspectRatio: aspectRatio
+                    });
+                    savedRecordId = savedRecord?.data?.id || savedRecord?.id;
+                }
 
                 playSuccess();
 
                 // Show GLOBAL RESULT
                 setGlobalGenResult({
                     url: result.imageUrl,
-                    id: savedRecord?.id || result.id,
+                    id: savedRecordId || result.id,
                     prompt: inputs['prompt']
                 });
 

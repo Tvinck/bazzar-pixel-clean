@@ -222,6 +222,26 @@ export const setupRoutes = (app, bot, boss) => {
 
                 if (!result.success) throw new Error(result.error || 'Generation failed upstream');
 
+                // --- SAVE TO HISTORY (SYNC FALLBACK) ---
+                if (userId && userId !== 'browser_user') {
+                    const isVideoResult = (type.includes('video') || (result.imageUrl && result.imageUrl.match(/\.(mp4|mov)$/i)));
+                    const { data: savedData, error: saveErr } = await supabase.from('creations').insert({
+                        user_id: userId,
+                        generation_id: 'sync_' + Date.now(),
+                        title: prompt ? prompt.slice(0, 50) : 'Web Generation',
+                        description: prompt || 'Created via Web',
+                        image_url: result.imageUrl,
+                        thumbnail_url: result.imageUrl,
+                        type: isVideoResult ? 'video' : 'image',
+                        prompt: prompt,
+                        is_public: false,
+                        tags: [type, 'web']
+                    }).select('id').maybeSingle();
+
+                    if (saveErr) console.error('⚠️ Sync History Save Error:', saveErr);
+                    if (savedData) result.id = savedData.id;
+                }
+
             } catch (genError) {
                 console.error('❌ Generation Failed:', genError.message);
 

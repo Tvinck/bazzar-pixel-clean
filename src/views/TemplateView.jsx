@@ -250,7 +250,6 @@ const TemplateView = () => {
                 selectedModel || template.model_id || 'nano_banana',
                 generationOptions
             );
-
             if (result.success) {
                 console.log('✅ Generation flow complete.');
 
@@ -262,7 +261,7 @@ const TemplateView = () => {
                     // Show GLOBAL RESULT
                     setGlobalGenResult({
                         url: result.imageUrl,
-                        id: 'gen_' + Date.now(),
+                        id: result.id || ('gen_' + Date.now()),
                         prompt: finalPrompt
                     });
                 }
