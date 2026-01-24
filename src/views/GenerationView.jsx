@@ -804,7 +804,19 @@ const GenerationView = ({ onOpenPayment }) => {
                                     onClick={() => refAudioInput.current?.click()}
                                     className="h-32 rounded-2xl bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-white/5 border-dashed flex flex-col items-center justify-center p-2 cursor-pointer relative hover:brightness-105 transition-all overflow-hidden"
                                 >
-                                    <input type="file" accept="audio/*" ref={refAudioInput} className="hidden" onChange={(e) => e.target.files[0] && setAvatarFiles(p => ({ ...p, audio: e.target.files[0] }))} />
+                                    <input type="file" accept="audio/*" ref={refAudioInput} className="hidden" onChange={(e) => {
+                                        const file = e.target.files[0];
+                                        if (file) {
+                                            const audio = new Audio(URL.createObjectURL(file));
+                                            audio.onloadedmetadata = () => {
+                                                if (audio.duration > 15) {
+                                                    toast.error('The uploaded audio file cannot exceed 15 seconds');
+                                                    return;
+                                                }
+                                                setAvatarFiles(p => ({ ...p, audio: file }));
+                                            };
+                                        }
+                                    }} />
                                     {avatarFiles.audio ? (
                                         <>
                                             <div className="absolute inset-0 bg-indigo-500/10 flex items-center justify-center">
