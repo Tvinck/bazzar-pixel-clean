@@ -132,24 +132,24 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed bottom-0 left-0 w-full h-[90%] bg-[#F8F9FC] dark:bg-[#0f1014] rounded-t-[2.5rem] z-[90] shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white"
+                        className="fixed bottom-0 left-0 w-full h-[85%] max-h-dvh bg-[#F8F9FC] dark:bg-[#0f1014] rounded-t-[2.5rem] z-[90] shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white"
                         onClick={(e) => e.stopPropagation()}
                     >
                         {/* Drag Handle */}
-                        <div className="w-full flex justify-center pt-4 pb-2" onClick={onClose}>
+                        <div className="w-full flex justify-center pt-4 pb-2 flex-shrink-0" onClick={onClose}>
                             <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full" />
                         </div>
 
                         {!selectedPlan ? (
                             // --- MAIN SELECTOR VIEW ---
-                            <div className="flex-1 flex flex-col p-6 pt-2">
-                                <header className="mb-6 px-2">
+                            <div className="flex-1 flex flex-col p-6 pt-2 min-h-0">
+                                <header className="mb-6 px-2 flex-shrink-0">
                                     <h2 className="font-display font-black text-2xl mb-1">Магазин Pixel</h2>
                                     <p className="text-slate-500 text-sm">Пополните баланс для генераций</p>
                                 </header>
 
                                 {/* Tabs */}
-                                <div className="bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl flex mb-6 shadow-inner">
+                                <div className="bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl flex mb-6 shadow-inner flex-shrink-0">
                                     <button
                                         onClick={() => setActiveTab('packs')}
                                         className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'packs' ? 'bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white' : 'text-slate-400'}`}
@@ -168,10 +168,10 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
 
                                 {/* Content Grid */}
                                 <div
-                                    className="flex-1 overflow-y-scroll pb-40 custom-scrollbar overscroll-contain"
+                                    className="flex-1 overflow-y-scroll pb-40 min-h-0"
                                     style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
                                 >
-                                    <div className="space-y-3 min-h-[400px]">
+                                    <div className="space-y-3">
                                         {(activeTab === 'packs' ? PACKS : SUBSCRIPTIONS).map((plan, idx) => (
                                             <motion.div
                                                 initial={{ opacity: 0, y: 10 }}
