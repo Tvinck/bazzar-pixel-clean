@@ -106,11 +106,15 @@ export const MODEL_CATALOG = {
     // ============================================
     'video_template': { name: 'Video Template', type: 'video', cost: 100 },
 
-    // Legacy / Unspecified default mappings (updated to reasonable mid-tier or specific if mentioned)
-    'gpt4o_image': { name: 'GPT-4o Image', type: 'image', cost: 20 },
+    // ============================================
+    // LEGACY / UNSPECIFIED
+    // ============================================
+    'gpt4o_image': { name: 'GPT-4o Image', type: 'image', cost: 5 }, // Override to 5 as per user latest instruction (was 20 in prev request, but 5 in latest lines)
     'midjourney': { name: 'Midjourney', type: 'image', cost: 20 },
-    'grok_text_video': { name: 'Grok Text-to-Video', type: 'video', cost: 100 }, // Scaled
-    'grok_image_video': { name: 'Grok Image-to-Video', type: 'video', cost: 120 } // Scaled
+    'grok_text_video': { name: 'Grok Text-to-Video', type: 'video', cost: 100 },
+    'grok_image_video': { name: 'Grok Image-to-Video', type: 'video', cost: 100 },
+    'flux_kontext': { name: 'Flux Kontext', type: 'image', cost: 20 },
+    'sora_2': { name: 'Sora 2', type: 'video', cost: 50 }
 };
 
 export const PRICING = {};
