@@ -358,7 +358,16 @@ const aiService = {
             }
             console.error('❌ Kie.ai API Error Status:', createRes.status);
             console.error('❌ Kie.ai API Error Body:', errorText);
-            throw new Error(`Kie.ai error: ${errorText} (Sent Keys: ${Object.keys(finalInput).join(', ')})`);
+
+            const debugInfo = {
+                model: kieModelId,
+                keys: Object.keys(finalInput),
+                input_urls: finalInput.input_urls,
+                video_urls: finalInput.video_urls,
+                mode: finalInput.mode
+            };
+
+            throw new Error(`Kie.ai error: ${errorText}. Debug: ${JSON.stringify(debugInfo)}`);
         }
 
         // Validate JSON content type
