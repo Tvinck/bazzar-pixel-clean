@@ -276,6 +276,7 @@ export const setupRoutes = (app, bot, boss) => {
                     // Create job record in generation_jobs (Queue Table) so /api/jobs/:id can find it
                     // NOTE: We assume result.taskId is UUID-compatible (32 hex chars). 
                     // If Kie returns non-UUID, this insert might fail, so we catch it.
+                    let dbStatus = 'Unknown';
                     try {
                         const { error: jobErr } = await supabase.from('generation_jobs').insert({
                             id: result.taskId, // Force explicit ID to match Kie ID
@@ -290,17 +291,23 @@ export const setupRoutes = (app, bot, boss) => {
 
                         if (jobErr) {
                             console.error('Job Insert Error:', jobErr);
-                            // Fallback? If insert fails (bad ID format), we can't track it easily.
-                            // But we still return success so client can try to poll Kie directly if implemented?
-                            // Currently client polls server.
+                            dbStatus = `Failed: ${jobErr.message}`;
                         } else {
                             console.log(`✅ Saved pending job ${result.taskId} to generation_jobs`);
+                            dbStatus = 'Inserted';
                         }
                     } catch (trackingErr) {
                         console.error('Job Tracking Exception:', trackingErr);
+                        dbStatus = `Exception: ${trackingErr.message}`;
                     }
 
-                    return res.json({ success: true, status: 'queued', jobId: result.taskId, message: 'Video processing started (Async)' });
+                    return res.json({
+                        success: true,
+                        status: 'queued',
+                        jobId: result.taskId,
+                        message: 'Video processing started (Async)',
+                        db_debug: dbStatus
+                    });
                 }
 
                 // --- SAVE TO HISTORY (SYNC FALLBACK - COMPLETED) ---
