@@ -243,15 +243,14 @@ const aiService = {
                 if (!img) throw new Error(`Kling Motion Control missing source image. Source files: ${JSON.stringify(options.source_files)}`);
                 if (!vid) throw new Error(`Kling Motion Control missing reference video. Video files: ${JSON.stringify(options.video_files)}`);
 
-                // Schema fix based on "input.video" error hint
                 input.image = img;
                 input.video = vid;
 
-                // Add aliases for robustness
-                input.input_image = img;
-                input.input_video = vid;
-                input.image_url = img;
-                input.video_url = vid;
+                // Cleanup aliases - strictly follow inferred schema
+                // input.input_image = img;
+                // input.input_video = vid;
+                // input.image_url = img;
+                // input.video_url = vid;
 
                 // Specific Params
                 input.character_orientation = 'video';
@@ -363,7 +362,7 @@ const aiService = {
             }
             console.error('❌ Kie.ai API Error Status:', createRes.status);
             console.error('❌ Kie.ai API Error Body:', errorText);
-            throw new Error(`Kie.ai error: ${errorText} (Status: ${createRes.status})`);
+            throw new Error(`Kie.ai error: ${errorText} (Sent Keys: ${Object.keys(finalInput).join(', ')})`);
         }
 
         // Validate JSON content type
@@ -409,6 +408,11 @@ const aiService = {
         }
 
         console.log(`📋 Kie.ai Task created: ${taskId}`);
+
+        if (options.skipPolling) {
+            console.log('⏩ Skipping polling (Async Mode)');
+            return { success: true, taskId, status: 'pending', provider: 'kie' };
+        }
 
         // Poll for result
         return await aiService.pollKieTask(taskId, apiKey);
