@@ -336,7 +336,7 @@ export const setupRoutes = (app, bot, boss) => {
                     }
                 }
 
-                return res.status(500).json({ error: 'Generation failed. Funds have been refunded.' });
+                return res.status(500).json({ error: `Generation failed: ${genError.message}. Funds refunded.` });
             }
 
             // Notify user in Telegram
