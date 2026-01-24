@@ -273,20 +273,32 @@ export const setupRoutes = (app, bot, boss) => {
 
                 // ASYNC HANDLING (VIDEO)
                 if (result.status === 'pending' && result.taskId) {
-                    // Create placeholder record so /api/jobs/:id can find it and poll
-                    await supabase.from('creations').insert({
-                        user_id: userId,
-                        generation_id: result.taskId,
-                        title: prompt ? prompt.slice(0, 50) : 'Processing Video...',
-                        description: 'Processing...',
-                        // Use a placeholder URL to indicate pending state
-                        image_url: 'https://cdn.dribbble.com/users/1186261/screenshots/3718681/loading_1.gif',
-                        thumbnail_url: 'https://cdn.dribbble.com/users/1186261/screenshots/3718681/loading_1.gif',
-                        type: isVideoModel ? 'video' : 'image',
-                        prompt: prompt,
-                        is_public: false,
-                        tags: ['pending', type]
-                    });
+                    // Create job record in generation_jobs (Queue Table) so /api/jobs/:id can find it
+                    // NOTE: We assume result.taskId is UUID-compatible (32 hex chars). 
+                    // If Kie returns non-UUID, this insert might fail, so we catch it.
+                    try {
+                        const { error: jobErr } = await supabase.from('generation_jobs').insert({
+                            id: result.taskId, // Force explicit ID to match Kie ID
+                            user_id: userId,
+                            status: 'pending',
+                            job_type: isVideoModel ? 'video' : 'image',
+                            prompt: prompt || 'Video Generation',
+                            model_id: type || 'video',
+                            configuration: options,
+                            result_url: 'https://cdn.dribbble.com/users/1186261/screenshots/3718681/loading_1.gif' // Placeholder
+                        });
+
+                        if (jobErr) {
+                            console.error('Job Insert Error:', jobErr);
+                            // Fallback? If insert fails (bad ID format), we can't track it easily.
+                            // But we still return success so client can try to poll Kie directly if implemented?
+                            // Currently client polls server.
+                        } else {
+                            console.log(`✅ Saved pending job ${result.taskId} to generation_jobs`);
+                        }
+                    } catch (trackingErr) {
+                        console.error('Job Tracking Exception:', trackingErr);
+                    }
 
                     return res.json({ success: true, status: 'queued', jobId: result.taskId, message: 'Video processing started (Async)' });
                 }

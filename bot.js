@@ -956,31 +956,83 @@ app.get('/api/jobs/:jobId', async (req, res) => {
             .single();
 
         if (error || !job) {
-            // FALLBACK: Check 'creations' table (Web Generations use this)
-            // This handles cases where routes.js inserted into creations but bot.js handled the route request
-            const { data: creation } = await supabase
-                .from('creations')
-                .select('*')
-                .eq('generation_id', jobId)
-                .maybeSingle();
+            // FALLBACK: Check 'creations' table
+            const { data: creation } = await supabase.from('creations').select('*').eq('generation_id', jobId).maybeSingle();
 
             if (creation) {
                 const isPending = creation.image_url && creation.image_url.includes('loading');
-                return res.json({
-                    success: true,
-                    job: {
-                        id: creation.generation_id,
-                        status: isPending ? 'pending' : 'completed',
-                        result_url: creation.image_url,
-                        created_at: creation.created_at,
-                        completed_at: isPending ? null : creation.completed_at
-                    }
-                });
+                job = {
+                    id: creation.generation_id,
+                    status: isPending ? 'pending' : 'completed',
+                    result_url: creation.image_url,
+                    created_at: creation.created_at,
+                    completed_at: isPending ? null : creation.completed_at,
+                    source: 'creations',
+                    db_id: creation.id
+                };
+            } else {
+                console.warn(`⚠️ Job ${jobId} lookup failed:`, error);
+                return res.status(404).json({ error: 'Job not found', details: error ? error.message : 'No data returned' });
             }
+        }
 
-            console.warn(`⚠️ Job ${jobId} lookup failed:`, error);
-            // Return detailed error for debugging
-            return res.status(404).json({ error: 'Job not found', details: error ? error.message : 'No data returned', code: error?.code });
+        // 2. Lazy Polling for Pending Jobs (Check upstream Kie)
+        if (job.status === 'pending') {
+            // Heuristic: Is it Kie? (32 hex) OR from creations OR placeholder URL
+            const isKie = /^[a-f0-9]{32}$/i.test(jobId) || job.source === 'creations' || (job.result_url && job.result_url.includes('loading'));
+
+            if (isKie) {
+                try {
+                    const kieKey = process.env.KIE_API_KEY || '365b6afae3b952cef9297bbc5384ec8e';
+                    const kRes = await fetch(`https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${jobId}`, {
+                        headers: { 'Authorization': `Bearer ${kieKey}` }
+                    });
+
+                    if (kRes.ok) {
+                        const kData = await kRes.json();
+                        const kState = kData.data?.state || kData.state;
+
+                        if (kState === 'success' || kState === 'completed') {
+                            // Extract Result
+                            let resultData = kData.data?.resultJson || kData.resultJson || kData.data?.result || kData.result;
+                            if (typeof resultData === 'string') { try { resultData = JSON.parse(resultData); } catch (e) { } }
+
+                            let finalUrl = null;
+                            if (resultData?.resultUrls?.[0]) finalUrl = resultData.resultUrls[0];
+                            else if (resultData?.url) finalUrl = resultData.url;
+                            else if (Array.isArray(resultData) && resultData[0]) finalUrl = typeof resultData[0] === 'string' ? resultData[0] : resultData[0].url;
+
+                            if (finalUrl) {
+                                // UPDATE DB
+                                if (job.source === 'creations') {
+                                    await supabase.from('creations').update({
+                                        image_url: finalUrl,
+                                        completed_at: new Date().toISOString()
+                                    }).eq('id', job.db_id);
+                                } else {
+                                    await supabase.from('generation_jobs').update({
+                                        status: 'completed',
+                                        result_url: finalUrl,
+                                        completed_at: new Date().toISOString()
+                                    }).eq('id', jobId);
+                                }
+
+                                job.status = 'completed';
+                                job.result_url = finalUrl;
+                            }
+                        } else if (kState === 'failed' || kState === 'error') {
+                            const failMsg = kData.data?.failMsg || 'Provider failed';
+                            if (job.source === 'creations') {
+                                await supabase.from('creations').update({ description: `Failed: ${failMsg}` }).eq('id', job.db_id);
+                            } else {
+                                await supabase.from('generation_jobs').update({ status: 'failed', error_message: failMsg }).eq('id', jobId);
+                            }
+                            job.status = 'failed';
+                            job.error_message = failMsg;
+                        }
+                    }
+                } catch (pollErr) { console.error('Lazy polling error:', pollErr); }
+            }
         }
 
         res.json({
