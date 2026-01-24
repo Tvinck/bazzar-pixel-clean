@@ -5,16 +5,24 @@
 
 @layer base {
   :root {
-    /* Cosmic Purple Default */
+    /* MAPPING TELEGRAM VARIABLES */
+    --tg-theme-bg-color: var(--tg-theme-bg-color, #ffffff);
+    --tg-theme-text-color: var(--tg-theme-text-color, #000000);
+    --tg-theme-hint-color: var(--tg-theme-hint-color, #999999);
+    --tg-theme-link-color: var(--tg-theme-link-color, #2481cc);
+    --tg-theme-button-color: var(--tg-theme-button-color, #2481cc);
+    --tg-theme-button-text-color: var(--tg-theme-button-text-color, #ffffff);
+    --tg-theme-secondary-bg-color: var(--tg-theme-secondary-bg-color, #f4f4f5);
+
+    /* Cosmic Purple Default (Fallback) */
     --color-primary: 99 102 241;
-    --color-secondary: 217 70 239;
-    --color-accent: 168 85 247;
   }
-  
+
   body {
-    @apply bg-slate-50 text-slate-900 antialiased overflow-x-hidden;
-    font-family: 'Outfit', sans-serif;
-    /* Clean modern body font */
+    background-color: var(--tg-theme-bg-color);
+    color: var(--tg-theme-text-color);
+    font-family: -apple-system, BlinkMacSystemFont, 'Roboto', 'Outfit', sans-serif;
+    @apply antialiased overflow-x-hidden;
   }
 }
 

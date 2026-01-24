@@ -568,75 +568,69 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
                             </div>
                         </div>
 
-                        {/* MENU LIST */}
-                        <div className="space-y-2">
-                            {(userData?.role === 'admin' || userData?.id === '13658f8b-3f48-4394-a320-dd8e2277d079' || window.location.hostname === 'localhost') && (
-                                <button onClick={() => navigate('/admin')} className="w-full bg-slate-900 text-white p-4 rounded-2xl flex items-center justify-between shadow-lg shadow-indigo-500/20 mb-3 group active:scale-98 transition-transform">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center"><ShieldAlert size={20} /></div>
-                                        <div className="text-left">
-                                            <div className="font-bold">Staff Panel</div>
-                                            <div className="text-xs opacity-70">Admin Access</div>
-                                        </div>
-                                    </div>
-                                    <ChevronRight className="opacity-50 group-hover:translate-x-1 transition-transform" />
-                                </button>
-                            )}
+                        import {List, Section, Cell} from '@telegram-apps/telegram-ui';
 
-                            <button onClick={() => navigateTo('account')} className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-sm group active:scale-98 transition-transform">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-blue-500/10 text-blue-500 rounded-xl flex items-center justify-center"><CreditCard size={20} /></div>
-                                    <div className="text-left">
-                                        <div className="font-bold text-slate-900 dark:text-white">Аккаунт</div>
-                                        <div className="text-xs text-slate-500">Подписка и история</div>
-                                    </div>
-                                </div>
-                                <ChevronRight className="text-slate-300" />
-                            </button>
+                        {/* --- MENU LIST (Native Style) --- */}
+                        <div className="space-y-4">
+                            <List>
+                                <Section header="Menu">
+                                    {(userData?.role === 'admin' || userData?.id === '13658f8b-3f48-4394-a320-dd8e2277d079' || window.location.hostname === 'localhost') && (
+                                        <Cell
+                                            before={<ShieldAlert size={20} className="text-red-500" />}
+                                            after={<ChevronRight size={16} className="opacity-50" />}
+                                            onClick={() => navigate('/admin')}
+                                            description="Admin Access"
+                                        >
+                                            Staff Panel
+                                        </Cell>
+                                    )}
 
-                            <button onClick={() => navigateTo('partnership')} className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-sm group active:scale-98 transition-transform">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-purple-500/10 text-purple-500 rounded-xl flex items-center justify-center"><Percent size={20} /></div>
-                                    <div className="text-left">
-                                        <div className="font-bold text-slate-900 dark:text-white">Партнёрство</div>
-                                        <div className="text-xs text-slate-500">Рефералы и задания</div>
-                                    </div>
-                                </div>
-                                <ChevronRight className="text-slate-300" />
-                            </button>
+                                    <Cell
+                                        before={<CreditCard size={22} className="text-blue-500" />}
+                                        after={<ChevronRight size={16} className="opacity-50" />}
+                                        onClick={() => navigateTo('account')}
+                                        description="Подписка и история"
+                                    >
+                                        Аккаунт
+                                    </Cell>
 
-                            <button onClick={() => navigateTo('achievements')} className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-sm group active:scale-98 transition-transform">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center"><Trophy size={20} /></div>
-                                    <div className="text-left">
-                                        <div className="font-bold text-slate-900 dark:text-white">Достижения</div>
-                                        <div className="text-xs text-slate-500">Награды и значки</div>
-                                    </div>
-                                </div>
-                                <ChevronRight className="text-slate-300" />
-                            </button>
+                                    <Cell
+                                        before={<Percent size={22} className="text-purple-500" />}
+                                        after={<ChevronRight size={16} className="opacity-50" />}
+                                        onClick={() => navigateTo('partnership')}
+                                        description="Рефералы и задания"
+                                    >
+                                        Партнёрство
+                                    </Cell>
 
-                            <button onClick={() => navigateTo('settings')} className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-sm group active:scale-98 transition-transform">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-slate-500/10 text-slate-500 rounded-xl flex items-center justify-center"><Settings size={20} /></div>
-                                    <div className="text-left">
-                                        <div className="font-bold text-slate-900 dark:text-white">Настройки</div>
-                                        <div className="text-xs text-slate-500">Настройки приложения</div>
-                                    </div>
-                                </div>
-                                <ChevronRight className="text-slate-300" />
-                            </button>
+                                    <Cell
+                                        before={<Trophy size={22} className="text-amber-500" />}
+                                        after={<ChevronRight size={16} className="opacity-50" />}
+                                        onClick={() => navigateTo('achievements')}
+                                        description="Награды и значки"
+                                    >
+                                        Достижения
+                                    </Cell>
 
-                            <button onClick={() => navigateTo('generations')} className="w-full bg-white dark:bg-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-sm group active:scale-98 transition-transform">
-                                <div className="flex items-center gap-4">
-                                    <div className="w-10 h-10 bg-pink-500/10 text-pink-500 rounded-xl flex items-center justify-center"><Image size={20} /></div>
-                                    <div className="text-left">
-                                        <div className="font-bold text-slate-900 dark:text-white">Мои работы</div>
-                                        <div className="text-xs text-slate-500">Публичные генерации</div>
-                                    </div>
-                                </div>
-                                <ChevronRight className="text-slate-300" />
-                            </button>
+                                    <Cell
+                                        before={<Image size={22} className="text-pink-500" />}
+                                        after={<ChevronRight size={16} className="opacity-50" />}
+                                        onClick={() => navigateTo('generations')}
+                                        description="Публичные генерации"
+                                    >
+                                        Мои работы
+                                    </Cell>
+
+                                    <Cell
+                                        before={<Settings size={22} className="text-slate-500" />}
+                                        after={<ChevronRight size={16} className="opacity-50" />}
+                                        onClick={() => navigateTo('settings')}
+                                        description="Настройки приложения"
+                                    >
+                                        Настройки
+                                    </Cell>
+                                </Section>
+                            </List>
                         </div>
                     </motion.div>
                 ) : (
