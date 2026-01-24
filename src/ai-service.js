@@ -137,9 +137,33 @@ const aiService = {
             'flux-pro': 'flux-2/pro-text-to-image',
             'seedream': 'seedream/4.5-text-to-image',
 
-            // Video
+            // Video (Existing)
             'kling_video': 'kling-v1.6/image-to-video',
-            'kling_motion_control': 'kling-2.6/motion-control' // Uses control video param
+            'kling_motion_control': 'kling-2.6/motion-control',
+
+            // --- WAN FAMILY (NEW) ---
+            'wan_2_6_text': 'wan/2-6-text-to-video',
+            'wan_2_6_image': 'wan/2-6-image-to-video',
+            'wan_2_6_video': 'wan/2-6-video-to-video',
+            'wan_2_5_text': 'wan/2-5-text-to-video',
+            'wan_2_5_image': 'wan/2-5-image-to-video',
+            'wan_2_2_animate_move': 'wan/2-2-animate-move',
+            'wan_2_2_animate_replace': 'wan/2-2-animate-replace',
+
+            // --- KLING TURBO FAMILY (NEW) ---
+            'kling_2_5_turbo_text_pro': 'kling/v2-5-turbo-text-to-video-pro',
+            'kling_2_5_turbo_image_pro': 'kling/v2-5-turbo-image-to-video-pro',
+            'kling_ai_avatar_std': 'kling/ai-avatar-standard',
+
+            // --- HAILUO FAMILY (NEW) ---
+            'hailuo_2_3_image_pro': 'hailuo/2-3-image-to-video-pro',
+            'hailuo_2_3_image_std': 'hailuo/2-3-image-to-video-standard',
+
+            // --- BYTEDANCE ---
+            'v1_pro_fast_image': 'bytedance/v1-pro-fast-image-to-video',
+
+            // --- SORA ---
+            'sora_2_pro_storyboard': 'sora-2-pro-storyboard'
         };
 
         // 1. Determine Correct Model ID
@@ -229,36 +253,95 @@ const aiService = {
                 }
             }
         }
-        // --- KLING / VIDEO FAMILY ---
-        else if (modelId === 'kling_motion_control' || kieModelId.includes('kling')) {
-            // Kling usually doesn't need a prompt if driving with video, but we provide a default
-            input.prompt = prompt || 'Animate this character matching the reference video';
+        // --- VIDEO GENERATION FAMILIES (Wan, Kling, Hailuo, Sora, Bytedance) ---
+        else if (
+            modelId === 'kling_motion_control' ||
+            kieModelId.includes('kling') ||
+            kieModelId.includes('wan/') ||
+            kieModelId.includes('hailuo/') ||
+            kieModelId.includes('sora') ||
+            kieModelId.includes('bytedance')
+        ) {
+            // General Video Defaults
+            input.prompt = prompt || (kieModelId.includes('animate') ? undefined : 'Generate a video');
             input.aspect_ratio = aspectRatio;
 
-            // Kling Motion Control specific inputs
-            if (modelId === 'kling_motion_control' && options.video_files?.length > 0) {
-                const img = options.source_files?.[0];
-                const vid = options.video_files?.[0];
+            const firstImg = options.source_files?.[0];
+            const firstVid = options.video_files?.[0];
 
-                if (!img) throw new Error(`Kling Motion Control missing source image. Source files: ${JSON.stringify(options.source_files)}`);
-                if (!vid) throw new Error(`Kling Motion Control missing reference video. Video files: ${JSON.stringify(options.video_files)}`);
+            // 1. WAN FAMILY
+            if (kieModelId.startsWith('wan/')) {
+                input.resolution = options.resolution || '1080p';
+                input.duration = options.duration || '5';
 
-                // Schema fix based on DOCUMENTATION provided by User
-                // Must be arrays: input_urls, video_urls
-                input.input_urls = [img];
-                input.video_urls = [vid];
+                if (kieModelId.includes('2-6')) {
+                    // Wan 2.6
+                    if (kieModelId.includes('image-to-video')) {
+                        if (!firstImg) throw new Error(`${kieModelId} requires an input image.`);
+                        input.image_urls = [firstImg]; // Array
+                    } else if (kieModelId.includes('video-to-video')) {
+                        if (!firstVid) throw new Error(`${kieModelId} requires an input video.`);
+                        input.video_urls = [firstVid]; // Array
+                    }
+                } else if (kieModelId.includes('2-5')) {
+                    // Wan 2.5
+                    if (kieModelId.includes('image-to-video')) {
+                        if (!firstImg) throw new Error(`${kieModelId} requires an input image.`);
+                        input.image_url = firstImg; // String
+                    }
+                } else if (kieModelId.includes('animate')) {
+                    // Animate Move/Replace
+                    if (!firstImg || !firstVid) throw new Error(`${kieModelId} requires both image and video.`);
+                    input.video_url = firstVid;
+                    input.image_url = firstImg;
+                    input.resolution = '480p'; // Default 480p
+                }
+            }
+            // 2. KLING FAMILY
+            else if (kieModelId.includes('kling')) {
+                // Kling Motion Control (Special)
+                if (modelId === 'kling_motion_control' && options.video_files?.length > 0) {
+                    if (!firstImg) throw new Error('Kling Motion Control missing source image.');
+                    if (!firstVid) throw new Error('Kling Motion Control missing reference video.');
+                    input.input_urls = [firstImg];
+                    input.video_urls = [firstVid];
+                    input.character_orientation = 'video';
+                    input.mode = '720p';
+                }
+                // Kling Turbo (New)
+                else if (kieModelId.includes('turbo')) {
+                    input.duration = options.duration || '5';
+                    if (kieModelId.includes('image-to-video')) {
+                        if (!firstImg) throw new Error(`${kieModelId} requires an input image.`);
+                        input.image_url = firstImg; // String
+                        if (options.tail_image_url) input.tail_image_url = options.tail_image_url;
+                    }
+                    if (options.cfg_scale) input.cfg_scale = options.cfg_scale;
+                }
+                // Kling Legacy (v1.6)
+                else {
+                    if (hasSourceFiles) {
+                        input.input_image = firstImg;
+                        input.input_urls = options.source_files;
+                    }
+                }
+            }
+            // 3. HAILUO / BYTEDANCE
+            else if (kieModelId.includes('hailuo') || kieModelId.includes('bytedance')) {
+                input.duration = options.duration || (kieModelId.includes('hailuo') ? '6' : '5');
+                input.resolution = options.resolution || (kieModelId.includes('bytedance') ? '720p' : '1080P'); // Note casing 1080P for Hailuo
+                if (kieModelId.includes('hailuo') && input.resolution === '1080p') input.resolution = '1080P'; // Case sensitive fix
 
-                // Specific Params
-                input.character_orientation = 'video';
-                input.mode = '720p'; // Doc says "720p" or "1080p", not "std"
-
-                // Ensure we don't have conflicting keys that might confuse the validator
-                // delete input.input_video; // Keep them now, maybe needed?
-                // delete input.input_image;
-            } else if (hasSourceFiles) {
-                // Standard Image-to-Video
-                input.input_image = options.source_files[0]; // Explicit single input
-                input.input_urls = options.source_files;
+                if (hasSourceFiles) {
+                    input.image_url = firstImg;
+                }
+            }
+            // 4. SORA
+            else if (kieModelId.includes('sora')) {
+                if (kieModelId.includes('storyboard')) {
+                    input.n_frames = options.duration === '10' ? '10' : '15'; // 10, 15, 25 options
+                    if (hasSourceFiles) input.image_urls = options.source_files;
+                }
             }
         }
         // --- GPT FAMILY ---

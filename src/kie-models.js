@@ -96,12 +96,82 @@ export const KIE_MODELS = {
     // VIDEO GENERATION MODELS
     // ============================================
     video: {
+        // --- Wan Series (Alibaba) ---
+        'wan_2_6_text': {
+            name: 'Wan 2.6 Text-to-Video',
+            endpoint: '/wan/generate',
+            credits: 100,
+            speed: 'medium',
+            description: 'Latest Alibaba model, high coherence'
+        },
+        'wan_2_6_image': {
+            name: 'Wan 2.6 Image-to-Video',
+            endpoint: '/wan/generate',
+            credits: 120,
+            speed: 'medium',
+            description: 'Image animation with Wan 2.6'
+        },
+        'wan_2_2_animate_move': {
+            name: 'Wan Animate Move',
+            endpoint: '/wan/animate',
+            credits: 100,
+            speed: 'fast',
+            description: 'Character movement animation'
+        },
+
+        // --- Kling Series ---
+        'kling_2_5_turbo_text_pro': {
+            name: 'Kling 2.5 Turbo Text',
+            endpoint: '/kling/generate',
+            credits: 120,
+            speed: 'fast',
+            description: 'Fast high-quality generation'
+        },
+        'kling_2_5_turbo_image_pro': {
+            name: 'Kling 2.5 Turbo Image',
+            endpoint: '/kling/generate',
+            credits: 140,
+            speed: 'fast',
+            description: 'Pro image to video'
+        },
+        'kling': {
+            name: 'Kling 2.6 Standard',
+            endpoint: '/kling/generate',
+            credits: 80,
+            speed: 'slow',
+            description: 'Classic Kling model'
+        },
+
+        // --- Hailuo & Others ---
+        'hailuo_2_3_image_pro': {
+            name: 'Hailuo 2.3 Pro',
+            endpoint: '/hailuo/generate',
+            credits: 120,
+            speed: 'medium',
+            description: 'Professional grade animation'
+        },
+        'v1_pro_fast_image': {
+            name: 'Bytedance Fast',
+            endpoint: '/bytedance/generate',
+            credits: 80,
+            speed: 'fast',
+            description: 'Quick image to video'
+        },
+        'sora_2_pro_storyboard': {
+            name: 'Sora 2 Pro Storyboard',
+            endpoint: '/sora/generate',
+            credits: 200,
+            speed: 'very_slow',
+            description: 'Advanced storyboard generation'
+        },
+
+        // --- Google & Runway ---
         'veo_3': {
             name: 'Google Veo 3.1',
             endpoint: '/veo/generate',
             credits: 100,
             speed: 'very_slow',
-            description: 'Google latest video generation model'
+            description: 'Google latest video model'
         },
         'runway': {
             name: 'Runway Aleph',
@@ -109,27 +179,6 @@ export const KIE_MODELS = {
             credits: 120,
             speed: 'very_slow',
             description: 'Professional video generation'
-        },
-        'kling': {
-            name: 'Kling 2.6',
-            endpoint: '/kling/generate',
-            credits: 80,
-            speed: 'slow',
-            description: 'High-quality video with motion control'
-        },
-        'sora2': {
-            name: 'Sora 2',
-            endpoint: '/sora2/generate',
-            credits: 150,
-            speed: 'very_slow',
-            description: 'OpenAI video generation (if available)'
-        },
-        'hailuo': {
-            name: 'Hailuo 2.3',
-            endpoint: '/hailuo/generate',
-            credits: 70,
-            speed: 'medium',
-            description: 'Fast video generation'
         }
     },
 

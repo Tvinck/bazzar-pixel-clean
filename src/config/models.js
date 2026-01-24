@@ -85,6 +85,32 @@ export const MODEL_CATALOG = {
     },
 
     // ============================================
+    // VIDEO - WAN FAMILY (Alibaba)
+    // ============================================
+    'wan_2_6_text': { name: 'Wan 2.6 Text-to-Video', type: 'video', cost: 10 },
+    'wan_2_6_image': { name: 'Wan 2.6 Image-to-Video', type: 'video', cost: 12 },
+    'wan_2_6_video': { name: 'Wan 2.6 Video-to-Video', type: 'video', cost: 15 },
+    'wan_2_5_text': { name: 'Wan 2.5 Text-to-Video', type: 'video', cost: 8 },
+    'wan_2_5_image': { name: 'Wan 2.5 Image-to-Video', type: 'video', cost: 10 },
+    'wan_2_2_animate_move': { name: 'Wan Animate Move', type: 'video', cost: 10 },
+    'wan_2_2_animate_replace': { name: 'Wan Animate Replace', type: 'video', cost: 10 },
+
+    // ============================================
+    // VIDEO - KLING TURBO
+    // ============================================
+    'kling_2_5_turbo_text_pro': { name: 'Kling 2.5 Turbo Text', type: 'video', cost: 12 },
+    'kling_2_5_turbo_image_pro': { name: 'Kling 2.5 Turbo Image', type: 'video', cost: 14 },
+    'kling_ai_avatar_std': { name: 'Kling AI Avatar Std', type: 'video', cost: 8 },
+
+    // ============================================
+    // VIDEO - HAILUO & OTHERS
+    // ============================================
+    'hailuo_2_3_image_pro': { name: 'Hailuo 2.3 Pro', type: 'video', cost: 12 },
+    'hailuo_2_3_image_std': { name: 'Hailuo 2.3 Standard', type: 'video', cost: 10 },
+    'v1_pro_fast_image': { name: 'Bytedance Fast Img2Vid', type: 'video', cost: 8 },
+    'sora_2_pro_storyboard': { name: 'Sora 2 Pro Storyboard', type: 'video', cost: 20 },
+
+    // ============================================
     // LEGACY MODELS
     // ============================================
     'nano_banana': { name: 'Nano Banana', type: 'image', cost: 1 },
