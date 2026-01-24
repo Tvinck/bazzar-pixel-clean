@@ -132,54 +132,45 @@ export const galleryAPI = {
         }
     },
 
-    // Like a creation (Direct DB)
+    // Like a creation (Via Proxy)
     async likeCreation(creationId, userId) {
         try {
-            const { data, error } = await supabase
-                .from('likes')
-                .insert({ user_id: userId, creation_id: creationId })
-                .select()
-                .single();
-
-            if (error) {
-                // Unique violation (23505) means already liked
-                if (error.code === '23505') return { success: false, error: 'Already liked' };
-                throw error;
-            }
-            return { success: true, data };
+            const res = await fetch('/api/gallery/like', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, creationId })
+            });
+            const data = await res.json();
+            return data;
         } catch (error) {
             console.error('Error liking creation:', error);
             return { success: false, error: error.message };
         }
     },
 
-    // Unlike a creation (Direct DB)
+    // Unlike a creation (Via Proxy)
     async unlikeCreation(creationId, userId) {
         try {
-            const { error } = await supabase
-                .from('likes')
-                .delete()
-                .match({ user_id: userId, creation_id: creationId });
-
-            if (error) throw error;
-            return { success: true };
+            const res = await fetch('/api/gallery/unlike', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ userId, creationId })
+            });
+            const data = await res.json();
+            return data;
         } catch (error) {
             console.error('Error unliking creation:', error);
             return { success: false, error: error.message };
         }
     },
 
-    // Check if user liked creation (Direct DB)
+    // Check if user liked creation (Via Proxy)
     async checkUserLiked(creationId, userId) {
         try {
-            const { data } = await supabase
-                .from('likes')
-                .select('id')
-                .eq('user_id', userId)
-                .eq('creation_id', creationId)
-                .maybeSingle();
-
-            return !!data;
+            const res = await fetch(`/api/gallery/is_liked?userId=${userId}&creationId=${creationId}`);
+            if (!res.ok) return false;
+            const data = await res.json();
+            return data.liked;
         } catch (error) {
             return false;
         }
@@ -201,15 +192,13 @@ export const galleryAPI = {
         }
     },
 
-    // Get IDs of creations liked by user
+    // Get IDs of creations liked by user (Via Proxy)
     async getUserLikedIds(userId) {
         try {
-            const { data } = await supabase
-                .from('likes')
-                .select('creation_id')
-                .eq('user_id', userId);
-
-            return data ? data.map(l => l.creation_id) : [];
+            const res = await fetch(`/api/gallery/liked?userId=${userId}`);
+            if (!res.ok) return [];
+            const data = await res.json();
+            return data || []; // Api returns array of ID strings
         } catch (error) {
             console.error('Error fetching liked IDs:', error);
             return [];
