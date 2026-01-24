@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Suspense, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { AppRoot } from '@telegram-apps/telegram-ui';
 import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { LanguageProvider } from './context/LanguageContext';
 import { SoundProvider } from './context/SoundContext';
@@ -390,7 +391,9 @@ function App() {
               <ToastProvider>
                 <UserProvider>
                   <Router>
-                    <AppContent />
+                    <AppRoot>
+                      <AppContent />
+                    </AppRoot>
                   </Router>
                 </UserProvider>
               </ToastProvider>
