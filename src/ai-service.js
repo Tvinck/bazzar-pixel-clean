@@ -406,7 +406,16 @@ const aiService = {
             } else if (responseData.code === 422) {
                 throw new Error(`Модель не поддерживается: ${responseData.msg}`);
             } else if (responseData.msg) {
-                throw new Error(`Kie.ai error: ${responseData.msg}`);
+                // Add Debug Info here too!
+                const debugInfo = {
+                    model: kieModelId,
+                    keys: Object.keys(finalInput),
+                    input_urls: finalInput.input_urls,
+                    video_urls: finalInput.video_urls,
+                    mode: finalInput.mode,
+                    code: responseData.code
+                };
+                throw new Error(`Kie.ai error: ${responseData.msg}. Debug: ${JSON.stringify(debugInfo)}`);
             } else {
                 throw new Error('Kie.ai did not return a task ID. Check API key and model availability.');
             }
