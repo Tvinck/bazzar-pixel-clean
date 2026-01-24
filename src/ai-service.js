@@ -692,11 +692,23 @@ const aiService = {
         }
 
         // Pass other options as JSON string
-        formData.append('options', JSON.stringify({
-            ...options,
-            source_files: undefined, // Already excluded
-            video_files: undefined // Exclude videos from JSON since they are uploaded
-        }));
+        // CRITICAL FIX: We must KEEP http URLs in the JSON options (e.g. from templates)
+        // while removing Base64/Files (which are uploaded via FormData).
+        const cleanOptions = { ...options };
+
+        if (Array.isArray(cleanOptions.source_files)) {
+            cleanOptions.source_files = cleanOptions.source_files.filter(f => typeof f === 'string' && f.startsWith('http'));
+        } else {
+            delete cleanOptions.source_files;
+        }
+
+        if (Array.isArray(cleanOptions.video_files)) {
+            cleanOptions.video_files = cleanOptions.video_files.filter(f => typeof f === 'string' && f.startsWith('http'));
+        } else {
+            delete cleanOptions.video_files;
+        }
+
+        formData.append('options', JSON.stringify(cleanOptions));
 
         const createRes = await fetch('/api/generate', {
             method: 'POST',
