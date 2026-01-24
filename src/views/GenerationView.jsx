@@ -19,28 +19,24 @@ import GenerationResult from '../components/GenerationResult';
 const RatioVisual = ({ ratio }) => {
     const getDims = (r) => {
         switch (r) {
-            case '1:1': return { w: 40, h: 40, labelW: 1, labelH: 1 };
-            case '3:4': return { w: 30, h: 40, labelW: 3, labelH: 4 };
-            case '9:16': return { w: 24, h: 42, labelW: 9, labelH: 16 };
-            case '4:3': return { w: 40, h: 30, labelW: 4, labelH: 3 };
-            case '16:9': return { w: 42, h: 24, labelW: 16, labelH: 9 };
-            default: return { w: 40, h: 40, labelW: 1, labelH: 1 };
+            case '1:1': return { w: 32, h: 32, labelW: 1, labelH: 1 };
+            case '3:4': return { w: 24, h: 32, labelW: 3, labelH: 4 };
+            case '9:16': return { w: 18, h: 32, labelW: 9, labelH: 16 };
+            case '4:3': return { w: 32, h: 24, labelW: 4, labelH: 3 };
+            case '16:9': return { w: 32, h: 18, labelW: 16, labelH: 9 };
+            default: return { w: 32, h: 32, labelW: 1, labelH: 1 };
         }
     };
     const { w, h, labelW, labelH } = getDims(ratio);
 
     return (
-        <div className="relative w-16 h-16 flex items-center justify-center">
-            <div className="border-2 border-slate-400 dark:border-slate-500 rounded-md bg-slate-200/50 dark:bg-white/5 transition-all" style={{ width: w, height: h }} />
-            <div className="absolute -bottom-2 w-full flex justify-center items-center gap-1">
-                <span className="text-[8px] text-slate-400">←</span>
-                <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400">{labelW}</span>
-                <span className="text-[8px] text-slate-400">→</span>
+        <div className="relative w-12 h-12 flex items-center justify-center">
+            <div className="border border-white/60 rounded-sm bg-white/10 transition-all shadow-[0_0_10px_rgba(255,255,255,0.1)]" style={{ width: w, height: h }} />
+            <div className="absolute -bottom-1.5 w-full flex justify-center items-center gap-1">
+                <span className="text-[6px] font-bold text-white/40">{labelW}</span>
             </div>
-            <div className="absolute -right-2 h-full flex flex-col justify-center items-center gap-0.5">
-                <span className="text-[8px] text-slate-400 rotate-90">←</span>
-                <span className="text-[8px] font-bold text-slate-500 dark:text-slate-400 my-0.5">{labelH}</span>
-                <span className="text-[8px] text-slate-400 rotate-90">→</span>
+            <div className="absolute -right-1.5 h-full flex flex-col justify-center items-center gap-0.5">
+                <span className="text-[6px] font-bold text-white/40 my-0.5">{labelH}</span>
             </div>
         </div>
     );
@@ -527,33 +523,37 @@ const GenerationView = ({ onOpenPayment }) => {
         return (
             <motion.div
                 initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="min-h-screen bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-white p-4 pt-16"
+                className="min-h-screen bg-[#0f0f10] text-white p-4 pt-16 relative overflow-hidden"
             >
+                {/* Background Blobs */}
+                <div className="fixed -top-20 -left-20 w-64 h-64 bg-indigo-500/20 rounded-full blur-[100px] pointer-events-none" />
+                <div className="fixed top-40 -right-20 w-64 h-64 bg-purple-500/20 rounded-full blur-[100px] pointer-events-none" />
+
                 <div className="absolute top-4 right-4 z-50">
-                    <button onClick={() => navigate('/')} className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md">
+                    <button onClick={() => navigate('/')} className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center backdrop-blur-md border border-white/10 hover:bg-white/20 transition-colors">
                         <X size={20} className="text-white" />
                     </button>
                 </div>
 
-                <h1 className="text-2xl font-black mb-1 uppercase tracking-wide">{t('toolsCard.tools')}</h1>
-                <p className="text-slate-500 mb-6 text-sm max-w-xs leading-tight">{modeConfig.desc}</p>
+                <h1 className="text-3xl font-black mb-2 uppercase tracking-tight bg-gradient-to-r from-white to-white/50 bg-clip-text text-transparent">{t('toolsCard.tools')}</h1>
+                <p className="text-white/50 mb-8 text-sm max-w-xs leading-relaxed font-medium">{modeConfig.desc}</p>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-4">
                     {toolsList.map((tool) => (
                         <motion.div
                             key={tool.id}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => handleTypeChange(tool.id)}
-                            className="relative aspect-[4/5] rounded-3xl overflow-hidden cursor-pointer group shadow-lg"
+                            className="relative aspect-[4/5] rounded-[2rem] overflow-hidden cursor-pointer group shadow-2xl shadow-black/20 border border-white/10"
                         >
-                            <img src={tool.img} alt={tool.label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                            <img src={tool.img} alt={tool.label} className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-60 group-hover:opacity-80" />
+                            <div className="absolute inset-0 bg-gradient-to-t from-black via-black/40 to-transparent" />
 
-                            <div className="absolute bottom-4 left-4 right-4 text-center">
-                                <div className="inline-block bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-full text-[9px] font-bold text-white/80 mb-1 uppercase tracking-wider">
+                            <div className="absolute bottom-5 left-5 right-5">
+                                <div className="inline-block bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg text-[10px] font-bold text-white/90 mb-2 uppercase tracking-widest border border-white/10">
                                     {tool.sub}
                                 </div>
-                                <div className="text-white font-black text-sm uppercase tracking-wider leading-none">{tool.label}</div>
+                                <div className="text-white font-black text-xl uppercase tracking-wide leading-none">{tool.label}</div>
                             </div>
                         </motion.div>
                     ))}
@@ -574,19 +574,19 @@ const GenerationView = ({ onOpenPayment }) => {
             {/* ... (Header remains same, not touching it here as we are replacing footer wrapper largely or just inserting into footer) */}
 
             {/* ... (We need to keep the structure valid, so I will target specific blocks if possible or just the footer area) */}
-            <div className="px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] flex items-center justify-between bg-slate-50 dark:bg-[#09090b] sticky top-0 z-40 transition-colors duration-300">
-                <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
-                    <ChevronLeft size={24} />
+            <div className="px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] flex items-center justify-between sticky top-0 z-40 backdrop-blur-xl bg-[#0f0f10]/80 border-b border-white/5">
+                <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all border border-white/5">
+                    <ChevronLeft size={22} />
                 </button>
 
                 <div className="relative">
                     <button
                         onClick={() => setIsTypeOpen(!isTypeOpen)}
-                        className="flex items-center gap-2 font-bold text-base text-slate-900 dark:text-white bg-slate-100 dark:bg-white/5 py-1.5 px-3 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 transition-colors"
+                        className="flex items-center gap-2.5 font-bold text-sm text-white bg-white/5 py-2 px-4 rounded-2xl hover:bg-white/10 transition-all border border-white/5 backdrop-blur-md shadow-lg shadow-black/10"
                     >
-                        <modeConfig.icon size={18} className="text-indigo-500 dark:text-indigo-400" />
-                        {modeConfig.label}
-                        <ChevronDown size={14} className={`text-slate-400 transition-transform ${isTypeOpen ? 'rotate-180' : ''}`} />
+                        <modeConfig.icon size={16} className="text-indigo-400" />
+                        <span className="tracking-wide uppercase text-[11px]">{modeConfig.label}</span>
+                        <ChevronDown size={12} className={`text-white/40 transition-transform ${isTypeOpen ? 'rotate-180' : ''}`} />
                     </button>
 
                     <AnimatePresence>
@@ -595,24 +595,29 @@ const GenerationView = ({ onOpenPayment }) => {
                                 initial={{ opacity: 0, y: 10, scale: 0.95 }}
                                 animate={{ opacity: 1, y: 0, scale: 1 }}
                                 exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                                className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white dark:bg-[#151517] rounded-xl shadow-2xl border border-slate-200 dark:border-white/10 overflow-hidden z-50 origin-top h-auto max-h-[60vh] overflow-y-auto"
+                                className="absolute top-full left-1/2 -translate-x-1/2 mt-3 w-64 bg-[#151517]/95 rounded-2xl shadow-2xl border border-white/10 overflow-hidden z-50 origin-top h-auto max-h-[60vh] overflow-y-auto backdrop-blur-2xl ring-1 ring-black/50"
                             >
                                 {Object.values(MODES).filter(m => !m.isMenu).map(mode => (
                                     <button
                                         key={mode.id}
                                         onClick={() => handleTypeChange(mode.id)}
-                                        className={`w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-white/5 transition-colors ${currentModeKey === mode.id ? 'bg-indigo-50 dark:bg-white/5' : ''}`}
+                                        className={`w-full text-left px-4 py-3.5 flex items-center gap-3 hover:bg-white/5 transition-colors border-b border-white/5 last:border-0 ${currentModeKey === mode.id ? 'bg-indigo-500/10' : ''}`}
                                     >
-                                        <mode.icon size={18} className={currentModeKey === mode.id ? 'text-indigo-500' : 'text-slate-400'} />
-                                        <span className={`text-sm font-bold ${currentModeKey === mode.id ? 'text-indigo-600 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>
+                                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${currentModeKey === mode.id ? 'bg-indigo-500/20 text-indigo-400' : 'bg-white/5 text-white/40'}`}>
+                                            <mode.icon size={16} />
+                                        </div>
+                                        <span className={`text-xs font-bold uppercase tracking-wide ${currentModeKey === mode.id ? 'text-indigo-400' : 'text-white/70'}`}>
                                             {mode.label}
                                         </span>
                                         {currentModeKey === mode.id && <Check size={14} className="ml-auto text-indigo-500" />}
                                     </button>
                                 ))}
-                                <div className="border-t border-slate-100 dark:border-white/5 mt-1 pt-1">
-                                    <button onClick={() => handleTypeChange('Tools')} className="w-full text-left px-4 py-3 flex items-center gap-3 hover:bg-slate-50 dark:hover:bg-white/5 text-slate-500 hover:text-slate-900 dark:hover:text-white">
-                                        <Sliders size={18} /> <span className="text-sm font-bold">{t('toolsCard.tools')}</span>
+                                <div className="bg-white/5 mt-0">
+                                    <button onClick={() => handleTypeChange('Tools')} className="w-full text-left px-4 py-3.5 flex items-center gap-3 hover:bg-white/10 text-white/50 hover:text-white transition-colors">
+                                        <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center">
+                                            <Sliders size={16} />
+                                        </div>
+                                        <span className="text-xs font-bold uppercase tracking-wide">{t('toolsCard.tools')}</span>
                                     </button>
                                 </div>
                             </motion.div>
@@ -620,7 +625,7 @@ const GenerationView = ({ onOpenPayment }) => {
                     </AnimatePresence>
                 </div>
 
-                <button onClick={() => navigate('/')} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+                <button onClick={() => navigate('/')} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all border border-white/5">
                     <X size={20} />
                 </button>
             </div>
@@ -628,17 +633,18 @@ const GenerationView = ({ onOpenPayment }) => {
             <div className="flex-1 overflow-y-auto px-5 pb-36">
 
                 {/* 1. Model Selector (Conditional) */}
+                {/* 1. Model Selector (Glassy) */}
                 {modeConfig.models && modeConfig.models.length > 1 && (
                     <div className="mb-6 mt-2">
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block uppercase tracking-wide">Модель</label>
+                        <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">Модель</label>
                         <div
                             onClick={() => { setIsModelOpen(!isModelOpen); playClick(); }}
-                            className="bg-white dark:bg-[#1c1c1e] rounded-2xl p-4 flex items-center justify-between border border-slate-200 dark:border-white/5 active:scale-[0.98] transition-all cursor-pointer shadow-sm relative overflow-hidden"
+                            className="bg-white/5 backdrop-blur-xl rounded-[1.2rem] p-3 flex items-center justify-between border border-white/10 active:scale-[0.99] transition-all cursor-pointer shadow-lg shadow-black/5 relative overflow-hidden group hover:bg-white/10"
                         >
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3.5">
                                 {selectedModelData && (
                                     <>
-                                        <div className="w-10 h-10 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-lg font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/5 overflow-hidden">
+                                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center text-lg font-bold text-white border border-white/10 overflow-hidden shadow-inner">
                                             {serverConfig?.models?.[model]?.preview ? (
                                                 <img src={serverConfig.models[model].preview} className="w-full h-full object-cover" alt="Selected" />
                                             ) : (
@@ -646,39 +652,41 @@ const GenerationView = ({ onOpenPayment }) => {
                                             )}
                                         </div>
                                         <div>
-                                            <div className="font-bold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                                            <div className="font-bold text-sm text-white flex items-center gap-2">
                                                 {selectedModelData.name}
                                                 {selectedModelData.badge && (
-                                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-yellow-400 text-black flex items-center gap-0.5">
+                                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500 text-black flex items-center gap-0.5 shadow-sm shadow-amber-500/20">
                                                         {selectedModelData.badge.text} {selectedModelData.badge.icon}
                                                     </span>
                                                 )}
                                             </div>
-                                            <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight mt-0.5 max-w-[200px]">
+                                            <div className="text-[10px] text-white/40 leading-tight mt-0.5 max-w-[200px]">
                                                 {selectedModelData.desc}
                                             </div>
                                         </div>
                                     </>
                                 )}
                             </div>
-                            <ChevronDown size={16} className={`text-slate-400 dark:text-slate-500 transition-transform ${isModelOpen ? 'rotate-180' : ''}`} />
+                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                                <ChevronDown size={16} className={`text-white/50 transition-transform duration-300 ${isModelOpen ? 'rotate-180' : ''}`} />
+                            </div>
                         </div>
                         <AnimatePresence>
                             {isModelOpen && (
                                 <motion.div
-                                    initial={{ height: 0, opacity: 0 }}
-                                    animate={{ height: 'auto', opacity: 1 }}
-                                    exit={{ height: 0, opacity: 0 }}
-                                    className="overflow-hidden bg-white dark:bg-[#151517] border border-slate-200 dark:border-white/5 rounded-2xl mt-2 shadow-xl origin-top"
+                                    initial={{ height: 0, opacity: 0, y: -10 }}
+                                    animate={{ height: 'auto', opacity: 1, y: 0 }}
+                                    exit={{ height: 0, opacity: 0, y: -10 }}
+                                    className="overflow-hidden bg-[#151517]/95 backdrop-blur-2xl border border-white/10 rounded-2xl mt-2 shadow-2xl origin-top ring-1 ring-black/50"
                                 >
-                                    <div className="divide-y divide-slate-100 dark:divide-white/5">
+                                    <div className="max-h-[300px] overflow-y-auto p-1.5 space-y-1">
                                         {modeConfig.models.map(m => (
                                             <div
                                                 key={m.id}
                                                 onClick={() => { setModel(m.id); setIsModelOpen(false); playClick(); }}
-                                                className={`p-4 flex items-center gap-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors ${model === m.id ? 'bg-indigo-50/50 dark:bg-indigo-500/10' : ''}`}
+                                                className={`p-3 rounded-xl flex items-center gap-3 cursor-pointer transition-all border border-transparent ${model === m.id ? 'bg-indigo-500/20 border-indigo-500/30' : 'hover:bg-white/5 hover:border-white/5'}`}
                                             >
-                                                <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-lg font-bold text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-white/5 overflow-hidden relative">
+                                                <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold border overflow-hidden relative ${model === m.id ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/20' : 'bg-white/5 text-white/50 border-white/5'}`}>
                                                     {serverConfig?.models?.[m.id]?.preview ? (
                                                         <img
                                                             src={serverConfig.models[m.id].preview}
@@ -691,15 +699,15 @@ const GenerationView = ({ onOpenPayment }) => {
                                                 </div>
                                                 <div className="flex-1 min-w-0">
                                                     <div className="flex items-center gap-2 mb-0.5">
-                                                        <span className={`font-bold text-sm ${model === m.id ? 'text-indigo-600 dark:text-indigo-400' : 'text-slate-900 dark:text-white'}`}>
+                                                        <span className={`font-bold text-xs uppercase tracking-wide ${model === m.id ? 'text-indigo-400' : 'text-white/90'}`}>
                                                             {m.name}
                                                         </span>
                                                     </div>
-                                                    <div className="text-[10px] text-slate-500 dark:text-slate-400 leading-tight">
+                                                    <div className="text-[9px] text-white/40 leading-tight">
                                                         {m.desc}
                                                     </div>
                                                 </div>
-                                                {model === m.id && <Check size={16} className="text-indigo-500 flex-shrink-0" />}
+                                                {model === m.id && <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center"><Check size={10} className="text-white" /></div>}
                                             </div>
                                         ))}
                                     </div>
@@ -709,10 +717,10 @@ const GenerationView = ({ onOpenPayment }) => {
                     </div>
                 )}
 
-                {/* 2. Images (Upload) */}
+                {/* 2. Images (Upload) - Glassy */}
                 {modeConfig.hasImages && (
                     <div className="mb-6">
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block uppercase tracking-wide">
+                        <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">
                             {model === 'kling_motion_control' ? 'Исходные файлы' : (modeConfig.uploadLabel || 'Изображения')} <span className="text-amber-500">*</span>
                         </label>
 
@@ -721,23 +729,23 @@ const GenerationView = ({ onOpenPayment }) => {
                                 {/* IMAGE UPLOAD */}
                                 <div
                                     onClick={() => refImageInput.current?.click()}
-                                    className="h-32 rounded-2xl bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-white/5 border-dashed flex flex-col items-center justify-center p-2 cursor-pointer relative hover:brightness-105 transition-all overflow-hidden"
+                                    className="h-32 rounded-[1.2rem] bg-white/5 border border-white/10 border-dashed flex flex-col items-center justify-center p-2 cursor-pointer relative hover:bg-white/10 transition-all overflow-hidden group"
                                 >
                                     <input type="file" accept="image/*" ref={refImageInput} className="hidden" onChange={(e) => e.target.files[0] && setKlingFiles(p => ({ ...p, image: e.target.files[0] }))} />
                                     {klingFiles.image ? (
                                         <>
-                                            <img src={URL.createObjectURL(klingFiles.image)} className="absolute inset-0 w-full h-full object-cover opacity-50" alt="ref" />
+                                            <img src={URL.createObjectURL(klingFiles.image)} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" alt="ref" />
                                             <div className="z-10 flex flex-col items-center">
-                                                <div className="p-1 bg-green-500 rounded-full mb-1"><Check size={12} className="text-white" /></div>
-                                                <span className="text-[10px] font-bold text-slate-900 dark:text-white">Фото готово</span>
+                                                <div className="p-1 bg-green-500 rounded-full mb-1 shadow-lg shadow-green-500/20"><Check size={12} className="text-white" /></div>
+                                                <span className="text-[10px] font-bold text-white shadow-black/50 drop-shadow-md">Фото готово</span>
                                             </div>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-slate-800 flex items-center justify-center mb-2 text-indigo-500">
-                                                <div className="font-bold text-lg">📸</div>
+                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 text-indigo-400 border border-white/5">
+                                                <Camera size={20} />
                                             </div>
-                                            <span className="text-[10px] text-center text-slate-500 dark:text-slate-400">1. Фото<br />Персонажа</span>
+                                            <span className="text-[10px] text-center text-white/40 group-hover:text-white/70 transition-colors">1. Фото<br />Персонажа</span>
                                         </>
                                     )}
                                 </div>
@@ -745,23 +753,23 @@ const GenerationView = ({ onOpenPayment }) => {
                                 {/* VIDEO UPLOAD */}
                                 <div
                                     onClick={() => refVideoInput.current?.click()}
-                                    className="h-32 rounded-2xl bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-white/5 border-dashed flex flex-col items-center justify-center p-2 cursor-pointer relative hover:brightness-105 transition-all overflow-hidden"
+                                    className="h-32 rounded-[1.2rem] bg-white/5 border border-white/10 border-dashed flex flex-col items-center justify-center p-2 cursor-pointer relative hover:bg-white/10 transition-all overflow-hidden group"
                                 >
                                     <input type="file" accept="video/*" ref={refVideoInput} className="hidden" onChange={(e) => e.target.files[0] && setKlingFiles(p => ({ ...p, video: e.target.files[0] }))} />
                                     {klingFiles.video ? (
                                         <>
-                                            <video src={URL.createObjectURL(klingFiles.video)} className="absolute inset-0 w-full h-full object-cover opacity-50" muted />
+                                            <video src={URL.createObjectURL(klingFiles.video)} className="absolute inset-0 w-full h-full object-cover opacity-60 group-hover:opacity-80 transition-opacity" muted />
                                             <div className="z-10 flex flex-col items-center">
-                                                <div className="p-1 bg-green-500 rounded-full mb-1"><Check size={12} className="text-white" /></div>
-                                                <span className="text-[10px] font-bold text-slate-900 dark:text-white">Видео готово</span>
+                                                <div className="p-1 bg-green-500 rounded-full mb-1 shadow-lg shadow-green-500/20"><Check size={12} className="text-white" /></div>
+                                                <span className="text-[10px] font-bold text-white shadow-black/50 drop-shadow-md">Видео готово</span>
                                             </div>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-slate-800 flex items-center justify-center mb-2 text-pink-500">
-                                                <div className="font-bold text-lg">🎬</div>
+                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 text-pink-400 border border-white/5">
+                                                <Video size={20} />
                                             </div>
-                                            <span className="text-[10px] text-center text-slate-500 dark:text-slate-400">2. Видео<br />Движения</span>
+                                            <span className="text-[10px] text-center text-white/40 group-hover:text-white/70 transition-colors">2. Видео<br />Движения</span>
                                         </>
                                     )}
                                 </div>
@@ -773,31 +781,30 @@ const GenerationView = ({ onOpenPayment }) => {
                                 {/* IMAGE UPLOAD */}
                                 <div
                                     onClick={() => refImageInput.current?.click()}
-                                    className="h-32 rounded-2xl bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-white/5 border-dashed flex flex-col items-center justify-center p-2 cursor-pointer relative hover:brightness-105 transition-all overflow-hidden"
+                                    className="h-32 rounded-[1.2rem] bg-white/5 border border-white/10 border-dashed flex flex-col items-center justify-center p-2 cursor-pointer relative hover:bg-white/10 transition-all overflow-hidden group"
                                 >
                                     <input type="file" accept="image/*" ref={refImageInput} className="hidden" onChange={(e) => {
                                         const file = e.target.files[0];
                                         if (file) {
                                             setAvatarFiles(p => ({ ...p, image: file }));
-                                            // Update previews for consistent logic elsewhere if needed, or just rely on local state
                                             setSelectedImages([file]);
                                             setPreviewUrls([URL.createObjectURL(file)]);
                                         }
                                     }} />
                                     {avatarFiles.image ? (
                                         <>
-                                            <img src={URL.createObjectURL(avatarFiles.image)} className="absolute inset-0 w-full h-full object-cover opacity-50" alt="avatar" />
+                                            <img src={URL.createObjectURL(avatarFiles.image)} className="absolute inset-0 w-full h-full object-cover opacity-60" alt="avatar" />
                                             <div className="z-10 flex flex-col items-center">
                                                 <div className="p-1 bg-green-500 rounded-full mb-1"><Check size={12} className="text-white" /></div>
-                                                <span className="text-[10px] font-bold text-slate-900 dark:text-white">Аватар готов</span>
+                                                <span className="text-[10px] font-bold text-white">Аватар готов</span>
                                             </div>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-slate-800 flex items-center justify-center mb-2 text-indigo-500">
-                                                <User size={18} />
+                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 text-indigo-400 border border-white/5">
+                                                <User size={20} />
                                             </div>
-                                            <span className="text-[10px] text-center text-slate-500 dark:text-slate-400">1. Лицо<br />Аватара</span>
+                                            <span className="text-[10px] text-center text-white/40 group-hover:text-white/70 transition-colors">1. Лицо<br />Аватара</span>
                                         </>
                                     )}
                                 </div>
@@ -805,7 +812,7 @@ const GenerationView = ({ onOpenPayment }) => {
                                 {/* AUDIO UPLOAD */}
                                 <div
                                     onClick={() => refAudioInput.current?.click()}
-                                    className="h-32 rounded-2xl bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-white/5 border-dashed flex flex-col items-center justify-center p-2 cursor-pointer relative hover:brightness-105 transition-all overflow-hidden"
+                                    className="h-32 rounded-[1.2rem] bg-white/5 border border-white/10 border-dashed flex flex-col items-center justify-center p-2 cursor-pointer relative hover:bg-white/10 transition-all overflow-hidden group"
                                 >
                                     <input type="file" accept="audio/*" ref={refAudioInput} className="hidden" onChange={(e) => {
                                         const file = e.target.files[0];
@@ -813,7 +820,7 @@ const GenerationView = ({ onOpenPayment }) => {
                                             const audio = new Audio(URL.createObjectURL(file));
                                             audio.onloadedmetadata = () => {
                                                 if (audio.duration > 15) {
-                                                    toast.error('The uploaded audio file cannot exceed 15 seconds');
+                                                    toast.error('Audio cannot exceed 15s');
                                                     return;
                                                 }
                                                 setAvatarFiles(p => ({ ...p, audio: file }));
@@ -829,16 +836,15 @@ const GenerationView = ({ onOpenPayment }) => {
                                             </div>
                                             <div className="z-10 flex flex-col items-center">
                                                 <div className="p-1 bg-green-500 rounded-full mb-1"><Check size={12} className="text-white" /></div>
-                                                <span className="text-[10px] font-bold text-slate-900 dark:text-white">Аудио готово</span>
-                                                <span className="text-[8px] text-slate-400 mt-1 max-w-[80%] truncate">{avatarFiles.audio.name}</span>
+                                                <span className="text-[10px] font-bold text-white">Аудио готово</span>
                                             </div>
                                         </>
                                     ) : (
                                         <>
-                                            <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-slate-800 flex items-center justify-center mb-2 text-pink-500">
-                                                <Music size={18} />
+                                            <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 text-pink-400 border border-white/5">
+                                                <Music size={20} />
                                             </div>
-                                            <span className="text-[10px] text-center text-slate-500 dark:text-slate-400">2. Голос<br />(Аудио)</span>
+                                            <span className="text-[10px] text-center text-white/40 group-hover:text-white/70 transition-colors">2. Голос<br />(Аудио)</span>
                                         </>
                                     )}
                                 </div>
@@ -848,24 +854,24 @@ const GenerationView = ({ onOpenPayment }) => {
                             <div className="flex gap-3 overflow-x-auto no-scrollbar py-1">
                                 <div
                                     onClick={() => fileInputRef.current?.click()}
-                                    className="w-28 h-32 flex-shrink-0 rounded-2xl bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-white/5 border-dashed flex flex-col items-center justify-center text-center p-3 cursor-pointer hover:bg-slate-50 dark:hover:bg-[#252528] transition-colors shadow-sm relative group"
+                                    className="w-28 h-32 flex-shrink-0 rounded-[1.2rem] bg-white/5 border border-white/10 border-dashed flex flex-col items-center justify-center text-center p-3 cursor-pointer hover:bg-white/10 transition-colors shadow-sm relative group"
                                 >
                                     <input type="file" multiple accept={currentModeKey.includes('video') ? "image/*,video/*" : "image/*"} ref={fileInputRef} className="hidden" onChange={handleFileChange} />
-                                    <div className="w-10 h-10 rounded-full bg-indigo-50 dark:bg-slate-800 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
-                                        <Upload size={18} className="text-indigo-500 dark:text-slate-400" />
+                                    <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mb-2 group-hover:scale-110 transition-transform border border-white/5">
+                                        <Upload size={18} className="text-indigo-400" />
                                     </div>
-                                    <span className="text-[10px] text-slate-500 dark:text-slate-500 leading-tight font-medium">Загрузить<br />фото</span>
+                                    <span className="text-[10px] text-white/40 leading-tight font-medium group-hover:text-white/70 transition-colors">Загрузить<br />файлы</span>
                                 </div>
                                 {previewUrls.map((url, idx) => (
-                                    <div key={idx} className="w-24 h-32 flex-shrink-0 rounded-2xl bg-slate-200 dark:bg-slate-800 relative overflow-hidden border border-slate-200 dark:border-white/10 group shadow-sm">
+                                    <div key={idx} className="w-24 h-32 flex-shrink-0 rounded-[1.2rem] bg-white/5 relative overflow-hidden border border-white/10 group shadow-sm">
                                         {/* Video Preview Support */}
                                         {(url.match(/\.(mp4|mov|webm)$/i) || url.includes('video')) ? (
-                                            <video src={url} className="w-full h-full object-cover" muted />
+                                            <video src={url} className="w-full h-full object-cover opacity-80" muted />
                                         ) : (
-                                            <img src={url} className="w-full h-full object-cover" alt="upload" />
+                                            <img src={url} className="w-full h-full object-cover opacity-80" alt="upload" />
                                         )}
-                                        <button onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }} className="absolute top-1 right-1 bg-white/90 dark:bg-black/90 text-red-500 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
-                                            <Trash2 size={12} />
+                                        <button onClick={(e) => { e.stopPropagation(); handleRemoveImage(idx); }} className="absolute top-1 right-1 bg-black/50 backdrop-blur-md text-white/70 p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity border border-white/10 hover:bg-red-500 hover:text-white">
+                                            <Trash2 size={10} />
                                         </button>
                                     </div>
                                 ))}
@@ -875,37 +881,39 @@ const GenerationView = ({ onOpenPayment }) => {
                 )}
 
                 {/* 3. Dynamic Inputs (Prompts) */}
+                {/* 3. Dynamic Inputs (Prompts) - premium glass style */}
                 {modeConfig.inputs && modeConfig.inputs.map(input => (
                     <div key={input.id} className="mb-6">
-                        <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block uppercase tracking-wide">
+                        <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">
                             {input.label} {input.required && <span className="text-amber-500">*</span>}
                         </label>
-                        <div className="relative">
+                        <div className="relative group">
                             <textarea
-                                className={`w-full h-32 bg-white dark:bg-[#1c1c1e] rounded-2xl border p-4 text-sm leading-relaxed focus:outline-none focus:border-indigo-500 dark:focus:border-amber-500/50 focus:ring-2 focus:ring-indigo-500/10 dark:focus:ring-amber-500/10 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600 text-slate-900 dark:text-white resize-none shadow-sm ${input.color ? input.color : 'border-slate-200 dark:border-white/5'}`}
+                                className={`w-full h-32 bg-white/5 backdrop-blur-md rounded-[1.2rem] border p-4 text-sm leading-relaxed focus:outline-none focus:border-indigo-500/50 focus:bg-white/10 transition-all placeholder:text-white/20 text-white resize-none shadow-inner ${input.color ? input.color : 'border-white/10'}`}
                                 placeholder={input.placeholder}
                                 value={inputs[input.id] || ''}
                                 onChange={(e) => setInputs(prev => ({ ...prev, [input.id]: e.target.value }))}
                             />
-                            <button className="absolute bottom-3 right-3 text-slate-400 hover:text-indigo-500 dark:text-slate-500 dark:hover:text-white transition-colors">
+                            <div className="absolute -bottom-px -left-px -right-px h-12 bg-gradient-to-t from-black/20 to-transparent pointer-events-none rounded-b-[1.2rem]" />
+                            <button className="absolute bottom-3 right-3 text-white/30 hover:text-indigo-400 transition-colors bg-white/5 p-2 rounded-lg border border-white/5 hover:bg-white/10">
                                 <Sparkles size={16} />
                             </button>
                         </div>
                     </div>
                 ))}
 
-                {/* 4. Custom Fields */}
+                {/* 4. Custom Fields (Glassy Pills) */}
                 {modeConfig.customFields && (
                     <div className="flex flex-wrap gap-4 mb-8">
                         {modeConfig.customFields.map(field => (
                             <div key={field.id} className="flex-1 min-w-[45%]">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block uppercase tracking-wide">{field.label}</label>
-                                <div className="bg-slate-100 dark:bg-[#1c1c1e] h-[52px] rounded-2xl p-1 flex items-center border border-slate-200 dark:border-white/5">
+                                <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">{field.label}</label>
+                                <div className="bg-white/5 h-[52px] rounded-[1.2rem] p-1 flex items-center border border-white/5 backdrop-blur-md">
                                     {field.options.map(opt => (
                                         <button
                                             key={opt}
                                             onClick={() => { setCustomValues(prev => ({ ...prev, [field.id]: opt })); playClick(); }}
-                                            className={`flex-1 h-full rounded-xl text-xs font-bold transition-all px-1 ${customValues[field.id] === opt ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                                            className={`flex-1 h-full rounded-[1rem] text-[10px] sm:text-xs font-bold transition-all px-1 ${customValues[field.id] === opt ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-white/30 hover:text-white/60'}`}
                                         >
                                             {opt}
                                         </button>
@@ -916,37 +924,37 @@ const GenerationView = ({ onOpenPayment }) => {
                     </div>
                 )}
 
-                {/* 5. Ratio & Count */}
+                {/* 5. Ratio & Count (Glassy) */}
                 {(modeConfig.hasRatio || modeConfig.hasCount) && (
                     <div className="flex gap-4 mb-8">
                         {modeConfig.hasRatio && (
                             <div className="flex-1">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block uppercase tracking-wide">Формат</label>
+                                <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">Формат</label>
                                 <div
                                     onClick={() => { setIsRatioOpen(!isRatioOpen); playClick(); }}
-                                    className="bg-white dark:bg-[#1c1c1e] h-[52px] rounded-2xl px-4 flex items-center justify-between border border-slate-200 dark:border-white/5 active:scale-[0.98] transition-all cursor-pointer shadow-sm relative"
+                                    className="bg-white/5 h-[52px] rounded-[1.2rem] px-4 flex items-center justify-between border border-white/10 active:scale-[0.98] transition-all cursor-pointer shadow-sm relative hover:bg-white/10 backdrop-blur-md"
                                 >
-                                    <span className="font-medium text-sm text-slate-900 dark:text-white">{aspectRatio}</span>
-                                    <ChevronDown size={16} className={`text-slate-400 dark:text-slate-500 transition-transform ${isRatioOpen ? 'rotate-180' : ''}`} />
+                                    <span className="font-bold text-sm text-white/90">{aspectRatio}</span>
+                                    <ChevronDown size={16} className={`text-white/50 transition-transform ${isRatioOpen ? 'rotate-180' : ''}`} />
                                 </div>
                                 <AnimatePresence>
                                     {isRatioOpen && (
                                         <motion.div
-                                            initial={{ height: 0, opacity: 0 }}
-                                            animate={{ height: 'auto', opacity: 1 }}
-                                            exit={{ height: 0, opacity: 0 }}
-                                            className="overflow-hidden bg-white dark:bg-[#151517] border border-slate-200 dark:border-white/5 rounded-2xl mt-2 shadow-xl absolute z-20 w-[90%] left-0"
+                                            initial={{ height: 0, opacity: 0, y: -10 }}
+                                            animate={{ height: 'auto', opacity: 1, y: 0 }}
+                                            exit={{ height: 0, opacity: 0, y: -10 }}
+                                            className="overflow-hidden bg-[#151517]/95 backdrop-blur-2xl border border-white/10 rounded-2xl mt-2 shadow-2xl absolute z-20 w-[90%] left-0 ring-1 ring-black/50"
                                             style={{ width: 'calc(100vw - 40px)' }}
                                         >
-                                            <div className="p-2">
+                                            <div className="p-2 grid grid-cols-1 divide-y divide-white/5">
                                                 {ratios.map(r => (
                                                     <div
                                                         key={r.id}
                                                         onClick={() => { setAspectRatio(r.id); setIsRatioOpen(false); playClick(); }}
-                                                        className={`p-3 rounded-xl flex items-center gap-4 cursor-pointer hover:bg-slate-50 dark:hover:bg-white/5 transition-colors ${aspectRatio === r.id ? 'bg-indigo-50 dark:bg-white/5' : ''}`}
+                                                        className={`p-3.5 rounded-xl flex items-center gap-4 cursor-pointer transition-colors ${aspectRatio === r.id ? 'bg-indigo-500/20' : 'hover:bg-white/5'}`}
                                                     >
-                                                        <div className="flex-shrink-0 w-12 flex justify-center"><RatioVisual ratio={r.id} /></div>
-                                                        <span className={`text-sm font-bold flex-1 ${aspectRatio === r.id ? 'text-indigo-600 dark:text-white' : 'text-slate-600 dark:text-slate-400'}`}>{r.id}</span>
+                                                        <div className="flex-shrink-0 w-8 flex justify-center opacity-60"><RatioVisual ratio={r.id} /></div>
+                                                        <span className={`text-sm font-bold flex-1 uppercase tracking-wide ${aspectRatio === r.id ? 'text-indigo-400' : 'text-white/70'}`}>{r.id}</span>
                                                         {aspectRatio === r.id && <Check size={16} className="text-indigo-500" />}
                                                     </div>
                                                 ))}
@@ -959,13 +967,13 @@ const GenerationView = ({ onOpenPayment }) => {
 
                         {modeConfig.hasCount && (
                             <div className="flex-1">
-                                <label className="text-xs font-bold text-slate-500 dark:text-slate-400 mb-2 block uppercase tracking-wide">Количество</label>
-                                <div className="bg-slate-100 dark:bg-[#1c1c1e] h-[52px] rounded-2xl p-1 flex items-center border border-slate-200 dark:border-white/5">
+                                <label className="text-xs font-bold text-white/50 mb-2 block uppercase tracking-wide ml-1">Количество</label>
+                                <div className="bg-white/5 h-[52px] rounded-[1.2rem] p-1 flex items-center border border-white/10 backdrop-blur-md">
                                     {[1, 2, 4].map(num => (
                                         <button
                                             key={num}
                                             onClick={() => { setGenCount(num); playClick(); }}
-                                            className={`flex-1 h-full rounded-xl text-sm font-bold transition-all ${genCount === num ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+                                            className={`flex-1 h-full rounded-[1rem] text-sm font-bold transition-all ${genCount === num ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-white/30 hover:text-white/60'}`}
                                         >
                                             {num}
                                         </button>
@@ -978,49 +986,65 @@ const GenerationView = ({ onOpenPayment }) => {
             </div>
 
             {/* Footer */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe-bottom bg-slate-50 dark:bg-[#09090b] border-t border-slate-200 dark:border-white/5 z-[100] pointer-events-auto transition-colors duration-300">
+            {/* Footer (Premium Glass Dock) */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe-bottom bg-[#0f0f10]/90 backdrop-blur-2xl border-t border-white/5 z-[100] transition-colors duration-300">
 
-                {/* Public Toggle & Compact Balance */}
-                <div className="flex items-center justify-between mb-3 px-2">
-                    <div onClick={() => { setIsPublicResult(!isPublicResult); playClick(); }} className="flex items-center gap-2 cursor-pointer opacity-80 hover:opacity-100 transition-opacity group">
-                        <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${isPublicResult ? 'bg-indigo-500 border-indigo-500' : 'border-slate-400 dark:border-slate-500 group-hover:border-indigo-400'}`}>
-                            {isPublicResult && <Check size={10} className="text-white" strokeWidth={4} />}
+                {/* Action Bar */}
+                <div className="flex items-center gap-3">
+                    {/* Cost Indicator & Balance */}
+                    <div className="flex flex-col gap-1">
+                        <div className={`h-14 px-5 rounded-[1.2rem] font-black text-sm flex items-center justify-center gap-2 border min-w-[90px] backdrop-blur-md transition-colors ${canAfford ? 'bg-white/5 border-white/10 text-white/80' : 'bg-red-500/10 border-red-500/30 text-red-500'}`}>
+                            <span className="text-lg">{cost}</span>
+                            <Zap size={18} className={canAfford ? "fill-indigo-400 text-indigo-400" : "fill-current"} />
                         </div>
-                        <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wide group-hover:text-indigo-500 transition-colors">В ленту</span>
-                    </div>
-                </div>
-
-                <div className="flex gap-3">
-                    {/* Cost Pill */}
-                    <div className={`px-4 rounded-2xl font-black text-sm flex items-center justify-center gap-2 border flex-shrink-0 min-w-[80px] ${canAfford ? 'bg-slate-100 dark:bg-white/5 border-slate-200 dark:border-white/5 text-slate-500 dark:text-slate-400' : 'bg-red-50 dark:bg-red-500/10 border-red-200 dark:border-red-500/20 text-red-500'}`}>
-                        {cost} <Zap size={16} className={canAfford ? "text-indigo-500 fill-indigo-500" : "fill-current"} />
                     </div>
 
-                    {/* Generate / Pay Button */}
+                    {/* Generate Button (Gradient Glass) */}
                     <motion.button
-                        whileTap={{ scale: 0.98 }}
+                        whileTap={{ scale: 0.97 }}
+                        whileHover={{ scale: 1.02 }}
                         disabled={isProcessing}
                         onClick={handleGenerate}
-                        className={`flex-1 h-14 rounded-2xl flex items-center justify-center gap-2 shadow-lg font-bold text-base transition-all
-                                ${canAfford
+                        className={`flex-1 h-14 rounded-[1.2rem] flex items-center justify-center gap-3 shadow-xl font-black text-base transition-all relative overflow-hidden
+                            ${canAfford
                                 ? 'bg-gradient-to-r from-amber-300 via-amber-400 to-amber-500 shadow-amber-500/20 text-[#321805]'
-                                : 'bg-slate-900 dark:bg-white text-white dark:text-black shadow-lg'}
-                            `}
+                                : 'bg-white/5 text-white/40 border border-white/5 cursor-not-allowed'}
+                        `}
                     >
+                        {/* Shimmer Effect */}
+                        {canAfford && !isProcessing && (
+                            <div className="absolute inset-0 -translate-x-full group-hover:translate-x-full bg-gradient-to-r from-transparent via-white/30 to-transparent transition-transform duration-1000" />
+                        )}
+
                         {isProcessing ? (
-                            <span className="animate-pulse">Creating...</span>
+                            <div className="flex items-center gap-2">
+                                <div className="w-5 h-5 border-3 border-current border-t-transparent rounded-full animate-spin" />
+                                <span>Creating...</span>
+                            </div>
                         ) : canAfford ? (
                             <>
                                 <Sparkles size={20} className="text-[#321805]" strokeWidth={2.5} />
-                                <span>Генерировать</span>
+                                <span className="tracking-wide">ГЕНЕРИРОВАТЬ</span>
                             </>
                         ) : (
                             <>
                                 <Zap size={20} className="fill-current" />
-                                <span>Пополнить</span>
+                                <span>ПОПОЛНИТЬ</span>
                             </>
                         )}
                     </motion.button>
+                </div>
+
+                {/* Public Toggle (Below) */}
+                <div className="mt-3 flex justify-center">
+                    <div onClick={() => { setIsPublicResult(!isPublicResult); playClick(); }} className="flex items-center gap-2 cursor-pointer group py-2 px-4 rounded-full hover:bg-white/5 transition-colors">
+                        <div className={`w-4 h-4 rounded-md border flex items-center justify-center transition-all duration-300 ${isPublicResult ? 'bg-indigo-500 border-indigo-500 scale-110' : 'border-white/30 group-hover:border-indigo-400'}`}>
+                            {isPublicResult && <Check size={10} className="text-white" strokeWidth={4} />}
+                        </div>
+                        <span className="text-[10px] font-bold text-white/40 uppercase tracking-widest group-hover:text-indigo-400 transition-colors">
+                            Опубликовать в ленту
+                        </span>
+                    </div>
                 </div>
             </div>
         </motion.div >
