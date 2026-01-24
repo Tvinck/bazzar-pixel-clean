@@ -23,6 +23,51 @@ export const setupRoutes = (app, bot, boss) => {
                 .maybeSingle();
 
             if (creation) {
+                // 4. Lazy Polling Logic: If placeholder, check external provider
+                if (creation.image_url && creation.image_url.includes('loading') && creation.generation_id) {
+                    try {
+                        const kieKey = process.env.KIE_API_KEY || '365b6afae3b952cef9297bbc5384ec8e';
+                        // Check Kie
+                        const kRes = await fetch(`https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${creation.generation_id}`, {
+                            headers: { 'Authorization': `Bearer ${kieKey}` }
+                        });
+
+                        if (kRes.ok) {
+                            const kData = await kRes.json();
+                            const kState = kData.data?.state || kData.state;
+
+                            if (kState === 'success' || kState === 'completed') {
+                                // Extract Result
+                                let resultData = kData.data?.resultJson || kData.resultJson || kData.data?.result || kData.result;
+                                if (typeof resultData === 'string') { try { resultData = JSON.parse(resultData); } catch (e) { } }
+
+                                let finalUrl = null;
+                                if (resultData?.resultUrls?.[0]) finalUrl = resultData.resultUrls[0];
+                                else if (resultData?.url) finalUrl = resultData.url;
+                                else if (Array.isArray(resultData) && resultData[0]) finalUrl = typeof resultData[0] === 'string' ? resultData[0] : resultData[0].url;
+
+                                if (finalUrl) {
+                                    // UPDATE DB
+                                    await supabase.from('creations').update({
+                                        image_url: finalUrl,
+                                        thumbnail_url: finalUrl, // todo: generate thumbnail
+                                        completed_at: new Date().toISOString()
+                                    }).eq('id', creation.id);
+
+                                    return res.json({ job: { status: 'completed', result_url: finalUrl } });
+                                }
+                            } else if (kState === 'failed' || kState === 'error') {
+                                // Mark failed
+                                await supabase.from('creations').update({ description: 'Changes: Failed' }).eq('id', creation.id);
+                                return res.json({ job: { status: 'failed', error_message: 'Provider reported failure' } });
+                            }
+                        }
+                    } catch (lazyErr) {
+                        console.error('Lazy polling error:', lazyErr);
+                    }
+                }
+
+                // Standard return
                 return res.json({ job: { status: 'completed', result_url: creation.image_url } });
             }
 
@@ -208,13 +253,17 @@ export const setupRoutes = (app, bot, boss) => {
                 console.warn('⚠️ Queue not active, falling back to synchronous mode.');
             }
 
-            // Fallback: Call AI Service with Refund Logic
+            // Fallback: Call AI Service
             let result;
             try {
+                // Enable async polling for video models to prevent Vercel timeouts
+                const isVideoModel = type.includes('video') || type.includes('kling') || type.includes('sora');
+
                 result = await aiService.generateImage(prompt, type, {
                     userId,
                     telegramId: options.telegramId,
                     aspect_ratio: aspectRatio,
+                    skipPolling: isVideoModel && !boss, // Only skip if no PgBoss and is Video
                     ...options
                 });
 
@@ -222,13 +271,31 @@ export const setupRoutes = (app, bot, boss) => {
 
                 if (!result.success) throw new Error(result.error || 'Generation failed upstream');
 
-                // --- SAVE TO HISTORY (SYNC FALLBACK) ---
+                // ASYNC HANDLING (VIDEO)
+                if (result.status === 'pending' && result.taskId) {
+                    // Create placeholder record so /api/jobs/:id can find it and poll
+                    await supabase.from('creations').insert({
+                        user_id: userId,
+                        generation_id: result.taskId,
+                        title: prompt ? prompt.slice(0, 50) : 'Processing Video...',
+                        description: 'Processing...',
+                        // Use a placeholder URL to indicate pending state
+                        image_url: 'https://cdn.dribbble.com/users/1186261/screenshots/3718681/loading_1.gif',
+                        thumbnail_url: 'https://cdn.dribbble.com/users/1186261/screenshots/3718681/loading_1.gif',
+                        type: isVideoModel ? 'video' : 'image',
+                        prompt: prompt,
+                        is_public: false,
+                        tags: ['pending', type]
+                    });
+
+                    return res.json({ success: true, status: 'queued', jobId: result.taskId, message: 'Video processing started (Async)' });
+                }
+
+                // --- SAVE TO HISTORY (SYNC FALLBACK - COMPLETED) ---
                 if (userId && userId !== 'browser_user') {
                     const isVideoResult = (type.includes('video') || (result.imageUrl && result.imageUrl.match(/\.(mp4|mov)$/i)));
                     const { data: savedData, error: saveErr } = await supabase.from('creations').insert({
                         user_id: userId,
-                        // Set to null to avoid UUID type error if it's not a real job.
-                        // If we ever want to store a reference here, it MUST be a valid UUID or column must be TEXT.
                         generation_id: null,
                         title: prompt ? prompt.slice(0, 50) : 'Web Generation',
                         description: prompt || 'Created via Web',
@@ -240,13 +307,7 @@ export const setupRoutes = (app, bot, boss) => {
                         tags: [type, 'web']
                     }).select('id').maybeSingle();
 
-                    if (saveErr) {
-                        console.error('⚠️ Sync History Save Error:', saveErr);
-                        // If it's a UUID error, we might need the migration
-                        if (saveErr.code === '22P02') {
-                            console.warn('💡 Recommendation: Run FIX_CREATIONS_UUID.sql to allow "sync_" prefix in generations_id');
-                        }
-                    }
+                    if (saveErr) console.error('History Save Error:', saveErr);
                     if (savedData) result.id = savedData.id;
                 }
 
