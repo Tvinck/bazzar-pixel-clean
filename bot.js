@@ -956,6 +956,28 @@ app.get('/api/jobs/:jobId', async (req, res) => {
             .single();
 
         if (error || !job) {
+            // FALLBACK: Check 'creations' table (Web Generations use this)
+            // This handles cases where routes.js inserted into creations but bot.js handled the route request
+            const { data: creation } = await supabase
+                .from('creations')
+                .select('*')
+                .eq('generation_id', jobId)
+                .maybeSingle();
+
+            if (creation) {
+                const isPending = creation.image_url && creation.image_url.includes('loading');
+                return res.json({
+                    success: true,
+                    job: {
+                        id: creation.generation_id,
+                        status: isPending ? 'pending' : 'completed',
+                        result_url: creation.image_url,
+                        created_at: creation.created_at,
+                        completed_at: isPending ? null : creation.completed_at
+                    }
+                });
+            }
+
             console.warn(`⚠️ Job ${jobId} lookup failed:`, error);
             // Return detailed error for debugging
             return res.status(404).json({ error: 'Job not found', details: error ? error.message : 'No data returned', code: error?.code });
