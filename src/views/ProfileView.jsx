@@ -3,7 +3,6 @@ import React, { Suspense, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Trophy, Star, Award, Globe, Volume2, VolumeX, Users, MessageCircle, Share2, Image, Heart, Gift, Zap, Settings, Sparkles, Video, Crown, Wallet, Moon, Copy, CreditCard, ChevronRight, ChevronLeft, Mail, Receipt, Percent, Check, Palette, ShieldAlert } from 'lucide-react';
-import { List, Section, Cell } from '@telegram-apps/telegram-ui';
 import { Canvas } from '@react-three/fiber';
 import Medal3D from '../components/3d/Medal3D';
 import ThemeSettings from '../components/ThemeSettings';
@@ -569,67 +568,110 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
                             </div>
                         </div>
 
-                        {/* --- MENU LIST (Native Style) --- */}
-                        <div className="space-y-4">
-                            <List>
-                                <Section header="Меню">
-                                    {(userData?.role === 'admin' || userData?.id === '13658f8b-3f48-4394-a320-dd8e2277d079' || window.location.hostname === 'localhost') && (
-                                        <Cell
-                                            before={<div className="w-7 h-7 bg-red-500 rounded-md flex items-center justify-center text-white"><ShieldAlert size={16} /></div>}
-                                            after={<ChevronRight size={16} className="opacity-30" />}
-                                            onClick={() => navigate('/admin')}
-                                            description="Доступ для персонала"
-                                        >
-                                            Панель персонала
-                                        </Cell>
-                                    )}
+                        {/* --- MENU LIST (Premium Glassy Style) --- */}
+                        <div className="space-y-3">
+                            {(userData?.role === 'admin' || userData?.id === '13658f8b-3f48-4394-a320-dd8e2277d079' || window.location.hostname === 'localhost') && (
+                                <motion.button
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => navigate('/admin')}
+                                    className="w-full bg-red-500/10 backdrop-blur-md border border-red-500/20 p-4 rounded-2xl flex items-center justify-between group relative overflow-hidden"
+                                >
+                                    <div className="flex items-center gap-4 relative z-10">
+                                        <div className="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-500/30">
+                                            <ShieldAlert size={20} />
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="font-bold text-red-500 text-[15px]">Панель персонала</div>
+                                            <div className="text-[11px] text-red-400/80 font-medium">Доступ для администраторов</div>
+                                        </div>
+                                    </div>
+                                    <ChevronRight size={18} className="text-red-500/50" />
+                                </motion.button>
+                            )}
 
-                                    <Cell
-                                        before={<div className="w-7 h-7 bg-blue-500 rounded-md flex items-center justify-center text-white"><CreditCard size={16} /></div>}
-                                        after={<ChevronRight size={16} className="opacity-30" />}
-                                        onClick={() => navigateTo('account')}
-                                        description="Подписка и история"
-                                    >
-                                        Аккаунт
-                                    </Cell>
+                            {[
+                                {
+                                    id: 'account',
+                                    title: 'Аккаунт',
+                                    desc: 'Подписка и история',
+                                    icon: CreditCard,
+                                    color: 'text-blue-400',
+                                    bg: 'bg-blue-500/20',
+                                    border: 'border-blue-500/20',
+                                    shadow: 'shadow-blue-500/20'
+                                },
+                                {
+                                    id: 'partnership',
+                                    title: 'Партнёрство',
+                                    desc: 'Рефералы и задания',
+                                    icon: Percent,
+                                    color: 'text-purple-400',
+                                    bg: 'bg-purple-500/20',
+                                    border: 'border-purple-500/20',
+                                    shadow: 'shadow-purple-500/20'
+                                },
+                                {
+                                    id: 'achievements',
+                                    title: 'Достижения',
+                                    desc: 'Награды и значки',
+                                    icon: Trophy,
+                                    color: 'text-amber-400',
+                                    bg: 'bg-amber-500/20',
+                                    border: 'border-amber-500/20',
+                                    shadow: 'shadow-amber-500/20'
+                                },
+                                {
+                                    id: 'generations',
+                                    title: 'Мои работы',
+                                    desc: 'Публичные генерации',
+                                    icon: Image,
+                                    color: 'text-pink-400',
+                                    bg: 'bg-pink-500/20',
+                                    border: 'border-pink-500/20',
+                                    shadow: 'shadow-pink-500/20'
+                                },
+                                {
+                                    id: 'settings',
+                                    title: 'Настройки',
+                                    desc: 'Язык и уведомления',
+                                    icon: Settings,
+                                    color: 'text-slate-400',
+                                    bg: 'bg-slate-500/20',
+                                    border: 'border-slate-500/20',
+                                    shadow: 'shadow-slate-500/20'
+                                }
+                            ].map((item, i) => (
+                                <motion.button
+                                    key={item.id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: i * 0.05 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => navigateTo(item.id)}
+                                    className="w-full relative p-4 rounded-[1.2rem] flex items-center justify-between group overflow-hidden bg-white/5 dark:bg-[#1c1c1e]/60 backdrop-blur-xl border border-slate-200/50 dark:border-white/5 shadow-sm"
+                                >
+                                    {/* Glass sheen effect */}
+                                    <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                    <Cell
-                                        before={<div className="w-7 h-7 bg-purple-500 rounded-md flex items-center justify-center text-white"><Percent size={16} /></div>}
-                                        after={<ChevronRight size={16} className="opacity-30" />}
-                                        onClick={() => navigateTo('partnership')}
-                                        description="Рефералы и задания"
-                                    >
-                                        Партнёрство
-                                    </Cell>
+                                    <div className="flex items-center gap-4 relative z-10">
+                                        <div className={`w-11 h-11 rounded-[14px] ${item.bg} backdrop-blur-md flex items-center justify-center border ${item.border} ${item.shadow} shadow-lg transition-transform group-hover:scale-110 duration-300`}>
+                                            <item.icon size={22} className={`${item.color} drop-shadow-sm`} />
+                                        </div>
+                                        <div className="text-left">
+                                            <div className="font-bold text-[15px] text-slate-900 dark:text-white leading-tight mb-0.5 group-hover:text-indigo-500 transition-colors">
+                                                {item.title}
+                                            </div>
+                                            <div className="text-[11px] font-medium text-slate-500 dark:text-white/40">
+                                                {item.desc}
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                    <Cell
-                                        before={<div className="w-7 h-7 bg-amber-500 rounded-md flex items-center justify-center text-white"><Trophy size={16} /></div>}
-                                        after={<ChevronRight size={16} className="opacity-30" />}
-                                        onClick={() => navigateTo('achievements')}
-                                        description="Награды и значки"
-                                    >
-                                        Достижения
-                                    </Cell>
-
-                                    <Cell
-                                        before={<div className="w-7 h-7 bg-pink-500 rounded-md flex items-center justify-center text-white"><Image size={16} /></div>}
-                                        after={<ChevronRight size={16} className="opacity-30" />}
-                                        onClick={() => navigateTo('generations')}
-                                        description="Публичные генерации"
-                                    >
-                                        Мои работы
-                                    </Cell>
-
-                                    <Cell
-                                        before={<div className="w-7 h-7 bg-slate-500 rounded-md flex items-center justify-center text-white"><Settings size={16} /></div>}
-                                        after={<ChevronRight size={16} className="opacity-30" />}
-                                        onClick={() => navigateTo('settings')}
-                                        description="Настройки приложения"
-                                    >
-                                        Настройки
-                                    </Cell>
-                                </Section>
-                            </List>
+                                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-white/5 flex items-center justify-center opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all duration-300">
+                                        <ChevronRight size={16} className="text-slate-400 dark:text-white/30" />
+                                    </div>
+                                </motion.button>
+                            ))}
                         </div>
                     </motion.div>
                 ) : (
