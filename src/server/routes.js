@@ -312,7 +312,10 @@ export const setupRoutes = (app, bot, boss) => {
                 }
 
             } catch (genError) {
-                console.error('❌ Generation Failed:', genError.message);
+                console.error('❌ [DEBUG-V5] Generation Failed:', genError.message);
+                if (genError.message.includes('Debug')) {
+                    console.error('🔍 DEBUG DETAILS:', genError.message);
+                }
 
                 // Automatic Refund
                 if (userId !== 'browser_user' && options.telegramId) {
