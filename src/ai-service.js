@@ -243,18 +243,14 @@ const aiService = {
                 if (!img) throw new Error(`Kling Motion Control missing source image. Source files: ${JSON.stringify(options.source_files)}`);
                 if (!vid) throw new Error(`Kling Motion Control missing reference video. Video files: ${JSON.stringify(options.video_files)}`);
 
-                input.image = img;
-                input.video = vid;
-
-                // Cleanup aliases - strictly follow inferred schema
-                // input.input_image = img;
-                // input.input_video = vid;
-                // input.image_url = img;
-                // input.video_url = vid;
+                // Schema fix based on DOCUMENTATION provided by User
+                // Must be arrays: input_urls, video_urls
+                input.input_urls = [img];
+                input.video_urls = [vid];
 
                 // Specific Params
                 input.character_orientation = 'video';
-                input.mode = 'std';
+                input.mode = '720p'; // Doc says "720p" or "1080p", not "std"
 
                 // Ensure we don't have conflicting keys that might confuse the validator
                 // delete input.input_video; // Keep them now, maybe needed?
