@@ -141,6 +141,20 @@ export const KIE_MODELS = {
             speed: 'slow',
             description: 'Classic Kling model'
         },
+        'ai_avatar_standard': {
+            name: 'AI Avatar Standard',
+            endpoint: '/kling/avatar',
+            credits: 80,
+            speed: 'medium',
+            description: 'Talking avatar from single image'
+        },
+        'ai_avatar_pro': {
+            name: 'AI Avatar Pro',
+            endpoint: '/kling/avatar-pro',
+            credits: 120,
+            speed: 'medium',
+            description: 'High fidelity talking avatar'
+        },
 
         // --- Hailuo & Others ---
         'hailuo_2_3_image_pro': {

@@ -4,7 +4,7 @@ import { useNavigate, useParams, useLocation } from 'react-router-dom';
 import {
     X, ChevronLeft, ChevronDown, Sparkles, Trash2, Check, Upload, Flame,
     Image as ImageIcon, Video, Music, Wand2, Zap, Clock, Search, Sliders, Film, Camera,
-    Eraser, Recycle, PlusCircle
+    Eraser, Recycle, PlusCircle, User
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSound } from '../context/SoundContext';
@@ -56,6 +56,21 @@ const getModes = (t) => ({
         isMenu: true,
         desc: t('toolsCard.utils')
     },
+    'avatar-gen': {
+        id: 'avatar-gen',
+        label: 'AI Avatar',
+        icon: User,
+        hasImages: true,
+        hasAudio: true,
+        hasRatio: false,
+        inputs: [
+            { id: 'prompt', label: t('creation.describe'), placeholder: 'Введите текст или оставьте пустым', type: 'textarea' }
+        ],
+        models: [
+            { id: 'ai_avatar_standard', name: 'Avatar Standard', desc: 'Talking Head', iconChar: 'A', badge: { text: 'NEW', icon: '✨' } },
+            { id: 'ai_avatar_pro', name: 'Avatar Pro', desc: 'High Fidelity', iconChar: 'P', badge: { text: 'PRO', icon: '💎' } }
+        ]
+    },
     'image-gen': {
         id: 'image-gen',
         label: t('toolsCard.image'),
@@ -67,11 +82,12 @@ const getModes = (t) => ({
             { id: 'prompt', label: t('creation.describe'), placeholder: t('creation.placeholder'), type: 'textarea', required: true }
         ],
         models: [
-            { id: 'seedream_45_text', name: 'Seedream 4.5', desc: 'Balanced & Fast', iconChar: 'S' },
-            { id: 'gpt_image_15_text', name: 'GPT Image 1.5', desc: 'High Coherence', iconChar: 'G' },
+            { id: 'nano_banana', name: 'Nano Banana', desc: 'Fastest', iconChar: '🍌' },
+            { id: 'nano_banana_pro', name: 'Nano Banana Pro', desc: 'Fast & Sharp', iconChar: '🍌', badge: { text: 'PRO', icon: '⚡' } },
+            { id: 'seedream_45_text', name: 'Seedream 4.5', desc: 'Balanced', iconChar: 'S' },
+            { id: 'gpt_image_15_text', name: 'GPT Image 1.5', desc: 'Coherence', iconChar: 'G' },
             { id: 'flux_flex', name: 'Flux 2.1', desc: 'Realistic', iconChar: 'F' },
-            { id: 'grok_text', name: 'Grok 2', desc: 'Creative', iconChar: 'X' },
-            { id: 'seedream_3', name: 'Seedream 3.0', desc: 'Fastest', iconChar: 'S' }
+            { id: 'grok_text', name: 'Grok 2', desc: 'Creative', iconChar: 'X' }
         ]
     },
     'video-gen': {
@@ -88,6 +104,7 @@ const getModes = (t) => ({
             { id: 'wan_2_6_image', name: 'Wan 2.6', desc: 'Alibaba AI (Im2Vid)', iconChar: 'W', badge: { text: 'HIT', icon: '🔥' } },
             { id: 'kling_motion_control', name: 'Kling Motion', desc: 'Photo + Video Ref', iconChar: 'K', badge: { text: 'NEW', icon: '✨' } },
             { id: 'hailuo_2_3_image_pro', name: 'Hailuo 2.1', desc: 'Best Quality', iconChar: 'H' },
+            { id: 'sora_2_pro_storyboard', name: 'Sora Turbo', desc: 'OpenAI Video', iconChar: 'S' },
             { id: 'v1_pro_fast_image', name: 'Bytedance', desc: 'Fast & Fluid', iconChar: 'B' },
             { id: 'kling_2_5_turbo_image_pro', name: 'Kling Turbo', desc: 'High Speed', iconChar: 'K' },
             { id: 'veo_3', name: 'Veo 3.1', desc: 'Google Deepmind', iconChar: 'V' }
@@ -233,8 +250,10 @@ const GenerationView = ({ onOpenPayment }) => {
 
     // --- KLING MOTION SPECIAL STATE ---
     const [klingFiles, setKlingFiles] = useState({ image: null, video: null });
+    const [avatarFiles, setAvatarFiles] = useState({ image: null, audio: null });
     const refImageInput = useRef(null);
     const refVideoInput = useRef(null);
+    const refAudioInput = useRef(null);
 
     useEffect(() => {
         if (model === 'kling_motion_control') {
@@ -411,6 +430,7 @@ const GenerationView = ({ onOpenPayment }) => {
                 const promptText = inputs['prompt'] || '';
                 let sourceFiles = selectedImages.length > 0 ? selectedImages : null;
                 let videoFiles = null;
+                let audioFiles = null;
 
                 if (model === 'kling_motion_control') {
                     if (sourceFiles) {
@@ -425,10 +445,18 @@ const GenerationView = ({ onOpenPayment }) => {
                         toast.error('Загрузите фото и видео для Kling Motion!');
                         setIsProcessing(false); closeGlobalGen(); return;
                     }
+                } else if (currentModeKey === 'avatar-gen') {
+                    if (avatarFiles.image && avatarFiles.audio) {
+                        sourceFiles = [avatarFiles.image];
+                        audioFiles = [avatarFiles.audio];
+                    } else {
+                        toast.error('Загрузите фото и аудио для Аватара!');
+                        setIsProcessing(false); closeGlobalGen(); return;
+                    }
                 }
 
                 result = await aiService.generateImage(promptText, model, {
-                    aspectRatio, count: genCount, source_files: sourceFiles, video_files: videoFiles,
+                    aspectRatio, count: genCount, source_files: sourceFiles, video_files: videoFiles, audio_files: audioFiles,
                     userId: apiUser?.id, telegramId: telegramId, ...customValues
                 });
             }
@@ -735,6 +763,71 @@ const GenerationView = ({ onOpenPayment }) => {
                                     )}
                                 </div>
                             </div>
+
+                        ) : currentModeKey === 'avatar-gen' ? (
+                            /* AVATAR UPLOAD UI */
+                            <div className="grid grid-cols-2 gap-3">
+                                {/* IMAGE UPLOAD */}
+                                <div
+                                    onClick={() => refImageInput.current?.click()}
+                                    className="h-32 rounded-2xl bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-white/5 border-dashed flex flex-col items-center justify-center p-2 cursor-pointer relative hover:brightness-105 transition-all overflow-hidden"
+                                >
+                                    <input type="file" accept="image/*" ref={refImageInput} className="hidden" onChange={(e) => {
+                                        const file = e.target.files[0];
+                                        if (file) {
+                                            setAvatarFiles(p => ({ ...p, image: file }));
+                                            // Update previews for consistent logic elsewhere if needed, or just rely on local state
+                                            setSelectedImages([file]);
+                                            setPreviewUrls([URL.createObjectURL(file)]);
+                                        }
+                                    }} />
+                                    {avatarFiles.image ? (
+                                        <>
+                                            <img src={URL.createObjectURL(avatarFiles.image)} className="absolute inset-0 w-full h-full object-cover opacity-50" alt="avatar" />
+                                            <div className="z-10 flex flex-col items-center">
+                                                <div className="p-1 bg-green-500 rounded-full mb-1"><Check size={12} className="text-white" /></div>
+                                                <span className="text-[10px] font-bold text-slate-900 dark:text-white">Аватар готов</span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-slate-800 flex items-center justify-center mb-2 text-indigo-500">
+                                                <User size={18} />
+                                            </div>
+                                            <span className="text-[10px] text-center text-slate-500 dark:text-slate-400">1. Лицо<br />Аватара</span>
+                                        </>
+                                    )}
+                                </div>
+
+                                {/* AUDIO UPLOAD */}
+                                <div
+                                    onClick={() => refAudioInput.current?.click()}
+                                    className="h-32 rounded-2xl bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-white/5 border-dashed flex flex-col items-center justify-center p-2 cursor-pointer relative hover:brightness-105 transition-all overflow-hidden"
+                                >
+                                    <input type="file" accept="audio/*" ref={refAudioInput} className="hidden" onChange={(e) => e.target.files[0] && setAvatarFiles(p => ({ ...p, audio: e.target.files[0] }))} />
+                                    {avatarFiles.audio ? (
+                                        <>
+                                            <div className="absolute inset-0 bg-indigo-500/10 flex items-center justify-center">
+                                                <div className="w-full h-1 bg-indigo-500/20 mx-4 overflow-hidden rounded-full">
+                                                    <div className="h-full bg-indigo-500 w-1/2 animate-pulse" />
+                                                </div>
+                                            </div>
+                                            <div className="z-10 flex flex-col items-center">
+                                                <div className="p-1 bg-green-500 rounded-full mb-1"><Check size={12} className="text-white" /></div>
+                                                <span className="text-[10px] font-bold text-slate-900 dark:text-white">Аудио готово</span>
+                                                <span className="text-[8px] text-slate-400 mt-1 max-w-[80%] truncate">{avatarFiles.audio.name}</span>
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-slate-800 flex items-center justify-center mb-2 text-pink-500">
+                                                <Music size={18} />
+                                            </div>
+                                            <span className="text-[10px] text-center text-slate-500 dark:text-slate-400">2. Голос<br />(Аудио)</span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
                         ) : (
                             /* STANDARD UPLOAD */
                             <div className="flex gap-3 overflow-x-auto no-scrollbar py-1">
@@ -915,7 +1008,7 @@ const GenerationView = ({ onOpenPayment }) => {
                     </motion.button>
                 </div>
             </div>
-        </motion.div>
+        </motion.div >
     );
 };
 

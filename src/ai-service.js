@@ -154,6 +154,8 @@ const aiService = {
             'kling_2_5_turbo_text_pro': 'kling/v2-5-turbo-text-to-video-pro',
             'kling_2_5_turbo_image_pro': 'kling/v2-5-turbo-image-to-video-pro',
             'kling_ai_avatar_std': 'kling/ai-avatar-standard',
+            'ai_avatar_standard': 'kling/ai-avatar-standard',
+            'ai_avatar_pro': 'kling/ai-avatar-pro',
 
             // --- HAILUO FAMILY (NEW) ---
             'hailuo_2_3_image_pro': 'hailuo/2-3-image-to-video-pro',
@@ -299,8 +301,17 @@ const aiService = {
             }
             // 2. KLING FAMILY
             else if (kieModelId.includes('kling')) {
+                // Kling AI Avatar (Talking Head)
+                if (kieModelId.includes('ai-avatar')) {
+                    if (!options.source_files?.[0]) throw new Error(`${kieModelId} requires an avatar image.`);
+                    if (!options.audio_files?.[0]) throw new Error(`${kieModelId} requires an audio file.`);
+
+                    input.image_url = options.source_files[0];
+                    input.audio_url = options.audio_files[0];
+                    input.prompt = prompt || '';
+                }
                 // Kling Motion Control (Special)
-                if (modelId === 'kling_motion_control' && options.video_files?.length > 0) {
+                else if (modelId === 'kling_motion_control' && options.video_files?.length > 0) {
                     if (!firstImg) throw new Error('Kling Motion Control missing source image.');
                     if (!firstVid) throw new Error('Kling Motion Control missing reference video.');
                     input.input_urls = [firstImg];
@@ -798,6 +809,42 @@ const aiService = {
             });
         }
 
+        // Handle AUDIO files (For AI Avatar)
+        if (options.audio_files && Array.isArray(options.audio_files)) {
+            options.audio_files.forEach((file, i) => {
+                if (file instanceof File) {
+                    formData.append('files', file, file.name);
+                } else if (typeof file === 'string') {
+                    try {
+                        let base64 = file;
+                        let mime = 'audio/mpeg';
+
+                        if (file.startsWith('data:')) {
+                            const parts = file.split(',');
+                            if (parts.length > 1) {
+                                const match = parts[0].match(/:(.*?);/);
+                                mime = match ? match[1] : 'audio/mpeg';
+                                base64 = parts[1];
+                            }
+                        }
+
+                        const bstr = atob(base64);
+                        let n = bstr.length;
+                        const u8arr = new Uint8Array(n);
+                        while (n--) {
+                            u8arr[n] = bstr.charCodeAt(n);
+                        }
+                        const blob = new Blob([u8arr], { type: mime });
+                        const extension = mime.split('/')[1] || 'mp3';
+                        formData.append('files', blob, `audio_${i}.${extension}`);
+                        console.log(`📎 Appended AUDIO file ${i} (${mime}) from base64`);
+                    } catch (e) {
+                        console.warn(`⚠️ Failed to parse audio ${i} as base64`, e);
+                    }
+                }
+            });
+        }
+
         // Pass other options as JSON string
         // CRITICAL FIX: We must KEEP http URLs in the JSON options (e.g. from templates)
         // while removing Base64/Files (which are uploaded via FormData).
@@ -813,6 +860,12 @@ const aiService = {
             cleanOptions.video_files = cleanOptions.video_files.filter(f => typeof f === 'string' && f.startsWith('http'));
         } else {
             delete cleanOptions.video_files;
+        }
+
+        if (Array.isArray(cleanOptions.audio_files)) {
+            cleanOptions.audio_files = cleanOptions.audio_files.filter(f => typeof f === 'string' && f.startsWith('http'));
+        } else {
+            delete cleanOptions.audio_files;
         }
 
         formData.append('options', JSON.stringify(cleanOptions));

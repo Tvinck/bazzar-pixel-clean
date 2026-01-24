@@ -101,6 +101,8 @@ export const MODEL_CATALOG = {
     'kling_2_5_turbo_text_pro': { name: 'Kling 2.5 Turbo Text', type: 'video', cost: 12 },
     'kling_2_5_turbo_image_pro': { name: 'Kling 2.5 Turbo Image', type: 'video', cost: 14 },
     'kling_ai_avatar_std': { name: 'Kling AI Avatar Std', type: 'video', cost: 8 },
+    'ai_avatar_standard': { name: 'AI Avatar Standard', type: 'video', cost: 10 },
+    'ai_avatar_pro': { name: 'AI Avatar Pro', type: 'video', cost: 15 },
 
     // ============================================
     // VIDEO - HAILUO & OTHERS

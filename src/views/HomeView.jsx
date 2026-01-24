@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom'; // Added useNavigate
 import {
     Image as ImageIcon, Video, Music, Wand2, Zap, Sparkles, Layers, Box, Trophy, Smile, UserPlus, Eraser,
-    Banana, Wind, Cloud, PenTool, LayoutTemplate, Search, Heart // Added Heart import
+    Banana, Wind, Cloud, PenTool, LayoutTemplate, Search, Heart, User
 } from 'lucide-react';
 import { Canvas } from '@react-three/fiber';
 import { Float } from '@react-three/drei';
@@ -14,8 +14,8 @@ import { useLanguage } from '../context/LanguageContext';
 import ErrorBoundary from '../components/ErrorBoundary';
 import OptimizedImage from '../components/ui/OptimizedImage';
 import BannerCarousel from '../components/BannerCarousel';
-import { usePublicCreations, useTemplates, useUserLikedIds } from '../hooks/useGallery'; // Added useUserLikedIds
-import { useUser } from '../context/UserContext'; // Added useUser
+import { usePublicCreations, useTemplates, useUserLikedIds } from '../hooks/useGallery';
+import { useUser } from '../context/UserContext';
 
 const triggerHaptic = (style = 'light') => {
     if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
@@ -39,8 +39,8 @@ const SkeletonLoader = () => (
 
 const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeaderboard }) => {
     const { t } = useLanguage();
-    const navigate = useNavigate(); // Init navigate
-    const { user } = useUser(); // Get user
+    const navigate = useNavigate();
+    const { user } = useUser();
 
     // React Query usage
     const { data: creations, isLoading: isFeedLoading } = usePublicCreations({
@@ -49,7 +49,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
     });
 
     const { data: templates, isLoading: isTemplatesLoading } = useTemplates();
-    const { data: likedIds } = useUserLikedIds(user?.id); // Fetch liked IDs
+    const { data: likedIds } = useUserLikedIds(user?.id);
 
     const [feedItems, setFeedItems] = useState([]);
     const [activeCategory, setActiveCategory] = useState('all');
@@ -58,12 +58,13 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
     const tools = [
         { id: 'image', label: t('toolsCard.image'), icon: ImageIcon, color: 'text-indigo-500 dark:text-indigo-400', action: () => onOpenCreation('image-gen') },
         { id: 'video', label: t('toolsCard.video'), icon: Video, color: 'text-rose-500 dark:text-rose-400', action: () => onOpenCreation('video-gen') },
-        { id: 'banana', label: t('toolsCard.nanoBanana'), icon: Banana, color: 'text-yellow-500 dark:text-yellow-400', special: true, action: () => onOpenCreation('image-gen', '', 'nano_banana_pro') },
-        { id: 'kling', label: 'Kling 2.6\nMotion', icon: Wind, color: 'text-emerald-500 dark:text-emerald-400', action: () => onOpenCreation('video-gen', '', 'kling_motion') },
+        { id: 'avatar', label: 'AI Avatar', icon: User, color: 'text-cyan-500 dark:text-cyan-400', action: () => onOpenCreation('avatar-gen') },
+        { id: 'banana', label: t('toolsCard.nanoBanana'), icon: ImageIcon, color: 'text-yellow-500 dark:text-yellow-400', special: true, action: () => onOpenCreation('image-gen', '', 'nano_banana_pro') },
+        { id: 'kling', label: 'Kling 2.6\nMotion', icon: Wind, color: 'text-emerald-500 dark:text-emerald-400', action: () => onOpenCreation('video-gen', '', 'kling_motion_control') },
         { id: 'audio', label: t('toolsCard.audio'), icon: Music, color: 'text-blue-500 dark:text-blue-400', action: () => onOpenCreation('audio-gen') },
         { id: 'animate', label: t('toolsCard.animate'), icon: Wand2, color: 'text-purple-500 dark:text-purple-400', action: () => onOpenCreation('animate-photo') },
-        { id: 'veo', label: 'Veo 3', icon: Layers, color: 'text-orange-500 dark:text-orange-400', action: () => onOpenCreation('video-gen', '', 'runway_gen3') },
-        { id: 'sora', label: t('toolsCard.sora'), icon: Cloud, color: 'text-sky-500 dark:text-sky-400', action: () => onOpenCreation('video-gen', '', 'sora_turbo') },
+        { id: 'veo', label: 'Veo 3', icon: Layers, color: 'text-orange-500 dark:text-orange-400', action: () => onOpenCreation('video-gen', '', 'veo_3') },
+        { id: 'sora', label: t('toolsCard.sora'), icon: Cloud, color: 'text-sky-500 dark:text-sky-400', action: () => onOpenCreation('video-gen', '', 'sora_2_pro_storyboard') },
         { id: 'tools', label: t('toolsCard.tools'), icon: PenTool, color: 'text-slate-500 dark:text-slate-400', action: () => onOpenCreation('tools') },
     ];
 
