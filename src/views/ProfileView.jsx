@@ -572,21 +572,21 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
                         {/* --- MENU LIST (Native Style) --- */}
                         <div className="space-y-4">
                             <List>
-                                <Section header="Menu">
+                                <Section header="Меню">
                                     {(userData?.role === 'admin' || userData?.id === '13658f8b-3f48-4394-a320-dd8e2277d079' || window.location.hostname === 'localhost') && (
                                         <Cell
-                                            before={<ShieldAlert size={20} className="text-red-500" />}
-                                            after={<ChevronRight size={16} className="opacity-50" />}
+                                            before={<div className="w-7 h-7 bg-red-500 rounded-md flex items-center justify-center text-white"><ShieldAlert size={16} /></div>}
+                                            after={<ChevronRight size={16} className="opacity-30" />}
                                             onClick={() => navigate('/admin')}
-                                            description="Admin Access"
+                                            description="Доступ для персонала"
                                         >
-                                            Staff Panel
+                                            Панель персонала
                                         </Cell>
                                     )}
 
                                     <Cell
-                                        before={<CreditCard size={22} className="text-blue-500" />}
-                                        after={<ChevronRight size={16} className="opacity-50" />}
+                                        before={<div className="w-7 h-7 bg-blue-500 rounded-md flex items-center justify-center text-white"><CreditCard size={16} /></div>}
+                                        after={<ChevronRight size={16} className="opacity-30" />}
                                         onClick={() => navigateTo('account')}
                                         description="Подписка и история"
                                     >
@@ -594,8 +594,8 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
                                     </Cell>
 
                                     <Cell
-                                        before={<Percent size={22} className="text-purple-500" />}
-                                        after={<ChevronRight size={16} className="opacity-50" />}
+                                        before={<div className="w-7 h-7 bg-purple-500 rounded-md flex items-center justify-center text-white"><Percent size={16} /></div>}
+                                        after={<ChevronRight size={16} className="opacity-30" />}
                                         onClick={() => navigateTo('partnership')}
                                         description="Рефералы и задания"
                                     >
@@ -603,8 +603,8 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
                                     </Cell>
 
                                     <Cell
-                                        before={<Trophy size={22} className="text-amber-500" />}
-                                        after={<ChevronRight size={16} className="opacity-50" />}
+                                        before={<div className="w-7 h-7 bg-amber-500 rounded-md flex items-center justify-center text-white"><Trophy size={16} /></div>}
+                                        after={<ChevronRight size={16} className="opacity-30" />}
                                         onClick={() => navigateTo('achievements')}
                                         description="Награды и значки"
                                     >
@@ -612,8 +612,8 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
                                     </Cell>
 
                                     <Cell
-                                        before={<Image size={22} className="text-pink-500" />}
-                                        after={<ChevronRight size={16} className="opacity-50" />}
+                                        before={<div className="w-7 h-7 bg-pink-500 rounded-md flex items-center justify-center text-white"><Image size={16} /></div>}
+                                        after={<ChevronRight size={16} className="opacity-30" />}
                                         onClick={() => navigateTo('generations')}
                                         description="Публичные генерации"
                                     >
@@ -621,8 +621,8 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
                                     </Cell>
 
                                     <Cell
-                                        before={<Settings size={22} className="text-slate-500" />}
-                                        after={<ChevronRight size={16} className="opacity-50" />}
+                                        before={<div className="w-7 h-7 bg-slate-500 rounded-md flex items-center justify-center text-white"><Settings size={16} /></div>}
+                                        after={<ChevronRight size={16} className="opacity-30" />}
                                         onClick={() => navigateTo('settings')}
                                         description="Настройки приложения"
                                     >

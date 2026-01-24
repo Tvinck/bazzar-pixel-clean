@@ -1,3 +1,4 @@
+import '@telegram-apps/telegram-ui/dist/styles.css';
 import React, { useState, useEffect, Suspense, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AppRoot } from '@telegram-apps/telegram-ui';
