@@ -201,7 +201,16 @@ const TemplateView = () => {
                         let width = img.width;
                         let height = img.height;
                         const MAX_SIZE = 1024;
+                        const MIN_SIZE = 340; // Kie requirement
 
+                        // 1. Upscale if too small (Kie needs >= 340px)
+                        if (width < MIN_SIZE || height < MIN_SIZE) {
+                            const scale = Math.max(MIN_SIZE / width, MIN_SIZE / height);
+                            width = Math.round(width * scale);
+                            height = Math.round(height * scale);
+                        }
+
+                        // 2. Downscale if too big
                         if (width > height) {
                             if (width > MAX_SIZE) {
                                 height *= MAX_SIZE / width;
@@ -213,6 +222,10 @@ const TemplateView = () => {
                                 height = MAX_SIZE;
                             }
                         }
+
+                        // Round for canvas
+                        width = Math.round(width);
+                        height = Math.round(height);
 
                         canvas.width = width;
                         canvas.height = height;
