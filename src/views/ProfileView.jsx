@@ -2,7 +2,8 @@ import { ProfileSkeleton } from '../components/ui/Skeletons';
 import React, { Suspense, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Star, Award, Globe, Volume2, VolumeX, Users, MessageCircle, Share2, Image, Heart, Gift, Zap, Settings, Sparkles, Video, Crown, Wallet, Moon, Copy, CreditCard, ChevronRight, ChevronLeft, Mail, Receipt, Percent, Check, Palette } from 'lucide-react';
+import { Trophy, Star, Award, Globe, Volume2, VolumeX, Users, MessageCircle, Share2, Image, Heart, Gift, Zap, Settings, Sparkles, Video, Crown, Wallet, Moon, Copy, CreditCard, ChevronRight, ChevronLeft, Mail, Receipt, Percent, Check, Palette, ShieldAlert } from 'lucide-react';
+import { List, Section, Cell } from '@telegram-apps/telegram-ui';
 import { Canvas } from '@react-three/fiber';
 import Medal3D from '../components/3d/Medal3D';
 import ThemeSettings from '../components/ThemeSettings';
@@ -567,8 +568,6 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
                                 <div className="text-3xl font-black flex items-center gap-2">{totalLikes} <Heart size={20} className="text-pink-500 fill-pink-500" /></div>
                             </div>
                         </div>
-
-                        import {List, Section, Cell} from '@telegram-apps/telegram-ui';
 
                         {/* --- MENU LIST (Native Style) --- */}
                         <div className="space-y-4">
