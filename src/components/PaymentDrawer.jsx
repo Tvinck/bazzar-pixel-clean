@@ -60,7 +60,8 @@ const SUBSCRIPTIONS = [
         description: 'Ежемесячный бонус',
         color: 'from-green-500 to-emerald-500',
         features: ['300 кредитов каждый месяц', 'Цена кредита: 0.6₽', 'Доступ к PRO моделям'],
-        icon: Calendar
+        icon: Calendar,
+        comingSoon: true
     },
     {
         id: 'sub_pro',
@@ -73,7 +74,8 @@ const SUBSCRIPTIONS = [
         description: 'Для активных криэйторов',
         color: 'from-rose-500 to-pink-500',
         features: ['800 кредитов каждый месяц', 'Цена кредита: 0.5₽', 'Генерация видео без очереди', 'Приватный чат авторов'],
-        icon: Zap
+        icon: Zap,
+        comingSoon: true
     }
 ];
 
@@ -178,9 +180,9 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                 animate={{ opacity: 1, y: 0 }}
                                                 transition={{ delay: idx * 0.05 }}
                                                 key={plan.id}
-                                                whileTap={{ scale: 0.98 }}
-                                                onClick={() => handleSelectPlan(plan)}
-                                                className={`relative group bg-white dark:bg-slate-800 p-5 rounded-[2rem] border-2 transition-all cursor-pointer ${plan.bestValue ? 'border-indigo-500 dark:border-indigo-500 shadow-lg shadow-indigo-500/10' : 'border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}
+                                                whileTap={!plan.comingSoon ? { scale: 0.98 } : {}}
+                                                onClick={() => !plan.comingSoon && handleSelectPlan(plan)}
+                                                className={`relative group bg-white dark:bg-slate-800 p-5 rounded-[2rem] border-2 transition-all ${plan.comingSoon ? 'opacity-70 cursor-not-allowed grayscale-[0.5]' : 'cursor-pointer'} ${plan.bestValue && !plan.comingSoon ? 'border-indigo-500 dark:border-indigo-500 shadow-lg shadow-indigo-500/10' : 'border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}
                                             >
                                                 {plan.bestValue && (
                                                     <div className="absolute -top-3 left-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-[10px] uppercase font-bold px-3 py-1 rounded-full shadow-md">
@@ -219,9 +221,13 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
 
                                                 <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
                                                     <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{plan.credits} CR</span>
-                                                    <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-colors">
-                                                        <ArrowRight size={16} />
-                                                    </div>
+                                                    {plan.comingSoon ? (
+                                                        <span className="text-[10px] font-black uppercase text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg">Скоро</span>
+                                                    ) : (
+                                                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                                                            <ArrowRight size={16} />
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </motion.div>
                                         ))}
