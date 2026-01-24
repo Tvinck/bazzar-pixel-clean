@@ -85,9 +85,12 @@ const getModes = (t) => ({
             { id: 'prompt', label: t('creation.describe'), placeholder: t('creation.placeholder'), type: 'textarea', required: true }
         ],
         models: [
-            { id: 'kling_motion_control', name: 'Kling Motion', desc: 'Photo + Video Ref', iconChar: 'K', badge: { text: 'NEW', icon: '🔥' } },
-            { id: 'grok_text_video', name: 'Grok 2 Video', desc: 'Text-to-Video', iconChar: 'X' },
-            { id: 'veo_3_1', name: 'Veo 3.1', desc: 'Google Veo', iconChar: 'V' }
+            { id: 'wan_2_6_image', name: 'Wan 2.6', desc: 'Alibaba AI (Im2Vid)', iconChar: 'W', badge: { text: 'HIT', icon: '🔥' } },
+            { id: 'kling_motion_control', name: 'Kling Motion', desc: 'Photo + Video Ref', iconChar: 'K', badge: { text: 'NEW', icon: '✨' } },
+            { id: 'hailuo_2_3_image_pro', name: 'Hailuo 2.1', desc: 'Best Quality', iconChar: 'H' },
+            { id: 'v1_pro_fast_image', name: 'Bytedance', desc: 'Fast & Fluid', iconChar: 'B' },
+            { id: 'kling_2_5_turbo_image_pro', name: 'Kling Turbo', desc: 'High Speed', iconChar: 'K' },
+            { id: 'veo_3', name: 'Veo 3.1', desc: 'Google Deepmind', iconChar: 'V' }
         ],
         customFields: [
             { id: 'resolution', label: 'Разрешение', type: 'selector', options: ['720p', '1080p'] },

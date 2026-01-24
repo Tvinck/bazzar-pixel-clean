@@ -19,12 +19,14 @@ import GenerationResult from '../components/GenerationResult';
 const HIDDEN_TEMPLATE_FIELDS = ['generation_prompt', 'prompt', 'configuration'];
 
 const AVAILABLE_MODELS = [
-    { id: 'nano_banana', name: '🍌 Nano Banana', desc: 'Быстро (Flux Flex)', credits: MODEL_CATALOG['nano_banana']?.cost || 1 },
-    { id: 'nano_banana_pro', name: '🍌 Nano Banana PRO', desc: 'Качество (Flux Pro)', credits: MODEL_CATALOG['nano_banana_pro']?.cost || 2 },
-    { id: 'grok-high', name: '🤖 Grok Quality', desc: 'Для обработки фото', credits: 25 }, // No mapping in catalog? Check later
-    { id: 'flux_pro', name: '💠 Flux 1.1 Pro', desc: 'Top Tier', credits: MODEL_CATALOG['flux_pro']?.cost || 3 },
-    { id: 'flux_flex', name: '💠 Flux Flex', desc: 'Balanced', credits: MODEL_CATALOG['flux_flex']?.cost || 3 },
-    { id: 'kling_motion_control', name: '🎬 Kling Motion', desc: 'Image to Video', credits: MODEL_CATALOG['kling_motion_control']?.cost || 8 }
+    { id: 'nano_banana', name: '🍌 Nano Banana', desc: 'Быстро (Flux Flex)', type: 'image', credits: MODEL_CATALOG['nano_banana']?.cost || 1 },
+    { id: 'nano_banana_pro', name: '🍌 Nano Banana PRO', desc: 'Качество (Flux Pro)', type: 'image', credits: MODEL_CATALOG['nano_banana_pro']?.cost || 2 },
+    { id: 'grok-high', name: '🤖 Grok Quality', desc: 'Для обработки фото', type: 'image', credits: 25 },
+    { id: 'flux_pro', name: '💠 Flux 1.1 Pro', desc: 'Top Tier', type: 'image', credits: MODEL_CATALOG['flux_pro']?.cost || 3 },
+    { id: 'flux_flex', name: '💠 Flux Flex', desc: 'Balanced', type: 'image', credits: MODEL_CATALOG['flux_flex']?.cost || 3 },
+    { id: 'kling_motion_control', name: '🎬 Kling Motion', desc: 'Image to Video', type: 'video', credits: MODEL_CATALOG['kling_motion_control']?.cost || 8 },
+    { id: 'wan_2_6_image', name: '🌊 Wan 2.6', desc: 'Alibaba AI', type: 'video', credits: MODEL_CATALOG['wan_2_6_image']?.cost || 12 },
+    { id: 'hailuo_2_3_image_pro', name: '🐚 Hailuo 2.1', desc: 'High Quality', type: 'video', credits: MODEL_CATALOG['hailuo_2_3_image_pro']?.cost || 15 }
 ];
 
 /**
@@ -335,22 +337,30 @@ const TemplateView = () => {
 
                 {/* Content */}
                 <div className="space-y-8 max-w-sm mx-auto">
-                    {/* Model Selection */}
-                    {!template.lockModel && (
+
+                    {/* Model Selection Logic */}
+                    {!template.lockModel && template.category !== 'dances' && (
                         <div className="relative mb-6 z-40">
-                            {/* ... keeping logic simple, relying on context matching ... */}
                             <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">{t('model.label') || 'Модель генерации'}</h3>
                             <button onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)} className="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-indigo-500 transition-colors shadow-sm">
                                 <span className="font-medium">{AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name || 'Auto'}</span>
                                 <ChevronDown size={18} className="text-slate-400" />
                             </button>
-                            {/* Simplified dropdown render for replacement to fit block */}
+
                             {isModelDropdownOpen && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1e1e24] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden">
-                                    {AVAILABLE_MODELS.map(m => (
-                                        <button key={m.id} onClick={() => { setSelectedModel(m.id); setIsModelDropdownOpen(false); }} className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-white/5 flex justify-between">
-                                            <span>{m.name}</span>
-                                            <span className="text-xs text-slate-500">{m.credits} CR</span>
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1e1e24] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden max-h-60 overflow-y-auto">
+                                    {AVAILABLE_MODELS.filter(m => {
+                                        if (template.category === 'photo') return m.type === 'image';
+                                        if (template.category === 'video') return m.type === 'video';
+                                        if (template.category === 'dances') return false; // Should be hidden by top condition, but safe check
+                                        return true; // Show all for other categories
+                                    }).map(m => (
+                                        <button key={m.id} onClick={() => { setSelectedModel(m.id); setIsModelDropdownOpen(false); }} className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-white/5 flex justify-between items-center bg-white dark:bg-transparent">
+                                            <div>
+                                                <div className="font-medium text-sm">{m.name}</div>
+                                                <div className="text-xs text-slate-500">{m.desc}</div>
+                                            </div>
+                                            <span className="text-xs text-slate-500 font-mono bg-slate-100 dark:bg-white/10 px-1.5 py-0.5 rounded">{m.credits} CR</span>
                                         </button>
                                     ))}
                                 </div>
