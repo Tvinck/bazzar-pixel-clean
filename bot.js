@@ -1010,11 +1010,40 @@ app.get('/api/jobs/:jobId', async (req, res) => {
                                         completed_at: new Date().toISOString()
                                     }).eq('id', job.db_id);
                                 } else {
+                                    // 1. Update Queue
                                     await supabase.from('generation_jobs').update({
                                         status: 'completed',
                                         result_url: finalUrl,
                                         completed_at: new Date().toISOString()
                                     }).eq('id', jobId);
+
+                                    // 2. Add to History (Creations)
+                                    try {
+                                        await supabase.from('creations').insert({
+                                            user_id: job.user_id,
+                                            image_url: finalUrl,
+                                            prompt: job.prompt || 'Web Generation',
+                                            type: job.job_type || 'video',
+                                            generation_id: jobId,
+                                            title: job.prompt ? job.prompt.slice(0, 30) : 'Video Result',
+                                            is_public: false
+                                        });
+                                    } catch (histErr) { console.error('History Save Error:', histErr); }
+                                }
+
+                                // 3. Notify User via Telegram
+                                if (bot && job.user_id) {
+                                    try {
+                                        const { data: u } = await supabase.from('users').select('telegram_id').eq('id', job.user_id).single();
+                                        if (u && u.telegram_id) {
+                                            const caption = `✨ Генерация готова!\n\n🎨 ${job.job_type || 'Video'}\n📝 "${(job.prompt || '').slice(0, 50)}..."`;
+                                            const isVideo = (job.job_type === 'video') || finalUrl.endsWith('.mp4');
+
+                                            if (isVideo) await bot.sendVideo(u.telegram_id, finalUrl, { caption });
+                                            else await bot.sendPhoto(u.telegram_id, finalUrl, { caption });
+                                            console.log(`📩 Notification sent to ${u.telegram_id}`);
+                                        }
+                                    } catch (notifyErr) { console.error('Notify Error:', notifyErr.message); }
                                 }
 
                                 job.status = 'completed';
