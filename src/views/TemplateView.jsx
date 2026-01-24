@@ -16,7 +16,7 @@ import GenerationResult from '../components/GenerationResult';
 
 // Templates are now imported from centralized data file
 // Prompts are hidden from users - only used for generation
-const HIDDEN_TEMPLATE_FIELDS = ['generation_prompt', 'configuration'];
+const HIDDEN_TEMPLATE_FIELDS = ['generation_prompt', 'prompt', 'configuration'];
 
 const AVAILABLE_MODELS = [
     { id: 'nano_banana', name: '🍌 Nano Banana', desc: 'Быстро (Flux Flex)', credits: MODEL_CATALOG['nano_banana']?.cost || 1 },
@@ -178,7 +178,7 @@ const TemplateView = () => {
 
         try {
             // 2. Prepare Prompt
-            let finalPrompt = template.generation_prompt || template.title;
+            let finalPrompt = template.prompt || template.generation_prompt || template.title;
 
             // Replace variables in prompt (e.g. ${anim_prompt})
             if (template.fields) {
