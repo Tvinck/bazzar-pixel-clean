@@ -392,7 +392,10 @@ function App() {
               <ToastProvider>
                 <UserProvider>
                   <Router>
-                    <AppRoot>
+                    <AppRoot
+                      appearance={document.documentElement.classList.contains('dark') ? 'dark' : 'light'}
+                      platform={['macos', 'ios'].includes(window.Telegram?.WebApp?.platform) ? 'ios' : 'base'}
+                    >
                       <AppContent />
                     </AppRoot>
                   </Router>
