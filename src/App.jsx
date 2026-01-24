@@ -110,12 +110,38 @@ function AppContent() {
       }
 
       try {
+        // Core Initialization
         tg.expand();
         tg.ready();
-        if (tg.colorScheme === 'dark') {
+
+        // New Features (Latest Tech)
+        // 1. Fullscreen (Removes header entirely on supported clients)
+        if (tg.requestFullscreen) {
+          tg.requestFullscreen();
+        }
+
+        // 2. Vertical Swipes (Prevent accidental close)
+        if (tg.disableVerticalSwipes) {
+          tg.disableVerticalSwipes();
+        }
+
+        // 3. Closing Confirmation (Prevent accidental exit)
+        if (tg.enableClosingConfirmation) {
+          tg.enableClosingConfirmation();
+        }
+
+        // 4. Color Scheme & Header Match
+        const isDark = tg.colorScheme === 'dark';
+        if (isDark) {
           document.documentElement.classList.add('dark');
         }
-      } catch (e) { console.error(e); }
+
+        // Immediate Header Color Set (Fallback if fullscreen fails)
+        const headerColor = isDark ? '#0f1014' : '#ffffff'; // Matches bg-pixel-dark / bg-slate-50
+        if (tg.setHeaderColor) tg.setHeaderColor(headerColor);
+        if (tg.setBackgroundColor) tg.setBackgroundColor(headerColor);
+
+      } catch (e) { console.error('TG Init Error:', e); }
     }
   }, [navigate]);
 
