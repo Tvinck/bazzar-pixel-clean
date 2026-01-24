@@ -237,15 +237,19 @@ const aiService = {
 
             // Kling Motion Control specific inputs
             if (modelId === 'kling_motion_control' && options.video_files?.length > 0) {
-                const img = options.source_files[0];
-                const vid = options.video_files[0];
+                const img = options.source_files?.[0];
+                const vid = options.video_files?.[0];
+
+                if (!img) throw new Error(`Kling Motion Control missing source image. Source files: ${JSON.stringify(options.source_files)}`);
+                if (!vid) throw new Error(`Kling Motion Control missing reference video. Video files: ${JSON.stringify(options.video_files)}`);
 
                 // Schema fix based on "input.video" error hint
-                // The API previously complained "input.video: Does not match format uri", implying 'video' is the required key.
                 input.image = img;
                 input.video = vid;
 
-                // Keep snake_case aliases just in case, but prioritize the simple keys
+                // Add aliases for robustness
+                input.input_image = img;
+                input.input_video = vid;
                 input.image_url = img;
                 input.video_url = vid;
 
@@ -254,10 +258,11 @@ const aiService = {
                 input.mode = 'std';
 
                 // Ensure we don't have conflicting keys that might confuse the validator
-                delete input.input_video;
-                delete input.input_image;
+                // delete input.input_video; // Keep them now, maybe needed?
+                // delete input.input_image;
             } else if (hasSourceFiles) {
                 // Standard Image-to-Video
+                input.input_image = options.source_files[0]; // Explicit single input
                 input.input_urls = options.source_files;
             }
         }
@@ -356,8 +361,9 @@ const aiService = {
             } catch (e) {
                 errorText = await createRes.text();
             }
-            console.error('❌ Kie.ai API Error:', errorText);
-            throw new Error(errorText || `API Error: ${createRes.status}`);
+            console.error('❌ Kie.ai API Error Status:', createRes.status);
+            console.error('❌ Kie.ai API Error Body:', errorText);
+            throw new Error(`Kie.ai error: ${errorText} (Status: ${createRes.status})`);
         }
 
         // Validate JSON content type
