@@ -5,13 +5,16 @@ export const MODEL_CATALOG = {
     // ============================================
     // ИЗОБРАЖЕНИЯ - GPT IMAGE (OpenAI)
     // ============================================
+    // ============================================
+    // ИЗОБРАЖЕНИЯ - GPT IMAGE (OpenAI)
+    // ============================================
     'gpt_image_15_text': {
         name: 'GPT Image 1.5 Text',
         type: 'image',
-        cost: 2,
-        preview: 'https://placehold.co/150x150/10b981/ffffff?text=GPT+1.5' // Example Preview
+        cost: 20,
+        preview: 'https://placehold.co/150x150/10b981/ffffff?text=GPT+1.5'
     },
-    'gpt_image_15_edit': { name: 'GPT Image 1.5 Edit', type: 'image', cost: 2 },
+    'gpt_image_15_edit': { name: 'GPT Image 1.5 Edit', type: 'image', cost: 20 },
 
     // ============================================
     // ИЗОБРАЖЕНИЯ - SEEDREAM (ByteDance)
@@ -19,112 +22,95 @@ export const MODEL_CATALOG = {
     'seedream_45_text': {
         name: 'Seedream 4.5 Text',
         type: 'image',
-        cost: 2,
+        cost: 10,
         preview: 'https://placehold.co/150x150/f59e0b/ffffff?text=Seedream+4.5'
     },
-    'seedream_45_edit': { name: 'Seedream 4.5 Edit', type: 'image', cost: 2 },
-    'seedream_v4_text': { name: 'Seedream V4 Text', type: 'image', cost: 2 },
-    'seedream_v4_edit': { name: 'Seedream V4 Edit', type: 'image', cost: 2 },
-    'seedream_3': { name: 'Seedream 3.0', type: 'image', cost: 1 },
+    'seedream_45_edit': { name: 'Seedream 4.5 Edit', type: 'image', cost: 10 },
+    'seedream_v4_text': { name: 'Seedream V4 Text', type: 'image', cost: 10 },
+    'seedream_v4_edit': { name: 'Seedream V4 Edit', type: 'image', cost: 10 },
+    'seedream_3': { name: 'Seedream 3.0', type: 'image', cost: 5 }, // Presumed lower than 4.5
 
     // ============================================
     // ИЗОБРАЖЕНИЯ - FLUX (Black Forest Labs)
     // ============================================
     'flux_flex': {
-        name: 'Flux 2 Flex',
+        name: 'Flux 2.1 Flex',
         type: 'image',
-        cost: 3,
+        cost: 10,
         preview: 'https://placehold.co/150x150/6366f1/ffffff?text=Flux+Flex'
     },
     'flux_pro': {
-        name: 'Flux 2 Pro',
+        name: 'Flux 1.1 Pro',
         type: 'image',
-        cost: 3,
+        cost: 10,
         preview: 'https://placehold.co/150x150/4f46e5/ffffff?text=Flux+Pro'
     },
+    'flux_2_1': { name: 'Flux 2.1', type: 'image', cost: 10 },
 
     // ============================================
-    // ИЗОБРАЖЕНИЯ - GROK IMAGINE (xAI)
+    // ИЗОБРАЖЕНИЯ - GROK (xAI)
     // ============================================
     'grok_text': {
-        name: 'Grok Text-to-Image',
+        name: 'Grok 2 Text-to-Image',
         type: 'image',
-        cost: 1,
+        cost: 10,
         preview: 'https://placehold.co/150x150/000000/ffffff?text=Grok+2'
     },
-    'grok_image': { name: 'Grok Image-to-Image', type: 'image', cost: 2 },
-    'grok_upscale': { name: 'Grok Upscale', type: 'image', cost: 1 },
+    'grok_image': { name: 'Grok 2 Image-to-Image', type: 'image', cost: 10 },
+    'grok_upscale': { name: 'Grok 2 Upscale', type: 'image', cost: 10 },
 
     // ============================================
     // ИЗОБРАЖЕНИЯ - ДРУГИЕ
     // ============================================
-    'z_image': { name: 'Z-Image', type: 'image', cost: 2 },
-    'ideogram_reframe': { name: 'Ideogram V3 Reframe', type: 'image', cost: 2 },
-    'recraft_remove_bg': { name: 'Remove Background', type: 'image', cost: 1 },
-    'recraft_upscale': { name: 'Crisp Upscale', type: 'image', cost: 1 },
+    'nano_banana': { name: 'Nano Banana', type: 'image', cost: 5 },
+    'nano_banana_pro': { name: 'Nano Banana Pro', type: 'image', cost: 20 },
+    'z_image': { name: 'Z-Image', type: 'image', cost: 20 }, // Assuming aligned with high tier
+    'ideogram_reframe': { name: 'Ideogram V3 Reframe', type: 'image', cost: 20 }, // Assuming high tier
+    'recraft_remove_bg': { name: 'Remove Background', type: 'image', cost: 20 }, // Per user request (remove object)
+    'recraft_upscale': { name: 'Crisp Upscale', type: 'image', cost: 10 },
 
     // ============================================
-    // ВИДЕО - GROK IMAGINE
+    // TOOLS (EDITING)
     // ============================================
-    'grok_text_video': {
-        name: 'Grok Text-to-Video',
-        type: 'video',
-        cost: 10,
-        preview: 'https://placehold.co/150x150/111827/ffffff?text=Grok+Video'
-    },
-    'grok_image_video': { name: 'Grok Image-to-Video', type: 'video', cost: 12 },
+    'replace_object': { name: 'Replace Object', type: 'image', cost: 20 },
+    'remove_object': { name: 'Remove Object', type: 'image', cost: 20 },
+    'add_object': { name: 'Add Object', type: 'image', cost: 20 },
+    'inpainting_v2': { name: 'Smart Edit', type: 'image', cost: 20 }, // Alias for replace
+    'outpainting_v1': { name: 'Object Adder', type: 'image', cost: 20 }, // Alias for add
+    'eraser_pro': { name: 'Magic Eraser', type: 'image', cost: 20 }, // Alias for remove
 
     // ============================================
-    // ВИДЕО - KLING (для шаблонов!)
+    // ВИДЕО
     // ============================================
-    'kling_motion_control': {
-        name: 'Kling Motion Control',
-        type: 'video',
-        cost: 8,
-        preview: 'https://placehold.co/150x150/ec4899/ffffff?text=Kling+Motion'
-    },
+    'wan_2_6_image': { name: 'Wan 2.6 Image-to-Video', type: 'video', cost: 210 },
+    'kling_motion_control': { name: 'Kling 2.6 Motion Control', type: 'video', cost: 60 },
+    'sora_2_pro_storyboard': { name: 'Sora Turbo', type: 'video', cost: 30 },
+    'ai_avatar_standard': { name: 'AI Avatar Standard', type: 'video', cost: 60 },
+    'ai_avatar_pro': { name: 'AI Avatar Pro', type: 'video', cost: 170 },
+    'veo_3_1': { name: 'Veo 3.1', type: 'video', cost: 70 },
+    'veo_3': { name: 'Veo 3.1', type: 'video', cost: 70 }, // Alias
+    'kling_2_5_turbo_image_pro': { name: 'Kling Turbo', type: 'video', cost: 50 },
+    'v1_pro_fast_image': { name: 'Bytedance', type: 'video', cost: 50 },
+    'hailuo_2_3_image_pro': { name: 'Hailuo 2.1', type: 'video', cost: 50 },
 
     // ============================================
-    // VIDEO - WAN FAMILY (Alibaba)
+    // AUDIO
     // ============================================
-    'wan_2_6_text': { name: 'Wan 2.6 Text-to-Video', type: 'video', cost: 10 },
-    'wan_2_6_image': { name: 'Wan 2.6 Image-to-Video', type: 'video', cost: 12 },
-    'wan_2_6_video': { name: 'Wan 2.6 Video-to-Video', type: 'video', cost: 15 },
-    'wan_2_5_text': { name: 'Wan 2.5 Text-to-Video', type: 'video', cost: 8 },
-    'wan_2_5_image': { name: 'Wan 2.5 Image-to-Video', type: 'video', cost: 10 },
-    'wan_2_2_animate_move': { name: 'Wan Animate Move', type: 'video', cost: 10 },
-    'wan_2_2_animate_replace': { name: 'Wan Animate Replace', type: 'video', cost: 10 },
+    'suno_v5': { name: 'Suno V5', type: 'audio', cost: 20 },
+    'chip_3_5': { name: 'Chip 3.5', type: 'audio', cost: 20 }, // Renamed from chirpv3
+    'chirp_4_5': { name: 'Chirp 4.5', type: 'audio', cost: 25 },
+    'chip_4_5': { name: 'Chip 4.5', type: 'audio', cost: 25 }, // Alias
 
     // ============================================
-    // VIDEO - KLING TURBO
+    // VIDEO TEMPLATES
     // ============================================
-    'kling_2_5_turbo_text_pro': { name: 'Kling 2.5 Turbo Text', type: 'video', cost: 12 },
-    'kling_2_5_turbo_image_pro': { name: 'Kling 2.5 Turbo Image', type: 'video', cost: 14 },
-    'kling_ai_avatar_std': { name: 'Kling AI Avatar Std', type: 'video', cost: 8 },
-    'ai_avatar_standard': { name: 'AI Avatar Standard', type: 'video', cost: 10 },
-    'ai_avatar_pro': { name: 'AI Avatar Pro', type: 'video', cost: 15 },
+    'video_template': { name: 'Video Template', type: 'video', cost: 100 },
 
-    // ============================================
-    // VIDEO - HAILUO & OTHERS
-    // ============================================
-    'hailuo_2_3_image_pro': { name: 'Hailuo 2.3 Pro', type: 'video', cost: 12 },
-    'hailuo_2_3_image_std': { name: 'Hailuo 2.3 Standard', type: 'video', cost: 10 },
-    'v1_pro_fast_image': { name: 'Bytedance Fast Img2Vid', type: 'video', cost: 8 },
-    'sora_2_pro_storyboard': { name: 'Sora 2 Pro Storyboard', type: 'video', cost: 20 },
-
-    // ============================================
-    // LEGACY MODELS
-    // ============================================
-    'nano_banana': { name: 'Nano Banana', type: 'image', cost: 1 },
-    'nano_banana_pro': { name: 'Nano Banana Pro', type: 'image', cost: 2 },
-    'gpt4o_image': { name: 'GPT-4o Image', type: 'image', cost: 2 },
-    'midjourney': { name: 'Midjourney', type: 'image', cost: 2 },
-    'flux_kontext': { name: 'Flux Kontext', type: 'image', cost: 3 },
-    'sora_2': { name: 'Sora 2', type: 'video', cost: 15 },
-    'veo_3_1': { name: 'Veo 3.1', type: 'video', cost: 10 },
-    'kling_motion': { name: 'Kling Motion', type: 'video', cost: 8 },
-    'suno_v5': { name: 'Suno v5', type: 'audio', cost: 5 },
-    'chirp_4_5': { name: 'Chirp v4.5', type: 'audio', cost: 5 }
+    // Legacy / Unspecified default mappings (updated to reasonable mid-tier or specific if mentioned)
+    'gpt4o_image': { name: 'GPT-4o Image', type: 'image', cost: 20 },
+    'midjourney': { name: 'Midjourney', type: 'image', cost: 20 },
+    'grok_text_video': { name: 'Grok Text-to-Video', type: 'video', cost: 100 }, // Scaled
+    'grok_image_video': { name: 'Grok Image-to-Video', type: 'video', cost: 120 } // Scaled
 };
 
 export const PRICING = {};
