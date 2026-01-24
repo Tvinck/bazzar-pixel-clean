@@ -167,8 +167,11 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                 </div>
 
                                 {/* Content Grid */}
-                                <div className="flex-1 overflow-y-auto pb-20 custom-scrollbar overscroll-contain">
-                                    <div className="space-y-3 min-h-[300px]">
+                                <div
+                                    className="flex-1 overflow-y-scroll pb-40 custom-scrollbar overscroll-contain"
+                                    style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+                                >
+                                    <div className="space-y-3 min-h-[400px]">
                                         {(activeTab === 'packs' ? PACKS : SUBSCRIPTIONS).map((plan, idx) => (
                                             <motion.div
                                                 initial={{ opacity: 0, y: 10 }}
@@ -242,7 +245,10 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                     </button>
                                 </div>
 
-                                <div className="px-6 flex-1 overflow-y-auto pb-40 custom-scrollbar">
+                                <div
+                                    className="px-6 flex-1 overflow-y-scroll pb-40 custom-scrollbar"
+                                    style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
+                                >
                                     <div className="text-center mb-8">
                                         <div className={`w-24 h-24 mx-auto rounded-[2rem] bg-gradient-to-br ${selectedPlan.color} flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20`}>
                                             <selectedPlan.icon size={40} className="text-white" />
