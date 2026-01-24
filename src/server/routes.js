@@ -174,6 +174,7 @@ export const setupRoutes = (app, bot, boss) => {
             // 3. Handle File Uploads (Supabase)
             let imageUrls = [];
             let videoUrls = [];
+            let audioUrls = [];
 
             if (req.files && req.files.length > 0) {
                 console.log(`📂 Uploading ${req.files.length} files to Supabase...`);
@@ -220,6 +221,8 @@ export const setupRoutes = (app, bot, boss) => {
 
                         if (file.mimetype.startsWith('video/')) {
                             videoUrls.push(url);
+                        } else if (file.mimetype.startsWith('audio/')) {
+                            audioUrls.push(url);
                         } else {
                             imageUrls.push(url);
                         }
@@ -233,6 +236,7 @@ export const setupRoutes = (app, bot, boss) => {
             // Assign back to options
             if (imageUrls.length > 0) options.source_files = imageUrls;
             if (videoUrls.length > 0) options.video_files = videoUrls;
+            if (audioUrls.length > 0) options.audio_files = audioUrls;
 
 
 
