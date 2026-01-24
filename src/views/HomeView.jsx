@@ -56,16 +56,16 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
     const [searchQuery, setSearchQuery] = useState('');
 
     const tools = [
-        { id: 'image', label: t('toolsCard.image'), icon: ImageIcon, color: 'text-indigo-500 dark:text-indigo-400', action: () => onOpenCreation('image-gen') },
-        { id: 'video', label: t('toolsCard.video'), icon: Video, color: 'text-rose-500 dark:text-rose-400', action: () => onOpenCreation('video-gen') },
-        { id: 'avatar', label: 'AI Avatar', icon: User, color: 'text-cyan-500 dark:text-cyan-400', action: () => onOpenCreation('avatar-gen') },
-        { id: 'banana', label: t('toolsCard.nanoBanana'), icon: ImageIcon, color: 'text-yellow-500 dark:text-yellow-400', special: true, action: () => onOpenCreation('image-gen', '', 'nano_banana_pro') },
-        { id: 'kling', label: 'Kling 2.6\nMotion', icon: Wind, color: 'text-emerald-500 dark:text-emerald-400', action: () => onOpenCreation('video-gen', '', 'kling_motion_control') },
-        { id: 'audio', label: t('toolsCard.audio'), icon: Music, color: 'text-blue-500 dark:text-blue-400', action: () => onOpenCreation('audio-gen') },
-        { id: 'animate', label: t('toolsCard.animate'), icon: Wand2, color: 'text-purple-500 dark:text-purple-400', action: () => onOpenCreation('animate-photo') },
-        { id: 'veo', label: 'Veo 3', icon: Layers, color: 'text-orange-500 dark:text-orange-400', action: () => onOpenCreation('video-gen', '', 'veo_3') },
-        { id: 'sora', label: t('toolsCard.sora'), icon: Cloud, color: 'text-sky-500 dark:text-sky-400', action: () => onOpenCreation('video-gen', '', 'sora_2_pro_storyboard') },
-        { id: 'tools', label: t('toolsCard.tools'), icon: PenTool, color: 'text-slate-500 dark:text-slate-400', action: () => onOpenCreation('tools') },
+        { id: 'image', label: t('toolsCard.image'), icon: ImageIcon, color: 'text-indigo-500', bgColor: 'bg-indigo-500/10', action: () => onOpenCreation('image-gen') },
+        { id: 'video', label: t('toolsCard.video'), icon: Video, color: 'text-rose-500', bgColor: 'bg-rose-500/10', action: () => onOpenCreation('video-gen') },
+        { id: 'avatar', label: 'AI Avatar', icon: User, color: 'text-cyan-500', bgColor: 'bg-cyan-500/10', action: () => onOpenCreation('avatar-gen') },
+        { id: 'banana', label: t('toolsCard.nanoBanana'), icon: Zap, color: 'text-yellow-500', bgColor: 'bg-yellow-500/10', special: true, action: () => onOpenCreation('image-gen', '', 'nano_banana_pro') },
+        { id: 'kling', label: 'Kling 2.6\nMotion', icon: Wind, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10', action: () => onOpenCreation('video-gen', '', 'kling_motion_control') },
+        { id: 'audio', label: t('toolsCard.audio'), icon: Music, color: 'text-blue-500', bgColor: 'bg-blue-500/10', action: () => onOpenCreation('audio-gen') },
+        { id: 'animate', label: t('toolsCard.animate'), icon: Wand2, color: 'text-purple-500', bgColor: 'bg-purple-500/10', action: () => onOpenCreation('animate-photo') },
+        { id: 'veo', label: 'Veo 3', icon: Layers, color: 'text-orange-500', bgColor: 'bg-orange-500/10', action: () => onOpenCreation('video-gen', '', 'veo_3') },
+        { id: 'sora', label: t('toolsCard.sora'), icon: Cloud, color: 'text-sky-500', bgColor: 'bg-sky-500/10', action: () => onOpenCreation('video-gen', '', 'sora_2_pro_storyboard') },
+        { id: 'tools', label: t('toolsCard.tools'), icon: PenTool, color: 'text-slate-500', bgColor: 'bg-slate-500/10', action: () => onOpenCreation('tools') },
     ];
 
     useEffect(() => {
@@ -106,14 +106,14 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                                 className="flex flex-col items-center gap-3 min-w-[80px] snap-start group"
                             >
                                 {/* Icon Container */}
-                                <div className="w-[80px] h-[80px] rounded-[1.8rem] bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-white/5 flex items-center justify-center shadow-lg shadow-slate-200/50 dark:shadow-black/20 group-hover:scale-105 group-hover:bg-slate-50 dark:group-hover:bg-[#252528] group-hover:border-slate-300 dark:group-hover:border-white/20 transition-all duration-300 relative overflow-hidden">
+                                <div className={`w-[80px] h-[80px] rounded-[1.8rem] ${tool.bgColor || 'bg-slate-100 dark:bg-slate-800'} border border-slate-200 dark:border-white/5 flex items-center justify-center group-hover:scale-105 transition-all duration-300 relative overflow-hidden backdrop-blur-sm`}>
                                     {/* Inner Glow */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity bg-current ${tool.color}`} />
 
                                     <tool.icon
                                         size={32}
                                         strokeWidth={2}
-                                        className={`${tool.color} opacity-90 group-hover:opacity-100 drop-shadow-sm transition-all`}
+                                        className={`${tool.color} drop-shadow-sm transition-all`}
                                     />
                                 </div>
                                 {/* Label */}
