@@ -90,7 +90,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                 <BannerCarousel />
             </section>
 
-            {/* --- TOOLS CAROUSEL --- */}
+            {/* --- TOOLS CAROUSEL (Premium Glassy) --- */}
             <section>
                 <div className="px-6 mb-4 flex items-center justify-between">
                     <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Создать</h2>
@@ -98,26 +98,27 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                 </div>
 
                 <div className="w-full">
-                    <div className="flex overflow-x-auto px-6 gap-4 pb-4 no-scrollbar snap-x snap-mandatory">
+                    <div className="flex overflow-x-auto px-6 gap-3 pb-4 no-scrollbar snap-x snap-mandatory">
                         {tools.map((tool) => (
                             <button
                                 key={tool.id}
                                 onClick={tool.action}
-                                className="flex flex-col items-center gap-3 min-w-[80px] snap-start group"
+                                className="flex flex-col items-center gap-2 min-w-[76px] snap-start group"
                             >
-                                {/* Icon Container */}
-                                <div className={`w-[80px] h-[80px] rounded-[1.8rem] ${tool.bgColor || 'bg-slate-100 dark:bg-slate-800'} border border-slate-200 dark:border-white/5 flex items-center justify-center group-hover:scale-105 transition-all duration-300 relative overflow-hidden backdrop-blur-sm`}>
-                                    {/* Inner Glow */}
-                                    <div className={`absolute inset-0 opacity-0 group-hover:opacity-20 transition-opacity bg-current ${tool.color}`} />
+                                {/* Glassy Icon Container */}
+                                <div className={`w-[76px] h-[76px] rounded-[1.8rem] bg-white/5 backdrop-blur-xl border border-white/10 flex items-center justify-center group-active:scale-95 transition-all duration-300 relative overflow-hidden shadow-lg shadow-black/5`}>
+                                    {/* Inner Color Glow */}
+                                    <div className={`absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-current ${tool.color}`} />
 
+                                    {/* Icon */}
                                     <tool.icon
-                                        size={32}
+                                        size={30}
                                         strokeWidth={2}
-                                        className={`${tool.color} drop-shadow-sm transition-all`}
+                                        className={`${tool.color} drop-shadow-lg transition-transform group-hover:scale-110 duration-300`}
                                     />
                                 </div>
                                 {/* Label */}
-                                <span className="text-[11px] font-medium text-slate-600 dark:text-white/60 text-center leading-tight whitespace-pre-line group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
+                                <span className="text-[10px] font-semibold text-slate-600 dark:text-white/60 text-center leading-tight whitespace-pre-line group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
                                     {tool.label}
                                 </span>
                             </button>
@@ -126,21 +127,23 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                 </div>
             </section>
 
-            {/* --- SEARCH & CATEGORIES (NEW) --- */}
+            {/* --- SEARCH & CATEGORIES (Glassy) --- */}
             <section className="space-y-6">
                 {/* Search */}
                 <div className="px-6 relative">
-                    <Search className="absolute left-10 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-10 h-full flex items-center justify-center pointer-events-none">
+                        <Search className="text-slate-400 dark:text-white/30" size={18} />
+                    </div>
                     <input
                         type="text"
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Поиск идей..."
-                        className="w-full h-12 pl-12 pr-4 bg-white dark:bg-[#1c1c1e] rounded-2xl border border-slate-200 dark:border-white/5 text-slate-900 dark:text-white font-medium placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all shadow-sm"
+                        className="w-full h-12 pl-12 pr-4 bg-white/50 dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-medium placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-indigo-500/50 focus:bg-white/80 dark:focus:bg-white/10 transition-all shadow-sm"
                     />
                 </div>
 
-                {/* Categories */}
+                {/* Glassy Categories */}
                 <div className="flex gap-2 overflow-x-auto no-scrollbar px-6 pb-2">
                     {[
                         { id: 'all', label: t('gallery.all') },
@@ -155,7 +158,10 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                         <button
                             key={cat.id}
                             onClick={() => { setActiveCategory(cat.id); triggerHaptic('light'); }}
-                            className={`px-6 py-2.5 rounded-2xl text-sm font-bold whitespace-nowrap transition-all duration-300 border ${activeCategory === cat.id ? 'bg-slate-900 text-white dark:bg-white dark:text-black border-transparent shadow-md scale-105' : 'bg-white text-slate-600 border-slate-200 dark:bg-[#1c1c1e] dark:text-slate-400 dark:border-white/5'}`}
+                            className={`px-5 py-2.5 rounded-[1rem] text-xs font-bold whitespace-nowrap transition-all duration-300 border backdrop-blur-md ${activeCategory === cat.id
+                                    ? 'bg-slate-900 text-white dark:bg-white dark:text-black border-transparent shadow-lg shadow-black/10 scale-105'
+                                    : 'bg-white/50 dark:bg-white/5 text-slate-600 dark:text-white/60 border-slate-200 dark:border-white/5 hover:bg-white dark:hover:bg-white/10'
+                                }`}
                         >
                             {cat.label}
                         </button>
@@ -163,7 +169,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                 </div>
             </section>
 
-            {/* --- DISCOVER --- */}
+            {/* --- DISCOVER (Premium Masonry) --- */}
             <section>
                 {/* DYNAMIC HEADER BASED ON CATEGORY */}
                 <div className="px-6 mb-6 mt-4">
@@ -177,7 +183,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                                                 activeCategory === 'pets' ? 'ПИТОМЦЫ' :
                                                     activeCategory === 'oldTrends' ? t('categories.oldTrends') : activeCategory}
                     </h2>
-                    <p className="text-slate-500 dark:text-slate-400 text-sm font-medium">
+                    <p className="text-slate-500 dark:text-white/40 text-sm font-medium">
                         {activeCategory === 'all' ? 'Популярные шаблоны' :
                             activeCategory === 'dances' ? 'Сгенерируй трендовые танцевальные видео!' :
                                 activeCategory === 'trends' ? 'Самые популярные шаблоны этой недели' :
@@ -186,15 +192,11 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                 </div>
 
                 {/* MASONRY LAYOUT */}
-                <div className="columns-2 gap-2 space-y-2 px-3">
+                <div className="columns-2 gap-3 space-y-3 px-4">
                     {(isFeedLoading || isTemplatesLoading) && feedItems.length === 0 ? (
                         Array.from({ length: 6 }).map((_, i) => (
-                            <div key={i} className="break-inside-avoid relative rounded-[1.2rem] overflow-hidden bg-slate-200 dark:bg-slate-800 mb-2 border border-slate-100 dark:border-white/5 animate-pulse">
-                                <div style={{ aspectRatio: i % 2 === 0 ? '3/4' : '1/1' }} className="w-full bg-slate-300 dark:bg-slate-700" />
-                                <div className="absolute inset-x-0 bottom-0 p-3 space-y-2">
-                                    <div className="h-3 w-2/3 bg-slate-400 dark:bg-slate-600 rounded-full" />
-                                    <div className="h-2 w-1/2 bg-slate-400 dark:bg-slate-600 rounded-full" />
-                                </div>
+                            <div key={i} className="break-inside-avoid relative rounded-[1.5rem] overflow-hidden bg-white/5 border border-white/5 animate-pulse">
+                                <div style={{ aspectRatio: i % 2 === 0 ? '3/4' : '1/1' }} className="w-full bg-white/5" />
                             </div>
                         ))
                     ) : feedItems.filter(item => {
@@ -208,8 +210,8 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                             initial={{ opacity: 0, y: 30 }}
                             whileInView={{ opacity: 1, y: 0 }}
                             viewport={{ once: true, margin: "-50px" }}
-                            transition={{ delay: i * 0.1 }}
-                            className="break-inside-avoid relative group rounded-[1.2rem] overflow-hidden bg-slate-900 cursor-pointer border border-slate-100 dark:border-white/10"
+                            transition={{ delay: i * 0.05 }}
+                            className="break-inside-avoid relative group rounded-[1.5rem] overflow-hidden bg-slate-900 cursor-pointer border border-white/10 shadow-lg shadow-black/20"
                             onClick={() => item.type === 'template' && onOpenTemplate(item)}
                         >
                             <div style={{ aspectRatio: item.type === 'template' ? '3/4' : '1/1' }} className="relative">
@@ -217,14 +219,14 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                                     item.mediaType === 'image' ? (
                                         <OptimizedImage
                                             src={item.src}
-                                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300"
+                                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-105 transition-transform"
                                             alt={item.title}
                                         />
                                     ) : (
                                         <video
                                             src={item.src.includes('#') ? item.src : `${item.src}#t=0.1`}
                                             poster={item.thumbnail_url || item.image_url || item.cover_url}
-                                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300 bg-black"
+                                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500 bg-black group-hover:scale-105 transition-transform"
                                             autoPlay
                                             muted
                                             loop
@@ -235,20 +237,20 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                                 ) : (
                                     <OptimizedImage
                                         src={item.src || item.image_url || item.thumbnail_url}
-                                        className="w-full h-full object-cover hover:scale-105 transition-transform"
+                                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
                                         alt={item.title || "Inspiration"}
                                     />
                                 )}
 
-                                {/* Dark Gradient Overlay (Bottom) */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none" />
+                                {/* Premium Gradient Overlay */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 pointer-events-none" />
                             </div>
 
-                            {/* Top Left: User Avatar (for creations) or Type Icon (for templates) */}
+                            {/* Top Left: User Avatar or Type Icon */}
                             <div className="absolute top-3 left-3 z-30">
                                 {item.type === 'template' ? (
-                                    <div className="text-white/80">
-                                        {item.mediaType === 'video' ? <Video size={16} fill="currentColor" className="opacity-90" /> : <ImageIcon size={16} className="opacity-90" />}
+                                    <div className="text-white/80 bg-black/30 backdrop-blur-md rounded-full p-1.5 border border-white/10">
+                                        {item.mediaType === 'video' ? <Video size={12} fill="currentColor" className="opacity-90" /> : <ImageIcon size={12} className="opacity-90" />}
                                     </div>
                                 ) : (
                                     <div
@@ -256,7 +258,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                                             e.stopPropagation();
                                             navigate(`/user/${item.user_id}`);
                                         }}
-                                        className="flex items-center gap-2 bg-black/40 backdrop-blur-md border border-white/10 pr-2 rounded-full p-0.5 hover:bg-black/60 transition-colors"
+                                        className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/10 pr-2 rounded-full p-0.5 hover:bg-black/60 transition-colors"
                                     >
                                         <div className="w-5 h-5 rounded-full bg-slate-700 overflow-hidden">
                                             {item.avatar_url ? (
@@ -267,7 +269,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                                                 </div>
                                             )}
                                         </div>
-                                        <span className="text-[10px] font-bold text-white max-w-[60px] truncate">
+                                        <span className="text-[10px] font-bold text-white/90 max-w-[60px] truncate">
                                             @{item.username || 'User'}
                                         </span>
                                     </div>
@@ -275,26 +277,22 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                             </div>
 
                             {/* Top Right Category Badge */}
-                            <div className="absolute top-3 right-3">
-                                <span className={`backdrop-blur-md border border-white/20 text-white text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm ${item.category === 'love' ? 'bg-pink-500/80 border-pink-300/50' : 'bg-black/40' // Special pink badge for Love
-                                    }`}>
-                                    {item.category === 'cars' ? 'АВТО' :
-                                        item.category === 'christmas' ? 'НОВЫЙ ГОД' :
-                                            item.category === 'angels' ? 'АНГЕЛЫ' :
-                                                item.category === 'pets' ? 'ПИТОМЦЫ' :
-                                                    item.category === 'oldTrends' ? 'РЕТРО' :
-                                                        item.category === 'dances' ? 'ТАНЦЫ' :
-                                                            item.category === 'love' ? '14 ФЕВРАЛЯ' : 'ТРЕНД'}
-                                </span>
+                            <div className="absolute top-3 right-3 z-30">
+                                {item.category && item.category !== 'all' && (
+                                    <span className={`backdrop-blur-xl border border-white/10 text-white text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm ${item.category === 'love' ? 'bg-pink-500/80' : 'bg-black/40' // Special pink badge for Love
+                                        }`}>
+                                        {item.categories?.[0] || item.category}
+                                    </span>
+                                )}
                             </div>
 
-                            {/* Bottom Content & Like Button */}
+                            {/* Bottom Content */}
                             <div className="absolute bottom-4 left-3 right-3 z-20 flex justify-between items-end gap-2">
-                                <h4 className="text-white font-bold text-sm uppercase leading-tight tracking-wide drop-shadow-md flex-1">
+                                <h4 className="text-white/90 font-bold text-[13px] leading-tight flex-1 line-clamp-2 drop-shadow-sm">
                                     {item.title || item.prompt}
                                 </h4>
 
-                                <div onClick={(e) => e.stopPropagation()}>
+                                <div onClick={(e) => e.stopPropagation()} className="scale-90 origin-bottom-right">
                                     <LikeButton
                                         creationId={item.id}
                                         initialCount={item.likes_count || item.likes || 0}

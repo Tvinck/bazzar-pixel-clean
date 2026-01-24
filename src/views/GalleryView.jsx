@@ -77,7 +77,7 @@ const GalleryView = ({ onRemix }) => {
                     <h1 className="text-2xl font-black font-display tracking-tight">Галерея</h1>
                 </div>
 
-                {/* Row 1: Main Filters (Pills) */}
+                {/* Row 1: Main Filters (Glassy Pills) */}
                 <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar scroll-smooth">
                     {['all', 'new', 'liked'].map((tab) => {
                         const labels = { all: 'В популярном', new: 'Свежее', liked: 'Избранное' };
@@ -86,9 +86,9 @@ const GalleryView = ({ onRemix }) => {
                             <button
                                 key={tab}
                                 onClick={() => setActiveTab(tab)}
-                                className={`px-5 py-2.5 rounded-full text-sm font-bold whitespace-nowrap transition-all duration-300 ${isActive
-                                    ? 'bg-slate-900 text-white dark:bg-white dark:text-black shadow-lg shadow-black/5 dark:shadow-white/10 scale-105'
-                                    : 'bg-white text-slate-500 hover:bg-slate-100 dark:bg-white/5 dark:text-slate-400 dark:hover:bg-white/10'
+                                className={`px-5 py-2.5 rounded-[1rem] text-xs font-bold whitespace-nowrap transition-all duration-300 border backdrop-blur-md ${isActive
+                                    ? 'bg-slate-900 text-white dark:bg-white dark:text-black border-transparent shadow-lg shadow-black/10 scale-105'
+                                    : 'bg-white/50 text-slate-500 hover:bg-white dark:bg-white/5 dark:text-white/60 dark:border-white/5 dark:hover:bg-white/10'
                                     }`}
                             >
                                 {labels[tab]}
@@ -97,7 +97,7 @@ const GalleryView = ({ onRemix }) => {
                     })}
                 </div>
 
-                {/* Row 2: Categories (Horizontal Scroll) */}
+                {/* Row 2: Categories (Glassy) */}
                 <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 mask-linear-fade">
                     {[
                         { icon: Box, label: 'Все' },
@@ -106,41 +106,44 @@ const GalleryView = ({ onRemix }) => {
                         { icon: Gift, label: 'Арты' },
                         { icon: Users, label: 'Люди' }
                     ].map((cat, i) => (
-                        <button key={i} className="flex items-center gap-2 px-4 py-2 rounded-2xl text-xs font-bold bg-white/50 border border-slate-200/50 text-slate-600 dark:bg-white/5 dark:border-white/5 dark:text-slate-300 hover:scale-105 transition-transform whitespace-nowrap">
+                        <button key={i} className="flex items-center gap-2 px-4 py-2 rounded-[0.8rem] text-xs font-bold bg-white/50 backdrop-blur-md border border-slate-200/50 text-slate-600 dark:bg-white/5 dark:border-white/10 dark:text-white/70 hover:scale-105 transition-transform whitespace-nowrap shadow-sm">
                             <cat.icon size={14} className={i === 0 ? "text-indigo-500" : "opacity-70"} /> {cat.label}
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* Masonry Grid */}
-            <div className="px-2 pt-2">
-                <div className="columns-2 gap-2 space-y-2">
+            {/* Masonry Grid (Glassy) */}
+            <div className="px-3 pt-2">
+                <div className="columns-2 gap-3 space-y-3">
                     {creations.map((item, i) => (
                         <motion.div
                             key={item.id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
                             transition={{ delay: i * 0.05 }}
-                            className="break-inside-avoid relative rounded-[1rem] overflow-hidden cursor-pointer group mb-2 bg-slate-200 dark:bg-[#121212]"
+                            className="break-inside-avoid relative rounded-[1.5rem] overflow-hidden cursor-pointer group mb-3 bg-white/5 border border-white/10 shadow-lg shadow-black/5"
                             onClick={() => setSelectedCreation(item)}
                         >
                             <OptimizedImage
                                 src={item.image_url || item.thumbnail_url}
-                                className="w-full h-auto object-cover opacity-90 group-hover:opacity-100 transition-opacity"
+                                className="w-full h-auto object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-300 group-hover:scale-105 transition-transform"
                             />
+
+                            {/* Gradient Overlay */}
+                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
                         </motion.div>
                     ))}
                 </div>
             </div>
 
-            {/* Load More */}
+            {/* Load More (Glassy) */}
             {hasNextPage && (
                 <div className="flex justify-center mt-8 mb-8">
                     <button
                         onClick={() => fetchNextPage()}
                         disabled={isFetchingNextPage}
-                        className="w-10 h-10 rounded-full bg-slate-200 text-slate-500 dark:bg-white/10 dark:text-white flex items-center justify-center animate-pulse"
+                        className="w-12 h-12 rounded-full bg-white/5 backdrop-blur-lg border border-white/10 text-slate-500 dark:text-white flex items-center justify-center animate-pulse shadow-xl"
                     >
                         {isFetchingNextPage ? <LoadingSpinner size={20} color="currentColor" /> : <div className="w-2 h-2 bg-current rounded-full" />}
                     </button>
