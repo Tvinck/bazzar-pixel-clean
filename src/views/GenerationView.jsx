@@ -413,6 +413,9 @@ const GenerationView = ({ onOpenPayment }) => {
 
         playClick();
         setIsProcessing(true);
+        if (window.Telegram?.WebApp?.HapticFeedback) {
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success'); // "Magic" feel start
+        }
 
         startGlobalGen(
             currentModeKey.includes('video') ? 'video' : 'image',

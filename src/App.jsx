@@ -141,6 +141,13 @@ function AppContent() {
         if (tg.setHeaderColor) tg.setHeaderColor(headerColor);
         if (tg.setBackgroundColor) tg.setBackgroundColor(headerColor);
 
+        // 5. Settings Button (Native)
+        if (tg.SettingsButton) {
+          tg.SettingsButton.show();
+          tg.SettingsButton.onClick(() => {
+            navigate('/profile');
+          });
+        }
       } catch (e) { console.error('TG Init Error:', e); }
     }
   }, [navigate]);
