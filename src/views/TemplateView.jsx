@@ -241,7 +241,12 @@ const TemplateView = () => {
 
             const currentModel = selectedModel || template.model_id || 'nano_banana';
             if (currentModel === 'kling_motion_control' && template.src && template.mediaType === 'video') {
-                generationOptions.video_files = [template.src];
+                let videoSrc = template.src;
+                // If relative path, make it absolute so server/Kie can download it
+                if (videoSrc.startsWith('/')) {
+                    videoSrc = window.location.origin + videoSrc;
+                }
+                generationOptions.video_files = [videoSrc];
             }
 
             // 4. Call AI Service
