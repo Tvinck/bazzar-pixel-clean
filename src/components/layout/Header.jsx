@@ -8,7 +8,7 @@ const Header = ({ onTabChange, onOpenPayment, balance = 10, isDark }) => {
     return (
         <header className="fixed top-0 left-0 right-0 z-40 transition-transform duration-300">
             {/* Added extra padding for Fullscreen Mode breathing room */}
-            <div className="bg-white dark:bg-[#0f1014] border-b border-slate-200 dark:border-white/5 shadow-sm pt-[calc(env(safe-area-inset-top)+16px)] pb-3 transition-colors duration-300">
+            <div className="bg-white dark:bg-[#0f1014] border-b border-slate-200 dark:border-white/5 shadow-sm pt-[calc(env(safe-area-inset-top)+24px)] pb-3 transition-colors duration-300">
                 <div className="max-w-screen-xl mx-auto px-5 h-14 flex items-center justify-between mt-1">
 
                     {/* Left: Logo */}
