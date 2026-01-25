@@ -198,7 +198,7 @@ export const templatesData = [
         id: 'latina',
         title: "LATINA",
         description: "Латиноамериканский танец",
-        category: TEMPLATE_CATEGORIES.VIDEO,
+        category: TEMPLATE_CATEGORIES.DANCE,
         likes: "16k",
         src: "/videos/latina.mp4",
         mediaType: 'video',
