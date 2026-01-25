@@ -165,7 +165,11 @@ const aiService = {
             'v1_pro_fast_image': 'bytedance/v1-pro-fast-image-to-video',
 
             // --- SORA ---
-            'sora_2_pro_storyboard': 'sora-2-pro-storyboard'
+            'sora_2_pro_storyboard': 'sora-2-pro-storyboard',
+
+            // --- VEO (Google) ---
+            'veo_3': 'google/veo',
+            'veo_3_1': 'google/veo'
         };
 
         // 1. Determine Correct Model ID
@@ -262,7 +266,8 @@ const aiService = {
             kieModelId.includes('wan/') ||
             kieModelId.includes('hailuo/') ||
             kieModelId.includes('sora') ||
-            kieModelId.includes('bytedance')
+            kieModelId.includes('bytedance') ||
+            kieModelId.includes('veo')
         ) {
             // General Video Defaults
             input.prompt = prompt || (kieModelId.includes('animate') ? undefined : 'Generate a video');
