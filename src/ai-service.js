@@ -778,335 +778,283 @@ const aiService = {
                         throw new Error('DefAPI timeout');
                     },
 
-                        // ============================================
-                        // TOOLS / EDIT
-                        // ============================================
-                        instructEdit: async (base64Img, instructions) => {
-                            console.log('✨ instructEdit called', instructions);
-
-                            let modelId = 'nano_banana_edit'; // Default edit model
-                            let prompt = '';
-
-                            // Map mode to Prompt/Model logic
-                            if (instructions.mode === 'replace-object') {
-                                prompt = `Replace ${instructions.old_object} with ${instructions.new_object}`;
-                            } else if (instructions.mode === 'remove-object') {
-                                prompt = `Remove ${instructions.remove_object}`;
-                            } else if (instructions.mode === 'add-object') {
-                                prompt = `Add ${instructions.new_object}`;
-                            } else {
-                                prompt = instructions.prompt || 'Edit image';
-                            }
-
-                            // Use 'generateWithKie' logic but with specific params
-                            // We pass the base64 string directly as a source file
-                            // The API expects URL or Base64. generateWithKie handles raw 'source_files'
-
-                            // Construct a data URI since generateWithKie/proxy might expect it or handles raw?
-                            // Let's pass full data URI to be safe as 'input_urls' often need scheme.
-                            const dataUri = `data:image/jpeg;base64,${base64Img}`;
-
-                            return await aiService.generateWithKie(prompt, modelId, {
-                                source_files: [dataUri],
-                                aspect_ratio: '1:1' // Usually preserves input ratio, but required param
-                            });
-                        },
-
-                            // ============================================
-                            // ASYNC JOB QUEUE (Browser)
-                            // ============================================
-                            generateImageAsync: async (prompt, type = 'image', options = {}) => {
-                                if (!isBrowser) {
-                                    throw new Error('generateImageAsync is only available in browser mode');
-                                }
-
-                                // Prepare FormData for /api/generate
-                                const formData = new FormData();
-                                formData.append('prompt', prompt);
-                                formData.append('type', type);
-                                formData.append('userId', options.userId || 'browser_user');
-                                formData.append('initData', window.Telegram?.WebApp?.initData || '');
-
-                                // Handle source files if they are File objects or base64 strings
-                                if (options.source_files && Array.isArray(options.source_files)) {
-                                    options.source_files.forEach((file, i) => {
                                         if (file instanceof File) {
-                                            formData.append('files', file, file.name);
-                                        } else if (typeof file === 'string') {
-                                            try {
-                                                let base64 = file;
-                                                let mime = 'image/jpeg';
+                formData.append('files', file, file.name);
+            } else if (typeof file === 'string') {
+                try {
+                    let base64 = file;
+                    let mime = 'image/jpeg';
 
-                                                if (file.startsWith('data:')) {
-                                                    const parts = file.split(',');
-                                                    if (parts.length > 1) {
-                                                        const match = parts[0].match(/:(.*?);/);
-                                                        mime = match ? match[1] : 'image/jpeg';
-                                                        base64 = parts[1];
-                                                    }
-                                                }
+                    if (file.startsWith('data:')) {
+                        const parts = file.split(',');
+                        if (parts.length > 1) {
+                            const match = parts[0].match(/:(.*?);/);
+                            mime = match ? match[1] : 'image/jpeg';
+                            base64 = parts[1];
+                        }
+                    }
 
-                                                // Convert base64 to Blob
-                                                const bstr = atob(base64);
-                                                let n = bstr.length;
-                                                const u8arr = new Uint8Array(n);
-                                                while (n--) {
-                                                    u8arr[n] = bstr.charCodeAt(n);
-                                                }
-                                                const blob = new Blob([u8arr], { type: mime });
-                                                const extension = mime.split('/')[1] || 'jpg';
-                                                formData.append('files', blob, `source_${i}.${extension}`);
-                                                console.log(`📎 Appended file ${i} (${mime}) from base64`);
-                                            } catch (e) {
-                                                console.warn(`⚠️ Failed to parse file ${i} as base64:`, e.message);
-                                                // If it's not base64, maybe it's a URL. We'll let the backend handle it via options if needed.
-                                            }
-                                        }
-                                    });
-                                }
+                    // Convert base64 to Blob
+                    const bstr = atob(base64);
+                    let n = bstr.length;
+                    const u8arr = new Uint8Array(n);
+                    while (n--) {
+                        u8arr[n] = bstr.charCodeAt(n);
+                    }
+                    const blob = new Blob([u8arr], { type: mime });
+                    const extension = mime.split('/')[1] || 'jpg';
+                    formData.append('files', blob, `source_${i}.${extension}`);
+                    console.log(`📎 Appended file ${i} (${mime}) from base64`);
+                } catch (e) {
+                    console.warn(`⚠️ Failed to parse file ${i} as base64:`, e.message);
+                    // If it's not base64, maybe it's a URL. We'll let the backend handle it via options if needed.
+                }
+            }
+        });
+    }
 
                                 // Handle VIDEO files (Same logic to support FormData upload)
-                                if (options.video_files && Array.isArray(options.video_files)) {
-                                    options.video_files.forEach((file, i) => {
-                                        // Logic mostly mirrors source_files but ensures video MIME types
-                                        if (file instanceof File) {
-                                            formData.append('files', file, file.name);
-                                        } else if (typeof file === 'string') {
-                                            try {
-                                                let base64 = file;
-                                                let mime = 'video/mp4'; // guess
+                                if(options.video_files && Array.isArray(options.video_files)) {
+        options.video_files.forEach((file, i) => {
+            // Logic mostly mirrors source_files but ensures video MIME types
+            if (file instanceof File) {
+                formData.append('files', file, file.name);
+            } else if (typeof file === 'string') {
+                try {
+                    let base64 = file;
+                    let mime = 'video/mp4'; // guess
 
-                                                if (file.startsWith('data:')) {
-                                                    const parts = file.split(',');
-                                                    if (parts.length > 1) {
-                                                        const match = parts[0].match(/:(.*?);/);
-                                                        mime = match ? match[1] : 'video/mp4';
-                                                        base64 = parts[1];
-                                                    }
-                                                }
+                    if (file.startsWith('data:')) {
+                        const parts = file.split(',');
+                        if (parts.length > 1) {
+                            const match = parts[0].match(/:(.*?);/);
+                            mime = match ? match[1] : 'video/mp4';
+                            base64 = parts[1];
+                        }
+                    }
 
-                                                const bstr = atob(base64);
-                                                let n = bstr.length;
-                                                const u8arr = new Uint8Array(n);
-                                                while (n--) {
-                                                    u8arr[n] = bstr.charCodeAt(n);
-                                                }
-                                                const blob = new Blob([u8arr], { type: mime });
-                                                const extension = mime.split('/')[1] || 'mp4';
-                                                formData.append('files', blob, `video_${i}.${extension}`);
-                                                console.log(`📎 Appended VIDEO file ${i} (${mime}) from base64`);
-                                            } catch (e) {
-                                                console.warn(`⚠️ Failed to parse video ${i} as base64`, e);
-                                            }
-                                        }
-                                    });
+                    const bstr = atob(base64);
+                    let n = bstr.length;
+                    const u8arr = new Uint8Array(n);
+                    while (n--) {
+                        u8arr[n] = bstr.charCodeAt(n);
+                    }
+                    const blob = new Blob([u8arr], { type: mime });
+                    const extension = mime.split('/')[1] || 'mp4';
+                    formData.append('files', blob, `video_${i}.${extension}`);
+                    console.log(`📎 Appended VIDEO file ${i} (${mime}) from base64`);
+                } catch (e) {
+                    console.warn(`⚠️ Failed to parse video ${i} as base64`, e);
+                }
+            }
+        });
                                 }
 
-                                // Handle AUDIO files (For AI Avatar)
-                                if (options.audio_files && Array.isArray(options.audio_files)) {
-                                    options.audio_files.forEach((file, i) => {
-                                        if (file instanceof File) {
-                                            formData.append('files', file, file.name);
-                                        } else if (typeof file === 'string') {
-                                            try {
-                                                let base64 = file;
-                                                let mime = 'audio/mpeg';
+// Handle AUDIO files (For AI Avatar)
+if (options.audio_files && Array.isArray(options.audio_files)) {
+    options.audio_files.forEach((file, i) => {
+        if (file instanceof File) {
+            formData.append('files', file, file.name);
+        } else if (typeof file === 'string') {
+            try {
+                let base64 = file;
+                let mime = 'audio/mpeg';
 
-                                                if (file.startsWith('data:')) {
-                                                    const parts = file.split(',');
-                                                    if (parts.length > 1) {
-                                                        const match = parts[0].match(/:(.*?);/);
-                                                        mime = match ? match[1] : 'audio/mpeg';
-                                                        base64 = parts[1];
-                                                    }
-                                                }
+                if (file.startsWith('data:')) {
+                    const parts = file.split(',');
+                    if (parts.length > 1) {
+                        const match = parts[0].match(/:(.*?);/);
+                        mime = match ? match[1] : 'audio/mpeg';
+                        base64 = parts[1];
+                    }
+                }
 
-                                                const bstr = atob(base64);
-                                                let n = bstr.length;
-                                                const u8arr = new Uint8Array(n);
-                                                while (n--) {
-                                                    u8arr[n] = bstr.charCodeAt(n);
-                                                }
-                                                const blob = new Blob([u8arr], { type: mime });
-                                                const extension = mime.split('/')[1] || 'mp3';
-                                                formData.append('files', blob, `audio_${i}.${extension}`);
-                                                console.log(`📎 Appended AUDIO file ${i} (${mime}) from base64`);
-                                            } catch (e) {
-                                                console.warn(`⚠️ Failed to parse audio ${i} as base64`, e);
-                                            }
-                                        }
-                                    });
-                                }
+                const bstr = atob(base64);
+                let n = bstr.length;
+                const u8arr = new Uint8Array(n);
+                while (n--) {
+                    u8arr[n] = bstr.charCodeAt(n);
+                }
+                const blob = new Blob([u8arr], { type: mime });
+                const extension = mime.split('/')[1] || 'mp3';
+                formData.append('files', blob, `audio_${i}.${extension}`);
+                console.log(`📎 Appended AUDIO file ${i} (${mime}) from base64`);
+            } catch (e) {
+                console.warn(`⚠️ Failed to parse audio ${i} as base64`, e);
+            }
+        }
+    });
+}
 
-                                // Pass other options as JSON string
-                                // CRITICAL FIX: We must KEEP http URLs in the JSON options (e.g. from templates)
-                                // while removing Base64/Files (which are uploaded via FormData).
-                                const cleanOptions = { ...options };
+// Pass other options as JSON string
+// CRITICAL FIX: We must KEEP http URLs in the JSON options (e.g. from templates)
+// while removing Base64/Files (which are uploaded via FormData).
+const cleanOptions = { ...options };
 
-                                if (Array.isArray(cleanOptions.source_files)) {
-                                    cleanOptions.source_files = cleanOptions.source_files.filter(f => typeof f === 'string' && f.startsWith('http'));
-                                } else {
-                                    delete cleanOptions.source_files;
-                                }
+if (Array.isArray(cleanOptions.source_files)) {
+    cleanOptions.source_files = cleanOptions.source_files.filter(f => typeof f === 'string' && f.startsWith('http'));
+} else {
+    delete cleanOptions.source_files;
+}
 
-                                if (Array.isArray(cleanOptions.video_files)) {
-                                    cleanOptions.video_files = cleanOptions.video_files.filter(f => typeof f === 'string' && f.startsWith('http'));
-                                } else {
-                                    delete cleanOptions.video_files;
-                                }
+if (Array.isArray(cleanOptions.video_files)) {
+    cleanOptions.video_files = cleanOptions.video_files.filter(f => typeof f === 'string' && f.startsWith('http'));
+} else {
+    delete cleanOptions.video_files;
+}
 
-                                if (Array.isArray(cleanOptions.audio_files)) {
-                                    cleanOptions.audio_files = cleanOptions.audio_files.filter(f => typeof f === 'string' && f.startsWith('http'));
-                                } else {
-                                    delete cleanOptions.audio_files;
-                                }
+if (Array.isArray(cleanOptions.audio_files)) {
+    cleanOptions.audio_files = cleanOptions.audio_files.filter(f => typeof f === 'string' && f.startsWith('http'));
+} else {
+    delete cleanOptions.audio_files;
+}
 
-                                formData.append('options', JSON.stringify(cleanOptions));
+formData.append('options', JSON.stringify(cleanOptions));
 
-                                const createRes = await fetch('/api/generate', {
-                                    method: 'POST',
-                                    body: formData
-                                });
+const createRes = await fetch('/api/generate', {
+    method: 'POST',
+    body: formData
+});
 
-                                if (!createRes.ok) {
-                                    let errorMsg = 'Generation request failed';
-                                    try {
-                                        const err = await createRes.json();
-                                        errorMsg = err.error || errorMsg;
-                                    } catch (jsonErr) {
-                                        // If not JSON, it might be a 404/500 HTML page from Vercel/Express
-                                        errorMsg = `Server Error (${createRes.status}): ${createRes.statusText}`;
-                                    }
-                                    throw new Error(errorMsg);
-                                }
+if (!createRes.ok) {
+    let errorMsg = 'Generation request failed';
+    try {
+        const err = await createRes.json();
+        errorMsg = err.error || errorMsg;
+    } catch (jsonErr) {
+        // If not JSON, it might be a 404/500 HTML page from Vercel/Express
+        errorMsg = `Server Error (${createRes.status}): ${createRes.statusText}`;
+    }
+    throw new Error(errorMsg);
+}
 
-                                const data = await createRes.json();
-                                const jobId = data.jobId;
+const data = await createRes.json();
+const jobId = data.jobId;
 
-                                if (!jobId) {
-                                    if (data.data?.imageUrl) return { success: true, imageUrl: data.data.imageUrl };
-                                    throw new Error('No Job ID returned from server');
-                                }
+if (!jobId) {
+    if (data.data?.imageUrl) return { success: true, imageUrl: data.data.imageUrl };
+    throw new Error('No Job ID returned from server');
+}
 
-                                console.log(`📋 Job started: ${jobId}`);
+console.log(`📋 Job started: ${jobId}`);
 
-                                // Poll for completion
-                                const maxAttempts = 400; // 20 minutes
-                                for (let i = 0; i < maxAttempts; i++) {
-                                    await new Promise(r => setTimeout(r, 3000));
+// Poll for completion
+const maxAttempts = 400; // 20 minutes
+for (let i = 0; i < maxAttempts; i++) {
+    await new Promise(r => setTimeout(r, 3000));
 
-                                    const statusRes = await fetch(`/api/jobs/${jobId}`);
-                                    if (!statusRes.ok) {
-                                        // For polling, we might be more lenient or throw
-                                        console.warn(`Polling status failed (${statusRes.status})`);
-                                        continue;
-                                    }
+    const statusRes = await fetch(`/api/jobs/${jobId}`);
+    if (!statusRes.ok) {
+        // For polling, we might be more lenient or throw
+        console.warn(`Polling status failed (${statusRes.status})`);
+        continue;
+    }
 
-                                    const { job } = await statusRes.json();
-                                    console.log(`⏳ Job ${jobId} status: ${job.status}`);
+    const { job } = await statusRes.json();
+    console.log(`⏳ Job ${jobId} status: ${job.status}`);
 
-                                    if (job.status === 'completed') {
-                                        return {
-                                            success: true,
-                                            imageUrl: job.result_url,
-                                            meta: { jobId: jobId }
-                                        };
-                                    }
+    if (job.status === 'completed') {
+        return {
+            success: true,
+            imageUrl: job.result_url,
+            meta: { jobId: jobId }
+        };
+    }
 
-                                    if (job.status === 'failed') {
-                                        throw new Error(job.error_message || 'Generation failed');
-                                    }
-                                }
+    if (job.status === 'failed') {
+        throw new Error(job.error_message || 'Generation failed');
+    }
+}
 
-                                throw new Error('Job timeout - took longer than 20 minutes');
+throw new Error('Job timeout - took longer than 20 minutes');
                             },
 
-                                // Helper for Templates (Frontend)
-                                generateFromTemplate: async (config) => {
-                                    return aiService.generateImage(config.prompt, config.modelId, {
-                                        ...config.configuration,
-                                        source_files: config.files
-                                    });
+// Helper for Templates (Frontend)
+generateFromTemplate: async (config) => {
+    return aiService.generateImage(config.prompt, config.modelId, {
+        ...config.configuration,
+        source_files: config.files
+    });
+},
+
+    // Get Dynamic Models Configuration
+    getModels: async () => {
+        if (!isBrowser) return [];
+
+        try {
+            const { supabase } = await import('./lib/supabase');
+            const { data } = await supabase.from('ai_models').select('*').eq('is_active', true).order('cost', { ascending: true });
+            return data || [];
+        } catch (e) {
+            console.error('⚠️ Failed to load models from DB', e);
+            return [];
+        }
+    },
+
+        // Model Training (Stub/Placeholder)
+        trainModel: async (images, triggerWord, type) => {
+            console.log(`🚂 Training Stub: ${triggerWord} with ${images.length} images`);
+            await new Promise(r => setTimeout(r, 2000));
+            return { success: true, taskId: 'mock_train_' + Date.now() };
+        },
+
+            // ============================================
+            // MAGIC PROMPT (LLM Enhancement)
+            // ============================================
+            enhancePrompt: async (originalPrompt) => {
+                if (!originalPrompt || originalPrompt.length > 300) return originalPrompt; // Don't touch long prompts
+
+                const apiKey = !isBrowser ? (getEnv('KIE_API_KEY') || HARDCODED_KIE_KEY) : null;
+                if (!apiKey) return originalPrompt;
+
+                console.log(`✨ Enhancing prompt: "${originalPrompt}"...`);
+
+                try {
+                    // Using KIE's OpenAI-compatible endpoint
+                    const res = await fetch('https://api.kie.ai/v1/chat/completions', {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${apiKey}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            model: 'gpt-4o-mini', // Fast & Cheap
+                            messages: [
+                                {
+                                    role: "system",
+                                    content: "You are an expert AI art prompter. Take the user's simple concept and rewrite it into a detailed, high-quality image generation prompt. Include details about lighting, style (photorealistic/cinematic), camera angles, and rendering engine (Unreal Engine 5, Octane Render). Keep it under 40 words. Output ONLY the raw prompt text, no intro/outro."
                                 },
+                                {
+                                    role: "user",
+                                    content: originalPrompt
+                                }
+                            ],
+                            max_tokens: 150,
+                            temperature: 0.7
+                        })
+                    });
 
-                                    // Get Dynamic Models Configuration
-                                    getModels: async () => {
-                                        if (!isBrowser) return [];
+                    if (!res.ok) {
+                        const errText = await res.text();
+                        // If 404, maybe KIE doesn't support chat at this endpoint.
+                        if (res.status === 404) console.warn('⚠️ KIE Chat API 404. Skipping enhancement.');
+                        else console.warn(`⚠️ Prompt enhancement failed (${res.status}): ${errText}`);
+                        return originalPrompt;
+                    }
 
-                                        try {
-                                            const { supabase } = await import('./lib/supabase');
-                                            const { data } = await supabase.from('ai_models').select('*').eq('is_active', true).order('cost', { ascending: true });
-                                            return data || [];
-                                        } catch (e) {
-                                            console.error('⚠️ Failed to load models from DB', e);
-                                            return [];
-                                        }
-                                    },
+                    const data = await res.json();
+                    const enhanced = data.choices?.[0]?.message?.content?.trim();
 
-                                        // Model Training (Stub/Placeholder)
-                                        trainModel: async (images, triggerWord, type) => {
-                                            console.log(`🚂 Training Stub: ${triggerWord} with ${images.length} images`);
-                                            await new Promise(r => setTimeout(r, 2000));
-                                            return { success: true, taskId: 'mock_train_' + Date.now() };
-                                        },
+                    if (enhanced) {
+                        console.log(`✨ Enhanced: "${enhanced}"`);
+                        return enhanced;
+                    }
+                } catch (e) {
+                    console.error('⚠️ Enhancement error:', e.message);
+                }
 
-                                            // ============================================
-                                            // MAGIC PROMPT (LLM Enhancement)
-                                            // ============================================
-                                            enhancePrompt: async (originalPrompt) => {
-                                                if (!originalPrompt || originalPrompt.length > 300) return originalPrompt; // Don't touch long prompts
-
-                                                const apiKey = !isBrowser ? (getEnv('KIE_API_KEY') || HARDCODED_KIE_KEY) : null;
-                                                if (!apiKey) return originalPrompt;
-
-                                                console.log(`✨ Enhancing prompt: "${originalPrompt}"...`);
-
-                                                try {
-                                                    // Using KIE's OpenAI-compatible endpoint
-                                                    const res = await fetch('https://api.kie.ai/v1/chat/completions', {
-                                                        method: 'POST',
-                                                        headers: {
-                                                            'Authorization': `Bearer ${apiKey}`,
-                                                            'Content-Type': 'application/json'
-                                                        },
-                                                        body: JSON.stringify({
-                                                            model: 'gpt-4o-mini', // Fast & Cheap
-                                                            messages: [
-                                                                {
-                                                                    role: "system",
-                                                                    content: "You are an expert AI art prompter. Take the user's simple concept and rewrite it into a detailed, high-quality image generation prompt. Include details about lighting, style (photorealistic/cinematic), camera angles, and rendering engine (Unreal Engine 5, Octane Render). Keep it under 40 words. Output ONLY the raw prompt text, no intro/outro."
-                                                                },
-                                                                {
-                                                                    role: "user",
-                                                                    content: originalPrompt
-                                                                }
-                                                            ],
-                                                            max_tokens: 150,
-                                                            temperature: 0.7
-                                                        })
-                                                    });
-
-                                                    if (!res.ok) {
-                                                        const errText = await res.text();
-                                                        // If 404, maybe KIE doesn't support chat at this endpoint.
-                                                        if (res.status === 404) console.warn('⚠️ KIE Chat API 404. Skipping enhancement.');
-                                                        else console.warn(`⚠️ Prompt enhancement failed (${res.status}): ${errText}`);
-                                                        return originalPrompt;
-                                                    }
-
-                                                    const data = await res.json();
-                                                    const enhanced = data.choices?.[0]?.message?.content?.trim();
-
-                                                    if (enhanced) {
-                                                        console.log(`✨ Enhanced: "${enhanced}"`);
-                                                        return enhanced;
-                                                    }
-                                                } catch (e) {
-                                                    console.error('⚠️ Enhancement error:', e.message);
-                                                }
-
-                                                return originalPrompt;
-                                            }
+                return originalPrompt;
+            }
         };
 
-        export { aiService };
+export { aiService };
