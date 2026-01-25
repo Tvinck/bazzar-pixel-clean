@@ -96,22 +96,73 @@ const getModes = (t) => ({
         hasRatio: true,
         hasCount: false,
         inputs: [
-            { id: 'prompt', label: t('creation.describe'), placeholder: t('creation.placeholder'), type: 'textarea', required: true }
+            { id: 'prompt', label: t('creation.describe'), placeholder: t('creation.placeholder'), type: 'textarea', required: false }
         ],
-        // New Hierarchical Structure
         families: [
             {
                 id: 'wan',
                 name: 'Wan (Alibaba)',
-                desc: 'State of the art',
+                desc: 'Cinematic Quality',
                 iconChar: 'W',
                 tasks: [
-                    { id: 'wan_2_6_text', label: '2.6 Text to Video', cost: 70 },
-                    { id: 'wan_2_6_video', label: '2.6 Video to Video', cost: 70, requiresVideo: true },
-                    { id: 'wan_2_5_image', label: '2.5 Image to Video', cost: 60, requiresImage: true },
-                    { id: 'wan_2_5_text', label: '2.5 Text to Video', cost: 60 },
-                    { id: 'wan_turbo_text', label: '2.2 Text Turbo', cost: 20 },
-                    { id: 'wan_turbo_image', label: '2.2 Image Turbo', cost: 20, requiresImage: true },
+                    {
+                        id: 'wan_2_6_text', label: '2.6 Text to Video',
+                        req: { text: true },
+                        pricing: (res, dur) => (dur === '10s' ? 140 : 70)
+                    },
+                    {
+                        id: 'wan_2_6_video', label: '2.6 Video to Video',
+                        req: { text: true, video: true },
+                        pricing: (res, dur) => (dur === '10s' ? 140 : 70)
+                    },
+                    {
+                        id: 'wan_2_5_image', label: '2.5 Image to Video',
+                        req: { text: true, image: true },
+                        pricing: (res, dur) => {
+                            const sec = parseInt(dur) || 5;
+                            const rate = res === '1080p' ? 20 : 12.5;
+                            return Math.ceil(rate * sec);
+                        }
+                    },
+                    {
+                        id: 'wan_2_5_text', label: '2.5 Text to Video',
+                        req: { text: true },
+                        pricing: (res, dur) => {
+                            const sec = parseInt(dur) || 5;
+                            const rate = res === '1080p' ? 20 : 12.5;
+                            return Math.ceil(rate * sec);
+                        }
+                    },
+                    {
+                        id: 'wan_turbo_text', label: '2.2 Text Turbo',
+                        req: { text: true },
+                        pricing: (res, dur) => {
+                            const sec = parseInt(dur) || 5;
+                            let rate = 8;
+                            if (res === '720p') rate = 16;
+                            return Math.ceil(rate * sec);
+                        }
+                    },
+                    {
+                        id: 'wan_turbo_image', label: '2.2 Image Turbo',
+                        req: { text: true, image: true },
+                        pricing: (res, dur) => {
+                            const sec = parseInt(dur) || 5;
+                            let rate = 8;
+                            if (res === '720p') rate = 16;
+                            return Math.ceil(rate * sec);
+                        }
+                    },
+                    {
+                        id: 'wan_turbo_speech', label: '2.2 Speech Turbo',
+                        req: { text: false, image: true, audio: true },
+                        pricing: (res, dur) => {
+                            const sec = parseInt(dur) || 5;
+                            let rate = 12; // 480p default
+                            if (res === '720p') rate = 24;
+                            return Math.ceil(rate * sec);
+                        }
+                    }
                 ]
             },
             {
@@ -120,11 +171,21 @@ const getModes = (t) => ({
                 desc: 'Realism & Motion',
                 iconChar: 'K',
                 tasks: [
-                    { id: 'kling_2_6_text', label: '2.6 Text to Video', cost: 60 },
-                    { id: 'kling_2_6_image', label: '2.6 Image to Video', cost: 60, requiresImage: true },
-                    { id: 'kling_2_5_turbo_image_pro', label: 'Turbo Image to Video', cost: 50, requiresImage: true },
-                    { id: 'kling_motion_control', label: 'Motion Control', cost: 60, customUI: 'kling_motion' },
-                    { id: 'kling_ai_avatar_std', label: 'Avatar Standard', cost: 60 },
+                    {
+                        id: 'kling_2_6_text', label: '2.6 Text to Video',
+                        req: { text: true },
+                        pricing: (res, dur) => (dur === '10s' ? 120 : 60)
+                    },
+                    {
+                        id: 'kling_2_6_image', label: '2.6 Image to Video',
+                        req: { text: true, image: true },
+                        pricing: (res, dur) => (dur === '10s' ? 120 : 60)
+                    },
+                    {
+                        id: 'kling_2_5_turbo_image_pro', label: 'Turbo Image to Video',
+                        req: { text: true, image: true },
+                        pricing: (res, dur) => (dur === '10s' ? 100 : 50)
+                    },
                 ]
             },
             {
@@ -133,8 +194,26 @@ const getModes = (t) => ({
                 desc: 'Creative & Fast',
                 iconChar: 'S',
                 tasks: [
-                    { id: 'seedance_pro', label: 'Seedance 1.5 Pro', cost: 80 },
-                    { id: 'bytedance_fast', label: 'Fast Image to Video', cost: 40, requiresImage: true }
+                    {
+                        id: 'seedance_pro', label: 'Seedance 1.5 Pro',
+                        req: { text: true, audio_toggle: true },
+                        pricing: (res, dur, extra) => {
+                            const sec = parseInt(dur) || 5;
+                            let base = sec <= 5 ? 55 : 110;
+                            if (extra?.generate_audio) base *= 2;
+                            return base;
+                        }
+                    },
+                    {
+                        id: 'bytedance_fast', label: 'Fast Image to Video',
+                        req: { text: false, image: true },
+                        pricing: (res, dur) => {
+                            const is1080 = res === '1080p';
+                            const is10s = dur === '10s';
+                            if (is1080) return is10s ? 72 : 36;
+                            return is10s ? 36 : 16;
+                        }
+                    }
                 ]
             },
             {
@@ -143,7 +222,11 @@ const getModes = (t) => ({
                 desc: 'Minimax',
                 iconChar: 'H',
                 tasks: [
-                    { id: 'hailuo_2_3_image_pro', label: '2.1 Image to Video', cost: 50, requiresImage: true }
+                    {
+                        id: 'hailuo_2_3_image_pro', label: '2.1 Image to Video',
+                        req: { text: true, image: true },
+                        pricing: () => 50
+                    }
                 ]
             },
             {
@@ -152,26 +235,18 @@ const getModes = (t) => ({
                 desc: 'Cinematic',
                 iconChar: 'V',
                 tasks: [
-                    { id: 'veo_3', label: 'Veo 3.1', cost: 70 }
-                ]
-            },
-            {
-                id: 'openai',
-                name: 'Sora',
-                desc: 'OpenAI',
-                iconChar: 'S',
-                tasks: [
-                    { id: 'sora_2_pro_storyboard', label: 'Sora Turbo', cost: 30 }
+                    {
+                        id: 'veo_3', label: 'Veo 3.1',
+                        req: { text: true },
+                        pricing: () => 70
+                    }
                 ]
             }
         ],
-        // Keeping legacy models array for generic prop passing compatibility if needed
-        models: [
-            { id: 'wan_2_6_text', name: 'Wan 2.6', desc: 'Alibaba', iconChar: 'W' }
-        ],
         customFields: [
             { id: 'resolution', label: 'Разрешение', type: 'selector', options: ['720p', '1080p'] },
-            { id: 'duration', label: 'Длительность', type: 'selector', options: ['5s', '10s'] }
+            { id: 'duration', label: 'Длительность', type: 'selector', options: ['5s', '10s'] },
+            { id: 'generate_audio', label: 'Генерировать звук', type: 'toggle', options: [t('profile.on'), t('profile.off')], condition: (m) => m === 'seedance_pro' }
         ]
     },
     'animate-photo': {
@@ -422,43 +497,72 @@ const GenerationView = ({ onOpenPayment }) => {
         closeGlobalGen
     } = useUser();
 
+    // Helper to find selected task in families
+    const activeFamily = modeConfig.families?.find(f => f.tasks.some(t => t.id === model));
+    const activeTask = activeFamily?.tasks?.find(t => t.id === model);
+
     // Cost Calculation Logic
     const getCost = () => {
-        // 1. Try server/loaded config first (dynamic overrides from DB)
+        // 1. Video Gen Dynamic Pricing
+        if (currentModeKey === 'video-gen' && activeTask?.pricing) {
+            return activeTask.pricing(
+                customValues.resolution || '720p',
+                customValues.duration || '5s',
+                customValues // Pass full custom values for extras like audio
+            ) * genCount;
+        }
+
+        // 2. Try server/loaded config first (dynamic overrides from DB)
         if (serverConfig && serverConfig.models && serverConfig.models[model]) {
             let cost = serverConfig.models[model].cost;
             return cost * genCount;
         }
 
-        // 2. Try Local Config (Catalog) - Source of Truth
+        // 3. Try Local Config
         if (MODEL_CATALOG[model]) {
             return MODEL_CATALOG[model].cost * genCount;
         }
 
-        // 3. Fallbacks for specific modes/tools not mapped clearly to a model ID
-        if (['replace-object', 'remove-object', 'add-object', 'inpainting_v2', 'eraser_pro'].includes(currentModeKey) || ['replace-object', 'remove-object', 'add-object'].includes(model)) {
-            return (MODEL_CATALOG['replace_object']?.cost || 20) * genCount;
-        }
+        // 4. Fallbacks
+        if (['replace-object', 'remove-object', 'add-object'].includes(currentModeKey)) return (MODEL_CATALOG['replace_object']?.cost || 20) * genCount;
         if (currentModeKey === 'describe') return 1;
 
-        // 4. Default Fallback
         return 5 * genCount;
     };
 
     const cost = getCost();
     const canAfford = (userStats?.current_balance || 0) >= cost;
 
+    // Derived flags for UI
+    const showPrompt = activeTask ? activeTask.req?.text !== false : true; // Default true if no specific req
+    const showImageUpload = activeTask ? activeTask.req?.image : modeConfig.hasImages;
+    const showVideoUpload = activeTask ? activeTask.req?.video : (model === 'kling_motion_control');
+    const showAudioUpload = activeTask ? activeTask.req?.audio : false;
+
     const handleGenerate = async () => {
         const requiredInputs = modeConfig.inputs?.filter(i => i.required) || [];
         for (const input of requiredInputs) {
+            // Skip prompt check if prompt is hidden
+            if (input.id === 'prompt' && !showPrompt) continue;
+
             if (!inputs[input.id]?.trim()) {
                 toast.error(`Пожалуйста, заполните ${input.label}`);
                 return;
             }
         }
 
-        if (modeConfig.hasImages && selectedImages.length === 0) {
-            toast.error('Пожалуйста, загрузите изображение');
+        if (showImageUpload && selectedImages.length === 0 && !klingFiles.image && !avatarFiles.image) {
+            // Strict check only if "req: { image: true }"
+            // But some modes like Seedance Pro image is optional? No, in my config I set it.
+            // If Seedance has req:{text:true}, then image is NOT required unless req:{image:true}.
+            if (activeTask?.req?.image) {
+                toast.error('Пожалуйста, загрузите изображение');
+                return;
+            }
+        }
+
+        if (activeTask?.req?.video && !klingFiles.video) {
+            toast.error('Пожалуйста, загрузите видео');
             return;
         }
 
@@ -496,17 +600,22 @@ const GenerationView = ({ onOpenPayment }) => {
                 let videoFiles = null;
                 let audioFiles = null;
 
+                // Handle Special File Inputs
+                if (showVideoUpload && klingFiles.video) {
+                    videoFiles = [klingFiles.video];
+                }
+                if (showImageUpload && klingFiles.image) {
+                    // If we used the special uploader
+                    sourceFiles = [klingFiles.image];
+                }
+
+                // Kling Motion Specifics (Legacy/Specific check)
                 if (model === 'kling_motion_control') {
-                    if (sourceFiles) {
-                        const images = sourceFiles.filter(f => f.type.startsWith('image/'));
-                        const videos = sourceFiles.filter(f => f.type.startsWith('video/'));
-                        if (images.length === 0 || videos.length === 0) {
-                            toast.error('Для Kling Motion нужно загрузить 1 фото и 1 видео!');
-                            setIsProcessing(false); closeGlobalGen(); return;
-                        }
-                        sourceFiles = images; videoFiles = videos;
+                    if (klingFiles.image && klingFiles.video) {
+                        sourceFiles = [klingFiles.image];
+                        videoFiles = [klingFiles.video];
                     } else {
-                        toast.error('Загрузите фото и видео для Kling Motion!');
+                        toast.error('Загрузите фото и видео!');
                         setIsProcessing(false); closeGlobalGen(); return;
                     }
                 } else if (currentModeKey === 'avatar-gen') {
@@ -731,26 +840,29 @@ const GenerationView = ({ onOpenPayment }) => {
                         <div>
                             <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">Режим генерации</label>
                             <div className="flex flex-col gap-2">
-                                {modeConfig.families.find(f => f.tasks.some(t => t.id === model))?.tasks.map(task => (
-                                    <div
-                                        key={task.id}
-                                        onClick={() => { setModel(task.id); playClick(); }}
-                                        className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${model === task.id ? 'bg-white/10 border-indigo-500/50' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
-                                    >
-                                        <div className="flex items-center gap-3">
-                                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${model === task.id ? 'border-indigo-500' : 'border-white/20'}`}>
-                                                {model === task.id && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
+                                {modeConfig.families.find(f => f.tasks.some(t => t.id === model))?.tasks.map(task => {
+                                    // Use new dynamic cost
+                                    const calcCost = task.pricing ? task.pricing(customValues?.resolution, customValues?.duration, customValues) : task.cost;
+                                    return (
+                                        <div
+                                            key={task.id}
+                                            onClick={() => { setModel(task.id); playClick(); }}
+                                            className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${model === task.id ? 'bg-white/10 border-indigo-500/50' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
+                                        >
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${model === task.id ? 'border-indigo-500' : 'border-white/20'}`}>
+                                                    {model === task.id && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
+                                                </div>
+                                                <span className={`text-xs font-medium ${model === task.id ? 'text-white' : 'text-white/60'}`}>{task.label}</span>
                                             </div>
-                                            <span className={`text-xs font-medium ${model === task.id ? 'text-white' : 'text-white/60'}`}>{task.label}</span>
+                                            {task.req?.image && <span className="text-[9px] px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded uppercase font-bold tracking-wider">Image</span>}
+                                            <div className="flex items-center gap-1 bg-black/20 px-2 py-1 rounded text-[10px] font-mono text-white/50">
+                                                <Zap size={10} className={model === task.id ? 'text-amber-400' : 'text-white/20'} />
+                                                {calcCost} CR
+                                            </div>
                                         </div>
-                                        {task.requiresImage && <span className="text-[9px] px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded uppercase font-bold tracking-wider">Image</span>}
-                                        {task.requiresVideo && <span className="text-[9px] px-1.5 py-0.5 bg-pink-500/20 text-pink-300 rounded uppercase font-bold tracking-wider">Video</span>}
-                                        <div className="flex items-center gap-1 bg-black/20 px-2 py-1 rounded text-[10px] font-mono text-white/50">
-                                            <Zap size={10} className={model === task.id ? 'text-amber-400' : 'text-white/20'} />
-                                            {task.cost} CR
-                                        </div>
-                                    </div>
-                                ))}
+                                    );
+                                })}
                             </div>
                         </div>
                     </div>
