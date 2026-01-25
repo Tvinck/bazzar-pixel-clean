@@ -6,7 +6,7 @@ const Header = ({ onTabChange, onOpenPayment, balance = 10, isDark }) => {
     const { t } = useLanguage();
 
     return (
-        <header className="fixed top-2 left-2 right-2 z-50 transition-all duration-300">
+        <header className="fixed top-6 left-2 right-2 z-50 transition-all duration-300">
             {/* Premium Floating Island Header */}
             <div className="bg-[#0f0f10]/80 backdrop-blur-xl border border-white/10 shadow-2xl rounded-[2rem] mx-auto max-w-screen-xl relative overflow-hidden">
                 {/* Shine Effect */}
