@@ -355,12 +355,27 @@ const aiService = {
             // 4. SORA
             else if (kieModelId.includes('sora')) {
                 if (kieModelId.includes('storyboard')) {
-                    input.n_frames = options.duration === '10' ? '10' : '15'; // 10, 15, 25 options
+                    // Sora Storyboard requires 'shots' array structure
+                    const durationVal = options.duration === '10' ? '10s' : '5s';
+
+                    input.shots = [
+                        {
+                            prompt: prompt || 'Generate video',
+                            duration: durationVal
+                        }
+                    ];
+
                     if (hasSourceFiles) {
-                        input.image_urls = options.source_files;
-                        // Fix for 500 Error: Aspect Ratio not allowed with Image Input
+                        // Image-to-Video: add image to shot
+                        input.shots[0].image_urls = options.source_files;
                         delete input.aspect_ratio;
+                    } else {
+                        // Text-to-Video
+                        input.aspect_ratio = aspectRatio;
                     }
+
+                    // Clean up top-level prompt as it's now in shots
+                    delete input.prompt;
                 }
             }
             // 5. VEO
