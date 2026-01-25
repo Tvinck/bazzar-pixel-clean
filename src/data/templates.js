@@ -83,6 +83,22 @@ export const templatesData = [
         }
     },
     {
+        id: 'gosti',
+        title: "Гости из Будущего",
+        description: "Сгенерируй танец под Гости из Будущего!",
+        category: TEMPLATE_CATEGORIES.DANCES,
+        likes: "12k",
+        src: "/videos/gosti.mp4",
+        mediaType: 'video',
+        model_id: 'kling_motion_control',
+        cost: 15,
+        generation_prompt: 'The character is performing an expressive dance with rhythmic arm movements and body swaying, following the nostalgic pop melody. Emotional and synchronized choreography.',
+        configuration: {
+            mode: '720p',
+            character_orientation: 'video'
+        }
+    },
+    {
         id: 'michael_jackson',
         title: "МАЙКЛ ДЖЕКСОН",
         description: "Сгенерируй трендовый танец с любого фото",
