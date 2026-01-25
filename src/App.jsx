@@ -64,13 +64,13 @@ import PageTransition from './components/PageTransition'; // Import Transition
 {/* Global Modals */ }
       <Suspense fallback={null}>
         {isPaymentOpen || hasPaymentMounted ? (
-          <PaymentDrawer isOpen={isPaymentOpen} onClose={() => setIsPaymentOpen(false)} />
+            <PaymentDrawer isOpen={isPaymentOpen} onClose={() => setIsPaymentOpen(false)} />
         ) : null}
       </Suspense>
 
       <Suspense fallback={null}>
         {isLeaderboardOpen || hasLeaderboardMounted ? (
-          <LeaderboardDrawer isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
+            <LeaderboardDrawer isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
         ) : null}
       </Suspense>
 
