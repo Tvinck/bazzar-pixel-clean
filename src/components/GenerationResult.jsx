@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Download, Share2, Globe, Sparkles, X, Check } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -8,6 +8,20 @@ const GenerationResult = ({ result, type = 'image', onClose, onRemix }) => {
     const { playClick } = useSound();
     const [isPublished, setIsPublished] = useState(false);
     const [isPublishing, setIsPublishing] = useState(false);
+
+    // Telegram Mini App Back Button
+    useEffect(() => {
+        if (window.Telegram?.WebApp?.BackButton) {
+            const backButton = window.Telegram.WebApp.BackButton;
+            backButton.show();
+            backButton.onClick(onClose);
+
+            return () => {
+                backButton.hide();
+                backButton.offClick(onClose);
+            };
+        }
+    }, [onClose]);
 
     const handleDownload = async () => {
         playClick();
@@ -84,13 +98,6 @@ const GenerationResult = ({ result, type = 'image', onClose, onRemix }) => {
 
     return (
         <div className="fixed inset-0 z-[9999] bg-[#0f1014] flex flex-col items-center justify-between py-6 px-4 touch-none">
-            {/* Header */}
-            <div className="w-full flex justify-end">
-                <button onClick={onClose} className="p-2 bg-white/10 rounded-full text-white active:scale-95 transition-transform">
-                    <X size={24} />
-                </button>
-            </div>
-
             {/* Content Preview */}
             <div className="flex-1 w-full flex items-center justify-center py-4">
                 <motion.div
@@ -169,9 +176,18 @@ const GenerationResult = ({ result, type = 'image', onClose, onRemix }) => {
                     </button>
                 </div>
 
-                <div className="pt-2 text-center">
+                {/* Bottom Actions */}
+                <div className="flex items-center justify-between pt-2">
                     <button onClick={onRemix} className="text-slate-500 text-xs font-medium hover:text-white transition-colors">
                         Сгенерировать еще раз
+                    </button>
+
+                    {/* Close Button - Moved to Bottom */}
+                    <button
+                        onClick={onClose}
+                        className="p-2 bg-white/10 rounded-full text-white/60 hover:text-white hover:bg-white/20 active:scale-95 transition-all"
+                    >
+                        <X size={20} />
                     </button>
                 </div>
             </motion.div>
