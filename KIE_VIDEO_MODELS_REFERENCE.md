@@ -69,8 +69,14 @@
   - `prompt` ✅ (required)
   - `duration` ✅ (5, 10) - strip 's'
   - `sound` ⚠️ (optional, boolean)
-  - `aspect_ratio` ✅
+  - `mode` ✅ **ВМЕСТО aspect_ratio!** ('720p', '1080p')
+  - `aspect_ratio` ❌ **УДАЛИТЬ** (используется mode)
   - `resolution` ❌ **НЕТ**
+
+**Mapping aspect_ratio -> mode:**
+- `16:9` → `1080p`
+- `9:16` → `720p`
+- `1:1` → `720p` (default)
 
 ### Kling 2.6 Image-to-Video
 - **Model ID:** `kling-2.6/image-to-video`
@@ -80,6 +86,7 @@
   - `duration` ✅ (5, 10) - strip 's'
   - `sound` ⚠️ (optional, boolean)
   - `aspect_ratio` ❌ **УДАЛИТЬ** (конфликтует с source image)
+  - `mode` ❌ **УДАЛИТЬ** (не используется для i2v)
   - `resolution` ❌ **НЕТ**
 
 ### Kling 2.5 Turbo Image-to-Video Pro
