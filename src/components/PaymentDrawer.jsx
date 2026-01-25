@@ -350,6 +350,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                     userId={user?.id}
                                                     telegramId={window.Telegram?.WebApp?.initDataUnsafe?.user?.id}
                                                     userEmail={user?.email || 'no-email@telegram.org'}
+                                                    terminalKey="1768938209983"
                                                     widgetTypes={['tpay', 'sbp', 'mirpay']}
                                                     displayParams={{
                                                         gap: 0.5,
