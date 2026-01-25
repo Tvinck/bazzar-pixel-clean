@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { LoadingSpinner } from '../components/ui/Progress';
-import { Heart, Box, Gift, HeartHandshake, Users, Sparkles } from 'lucide-react';
+import { Heart, Box, Gift, HeartHandshake, Users, Sparkles, Star, Shield, Crown } from 'lucide-react';
 import galleryAPI from '../lib/galleryAPI';
 import IdeaDetailModal from '../components/IdeaDetailModal';
 import { useInfiniteCreations } from '../hooks/useGallery';
@@ -100,14 +100,17 @@ const GalleryView = ({ onRemix }) => {
                 {/* Row 2: Categories (Glassy) */}
                 <div className="flex gap-3 overflow-x-auto no-scrollbar pb-2 mask-linear-fade">
                     {[
-                        { icon: Box, label: 'Все' },
-                        { icon: Sparkles, label: 'Аниме' },
-                        { icon: HeartHandshake, label: 'Пары' },
-                        { icon: Gift, label: 'Арты' },
-                        { icon: Users, label: 'Люди' }
+                        { icon: Box, label: 'Все', color: 'text-indigo-500' },
+                        { icon: Heart, label: '14 февраля', color: 'text-pink-500 fill-pink-500/20' },
+                        { icon: Shield, label: '23 февраля', color: 'text-emerald-500 fill-emerald-500/20' },
+                        { icon: Crown, label: '8 марта', color: 'text-fuchsia-500 fill-fuchsia-500/20' },
+                        { icon: Sparkles, label: 'Аниме', color: 'text-amber-400' },
+                        { icon: HeartHandshake, label: 'Пары', color: 'text-rose-400' },
+                        { icon: Gift, label: 'Арты', color: 'text-cyan-400' },
+                        { icon: Users, label: 'Люди', color: 'text-blue-400' }
                     ].map((cat, i) => (
                         <button key={i} className="flex items-center gap-2 px-4 py-2 rounded-[0.8rem] text-xs font-bold bg-white/50 backdrop-blur-md border border-slate-200/50 text-slate-600 dark:bg-white/5 dark:border-white/10 dark:text-white/70 hover:scale-105 transition-transform whitespace-nowrap shadow-sm">
-                            <cat.icon size={14} className={i === 0 ? "text-indigo-500" : "opacity-70"} /> {cat.label}
+                            <cat.icon size={14} className={cat.color || "opacity-70"} /> {cat.label}
                         </button>
                     ))}
                 </div>
