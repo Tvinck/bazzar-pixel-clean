@@ -123,7 +123,7 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
         [
             { id: 'sub_channel', title: 'Подпишись на канал', reward: 9, link: 'https://t.me/pixel_imagess', icon: <Volume2 size={18} className="text-blue-500" />, color: 'text-blue-500 bg-blue-500/10' },
             { id: 'join_chat', title: 'Вступай в чат', reward: 9, link: 'https://t.me/pixel_communityy', icon: <Users size={18} className="text-violet-500" />, color: 'text-violet-500 bg-violet-500/10' },
-            { id: 'invite_friend', title: 'Пригласи друга', reward: 50, action: 'copy', icon: <Share2 size={18} className="text-pink-500" />, color: 'text-pink-500 bg-pink-500/10' },
+            { id: 'invite_friend_task', title: 'Поделиться ссылкой', reward: 5, action: 'copy', icon: <Share2 size={18} className="text-pink-500" />, color: 'text-pink-500 bg-pink-500/10' },
         ].map((task) => {
             const isCompleted = completedTasks.includes(task.id);
             return (
@@ -166,8 +166,9 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
 
     const handleCopyReflink = () => {
         playClick();
-        navigator.clipboard.writeText(`https://t.me/Pixel_ai_bot?start=${userData?.id || 'ref'}`);
+        navigator.clipboard.writeText(`https://t.me/Pixel_ai_bot?start=r-${userData?.id || 'ref'}`);
         if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        toast.success('Реферальная ссылка скопирована!');
     };
 
     const navigateTo = (section) => {
@@ -351,21 +352,89 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
         </div>
     );
 
-    // 2. PARTNERSHIP VIEW (Premium Glassy)
+    // 2. PARTNERSHIP VIEW (Updated with Referral System)
+    const [referralStats, setReferralStats] = useState(null);
+    const [referralList, setReferralList] = useState([]);
+    const [promoInput, setPromoInput] = useState('');
+    const [isCreatingPromo, setIsCreatingPromo] = useState(false);
+
+    useEffect(() => {
+        if (activeSection === 'partnership' && userData?.id) {
+            const fetchReferralData = async () => {
+                // 1. Get Stats View
+                const { data: stats } = await supabase
+                    .from('user_referral_stats_view')
+                    .select('*')
+                    .eq('user_id', userData.id)
+                    .single();
+                setReferralStats(stats || { invited_count: 0, earned_from_invites: 0 });
+
+                // 2. Get Referrals List
+                const { data: list } = await supabase
+                    .from('referrals')
+                    .select('created_at, status, users!referrals_invited_user_id_fkey(first_name, username)')
+                    .eq('inviter_id', userData.id)
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+                setReferralList(list || []);
+            };
+            fetchReferralData();
+        }
+    }, [activeSection, userData]);
+
+    const handleCreatePromo = async (e) => {
+        e.preventDefault();
+        if (referralStats?.invited_count < 5) return;
+        setIsCreatingPromo(true);
+        try {
+            const { data, error } = await supabase.rpc('create_custom_promo', {
+                p_user_id: userData.id,
+                p_code: promoInput
+            });
+
+            if (data?.success) {
+                toast.success('Промокод создан!');
+                setReferralStats({ ...referralStats, my_promo_code: data.code });
+            } else {
+                toast.error(data?.error || 'Ошибка создания');
+            }
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setIsCreatingPromo(false);
+        }
+    };
+
     const renderPartnershipView = () => (
         <div className="space-y-6">
+            {/* Header Card */}
             <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 rounded-[2.5rem] p-6 shadow-2xl shadow-purple-500/20 text-white relative overflow-hidden ring-1 ring-white/10">
                 <div className="absolute top-0 right-0 w-40 h-40 bg-white/20 rounded-full blur-[60px] translate-x-10 -translate-y-10" />
                 <div className="relative z-10">
                     <div className="flex justify-between items-start mb-6">
                         <div>
                             <h3 className="font-black text-xl flex items-center gap-2 tracking-tight"><Users size={22} className="text-white" /> Пригласи и заработай</h3>
-                            <p className="text-white/80 text-xs font-medium mt-1">Получи 50 кредитов за каждого друга</p>
+                            <p className="text-white/80 text-xs font-medium mt-1">25 кредитов за друга + 50 за промокод</p>
                         </div>
                         <div className="bg-white/20 backdrop-blur-md rounded-2xl p-2.5 border border-white/10 shadow-lg"><Gift size={24} className="text-white" /></div>
                     </div>
+
+                    {/* Stats Grid */}
+                    <div className="grid grid-cols-2 gap-3 mb-4">
+                        <div className="bg-black/20 rounded-xl p-3 border border-white/10">
+                            <div className="text-[10px] opacity-70 mb-1">Приглашено</div>
+                            <div className="text-xl font-black">{referralStats?.invited_count || 0}</div>
+                        </div>
+                        <div className="bg-black/20 rounded-xl p-3 border border-white/10">
+                            <div className="text-[10px] opacity-70 mb-1">Заработано</div>
+                            <div className="text-xl font-black flex items-center gap-1">
+                                {(referralStats?.earned_from_invites || 0) + (referralStats?.earned_from_promo || 0)} <Zap size={14} className="text-amber-400 fill-amber-400" />
+                            </div>
+                        </div>
+                    </div>
+
                     <div className="bg-black/30 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between gap-3 border border-white/10 shadow-inner">
-                        <div className="font-mono text-xs truncate text-white/90">https://t.me/Pixel_ai_bot?start={userData?.id}</div>
+                        <div className="font-mono text-xs truncate text-white/90">t.me/Pixel_ai_bot?start=r-{userData?.id}</div>
                         <button onClick={handleCopyReflink} className="bg-white text-indigo-600 p-2.5 rounded-xl flex-shrink-0 active:scale-95 transition-transform hover:bg-indigo-50 shadow-md">
                             <Copy size={16} />
                         </button>
@@ -373,12 +442,73 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
                 </div>
             </div>
 
+            {/* Custom Promo Code Section */}
+            <div className="bg-white/5 border border-white/5 p-5 rounded-[2rem] relative overflow-hidden">
+                <h3 className="font-bold text-white mb-2">Фирменный промокод</h3>
+                {referralStats?.my_promo_code ? (
+                    <div className="bg-indigo-500/20 border border-indigo-500/30 p-4 rounded-xl text-center">
+                        <div className="text-xs text-indigo-200 mb-1">Ваш активный код</div>
+                        <div className="text-2xl font-black text-white tracking-widest font-mono mb-2">{referralStats.my_promo_code}</div>
+                        <div className="text-[10px] text-white/50">Дает 10% скидку друзьям. Вы получаете 50 <Zap size={8} className="inline fill-amber-400 text-amber-400" /></div>
+                    </div>
+                ) : (
+                    <div>
+                        <p className="text-xs text-white/50 mb-4">
+                            Пригласите 5 друзей, чтобы создать свой уникальный промокод.
+                            <br />Прогресс: <span className={referralStats?.invited_count >= 5 ? 'text-green-400' : 'text-amber-400'}>{referralStats?.invited_count || 0} / 5</span>
+                        </p>
+                        <form onSubmit={handleCreatePromo} className="flex gap-2">
+                            <input
+                                type="text"
+                                placeholder="MYCODE"
+                                value={promoInput}
+                                onChange={e => setPromoInput(e.target.value.toUpperCase())}
+                                disabled={(referralStats?.invited_count || 0) < 5}
+                                className="bg-black/30 w-full rounded-xl px-4 py-3 text-sm font-bold text-white placeholder:text-white/20 border border-white/10 focus:border-indigo-500/50 outline-none disabled:opacity-50"
+                                maxLength={10}
+                            />
+                            <button
+                                disabled={(referralStats?.invited_count || 0) < 5 || isCreatingPromo || !promoInput}
+                                className="bg-indigo-500 disabled:bg-white/10 disabled:text-white/30 text-white font-bold px-4 rounded-xl text-xs whitespace-nowrap"
+                            >
+                                {isCreatingPromo ? '...' : 'Создать'}
+                            </button>
+                        </form>
+                    </div>
+                )}
+            </div>
+
+            {/* Referral List */}
+            {referralList.length > 0 && (
+                <div className="space-y-3">
+                    <h3 className="font-bold text-sm text-white/60 uppercase tracking-wider ml-1">Мои друзья</h3>
+                    <div className="space-y-2">
+                        {referralList.map((ref, i) => (
+                            <div key={i} className="bg-white/5 p-3 rounded-xl flex items-center justify-between border border-white/5">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] font-bold">
+                                        {(ref.users?.username || 'U')[0].toUpperCase()}
+                                    </div>
+                                    <div>
+                                        <div className="text-xs font-bold text-white">{ref.users?.first_name || ref.users?.username || 'Пользователь'}</div>
+                                        <div className="text-[10px] text-white/40">{new Date(ref.created_at).toLocaleDateString()}</div>
+                                    </div>
+                                </div>
+                                <div className="bg-green-500/10 text-green-400 px-2 py-1 rounded-lg text-[10px] font-bold border border-green-500/20">
+                                    +25 CREDITS
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             <h3 className="font-black text-xl px-2 text-white">Задания лояльности</h3>
             <div className="space-y-3">
                 {[
                     { id: 'sub_channel', title: 'Подпишись на канал', reward: 9, link: 'https://t.me/pixel_imagess', icon: <Volume2 size={18} className="text-blue-400" />, color: 'text-blue-400 bg-blue-500/10' },
                     { id: 'join_chat', title: 'Вступай в чат', reward: 9, link: 'https://t.me/pixel_communityy', icon: <Users size={18} className="text-violet-400" />, color: 'text-violet-400 bg-violet-500/10' },
-                    { id: 'invite_friend', title: 'Пригласи друга', reward: 50, action: 'copy', icon: <Share2 size={18} className="text-pink-400" />, color: 'text-pink-400 bg-pink-500/10' },
+                    { id: 'invite_friend_task', title: 'Поделиться ссылкой', reward: 5, action: 'copy', icon: <Share2 size={18} className="text-pink-400" />, color: 'text-pink-400 bg-pink-500/10' },
                 ].map((task) => {
                     const isCompleted = completedTasks.includes(task.id);
                     return (
