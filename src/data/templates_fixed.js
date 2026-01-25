@@ -7,7 +7,8 @@ export const TEMPLATE_CATEGORIES = {
     WINTER: 'winter',
     PETS: 'pets',
     CARS: 'cars',
-    EFFECTS: 'effects'
+    EFFECTS: 'effects',
+    DANCE: 'dances'
 };
 
 export const templatesData = [
@@ -85,7 +86,7 @@ export const templatesData = [
         id: 'gosti',
         title: "Гости из Будущего",
         description: "Сгенерируй танец под Гости из Будущего!",
-        category: TEMPLATE_CATEGORIES.VIDEO,
+        category: TEMPLATE_CATEGORIES.DANCE,
         likes: "12k",
         src: "/videos/gosti.mp4",
         mediaType: 'video',
@@ -874,3 +875,652 @@ export const templatesData = [
         id: 'winter_car_1',
         title: "В МАШИНЕ 1",
         description: "Сгенерируйте зимний коллаж в машине",
+        category: TEMPLATE_CATEGORIES.WINTER,
+        likes: "41k",
+        src: "/images/winter_car_1.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 20,
+        generation_prompt: "Hyper-realistic 8K portrait collage, three vertical stacked frames. Top Frame: Ultra Close-Up Portrait, face fills frame, eye-level, snow hood, winter forest background. Middle Frame: Woman standing back to camera on frozen lake, pine forest background, ivory fur coat. Bottom Frame: Woman inside Maybach car, profile view looking out window at snowy forest. Consistent style: cinematic winter fashion, soft lighting, ivory fur coat, loose hair, quiet luxury atmosphere."
+    },
+
+    // ============================================
+    // ПОРТРЕТЫ И СТИЛИ - ДОПОЛНИТЕЛЬНЫЕ (10 шаблонов)
+    // ============================================
+    {
+        id: 'age_test',
+        title: "ТЕСТ ВОЗРАСТА",
+        description: "Посмотрите как вы будете выглядеть в разном возрасте",
+        category: TEMPLATE_CATEGORIES.PHOTO,
+        likes: "55k",
+        src: "/images/age_test.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 20,
+        generation_prompt: 'Transform the uploaded photo into an age progression/regression collage showing the same person at different life stages: as a child (5-10 years old), teenager (15-18), young adult (25-30), middle-aged (45-50), and elderly (70-80). Keep facial features, bone structure, and unique characteristics identical across all ages. Professional photo manipulation, realistic aging effects including wrinkles, gray hair, skin texture changes, natural aging process, high detail, photorealistic'
+    },
+    {
+        id: 'flash_effect',
+        title: "ЭФФЕКТ ВСПЫШКИ",
+        description: "Эффект яркой камерной вспышки",
+        category: TEMPLATE_CATEGORIES.PHOTO,
+        likes: "18k",
+        src: "/images/flash_effect.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Professional portrait with strong camera flash effect, overexposed highlights on face and shoulders, dramatic lighting contrast, bright white flash reflection in eyes, slightly washed out skin tones in center, darker edges, paparazzi-style photography, candid moment captured with flash, high contrast, realistic flash photography aesthetic'
+    },
+    {
+        id: 'golden_portrait',
+        title: "ЗОЛОТОЙ ПОРТРЕТ",
+        description: "Роскошный портрет в золотых тонах",
+        category: TEMPLATE_CATEGORIES.PHOTO,
+        likes: "32k",
+        src: "/images/golden_portrait.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Luxurious golden hour portrait, warm golden and amber tones throughout, soft glowing skin, rich golden lighting, elegant and refined atmosphere, professional beauty photography, radiant warm highlights, golden bokeh background, premium fashion editorial style, warm color grading, sophisticated and glamorous mood'
+    },
+    {
+        id: 'hairstyle_change',
+        title: "СМЕНА ПРИЧЕСКИ",
+        description: "Примерьте новую прическу",
+        category: TEMPLATE_CATEGORIES.PHOTO,
+        likes: "48k",
+        src: "/images/hairstyle_change.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 15,
+        generation_prompt: 'Transform the hairstyle while keeping the face identical. Generate modern trendy hairstyle with natural hair texture, realistic hair color and shine, high-quality salon result, photorealistic. Professional hair styling with volume and movement, contemporary fashion-forward look',
+        fields: [
+            {
+                id: 'hairstyle_desc',
+                type: 'text',
+                label: 'Опишите прическу',
+                placeholder: 'Например: длинные волны, короткая пикси, каре...'
+            }
+        ]
+    },
+    {
+        id: 'knitted_effect',
+        title: "ВЯЗАНЫЙ ЭФФЕКТ",
+        description: "Превратите фото в вязаную картину",
+        category: TEMPLATE_CATEGORIES.EFFECTS,
+        likes: "21k",
+        src: "/images/knitted_effect.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Transform the photo into a handmade knitted artwork, as if the portrait was created using colorful yarn and knitting needles. Visible knit stitches texture, soft wool yarn appearance, cozy handcrafted aesthetic, warm knitted fabric texture throughout the image, realistic knitting patterns, chunky knit style, artisanal handmade look, textile art'
+    },
+    {
+        id: 'lego_effect',
+        title: "LEGO ЭФФЕКТ",
+        description: "Превратите фото в LEGO мозаику",
+        category: TEMPLATE_CATEGORIES.EFFECTS,
+        likes: "27k",
+        src: "/images/lego_effect.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Transform the photo into a LEGO brick mosaic artwork. The image should appear as if constructed from thousands of small LEGO bricks in various colors. Visible individual LEGO studs and brick texture, pixelated mosaic effect, vibrant LEGO colors, realistic plastic brick appearance, creative LEGO art style, detailed brick-by-brick construction look'
+    },
+    {
+        id: 'nyc_style',
+        title: "NYC СТИЛЬ",
+        description: "Стильное фото в духе Нью-Йорка",
+        category: TEMPLATE_CATEGORIES.PHOTO,
+        likes: "36k",
+        src: "/images/nyc_style.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Urban New York City street style portrait, modern metropolitan fashion photography, gritty urban background with NYC architecture, street photography aesthetic, confident pose, trendy outfit, city lights and billboards in background, cinematic urban atmosphere, professional street fashion editorial, contemporary NYC vibe, cool and edgy mood'
+    },
+    {
+        id: 'passport_photo',
+        title: "ФОТО НА ДОКУМЕНТЫ",
+        description: "Профессиональное фото на паспорт",
+        category: TEMPLATE_CATEGORIES.PHOTO,
+        likes: "42k",
+        src: "/images/passport_photo.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Professional passport/ID photo format: neutral white or light gray background, frontal face view, shoulders visible, neutral expression, even lighting with no shadows, standard document photo composition, clean and simple, official ID photo requirements, high resolution, professional studio quality'
+    },
+    {
+        id: 'sticker_no_text',
+        title: "СТИКЕР",
+        description: "Превратите фото в забавный стикер",
+        category: TEMPLATE_CATEGORIES.EFFECTS,
+        likes: "39k",
+        src: "/images/sticker_no_text.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Transform the photo into a fun cartoon sticker design with clean white outline border. Vibrant colors, slightly exaggerated features for sticker appeal, smooth vector-like appearance, glossy sticker finish, die-cut sticker style with white border, playful and expressive, suitable for messaging apps, no text or words'
+    },
+    {
+        id: 'tokyo_style',
+        title: "TOKYO СТИЛЬ",
+        description: "Стильное фото в духе Токио",
+        category: TEMPLATE_CATEGORIES.PHOTO,
+        likes: "33k",
+        src: "/images/tokyo_style.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Tokyo street fashion portrait, Japanese urban style photography, neon lights and Shibuya/Harajuku atmosphere, trendy Japanese fashion, vibrant city night background, modern Tokyo aesthetic, colorful neon signs, contemporary Japanese street culture, stylish and cool vibe, urban Tokyo nightlife atmosphere'
+    },
+
+    // ============================================
+    // АНГЕЛЫ И ДУХОВНОЕ
+    // ============================================
+    {
+        id: 'angels_inspire',
+        title: "АНГЕЛ ВДОХНОВЕНИЯ",
+        description: "Ангел с мягким светом вдохновения",
+        category: TEMPLATE_CATEGORIES.ART,
+        likes: "25k",
+        src: "/images/angels_inspire.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Ethereal angelic portrait with soft glowing wings of light behind the person, divine inspiration theme, heavenly atmosphere, soft golden and white light rays, peaceful and uplifting mood, celestial glow, gentle angel wings made of light and feathers, spiritual and inspiring energy, dreamy heavenly background, warm divine light'
+    },
+    {
+        id: 'angels_pulse',
+        title: "ЭНЕРГИЯ АНГЕЛА",
+        description: "Ангел с пульсирующей энергией",
+        category: TEMPLATE_CATEGORIES.ART,
+        likes: "22k",
+        src: "/images/angels_pulse.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Dynamic angelic portrait with pulsing energy waves and light, vibrant spiritual aura, glowing energy radiating from the person, angel wings with flowing energy particles, powerful and energetic atmosphere, bright light pulses, divine power visualization, ethereal energy field, celestial force, radiant and alive feeling'
+    },
+    {
+        id: 'angels_sign',
+        title: "ЗНАК АНГЕЛА",
+        description: "Ангел, передающий послание",
+        category: TEMPLATE_CATEGORIES.ART,
+        likes: "19k",
+        src: "/images/angels_sign.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Mystical angelic portrait with symbolic divine signs and sacred geometry, angel delivering a message, soft ethereal wings, spiritual symbols floating around, heavenly light beams, peaceful messenger atmosphere, celestial communication theme, gentle and wise expression, divine guidance visualization, sacred and meaningful mood'
+    },
+    {
+        id: 'angels_silence',
+        title: "АНГЕЛ ТИШИНЫ",
+        description: "Ангел в безмятежной тишине",
+        category: TEMPLATE_CATEGORIES.ART,
+        likes: "24k",
+        src: "/images/angels_silence.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Serene angelic portrait in peaceful silence, soft white angel wings, calm and tranquil atmosphere, gentle misty background, quiet contemplation mood, pure white and soft blue tones, peaceful meditation energy, silent prayer feeling, ethereal calmness, divine peace and serenity, whisper-quiet heavenly scene'
+    },
+    {
+        id: 'angels_whisper',
+        title: "ШЕПОТ АНГЕЛА",
+        description: "Ангел, шепчущий тайны",
+        category: TEMPLATE_CATEGORIES.ART,
+        likes: "20k",
+        src: "/images/angels_whisper.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Intimate angelic portrait with angel whispering divine secrets, delicate feathered wings close to face, soft mysterious atmosphere, gentle whisper visualization with light particles, ethereal and secretive mood, close-up intimate composition, soft glowing light, mystical communication, tender and personal angelic moment'
+    },
+
+    // ============================================
+    // АНИМЕ И МУЛЬТЯШНЫЕ
+    // ============================================
+    {
+        id: 'anime_love',
+        title: "АНИМЕ РОМАНТИКА",
+        description: "Романтический портрет в аниме стиле",
+        category: TEMPLATE_CATEGORIES.ART,
+        likes: "45k",
+        src: "/images/anime_love.png",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 10,
+        generation_prompt: 'Transform the photo into beautiful anime art style, romantic shoujo manga aesthetic, large expressive anime eyes, soft pastel colors, cherry blossoms or sparkles in background, dreamy romantic atmosphere, Japanese anime illustration style, detailed anime hair with highlights, cute and lovely expression, manga-style romance scene'
+    },
+    {
+        id: 'pixar_couple',
+        title: "В СТИЛЕ PIXAR",
+        description: "Вы как персонажи мультфильма Pixar",
+        category: TEMPLATE_CATEGORIES.ART,
+        likes: "52k",
+        src: "/images/pixar_couple.png", // Предполагаемое имя
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 10,
+        generation_prompt: 'Transform two people into adorable Pixar 3D animated characters, cute and charming Pixar animation style, big expressive eyes, smooth 3D rendering, warm and colorful Pixar aesthetic, friendly and lovable character design, Disney Pixar quality, heartwarming couple portrait, professional 3D character art, vibrant and joyful mood'
+    },
+
+    // ============================================
+    // АВТОМОБИЛИ - ДОПОЛНИТЕЛЬНЫЕ
+    // ============================================
+    {
+        id: 'car_in_snow',
+        title: "АВТО В СНЕГУ",
+        description: "Ваш автомобиль в зимней сказке",
+        category: TEMPLATE_CATEGORIES.CARS,
+        likes: "31k",
+        src: "/images/car_in_snow.png",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'The car from the uploaded photo in a beautiful winter wonderland scene, heavy snowfall, car covered with fresh snow, snowy forest or mountain road background, winter tires visible, cold blue-white color palette, peaceful winter atmosphere, snowflakes falling, frosty windows, winter driving scene, cinematic winter photography'
+    },
+    {
+        id: 'christmas_car',
+        title: "НОВОГОДНЕЕ АВТО",
+        description: "Праздничный декор для вашего авто",
+        category: TEMPLATE_CATEGORIES.CARS,
+        likes: "28k",
+        src: "/images/christmas_car.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'The car from the uploaded photo decorated for Christmas, festive holiday decorations on the car, Christmas lights wrapped around, wreath on the front grille, red bow on hood, snowy Christmas Eve setting, warm holiday lights, Christmas tree in background, festive and joyful atmosphere, holiday spirit, cozy winter night'
+    },
+    {
+        id: 'garage_tale',
+        title: "ИСТОРИЯ В ГАРАЖЕ",
+        description: "Атмосферное фото в гараже",
+        category: TEMPLATE_CATEGORIES.CARS,
+        likes: "24k",
+        src: "/images/garage_tale.png",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Cinematic scene of the car from the uploaded photo in a vintage mechanic garage, classic car workshop atmosphere, tools and equipment around, warm garage lighting, nostalgic automotive story mood, detailed garage interior, oil stains on floor, vintage posters on walls, authentic car enthusiast space, storytelling automotive photography'
+    },
+    {
+        id: 'nfs_race',
+        title: "СТРИТРЕЙСИНГ",
+        description: "В стиле Need for Speed",
+        category: TEMPLATE_CATEGORIES.CARS,
+        likes: "37k",
+        src: "/images/nfs_race.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'The car from the uploaded photo in an intense street racing scene, Need for Speed video game aesthetic, motion blur and speed effects, neon city lights at night, dramatic racing atmosphere, modified street racer look, urban night racing, high-speed action, cinematic racing game style, adrenaline and excitement, vibrant neon colors'
+    },
+
+    // ============================================
+    // ПРАЗДНИКИ И НОВЫЙ ГОД
+    // ============================================
+    {
+        id: 'christmas_card_custom',
+        title: "РОЖДЕСТВЕНСКАЯ ОТКРЫТКА",
+        description: "Персональная новогодняя открытка",
+        category: TEMPLATE_CATEGORIES.HOLIDAYS,
+        likes: "33k",
+        src: "/images/christmas_card_custom.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Beautiful personalized Christmas greeting card design featuring the person from the uploaded photo, festive holiday background with Christmas tree, snow, ornaments, warm cozy atmosphere, professional holiday card layout, space for custom text, elegant Christmas design, family-friendly, joyful holiday spirit, premium greeting card quality'
+    },
+    {
+        id: 'christmas_glamour',
+        title: "ГЛАМУРНОЕ РОЖДЕСТВО",
+        description: "Роскошный праздничный портрет",
+        category: TEMPLATE_CATEGORIES.HOLIDAYS,
+        likes: "29k",
+        src: "/images/christmas_glamour.png",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Glamorous Christmas fashion portrait, luxurious holiday outfit with sequins or velvet, elegant festive styling, sparkling Christmas lights bokeh background, sophisticated holiday glamour, professional fashion photography, rich red and gold colors, premium holiday aesthetic, elegant and festive mood, high-end Christmas photoshoot'
+    },
+    {
+        id: 'christmas_toy',
+        title: "ЕЛОЧНАЯ ИГРУШКА",
+        description: "Вы как украшение на елке",
+        category: TEMPLATE_CATEGORIES.HOLIDAYS,
+        likes: "26k",
+        src: "/images/christmas_toy.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Transform the person into a charming Christmas tree ornament or holiday figurine, cute miniature toy appearance, glossy ceramic or glass ornament finish, festive colors (red, green, gold), hanging on a decorated Christmas tree, magical holiday toy aesthetic, collectible ornament style, whimsical and festive'
+    },
+    {
+        id: 'festive_gloss',
+        title: "ПРАЗДНИЧНЫЙ ГЛЯНЕЦ",
+        description: "Фото как для обложки журнала",
+        category: TEMPLATE_CATEGORIES.HOLIDAYS,
+        likes: "31k",
+        src: "/images/festive_gloss.png",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Festive glossy magazine-style portrait, high-gloss finish, vibrant holiday colors, professional editorial photography, glamorous festive makeup and styling, shiny and polished aesthetic, celebration mood, premium fashion magazine quality, bright and joyful atmosphere, party-ready look'
+    },
+    {
+        id: 'festive_portrait',
+        title: "ПРАЗДНИЧНЫЙ ПОРТРЕТ",
+        description: "Элегантное праздничное фото",
+        category: TEMPLATE_CATEGORIES.HOLIDAYS,
+        likes: "35k",
+        src: "/images/festive_portrait.png",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Elegant festive portrait photography, celebration atmosphere, warm golden lighting, joyful and cheerful expression, festive outfit or accessories, professional studio quality, happy celebration mood, special occasion photography, refined and polished look, timeless festive elegance'
+    },
+    {
+        id: 'new_year_card',
+        title: "НОВОГОДНЯЯ КАРТОЧКА",
+        description: "Стильная открытка с шампанским",
+        category: TEMPLATE_CATEGORIES.HOLIDAYS,
+        likes: "38k",
+        src: "/images/new_year_card.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Professional New Year greeting card design, person from uploaded photo in festive setting, champagne, fireworks, clock showing midnight, elegant New Year mood, celebratory atmosphere, gold and silver accents, Happy New Year theme, premium greeting card layout, sophisticated celebration design'
+    },
+    {
+        id: 'nutcracker',
+        title: "ЩЕЛКУНЧИК",
+        description: "В образе из сказки Щелкунчик",
+        category: TEMPLATE_CATEGORIES.HOLIDAYS,
+        likes: "27k",
+        src: "/images/nutcracker.png",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 10,
+        generation_prompt: 'Transform into a character from The Nutcracker ballet, magical Christmas fairy tale aesthetic, ornate toy soldier or sugar plum fairy costume, theatrical and whimsical style, rich colors and gold details, enchanted Christmas story atmosphere, classical ballet costume design, festive and magical mood'
+    },
+    {
+        id: 'old_year_card_2',
+        title: "РЕТРО ОТКРЫТКА 2",
+        description: "Винтажная советская открытка",
+        category: TEMPLATE_CATEGORIES.HOLIDAYS,
+        likes: "23k",
+        src: "/images/generations_portrait.jpeg", // Используем заглушку, если нет точного соответствия
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Nostalgic vintage New Year postcard design, retro Soviet-era aesthetic, warm sepia or muted colors, classic typography style, traditional New Year symbols (fir tree, snowflakes, clock), vintage postcard texture, nostalgic and sentimental mood, old-fashioned greeting card charm'
+    },
+    {
+        id: 'polaroid_cheburashka',
+        title: "ФОТО С ЧЕБУРАШКОЙ",
+        description: "Милое фото с Чебурашкой",
+        category: TEMPLATE_CATEGORIES.HOLIDAYS,
+        likes: "58k",
+        src: "/images/polaroid_cheburashka.png", // Предполагаемое имя
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Nostalgic Polaroid-style photo with the person and Cheburashka character, vintage instant camera aesthetic, soft faded colors, white Polaroid frame border, cozy and friendly atmosphere, Soviet cartoon nostalgia, warm childhood memories feeling, retro 70s-80s vibe, cute and heartwarming scene'
+    },
+    {
+        id: 'polaroid_tree',
+        title: "ПОЛАРОИД У ЕЛКИ",
+        description: "Уютное домашнее фото у елки",
+        category: TEMPLATE_CATEGORIES.HOLIDAYS,
+        likes: "40k",
+        src: "/images/polaroid_tree.png", // Предполагаемое имя
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Cozy Polaroid instant photo by the Christmas tree, vintage camera aesthetic, warm indoor lighting, decorated tree with lights and ornaments in background, soft nostalgic colors, white Polaroid frame, intimate holiday moment, family Christmas memories, retro holiday photography, warm and nostalgic mood'
+    },
+    {
+        id: 'snow_queen',
+        title: "СНЕЖНАЯ КОРОЛЕВА",
+        description: "Магический зимний образ",
+        category: TEMPLATE_CATEGORIES.HOLIDAYS,
+        likes: "34k",
+        src: "/images/snow_queen.png", // Предполагаемое имя
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 10,
+        generation_prompt: 'Transform into the Snow Queen character, icy elegant costume with crystals and frost patterns, cold blue and white color palette, majestic and regal pose, frozen winter palace background, magical ice powers visualization, ethereal and powerful atmosphere, fairy tale royalty, crystalline ice crown, winter magic aesthetic'
+    },
+    {
+        id: 'soviet_tree',
+        title: "У СОВЕТСКОЙ ЕЛКИ",
+        description: "Ностальгия по Новому году в СССР",
+        category: TEMPLATE_CATEGORIES.HOLIDAYS,
+        likes: "44k",
+        src: "/images/soviet_tree.png", // Предполагаемое имя
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Nostalgic Soviet-era New Year celebration scene, vintage USSR apartment interior, classic Soviet Christmas tree decorations (glass ornaments, tinsel, star on top), retro 1970s-1980s atmosphere, warm indoor lighting, vintage furniture and wallpaper, nostalgic childhood New Year memories, authentic Soviet aesthetic'
+    },
+
+    // ============================================
+    // РОМАНТИКА И ДЕНЬ СВЯТОГО ВАЛЕНТИНА
+    // ============================================
+    {
+        id: 'bordeaux_couture',
+        title: "БОРДО КУТЮР",
+        description: "Элегантный образ в стиле Vogue",
+        category: TEMPLATE_CATEGORIES.LOVE,
+        likes: "30k",
+        src: "/images/bordeaux_couture.png",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Luxurious haute couture fashion portrait in rich bordeaux wine tones, elegant deep red and burgundy colors, sophisticated high-fashion styling, premium fabric textures (velvet, silk), dramatic fashion photography, refined and elegant atmosphere, editorial fashion magazine quality, romantic and luxurious mood'
+    },
+    {
+        id: 'cupid_style',
+        title: "КУПИДОН",
+        description: "Романтический образ со стрелами",
+        category: TEMPLATE_CATEGORIES.LOVE,
+        likes: "28k",
+        src: "/images/cupid_style.png",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Romantic Cupid-inspired portrait, soft angel wings, Valentine theme, holding bow and arrow of love, floating hearts and rose petals, dreamy pink and red color palette, romantic and playful atmosphere, love and romance symbolism, whimsical Valentine aesthetic, sweet and charming mood'
+    },
+    {
+        id: 'cyberpunk_love',
+        title: "КИБЕРПАНК ЛАВ",
+        description: "Романтика будущего",
+        category: TEMPLATE_CATEGORIES.LOVE,
+        likes: "36k",
+        src: "/images/cyberpunk_love.png",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 10,
+        generation_prompt: 'Futuristic cyberpunk romance scene, neon lights and holographic hearts, sci-fi urban night setting, vibrant pink and blue neon colors, high-tech romantic atmosphere, cyberpunk aesthetic with love theme, digital rain and glowing effects, modern dystopian romance, edgy and stylish mood'
+    },
+    {
+        id: 'heart_bokeh',
+        title: "В СЕРДЦАХ",
+        description: "Романтическое фото с боке",
+        category: TEMPLATE_CATEGORIES.LOVE,
+        likes: "41k",
+        src: "/images/heart_bokeh.png",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Romantic portrait with heart-shaped bokeh lights in background, soft out-of-focus heart lights, Valentine Day photography, warm romantic lighting, dreamy and magical atmosphere, professional bokeh effect, love and romance theme, soft pink and warm tones, enchanting and sweet mood'
+    },
+    {
+        id: 'satin_gloss',
+        title: "АТЛАСНЫЙ БЛЕСК",
+        description: "Роскошное фото в атласе",
+        category: TEMPLATE_CATEGORIES.LOVE,
+        likes: "29k",
+        src: "/images/festive_gloss.png", // Используем похожее если нет
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Luxurious portrait with satin fabric textures and glossy finish, smooth silky appearance, rich satin colors (deep reds, purples, or blacks), elegant and sensual atmosphere, high-gloss professional photography, premium fabric aesthetic, sophisticated and refined mood, fashion editorial quality'
+    },
+    {
+        id: 'vintage_valentine',
+        title: "ВИНТАЖНАЯ ВАЛЕНТИНКА",
+        description: "Открытка в стиле ретро",
+        category: TEMPLATE_CATEGORIES.LOVE,
+        likes: "25k",
+        src: "/images/vintage_valentine.jpeg", // Предполагаемое имя
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Vintage Valentine Day card design, retro 1950s-60s aesthetic, classic romantic imagery (roses, lace, ribbons), soft pastel colors, nostalgic Valentine postcard style, old-fashioned romance, vintage typography and ornaments, sweet and sentimental mood, timeless love theme'
+    },
+
+    // ============================================
+    // ФАНТАЗИЯ И МАГИЯ
+    // ============================================
+    {
+        id: 'harry_potter_card',
+        title: "КАРТОЧКА ВОЛШЕБНИКА",
+        description: "Как коллекционная карта из ГП",
+        category: TEMPLATE_CATEGORIES.ART,
+        likes: "49k",
+        src: "/images/harry_potter_card.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 10,
+        generation_prompt: 'Transform into a Harry Potter wizard trading card, Hogwarts student or character style, magical wand, house robes (Gryffindor, Slytherin, Hufflepuff, or Ravenclaw), ornate card frame with magical symbols, vintage wizard card aesthetic, magical atmosphere with sparkles, fantasy wizard portrait, collectible card design'
+    },
+    {
+        id: 'irony_of_fate',
+        title: "ИРОНИЯ СУДЬБЫ",
+        description: "Атмосфера любимого фильма",
+        category: TEMPLATE_CATEGORIES.ART,
+        likes: "37k",
+        src: "/images/irony_of_fate.jpeg",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Nostalgic scene inspired by Soviet film The Irony of Fate, cozy apartment interior, New Year Eve atmosphere, vintage 1970s USSR aesthetic, warm indoor lighting, retro furniture and decor, romantic comedy mood, classic Soviet cinema style, intimate and nostalgic feeling, traditional Russian New Year celebration'
+    },
+    {
+        id: 'patronus',
+        title: "ЭКСПЕКТО ПАТРОНУМ",
+        description: "Вы вызываете патронуса",
+        category: TEMPLATE_CATEGORIES.ART,
+        likes: "43k",
+        src: "/images/patronus.png", // Предполагаемое имя
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 10,
+        generation_prompt: 'Magical Patronus charm visualization, glowing ethereal animal spirit emerging from wand, bright silver-blue magical light, Harry Potter universe magic, protective spell energy, mystical and powerful atmosphere, magical particles and light trails, spiritual guardian animal, enchanting magical effect'
+    },
+    {
+        id: 'photo_in_toy',
+        title: "ВНУТРИ ИГРУШКИ",
+        description: "Вы внутри стеклянного шара",
+        category: TEMPLATE_CATEGORIES.ART,
+        likes: "32k",
+        src: "/images/photo_in_toy.jpeg", // Предполагаемое имя
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 10,
+        generation_prompt: 'Creative scene where the person appears miniaturized inside a glass toy or snow globe, tiny figure in a magical miniature world, whimsical and surreal perspective, detailed miniature environment, glass reflection and refraction effects, playful and imaginative concept, fantasy toy world aesthetic'
+    },
+
+    // ============================================
+    // ГОРОДСКОЙ СТИЛЬ
+    // ============================================
+    {
+        id: 'mnogoetazhki',
+        title: "МНОГОЭТАЖКИ",
+        description: "Эстетика спальных районов",
+        category: TEMPLATE_CATEGORIES.ART,
+        likes: "39k",
+        src: "/images/mnogoetazhki.png",
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 5,
+        generation_prompt: 'Urban portrait with Soviet-era apartment buildings (khrushchyovka) in background, post-Soviet aesthetic, concrete panel buildings, urban residential area, nostalgic post-USSR atmosphere, overcast sky, authentic Eastern European urban landscape, documentary street photography style, realistic urban environment, contemporary post-Soviet life'
+    },
+
+    // ============================================
+    // ИНСТРУМЕНТЫ (РЕДАКТИРОВАНИЕ)
+    // ============================================
+    {
+        id: 'tool_add',
+        title: "ДОБАВИТЬ ОБЪЕКТ",
+        description: "Добавьте любой объект на фото",
+        category: TEMPLATE_CATEGORIES.EFFECTS,
+        likes: "15k",
+        src: "/images/tool_add.jpeg", // Заглушка
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 10,
+        generation_prompt: 'Add ${object_description} to the photo naturally and realistically. The added object should blend seamlessly with the existing scene, matching lighting, shadows, perspective, and color tone. Professional photo manipulation, realistic integration, natural placement, high-quality compositing',
+        fields: [
+            {
+                id: 'object_description',
+                type: 'text',
+                label: 'Что добавить?',
+                placeholder: 'Например: собаку, цветы, машину...'
+            }
+        ]
+    },
+    {
+        id: 'tool_remove',
+        title: "УДАЛИТЬ ОБЪЕКТ",
+        description: "Удалите лишнее с фото",
+        category: TEMPLATE_CATEGORIES.EFFECTS,
+        likes: "18k",
+        src: "/images/tool_remove.jpeg", // Заглушка
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 10,
+        generation_prompt: 'Remove ${object_to_remove} from the photo cleanly and naturally. Fill the removed area with appropriate background content, matching textures, colors, and patterns. Professional object removal, seamless inpainting, no visible artifacts, natural-looking result',
+        fields: [
+            {
+                id: 'object_to_remove',
+                type: 'text',
+                label: 'Что удалить?',
+                placeholder: 'Например: человека, провода, мусор...'
+            }
+        ]
+    },
+    {
+        id: 'tool_replace',
+        title: "ЗАМЕНИТЬ ОБЪЕКТ",
+        description: "Замените один объект на другой",
+        category: TEMPLATE_CATEGORIES.EFFECTS,
+        likes: "12k",
+        src: "/images/tool_replace.jpeg", // Заглушка
+        mediaType: 'image',
+        model_id: 'flux_pro',
+        cost: 10,
+        generation_prompt: 'Replace ${object_to_replace} with ${new_object} in the photo. The replacement should look natural and realistic, matching the lighting, perspective, scale, and overall scene aesthetics. Professional object replacement, seamless integration, photorealistic result',
+        fields: [
+            {
+                id: 'object_to_replace',
+                type: 'text',
+                label: 'Что заменить?',
+                placeholder: 'Например: фон, одежду...'
+            },
+            {
+                id: 'new_object',
+                type: 'text',
+                label: 'На что заменить?',
+                placeholder: 'Например: пляж, костюм...'
+            }
+        ]
+    }
+];
+
+export default templatesData;
