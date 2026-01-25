@@ -366,8 +366,8 @@ const aiService = {
                     ];
 
                     if (hasSourceFiles) {
-                        // Image-to-Video: add image to shot
-                        input.shots[0].image_urls = options.source_files;
+                        // Image-to-Video: add image to shot (Use singular image_url)
+                        input.shots[0].image_url = options.source_files[0];
                         delete input.aspect_ratio;
                     } else {
                         // Text-to-Video
@@ -398,6 +398,11 @@ const aiService = {
             // SPECIAL CASE: Kling Motion Control (Strict Schema)
             // We manually constructed the perfect payload above. Do not touch it.
             if (targetModel.includes('motion-control') || targetModel === 'kling_motion_control') {
+                return targetInput;
+            }
+
+            // SPECIAL CASE: Sora (Strict 'shots' Schema)
+            if (targetModel.includes('sora')) {
                 return targetInput;
             }
 
