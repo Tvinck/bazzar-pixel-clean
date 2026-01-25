@@ -69,7 +69,7 @@ export const initQueue = async (bot) => {
 🎨 ${type}
 📝 "${prompt ? prompt.slice(0, 50) : '...'}${prompt && prompt.length > 50 ? '...' : ''}"
 
-@bazzar_pixel_bot`;
+@Pixel_ai_bot`;
 
                     try {
                         console.log(`📨 [Job ${jobId}] Sending ${isVideo ? 'video' : 'image'} to ${options.telegramId}`);

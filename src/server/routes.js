@@ -373,7 +373,7 @@ export const setupRoutes = (app, bot, boss) => {
             // Notify user in Telegram
             if (options.telegramId) {
                 const isVideo = type.includes('video') || (result.imageUrl && result.imageUrl.match(/\.(mp4|mov|webm)$/i));
-                const caption = `✨ Ваша генерация готова!\n\n🎨 ${type}\n📝 "${prompt ? prompt.slice(0, 50) : '...'}"\n\n@bazzar_pixel_bot`;
+                const caption = `✨ Ваша генерация готова!\n\n🎨 ${type}\n📝 "${prompt ? prompt.slice(0, 50) : '...'}"\n\n@Pixel_ai_bot`;
 
                 try {
                     console.log(`📨 Sending notification to ${options.telegramId} (Video: ${isVideo})`);
@@ -422,7 +422,7 @@ export const setupRoutes = (app, bot, boss) => {
 
             // Send Photo
             await bot.sendPhoto(targetChatId, imageUrl, {
-                caption: `✨ Генерация завершена!\n\n"${prompt || 'Result'}"\n\n@bazzar_pixel_bot`
+                caption: `✨ Генерация завершена!\n\n"${prompt || 'Result'}"\n\n@Pixel_ai_bot`
             });
 
             res.json({ success: true });
