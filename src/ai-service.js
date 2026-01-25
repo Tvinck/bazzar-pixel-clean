@@ -320,39 +320,41 @@ const aiService = {
 
                 // Kling 2.6
                 if (kieModelId.includes('kling-2.6')) {
-                    input.duration = (options.duration || '5').replace('s', '');
-                    if (options.sound) input.sound = true;
+                    // Duration: strip 's' and ensure it's '5' or '10'
+                    const dur = (options.duration || '5').replace('s', '');
+                    input.duration = ['5', '10'].includes(dur) ? dur : '5';
 
-                    // cfg_scale is REQUIRED for Kling 2.6
-                    input.cfg_scale = options.cfg_scale || 0.5;
+                    // Sound is optional
+                    if (options.sound) input.sound = true;
 
                     if (kieModelId.includes('image-to-video')) {
                         if (!firstImg) throw new Error('Kling 2.6 I2V needs image');
 
-                        // STRICT: Only use image_url for Kling 2.6
+                        // Required fields for i2v
                         input.image_url = firstImg;
 
-                        // Keep aspect_ratio for i2v (may be required)
-                        if (!input.aspect_ratio) input.aspect_ratio = '16:9';
-
-                        // Remove mode for i2v
-                        delete input.mode;
-
-                        // Ensure prompt is not empty if required
-                        if (!input.prompt || input.prompt.trim() === '') input.prompt = 'animate this image';
-                    } else {
-                        // Text-to-Video: Keep aspect_ratio AND add mode
-                        if (!input.aspect_ratio) input.aspect_ratio = aspectRatio || '16:9';
-
-                        // Map aspect_ratio to mode (both may be needed)
-                        const aspectRatioValue = options.aspect_ratio || aspectRatio || '16:9';
-                        if (aspectRatioValue === '16:9') {
-                            input.mode = '1080p';
-                        } else if (aspectRatioValue === '9:16') {
-                            input.mode = '720p';
-                        } else {
-                            input.mode = '720p'; // Default for 1:1 and others
+                        // Ensure prompt is not empty
+                        if (!input.prompt || input.prompt.trim() === '') {
+                            input.prompt = 'animate this image';
                         }
+
+                        // Remove all optional/conflicting fields
+                        delete input.aspect_ratio;
+                        delete input.mode;
+                        delete input.cfg_scale;
+                    } else {
+                        // Text-to-Video: Required fields only
+                        // Ensure prompt
+                        if (!input.prompt || input.prompt.trim() === '') {
+                            input.prompt = 'generate a video';
+                        }
+
+                        // aspect_ratio is required for t2v
+                        input.aspect_ratio = options.aspect_ratio || aspectRatio || '16:9';
+
+                        // Remove optional/conflicting fields
+                        delete input.mode;
+                        delete input.cfg_scale;
                     }
                 }
                 // Kling AI Avatar (Talking Head)
