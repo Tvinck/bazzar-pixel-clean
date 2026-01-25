@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { amount, description, userId, userEmail, recurrent } = req.body;
+        const { amount, description, userId, userEmail, recurrent, connectionType, paymentType } = req.body;
 
         // DEMO CREDENTIALS
         const TERMINAL_KEY = '1768938209941DEMO';
@@ -43,7 +43,10 @@ export default async function handler(req, res) {
             FailURL: 'https://t.me/Pixel_ai_bot?startapp=payment_fail',
             DATA: {
                 userId: userId,
-                telegramId: req.body.telegramId
+                telegramId: req.body.telegramId,
+                // CRITICAL: connection_type = Widget for widget integration
+                ...(connectionType && { connection_type: connectionType }),
+                ...(paymentType && { payment_type: paymentType }) // For analytics
             },
             Receipt: {
                 Email: userEmail || 'customer@example.com',
