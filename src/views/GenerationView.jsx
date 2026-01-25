@@ -171,16 +171,17 @@ const getModes = (t) => ({
                 desc: 'Realism & Motion',
                 iconChar: 'K',
                 tasks: [
-                    {
-                        id: 'kling_2_6_text', label: '2.6 Text to Video',
-                        req: { text: true },
-                        pricing: (res, dur) => (dur === '10s' ? 120 : 60)
-                    },
-                    {
-                        id: 'kling_2_6_image', label: '2.6 Image to Video',
-                        req: { text: true, image: true },
-                        pricing: (res, dur) => (dur === '10s' ? 120 : 60)
-                    },
+                    // ВРЕМЕННО ОТКЛЮЧЕНО: Kling 2.6 не работает через Kie.ai API
+                    // {
+                    //     id: 'kling_2_6_text', label: '2.6 Text to Video',
+                    //     req: { text: true },
+                    //     pricing: (res, dur) => (dur === '10s' ? 120 : 60)
+                    // },
+                    // {
+                    //     id: 'kling_2_6_image', label: '2.6 Image to Video',
+                    //     req: { text: true, image: true },
+                    //     pricing: (res, dur) => (dur === '10s' ? 120 : 60)
+                    // },
                     {
                         id: 'kling_2_5_turbo_image_pro', label: 'Turbo Image to Video',
                         req: { text: true, image: true },
