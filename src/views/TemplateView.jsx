@@ -19,14 +19,14 @@ import GenerationResult from '../components/GenerationResult';
 const HIDDEN_TEMPLATE_FIELDS = ['generation_prompt', 'prompt', 'configuration'];
 
 const AVAILABLE_MODELS = [
-    { id: 'nano_banana', name: '🍌 Nano Banana', desc: 'Быстро (Flux Flex)', type: 'image', credits: MODEL_CATALOG['nano_banana']?.cost || 1 },
-    { id: 'nano_banana_pro', name: '🍌 Nano Banana PRO', desc: 'Качество (Flux Pro)', type: 'image', credits: MODEL_CATALOG['nano_banana_pro']?.cost || 2 },
+    { id: 'nano_banana', name: '🍌 Nano Banana', desc: 'Быстро (Flux Flex)', type: 'image', credits: MODEL_CATALOG['nano_banana']?.cost || 10 },
+    { id: 'nano_banana_pro', name: '🍌 Nano Banana PRO', desc: 'Качество (Flux Pro)', type: 'image', credits: MODEL_CATALOG['nano_banana_pro']?.cost || 20 },
     { id: 'grok-high', name: '🤖 Grok Quality', desc: 'Для обработки фото', type: 'image', credits: 25 },
-    { id: 'flux_pro', name: '💠 Flux 1.1 Pro', desc: 'Top Tier', type: 'image', credits: MODEL_CATALOG['flux_pro']?.cost || 3 },
-    { id: 'flux_flex', name: '💠 Flux Flex', desc: 'Balanced', type: 'image', credits: MODEL_CATALOG['flux_flex']?.cost || 3 },
-    { id: 'kling_motion_control', name: '🎬 Kling Motion', desc: 'Image to Video', type: 'video', credits: MODEL_CATALOG['kling_motion_control']?.cost || 8 },
-    { id: 'wan_2_6_image', name: '🌊 Wan 2.6', desc: 'Alibaba AI', type: 'video', credits: MODEL_CATALOG['wan_2_6_image']?.cost || 12 },
-    { id: 'hailuo_2_3_image_pro', name: '🐚 Hailuo 2.1', desc: 'High Quality', type: 'video', credits: MODEL_CATALOG['hailuo_2_3_image_pro']?.cost || 15 }
+    { id: 'flux_pro', name: '💠 Flux 1.1 Pro', desc: 'Top Tier', type: 'image', credits: MODEL_CATALOG['flux_pro']?.cost || 10 },
+    { id: 'flux_flex', name: '💠 Flux Flex', desc: 'Balanced', type: 'image', credits: MODEL_CATALOG['flux_flex']?.cost || 10 },
+    { id: 'kling_motion_control', name: '🎬 Kling Motion', desc: 'Image to Video', type: 'video', credits: MODEL_CATALOG['kling_motion_control']?.cost || 70 },
+    { id: 'wan_2_6_image', name: '🌊 Wan 2.6', desc: 'Alibaba AI', type: 'video', credits: MODEL_CATALOG['wan_2_6_image']?.cost || 50 },
+    { id: 'hailuo_2_3_image_pro', name: '🐚 Hailuo 2.1', desc: 'High Quality', type: 'video', credits: MODEL_CATALOG['hailuo_2_3_image_pro']?.cost || 50 }
 ];
 
 /**
@@ -96,10 +96,23 @@ const TemplateView = () => {
                 setPreviewUrls(new Array(reqCount).fill(null));
                 setFormValues({});
                 setGenerationsCount(1);
-                // Default model logic: if template has specific model, use it.
-                // If it's a VIDEO template, default to Kling Motion Control.
-                // Otherwise default to nano_banana.
-                const defaultModel = found.model_id || (found.mediaType === 'video' ? 'kling_motion_control' : 'nano_banana');
+                // Default model logic:
+                // 1. Use template's model_id if specified and exists in AVAILABLE_MODELS
+                // 2. Otherwise, pick first model matching template type
+                let defaultModel = found.model_id;
+
+                // Validate model exists in AVAILABLE_MODELS
+                const modelExists = AVAILABLE_MODELS.find(m => m.id === defaultModel);
+
+                if (!modelExists) {
+                    // Pick first model matching template type
+                    const templateType = found.mediaType === 'video' ? 'video' : 'image';
+                    const firstMatchingModel = AVAILABLE_MODELS.find(m => m.type === templateType);
+                    defaultModel = firstMatchingModel?.id || AVAILABLE_MODELS[0].id;
+
+                    console.warn(`Template ${found.id} model_id "${found.model_id}" not found in AVAILABLE_MODELS. Using ${defaultModel} instead.`);
+                }
+
                 setSelectedModel(defaultModel);
             }
             setIsLoading(false);
@@ -347,7 +360,7 @@ const TemplateView = () => {
                         <div className="relative mb-6 z-30">
                             <h3 className="text-xs font-bold text-white/50 mb-3 uppercase tracking-wide ml-1">{t('model.label') || 'Модель генерации'}</h3>
                             <button onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)} className="w-full flex items-center justify-between p-3.5 bg-white/5 border border-white/10 rounded-[1.2rem] hover:bg-white/10 transition-colors shadow-lg shadow-black/5 backdrop-blur-sm">
-                                <span className="font-bold text-sm tracking-wide">{AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name || 'Auto'}</span>
+                                <span className="font-bold text-sm tracking-wide">{AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name || 'Выберите модель'}</span>
                                 <ChevronDown size={18} className={`text-white/50 transition-transform ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
 
