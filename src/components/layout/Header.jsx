@@ -24,7 +24,7 @@ const Header = ({ onTabChange, onOpenPayment, balance = 10, isDark }) => {
             className="fixed left-0 right-0 z-50 flex justify-center"
             initial={false}
             animate={{
-                top: isCompact ? 4 : 112, // 4px (~top-1) vs 112px (~top-28)
+                top: isCompact ? 32 : 112, // 32px (~top-8) vs 112px (~top-28)
             }}
             transition={{ type: "spring", stiffness: 100, damping: 20 }}
         >
