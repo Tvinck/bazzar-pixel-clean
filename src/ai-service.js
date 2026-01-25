@@ -359,6 +359,13 @@ const aiService = {
                     if (hasSourceFiles) input.image_urls = options.source_files;
                 }
             }
+            // 5. VEO
+            else if (kieModelId.includes('veo')) {
+                if (hasSourceFiles) {
+                    // Google Veo typically expects 'image_url' for image-to-video
+                    input.image_url = firstImg;
+                }
+            }
         }
         // --- GPT FAMILY ---
         else if (kieModelId.startsWith('gpt-image/')) {
