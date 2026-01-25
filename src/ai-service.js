@@ -326,7 +326,9 @@ const aiService = {
                 }
                 // Kling Turbo (New)
                 else if (kieModelId.includes('turbo')) {
-                    input.duration = options.duration || '5';
+                    // Duration: Strip 's' (e.g., '5s' -> '5')
+                    input.duration = (options.duration || '5').replace('s', '');
+
                     if (kieModelId.includes('image-to-video')) {
                         if (!firstImg) throw new Error(`${kieModelId} requires an input image.`);
                         input.image_url = firstImg; // String
@@ -344,7 +346,13 @@ const aiService = {
             }
             // 3. HAILUO / BYTEDANCE
             else if (kieModelId.includes('hailuo') || kieModelId.includes('bytedance')) {
-                input.duration = options.duration || (kieModelId.includes('hailuo') ? '6' : '5');
+                // Duration Cleanup
+                let rawDuration = (options.duration || '5').replace('s', '');
+
+                // Hailuo typically supports 6s. Bytedance 5s.
+                if (kieModelId.includes('hailuo')) input.duration = '6';
+                else input.duration = rawDuration;
+
                 input.resolution = options.resolution || (kieModelId.includes('bytedance') ? '720p' : '1080P'); // Note casing 1080P for Hailuo
                 if (kieModelId.includes('hailuo') && input.resolution === '1080p') input.resolution = '1080P'; // Case sensitive fix
 
