@@ -147,6 +147,9 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                 <div className="flex gap-2 overflow-x-auto no-scrollbar px-6 pb-2">
                     {[
                         { id: 'all', label: 'Все' },
+                        { id: '14feb', label: '💞 14 февраля' },
+                        { id: '23feb', label: '🛡️ 23 февраля' },
+                        { id: '8march', label: '👑 8 марта' },
                         { id: 'trends', label: '🔥 Тренды' },
                         { id: 'dances', label: '💃 Танцы' },
                         { id: 'cars', label: '🏎 Авто' },
@@ -175,19 +178,25 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                 <div className="px-6 mb-6 mt-4">
                     <h2 className="text-3xl font-black text-amber-500 uppercase tracking-wide mb-1">
                         {activeCategory === 'all' ? t('home.discover') :
-                            activeCategory === 'dances' ? t('categories.dances') :
-                                activeCategory === 'trends' ? t('categories.trends') :
-                                    activeCategory === 'christmas' ? t('categories.christmas') :
-                                        activeCategory === 'angels' ? t('categories.angels') :
-                                            activeCategory === 'cars' ? 'АВТО' :
-                                                activeCategory === 'pets' ? 'ПИТОМЦЫ' :
-                                                    activeCategory === 'oldTrends' ? t('categories.oldTrends') : activeCategory}
+                            activeCategory === '14feb' ? '14 Февраля' :
+                                activeCategory === '23feb' ? '23 Февраля' :
+                                    activeCategory === '8march' ? '8 Марта' :
+                                        activeCategory === 'dances' ? t('categories.dances') :
+                                            activeCategory === 'trends' ? t('categories.trends') :
+                                                activeCategory === 'christmas' ? t('categories.christmas') :
+                                                    activeCategory === 'angels' ? t('categories.angels') :
+                                                        activeCategory === 'cars' ? 'АВТО' :
+                                                            activeCategory === 'pets' ? 'ПИТОМЦЫ' :
+                                                                activeCategory === 'oldTrends' ? t('categories.oldTrends') : activeCategory}
                     </h2>
                     <p className="text-slate-500 dark:text-white/40 text-sm font-medium">
                         {activeCategory === 'all' ? 'Популярные шаблоны' :
-                            activeCategory === 'dances' ? 'Сгенерируй трендовые танцевальные видео!' :
-                                activeCategory === 'trends' ? 'Самые популярные шаблоны этой недели' :
-                                    'Тематические подборки'}
+                            activeCategory === '14feb' ? 'Романтичные идеи для влюбленных' :
+                                activeCategory === '23feb' ? 'Стильные открытки для защитников' :
+                                    activeCategory === '8march' ? 'Нежные поздравления для прекрасных дам' :
+                                        activeCategory === 'dances' ? 'Сгенерируй трендовые танцевальные видео!' :
+                                            activeCategory === 'trends' ? 'Самые популярные шаблоны этой недели' :
+                                                'Тематические подборки'}
                     </p>
                 </div>
 
@@ -295,7 +304,10 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                                                 'cars': 'Авто',
                                                 'pets': 'Животные',
                                                 'oldTrends': 'Классика',
-                                                'love': 'Любовь'
+                                                'love': 'Любовь',
+                                                '14feb': '14 Фев',
+                                                '23feb': '23 Фев',
+                                                '8march': '8 Мар'
                                             };
                                             return map[cat] || cat;
                                         })()}
