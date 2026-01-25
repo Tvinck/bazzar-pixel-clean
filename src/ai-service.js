@@ -329,14 +329,25 @@ const aiService = {
                         // STRICT: Only use image_url for Kling 2.6
                         input.image_url = firstImg;
 
-                        // Remove aspect_ratio for Img2Vid as it conflicts with source image
+                        // CRITICAL: Remove both aspect_ratio AND mode for image-to-video
                         delete input.aspect_ratio;
+                        delete input.mode;
 
                         // Ensure prompt is not empty if required
                         if (!input.prompt || input.prompt.trim() === '') input.prompt = 'animate this image';
                     } else {
-                        // Text
-                        if (options.aspect_ratio) input.aspect_ratio = options.aspect_ratio;
+                        // Text-to-Video: Use 'mode' instead of 'aspect_ratio'
+                        delete input.aspect_ratio;
+
+                        // Map aspect_ratio to mode
+                        const aspectRatioValue = options.aspect_ratio || aspectRatio || '16:9';
+                        if (aspectRatioValue === '16:9') {
+                            input.mode = '1080p';
+                        } else if (aspectRatioValue === '9:16') {
+                            input.mode = '720p';
+                        } else {
+                            input.mode = '720p'; // Default for 1:1 and others
+                        }
                     }
                 }
                 // Kling AI Avatar (Talking Head)
