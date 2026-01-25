@@ -313,26 +313,29 @@ const TemplateView = () => {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -50 }}
-            className="min-h-screen bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-white pb-safe flex flex-col"
+            className="min-h-screen bg-[#0f0f10] text-white pb-safe flex flex-col relative overflow-hidden"
         >
-            {/* Header */}
-            {/* ... keeping header structure via surrounding context usually, but here replacing full return body is safer to insert AnimatePresence properly at end */}
-            <div className="px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] flex items-center justify-between sticky top-0 bg-slate-50/95 dark:bg-[#09090b]/95 backdrop-blur z-20">
-                <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-slate-500 dark:text-slate-400">
-                    <ChevronLeft size={24} /> <span className="font-medium">Назад</span>
+            {/* Background Blobs (Optional for depth) */}
+            <div className="fixed top-0 left-0 w-full h-96 bg-gradient-to-b from-indigo-900/20 to-transparent pointer-events-none" />
+
+            {/* Header (Glassy) */}
+            <div className="px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] flex items-center justify-between sticky top-0 bg-[#0f0f10]/80 backdrop-blur-xl z-50 border-b border-white/5">
+                <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/70 hover:bg-white/10 transition-colors border border-white/5">
+                    <ChevronLeft size={22} />
                 </button>
-                <div className="font-bold text-lg pr-8">{template.title}</div>
+                <div className="font-black text-sm uppercase tracking-widest text-white/90 pr-10">{template.title}</div>
                 <div />
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-32">
+            <div className="flex-1 overflow-y-auto px-6 pb-40 z-10 relative">
                 {/* Preview */}
-                <div className="aspect-[9/16] w-full max-w-[240px] mx-auto rounded-3xl overflow-hidden shadow-2xl mb-8 bg-black relative ring-4 ring-white dark:ring-slate-800/50 mt-4">
+                <div className="aspect-[9/16] w-full max-w-[260px] mx-auto rounded-[2rem] overflow-hidden shadow-2xl mb-10 bg-black relative ring-1 ring-white/10 mt-6 group">
                     {template.mediaType === 'image' ? (
-                        <img src={template.src} className="w-full h-full object-cover" alt={template.title} />
+                        <img src={template.src} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-700" alt={template.title} />
                     ) : (
-                        <video src={template.src} autoPlay loop muted playsInline className="w-full h-full object-cover" />
+                        <video src={template.src} autoPlay loop muted playsInline className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-700" />
                     )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
                 </div>
 
                 {/* Content */}
@@ -340,27 +343,27 @@ const TemplateView = () => {
 
                     {/* Model Selection Logic */}
                     {!template.lockModel && template.category !== 'dances' && (
-                        <div className="relative mb-6 z-40">
-                            <h3 className="text-sm font-medium text-slate-500 dark:text-slate-400 mb-3 uppercase tracking-wider">{t('model.label') || 'Модель генерации'}</h3>
-                            <button onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)} className="w-full flex items-center justify-between p-3 bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl hover:border-indigo-500 transition-colors shadow-sm">
-                                <span className="font-medium">{AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name || 'Auto'}</span>
-                                <ChevronDown size={18} className="text-slate-400" />
+                        <div className="relative mb-6 z-30">
+                            <h3 className="text-xs font-bold text-white/50 mb-3 uppercase tracking-wide ml-1">{t('model.label') || 'Модель генерации'}</h3>
+                            <button onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)} className="w-full flex items-center justify-between p-3.5 bg-white/5 border border-white/10 rounded-[1.2rem] hover:bg-white/10 transition-colors shadow-lg shadow-black/5 backdrop-blur-sm">
+                                <span className="font-bold text-sm tracking-wide">{AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name || 'Auto'}</span>
+                                <ChevronDown size={18} className={`text-white/50 transition-transform ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
                             </button>
 
                             {isModelDropdownOpen && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-white dark:bg-[#1e1e24] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 overflow-hidden max-h-60 overflow-y-auto">
+                                <div className="absolute top-full left-0 right-0 mt-3 bg-[#151517]/95 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto ring-1 ring-black/50 backdrop-blur-xl">
                                     {AVAILABLE_MODELS.filter(m => {
                                         if (template.category === 'photo') return m.type === 'image';
                                         if (template.category === 'video') return m.type === 'video';
-                                        if (template.category === 'dances') return false; // Should be hidden by top condition, but safe check
-                                        return true; // Show all for other categories
+                                        if (template.category === 'dances') return false;
+                                        return true;
                                     }).map(m => (
-                                        <button key={m.id} onClick={() => { setSelectedModel(m.id); setIsModelDropdownOpen(false); }} className="w-full text-left p-3 hover:bg-slate-50 dark:hover:bg-white/5 flex justify-between items-center bg-white dark:bg-transparent">
+                                        <button key={m.id} onClick={() => { setSelectedModel(m.id); setIsModelDropdownOpen(false); playClick(); }} className="w-full text-left p-3.5 hover:bg-white/10 flex justify-between items-center bg-transparent border-b border-white/5 last:border-0">
                                             <div>
-                                                <div className="font-medium text-sm">{m.name}</div>
-                                                <div className="text-xs text-slate-500">{m.desc}</div>
+                                                <div className="font-bold text-xs uppercase tracking-wide text-white/90">{m.name}</div>
+                                                <div className="text-[10px] text-white/40 mt-0.5">{m.desc}</div>
                                             </div>
-                                            <span className="text-xs text-slate-500 font-mono bg-slate-100 dark:bg-white/10 px-1.5 py-0.5 rounded">{m.credits} CR</span>
+                                            <span className="text-[10px] font-bold text-white/30 bg-white/5 px-2 py-1 rounded-lg border border-white/5">{m.credits} CR</span>
                                         </button>
                                     ))}
                                 </div>
@@ -368,38 +371,74 @@ const TemplateView = () => {
                         </div>
                     )}
 
-                    {/* File Uploads */}
+                    {/* File Uploads (Glassy) */}
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                            <label className="text-sm font-bold flex items-center gap-2"><Upload size={16} className="text-indigo-500" /> {template.fileLabel || 'Ваше фото'}</label>
-                            <span className="text-xs font-medium text-slate-500 bg-slate-200 dark:bg-slate-800 px-2 py-1 rounded-full">{selectedFiles.filter(Boolean).length}/{requiredFilesCount}</span>
+                        <div className="flex items-center justify-between px-1">
+                            <label className="text-xs font-bold flex items-center gap-2 text-white/50 uppercase tracking-wide">
+                                <Upload size={14} className="text-indigo-400" /> {template.fileLabel || 'Ваше фото'}
+                            </label>
+                            <span className="text-[10px] font-bold text-white/60 bg-white/10 px-2 py-0.5 rounded-full border border-white/5">{selectedFiles.filter(Boolean).length}/{requiredFilesCount}</span>
                         </div>
                         <div className={`grid gap-3 ${requiredFilesCount > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
                             {Array.from({ length: requiredFilesCount }).map((_, i) => (
                                 <div key={i} className="relative aspect-square group">
                                     <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, i)} className="absolute inset-0 z-20 opacity-0 cursor-pointer" />
-                                    <div className={`w-full h-full rounded-2xl border-2 border-dashed flex items-center justify-center ${previewUrls[i] ? 'border-indigo-500' : 'border-slate-300 dark:border-slate-700'}`}>
-                                        {previewUrls[i] ? <img src={previewUrls[i]} className="w-full h-full object-cover rounded-2xl" /> : <Upload className="text-slate-400" />}
+                                    <div className={`w-full h-full rounded-[1.5rem] border border-dashed flex items-center justify-center transition-all duration-300 ${previewUrls[i] ? 'border-indigo-500/50 bg-black' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}>
+                                        {previewUrls[i] ? (
+                                            <>
+                                                <img src={previewUrls[i]} className="w-full h-full object-cover rounded-[1.4rem] opacity-80" />
+                                                <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRemoveFile(i); }} className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-white/70 hover:text-white hover:bg-red-500/80 transition-all z-30">
+                                                    <Trash2 size={12} />
+                                                </button>
+                                            </>
+                                        ) : (
+                                            <div className="text-center p-4">
+                                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-2 border border-white/10 group-hover:scale-110 transition-transform">
+                                                    <Upload size={18} className="text-white/40 group-hover:text-indigo-400" />
+                                                </div>
+                                                <span className="text-[10px] text-white/30 font-bold uppercase tracking-wide">Загрузить</span>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             ))}
                         </div>
                     </div>
 
-                    {/* Fields */}
+                    {/* Fields (Glassy) */}
                     {fields.map(field => (
                         <div key={field.id} className="space-y-2">
-                            <label className="text-sm font-bold ml-1">{field.label}</label>
-                            <input type={field.type || 'text'} placeholder={field.placeholder} value={formValues[field.id] || ''} onChange={(e) => handleFieldChange(field.id, e.target.value)} className="w-full px-4 py-3 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 focus:border-indigo-500 outline-none text-sm" />
+                            <label className="text-xs font-bold ml-1 text-white/50 uppercase tracking-wide">{field.label}</label>
+                            <input
+                                type={field.type || 'text'}
+                                placeholder={field.placeholder}
+                                value={formValues[field.id] || ''}
+                                onChange={(e) => handleFieldChange(field.id, e.target.value)}
+                                className="w-full px-4 py-4 rounded-[1.2rem] bg-white/5 border border-white/10 focus:border-indigo-500/50 focus:bg-white/10 outline-none text-sm text-white placeholder:text-white/20 transition-all shadow-inner"
+                            />
                         </div>
                     ))}
                 </div>
             </div>
 
-            {/* Footer */}
-            <div className="p-6 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 z-30 pb-safe-bottom">
-                <AnimatedButton variant="primary" size="lg" fullWidth onClick={handleGenerate} disabled={!isReady || isProcessing} isLoading={isProcessing} icon={<Film size={20} />}>
-                    {isProcessing ? 'Генерируем...' : 'Сгенерировать'}
+            {/* Footer (Dock) */}
+            <div className="fixed bottom-0 left-0 right-0 p-5 pb-safe-bottom bg-[#0f0f10]/80 backdrop-blur-2xl border-t border-white/5 z-40 transition-all">
+                <AnimatedButton
+                    variant="primary"
+                    size="lg"
+                    fullWidth
+                    onClick={handleGenerate}
+                    disabled={!isReady || isProcessing}
+                    isLoading={isProcessing}
+                    className="h-14 rounded-[1.2rem] shadow-xl shadow-amber-500/10 font-black text-base tracking-wide"
+                >
+                    <span className="flex items-center gap-2">
+                        {isProcessing ? 'Генерируем...' : (
+                            <>
+                                <Film size={20} className="fill-current" /> СГЕНЕРИРОВАТЬ
+                            </>
+                        )}
+                    </span>
                 </AnimatedButton>
             </div>
         </motion.div>
