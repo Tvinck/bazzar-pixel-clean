@@ -335,7 +335,12 @@ export const setupRoutes = (app, bot, boss) => {
                 }
 
             } catch (genError) {
-                console.error('❌ [DEBUG-V6] Generation Failed:', genError.message);
+                console.error('❌ [DEBUG-V7] Generation Failed:', {
+                    error: genError.message,
+                    model: type,
+                    prompt: prompt?.slice(0, 50),
+                    options: JSON.stringify(options)
+                });
                 if (genError.message.includes('Debug')) {
                     console.error('🔍 DEBUG DETAILS:', genError.message);
                 }
