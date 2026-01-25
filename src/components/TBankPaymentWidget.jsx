@@ -30,12 +30,34 @@ const TBankPaymentWidget = ({
     const integrationRef = useRef(null);
 
     useEffect(() => {
+        // Check if script already loaded
+        if (window.PaymentIntegration) {
+            initializeWidget();
+            return;
+        }
+
+        // Check if script is already being loaded
+        const existingScript = document.querySelector('script[src="https://integrationjs.tbank.ru/integration.js"]');
+        if (existingScript) {
+            existingScript.addEventListener('load', initializeWidget);
+            return () => {
+                existingScript.removeEventListener('load', initializeWidget);
+            };
+        }
+
         // Load T-Bank Integration Script
         const script = document.createElement('script');
         script.src = 'https://integrationjs.tbank.ru/integration.js';
         script.async = true;
-        script.onload = () => initializeWidget();
-        script.onerror = () => setError('Не удалось загрузить виджет оплаты');
+        script.onload = () => {
+            console.log('T-Bank script loaded successfully');
+            initializeWidget();
+        };
+        script.onerror = (err) => {
+            console.error('Failed to load T-Bank script:', err);
+            setError('Не удалось загрузить виджет оплаты. Используйте классическую кнопку ниже.');
+            setLoading(false);
+        };
 
         document.body.appendChild(script);
 
@@ -44,7 +66,7 @@ const TBankPaymentWidget = ({
             if (integrationRef.current) {
                 integrationRef.current.unmount().catch(console.error);
             }
-            document.body.removeChild(script);
+            // Don't remove script - it might be used by other components
         };
     }, []);
 
@@ -54,8 +76,18 @@ const TBankPaymentWidget = ({
                 throw new Error('PaymentIntegration not loaded');
             }
 
+            // Get terminal key
+            const key = terminalKey || process.env.REACT_APP_TBANK_TERMINAL_KEY;
+
+            // Skip widget if no key or demo key (widgets don't work with demo)
+            if (!key || key.includes('DEMO')) {
+                console.warn('TBankPaymentWidget: No production Terminal Key, hiding widget');
+                setError('No Terminal Key');
+                return;
+            }
+
             const initConfig = {
-                terminalKey: terminalKey || process.env.REACT_APP_TBANK_TERMINAL_KEY,
+                terminalKey: key,
                 product: 'eacq',
                 features: {
                     payment: {}
@@ -157,13 +189,9 @@ const TBankPaymentWidget = ({
     };
 
     if (error) {
-        return (
-            <div className="w-full mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-900/30 rounded-2xl">
-                <p className="text-sm text-red-600 dark:text-red-400 text-center font-medium">
-                    {error}
-                </p>
-            </div>
-        );
+        // Silently hide widget if it fails - user will see classic button below
+        console.warn('TBankPaymentWidget error:', error);
+        return null;
     }
 
     return (
