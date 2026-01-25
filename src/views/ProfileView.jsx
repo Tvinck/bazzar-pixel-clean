@@ -467,27 +467,50 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
                     <div className="bg-indigo-500/20 border border-indigo-500/30 p-4 rounded-xl text-center">
                         <div className="text-xs text-indigo-200 mb-1">Ваш активный код</div>
                         <div className="text-2xl font-black text-white tracking-widest font-mono mb-2">{referralStats.my_promo_code}</div>
-                        <div className="text-[10px] text-white/50">Дает 10% скидку друзьям. Вы получаете 50 <Zap size={8} className="inline fill-amber-400 text-amber-400" /></div>
+                        <div className="text-[10px] text-white/50">Дает 10% скидку друзьям. Вы получаете 50 <Zap size={8} className="inline fill-amber-400 text-amber-400 text-amber-400" /></div>
                     </div>
                 ) : (
                     <div>
-                        <p className="text-xs text-white/50 mb-4">
-                            Пригласите 5 друзей, чтобы создать свой уникальный промокод.
-                            <br />Прогресс: <span className={referralStats?.invited_count >= 5 ? 'text-green-400' : 'text-amber-400'}>{referralStats?.invited_count || 0} / 5</span>
+                        {/* Benefits */}
+                        <div className="grid grid-cols-1 gap-2 mb-4">
+                            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                                <div className="bg-amber-500/20 p-2 rounded-lg text-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.2)]">
+                                    <Zap size={16} className="fill-amber-400" />
+                                </div>
+                                <div className="leading-tight">
+                                    <div className="font-bold text-xs text-white">50 кредитов вам</div>
+                                    <div className="text-[10px] text-white/50">С каждой активации кода</div>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
+                                <div className="bg-green-500/20 p-2 rounded-lg text-green-400 shadow-[0_0_10px_rgba(74,222,128,0.2)]">
+                                    <Percent size={16} />
+                                </div>
+                                <div className="leading-tight">
+                                    <div className="font-bold text-xs text-white">Скидка 10% другу</div>
+                                    <div className="text-[10px] text-white/50">На покупку любого тарифа</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <p className="text-[10px] text-white/40 mb-3 text-center">
+                            Пригласите 5 друзей, чтобы создать промокод. <br />
+                            Прогресс: <span className={`font-bold ${referralStats?.invited_count >= 5 ? 'text-green-400' : 'text-amber-400'}`}>{referralStats?.invited_count || 0} / 5</span>
                         </p>
+
                         <form onSubmit={handleCreatePromo} className="flex gap-2">
                             <input
                                 type="text"
-                                placeholder="MYCODE"
+                                placeholder="МОЙ КОД"
                                 value={promoInput}
                                 onChange={e => setPromoInput(e.target.value.toUpperCase())}
                                 disabled={(referralStats?.invited_count || 0) < 5}
-                                className="bg-black/30 w-full rounded-xl px-4 py-3 text-sm font-bold text-white placeholder:text-white/20 border border-white/10 focus:border-indigo-500/50 outline-none disabled:opacity-50"
-                                maxLength={10}
+                                className="bg-black/30 w-full rounded-xl px-4 py-3 text-sm font-bold text-white placeholder:text-white/20 border border-white/10 focus:border-indigo-500/50 outline-none disabled:opacity-50 tracking-wider uppercase"
+                                maxLength={15}
                             />
                             <button
                                 disabled={(referralStats?.invited_count || 0) < 5 || isCreatingPromo || !promoInput}
-                                className="bg-indigo-500 disabled:bg-white/10 disabled:text-white/30 text-white font-bold px-4 rounded-xl text-xs whitespace-nowrap"
+                                className="bg-indigo-500 disabled:bg-white/10 disabled:text-white/30 text-white font-bold px-4 rounded-xl text-xs whitespace-nowrap shadow-lg shadow-indigo-500/20"
                             >
                                 {isCreatingPromo ? '...' : 'Создать'}
                             </button>
