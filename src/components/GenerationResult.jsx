@@ -11,8 +11,21 @@ const GenerationResult = ({ result, type = 'image', onClose, onRemix }) => {
 
     const handleDownload = async () => {
         playClick();
+
+        // 1. Try Telegram Native Download (Best for Mobile)
+        if (window.Telegram?.WebApp?.downloadFile) {
+            try {
+                window.Telegram.WebApp.downloadFile({ url: result.url, file_name: `pixel-${Date.now()}.${type === 'video' ? 'mp4' : 'png'}` });
+                return;
+            } catch (e) {
+                console.warn('TG Download failed, falling back', e);
+            }
+        }
+
+        // 2. Try Browser Blob Download (Desktop/Android Web)
         try {
-            const response = await fetch(result.url);
+            const response = await fetch(result.url, { mode: 'cors' });
+            if (!response.ok) throw new Error('Network error');
             const blob = await response.blob();
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -24,7 +37,12 @@ const GenerationResult = ({ result, type = 'image', onClose, onRemix }) => {
             document.body.removeChild(a);
         } catch (e) {
             console.error('Download failed', e);
-            window.open(result.url, '_blank');
+            // 3. Last Resort: Open Link
+            if (window.Telegram?.WebApp?.openLink) {
+                window.Telegram.WebApp.openLink(result.url, { try_instant_view: false });
+            } else {
+                window.open(result.url, '_blank');
+            }
         }
     };
 
