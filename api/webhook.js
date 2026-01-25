@@ -207,12 +207,38 @@ export default async function handler(req, res) {
                 const text = msg.text || '';
 
                 if (text === '/start' || text === 'Главное меню 🏠') {
-                    await sendMessage(chatId, `🎉 <b>Добро пожаловать в NanoBanana Bot!</b>\n\nЗдесь ты можешь создавать контент. Открой приложение 👇`, {
+                    // Welcome Message with Keyboard
+                    const welcomeMsg = `🎉 <b>Добро пожаловать в Pixel AI!</b>
+
+Здесь ты можешь создавать фото и видео контент высочайшего качества.
+
+🚀 <b>Возможности:</b>
+• Генерация изображений (Flux, Grok)
+• Создание видео (Kling, Hailuo, Wan)
+• Готовые шаблоны
+
+👇 <b>Начни творить прямо сейчас!</b>`;
+
+                    const keyboard = {
+                        keyboard: [
+                            [{ text: 'Трендовые фото 🔥' }, { text: 'Сообщество 👥' }],
+                            [{ text: 'Баланс ⚡' }, { text: 'Пригласи друга 🤝' }]
+                        ],
+                        resize_keyboard: true,
+                        persistent: true
+                    };
+
+                    await sendMessage(chatId, welcomeMsg, {
+                        reply_markup: keyboard
+                    });
+
+                    // Inline button for app
+                    await sendMessage(chatId, 'Открой приложение для начала работы:', {
                         reply_markup: {
-                            inline_keyboard: [[{ text: 'Трендовые фото 🔥', web_app: { url: 'https://bazzar-pixel-clean-4zm4.vercel.app' } }]],
-                            resize_keyboard: true
+                            inline_keyboard: [[{ text: '🚀 Запустить Pixel AI', web_app: { url: 'https://bazzar-pixel-clean-4zm4.vercel.app' } }]]
                         }
                     });
+
                 } else if (text === 'Баланс ⚡') {
                     const telegramId = msg.from.id;
                     let balance = 0;
@@ -229,6 +255,48 @@ export default async function handler(req, res) {
                             inline_keyboard: [[{ text: 'Открыть приложение', web_app: { url: 'https://bazzar-pixel-clean-4zm4.vercel.app' } }]]
                         }
                     });
+
+                } else if (text === 'Трендовые фото 🔥') {
+                    await sendMessage(chatId, '🔥 <b>Трендовые фото</b>\n\nОткройте приложение чтобы посмотреть популярные работы сообщества!', {
+                        reply_markup: {
+                            inline_keyboard: [[
+                                { text: '🌟 Открыть галерею', web_app: { url: 'https://bazzar-pixel-clean-4zm4.vercel.app/gallery' } }
+                            ]]
+                        }
+                    });
+
+                } else if (text === 'Сообщество 👥') {
+                    const communityMsg = `👥 <b>Присоединяйтесь к сообществу!</b>
+
+📢 Канал с примерами: @pixel_imagess
+💬 Чат для общения: @pixel_communityy
+
+Делитесь своими работами, получайте советы и вдохновляйтесь творчеством других!`;
+
+                    await sendMessage(chatId, communityMsg, {
+                        reply_markup: {
+                            inline_keyboard: [
+                                [{ text: '📢 Канал', url: 'https://t.me/pixel_imagess' }],
+                                [{ text: '💬 Чат', url: 'https://t.me/pixel_communityy' }]
+                            ]
+                        }
+                    });
+
+                } else if (text === 'Пригласи друга 🤝') {
+                    const userId = msg.from.id;
+                    const inviteMsg = `🤝 <b>Партнёрская программа</b>
+
+Приглашайте друзей и получайте 10% от всех их платежей!
+
+🔗 <b>Ваша реферальная ссылка:</b>
+https://t.me/Pixel_ai_bot?start=r-${userId}
+
+📈 Приглашено пользователей: 0
+💰 Заработано кредитов: 0
+
+Просто поделитесь ссылкой с друзьями. Когда они зарегистрируются и пополнят баланс, вы автоматически получите 10% от суммы их пополнения на свой счёт.`;
+
+                    await sendMessage(chatId, inviteMsg);
                 }
             }
         } catch (e) {
