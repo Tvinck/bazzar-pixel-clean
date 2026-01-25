@@ -89,6 +89,29 @@ className="... absolute z-50 left-0 right-0 ..."
 
 ---
 
+### 4. ❌ ReferenceError: Can't find variable: selectedTask
+
+**Проблема:**
+```
+ReferenceError: Can't find variable: selectedTask
+at GenerationView.jsx:1151
+```
+
+**Причина:** Использование несуществующей переменной `selectedTask` в фильтрации customFields.
+
+**Решение:**
+```javascript
+// ❌ Было:
+.filter(field => !field.condition || field.condition(selectedTask || selectedModel))
+
+// ✅ Стало:
+.filter(field => !field.condition || field.condition(model))
+```
+
+**Файл:** `src/views/GenerationView.jsx` (строка 1151)
+
+---
+
 ## Поддержка Resolution по моделям
 
 | Модель                  | Resolution | Значения       | Примечание                    |
@@ -130,6 +153,8 @@ className="... absolute z-50 left-0 right-0 ..."
 
 1. `8782a4e` - Fix Kling 2.6 I2V payload: redundant keys removed
 2. `b1b5086` - Fix video generation: remove resolution for Hailuo, add conditional fields, fix dropdown z-index
+3. `7f98386` - Add comprehensive documentation for video generation fixes and model parameters
+4. `7522647` - Fix ReferenceError: use 'model' instead of undefined 'selectedTask'
 
 ---
 
