@@ -265,7 +265,7 @@ function AppContent() {
       )}
 
       {/* Routed Main Content */}
-      <main className={`relative z-10 min-h-screen ${showLayout ? 'pt-28 pb-24' : ''}`}>
+      <main className={`relative z-10 min-h-screen ${showLayout ? 'pt-36 pb-24' : ''}`}>
         <Suspense fallback={<div className="fixed inset-0 flex items-center justify-center"><div className="w-8 h-8 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" /></div>}>
           <Routes>
             {/* Main Tabs */}
