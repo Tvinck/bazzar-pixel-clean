@@ -1039,9 +1039,24 @@ app.get('/api/jobs/:jobId', async (req, res) => {
                                             const caption = `✨ Генерация готова!\n\n🎨 ${job.job_type || 'Video'}\n📝 "${(job.prompt || '').slice(0, 50)}..."`;
                                             const isVideo = (job.job_type === 'video') || finalUrl.endsWith('.mp4');
 
-                                            if (isVideo) await bot.sendVideo(u.telegram_id, finalUrl, { caption });
-                                            else await bot.sendPhoto(u.telegram_id, finalUrl, { caption });
-                                            console.log(`📩 Notification sent to ${u.telegram_id}`);
+                                            try {
+                                                // Download media first (URL may require auth)
+                                                const mediaResponse = await fetch(finalUrl);
+                                                if (!mediaResponse.ok) throw new Error(`Failed to download: ${mediaResponse.status}`);
+
+                                                const buffer = Buffer.from(await mediaResponse.arrayBuffer());
+
+                                                if (isVideo) {
+                                                    await bot.sendVideo(u.telegram_id, buffer, { caption });
+                                                } else {
+                                                    await bot.sendPhoto(u.telegram_id, buffer, { caption });
+                                                }
+                                                console.log(`📩 Notification sent to ${u.telegram_id}`);
+                                            } catch (mediaErr) {
+                                                // Fallback: send text message with link
+                                                console.warn('Media send failed, sending link:', mediaErr.message);
+                                                await bot.sendMessage(u.telegram_id, `${caption}\n\n🔗 Результат: ${finalUrl}`);
+                                            }
                                         }
                                     } catch (notifyErr) { console.error('Notify Error:', notifyErr.message); }
                                 }
