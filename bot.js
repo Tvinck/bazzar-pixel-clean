@@ -493,6 +493,30 @@ function setupBotHandlers(b) {
             sendWelcome(msg.chat.id);
         } else if (text === 'Пригласи друга 🤝') {
             b.sendMessage(msg.chat.id, inviteMessage(msg.from.id), { parse_mode: 'Markdown' });
+        } else if (text === 'Трендовые фото 🔥') {
+            b.sendMessage(msg.chat.id, '🔥 *Трендовые фото*\n\nОткройте приложение чтобы посмотреть популярные работы сообщества!', {
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: [[
+                        { text: '🌟 Открыть галерею', web_app: { url: 'https://bazzar-pixel-clean-4zm4.vercel.app/gallery' } }
+                    ]]
+                }
+            });
+        } else if (text === 'Сообщество 👥') {
+            b.sendMessage(msg.chat.id, `👥 *Присоединяйтесь к сообществу!*
+
+📢 Канал с примерами: @pixel\\_imagess
+💬 Чат для общения: @pixel\\_communityy
+
+Делитесь своими работами, получайте советы и вдохновляйтесь творчеством других!`, {
+                parse_mode: 'Markdown',
+                reply_markup: {
+                    inline_keyboard: [
+                        [{ text: '📢 Канал', url: 'https://t.me/pixel_imagess' }],
+                        [{ text: '💬 Чат', url: 'https://t.me/pixel_communityy' }]
+                    ]
+                }
+            });
         } else {
             // Draft logic
             let draft = userDrafts.get(msg.chat.id) || { images: [], prompt: 'Art' };
