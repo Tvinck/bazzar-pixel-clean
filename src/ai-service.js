@@ -318,8 +318,40 @@ const aiService = {
                 // Common Defaults
                 input.prompt = prompt || ''; // Ensure string
 
-                // Kling 2.6
-                if (kieModelId.includes('kling-2.6')) {
+                // Kling Motion Control (Special) - Checked FIRST
+                if (modelId === 'kling_motion_control' || kieModelId.includes('motion-control')) {
+                    if (options.video_files?.length > 0) {
+                        if (!firstImg) throw new Error('Kling Motion Control missing source image.');
+                        if (!firstVid) throw new Error('Kling Motion Control missing reference video.');
+
+                        // Specific Schema for Motion Control (verified)
+                        input.image_url = firstImg; // Docs say image_url or input_urls? Let's check logic below. 
+                        // Actually, docs usually prefer scalar for single items, but arrays for lists.
+                        // The previous block used input_urls = [firstImg], let's stick to what we had if verified,
+                        // BUT standardizing on image_url often is safer for Kie adapters.
+                        // Let's stick to the code we are moving:
+                        input.input_urls = [firstImg];
+                        input.video_urls = [firstVid];
+
+                        input.character_orientation = 'video';
+                        // input.mode = '720p'; // Removed hardcoded mode if not strictly needed or causing conflict 
+
+                        // Motion Control might fail if prompt is missing, so ensure it
+                        if (!input.prompt || input.prompt.trim() === '') input.prompt = "animate";
+                    } else {
+                        throw new Error('Kling Motion Control requires a reference video.');
+                    }
+                }
+                // Kling AI Avatar (Talking Head)
+                else if (kieModelId.includes('ai-avatar')) {
+                    if (!options.source_files?.[0]) throw new Error(`${kieModelId} requires an avatar image.`);
+                    if (!options.audio_files?.[0]) throw new Error(`${kieModelId} requires an audio file.`);
+
+                    input.image_url = options.source_files[0];
+                    input.audio_url = options.audio_files[0];
+                }
+                // Kling 2.6 (Generics)
+                else if (kieModelId.includes('kling-2.6')) {
                     // Duration: strip 's' and ensure it's '5' or '10'
                     const dur = (options.duration || '5').replace('s', '');
                     input.duration = ['5', '10'].includes(dur) ? dur : '5';
@@ -356,27 +388,6 @@ const aiService = {
                         delete input.mode;
                         delete input.cfg_scale;
                     }
-                }
-                // Kling AI Avatar (Talking Head)
-                else if (kieModelId.includes('ai-avatar')) {
-                    if (!options.source_files?.[0]) throw new Error(`${kieModelId} requires an avatar image.`);
-                    if (!options.audio_files?.[0]) throw new Error(`${kieModelId} requires an audio file.`);
-
-                    input.image_url = options.source_files[0];
-                    input.audio_url = options.audio_files[0];
-                }
-                // Kling Motion Control (Special)
-                else if (modelId === 'kling_motion_control' && options.video_files?.length > 0) {
-                    if (!firstImg) throw new Error('Kling Motion Control missing source image.');
-                    if (!firstVid) throw new Error('Kling Motion Control missing reference video.');
-
-                    // Specific Schema for Motion Control (verified)
-                    input.input_urls = [firstImg];
-                    input.video_urls = [firstVid];
-                    input.character_orientation = 'video';
-                    input.mode = '720p';
-                    // Motion Control might fail if prompt is missing, so ensure it
-                    if (!input.prompt) input.prompt = "animate";
                 }
                 // Kling Turbo (New)
                 else if (kieModelId.includes('turbo')) {
