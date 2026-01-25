@@ -322,10 +322,16 @@ const aiService = {
 
                             if (kieModelId.includes('image-to-video')) {
                                 if (!firstImg) throw new Error('Kling 2.6 I2V needs image');
-                                // Fix: Use SINGULAR 'image_url' for compatibility, 
-                                // but duplicate to 'input_image' just in case if regularizer doesn't catch it.
+
+                                // Try ALL standard keys to hit the right one
+                                input.image = firstImg;
                                 input.image_url = firstImg;
-                                input.image_urls = [firstImg]; // Some Kie variants check this
+
+                                // Remove aspect_ratio for Img2Vid as it conflicts with source image
+                                delete input.aspect_ratio;
+
+                                // Ensure prompt is not empty if required
+                                if (!input.prompt || input.prompt.trim() === '') input.prompt = '.';
                             } else {
                                 // Text
                                 if (options.aspect_ratio) input.aspect_ratio = options.aspect_ratio;
