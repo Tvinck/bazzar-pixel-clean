@@ -62,56 +62,58 @@ import PageTransition from './components/PageTransition'; // Import Transition
 }
 
 {/* Global Modals */ }
-      <Suspense fallback={null}>
-        {isPaymentOpen || hasPaymentMounted ? (
-            <PaymentDrawer isOpen={isPaymentOpen} onClose={() => setIsPaymentOpen(false)} />
-        ) : null}
-      </Suspense>
+<>
+  <Suspense fallback={null}>
+    {isPaymentOpen || hasPaymentMounted ? (
+      <PaymentDrawer isOpen={isPaymentOpen} onClose={() => setIsPaymentOpen(false)} />
+    ) : null}
+  </Suspense>
 
-      <Suspense fallback={null}>
-        {isLeaderboardOpen || hasLeaderboardMounted ? (
-            <LeaderboardDrawer isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
-        ) : null}
-      </Suspense>
+  <Suspense fallback={null}>
+    {isLeaderboardOpen || hasLeaderboardMounted ? (
+      <LeaderboardDrawer isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
+    ) : null}
+  </Suspense>
 
-      <Suspense fallback={null}>
-        {isInpaintingOpen || hasInpaintingMounted ? (
-            <InpaintingEditor isOpen={isInpaintingOpen} onClose={() => setIsInpaintingOpen(false)} />
-        ) : null}
-      </Suspense>
+  <Suspense fallback={null}>
+    {isInpaintingOpen || hasInpaintingMounted ? (
+      <InpaintingEditor isOpen={isInpaintingOpen} onClose={() => setIsInpaintingOpen(false)} />
+    ) : null}
+  </Suspense>
 
-      <Suspense fallback={null}>
-        {isFaceSwapOpen || hasFaceSwapMounted ? (
-            <FaceSwap isOpen={isFaceSwapOpen} onClose={() => setIsFaceSwapOpen(false)} />
-        ) : null}
-      </Suspense>
+  <Suspense fallback={null}>
+    {isFaceSwapOpen || hasFaceSwapMounted ? (
+      <FaceSwap isOpen={isFaceSwapOpen} onClose={() => setIsFaceSwapOpen(false)} />
+    ) : null}
+  </Suspense>
 
-      <Suspense fallback={null}>
-        {isAvatarTrainerOpen || hasAvatarTrainerMounted ? (
-            <AvatarTrainer isOpen={isAvatarTrainerOpen} onClose={() => setIsAvatarTrainerOpen(false)} />
-        ) : null}
-      </Suspense>
+  <Suspense fallback={null}>
+    {isAvatarTrainerOpen || hasAvatarTrainerMounted ? (
+      <AvatarTrainer isOpen={isAvatarTrainerOpen} onClose={() => setIsAvatarTrainerOpen(false)} />
+    ) : null}
+  </Suspense>
 
-      <Suspense fallback={null}>
-        {isOnboardingVisible && (
-            <OnboardingOverlay
-                isVisible={isOnboardingVisible}
-                onComplete={handleOnboardingComplete}
-                onStepAction={handleOnboardingAction}
-            />
-        )}
-      </Suspense>
+  <Suspense fallback={null}>
+    {isOnboardingVisible && (
+      <OnboardingOverlay
+        isVisible={isOnboardingVisible}
+        onComplete={handleOnboardingComplete}
+        onStepAction={handleOnboardingAction}
+      />
+    )}
+  </Suspense>
 
-      <Suspense fallback={null}>
-        <DailyBonusModal isOpen={showDailyBonus} onClose={() => setShowDailyBonus(false)} user={telegramUser} />
-      </Suspense>
+  <Suspense fallback={null}>
+    <DailyBonusModal isOpen={showDailyBonus} onClose={() => setShowDailyBonus(false)} user={telegramUser} />
+  </Suspense>
 
-      <Suspense fallback={null}>
-        <NotificationsPanel
-          isOpen={isNotificationsOpen}
-          onClose={() => setIsNotificationsOpen(false)}
-        />
-      </Suspense>
+  <Suspense fallback={null}>
+    <NotificationsPanel
+      isOpen={isNotificationsOpen}
+      onClose={() => setIsNotificationsOpen(false)}
+    />
+  </Suspense>
+</>
 
 {/* Global Generation UI */ }
 <GlobalGenerationOverlay />
