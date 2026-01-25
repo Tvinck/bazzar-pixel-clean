@@ -308,6 +308,9 @@ const TemplateView = () => {
     const isFilesReady = selectedFiles.filter(f => f).length >= requiredFilesCount;
     const isReady = isFilesReady;
 
+    const currentModelId = selectedModel || template.model_id || (template.mediaType === 'video' ? 'kling_motion_control' : 'nano_banana');
+    const cost = MODEL_CATALOG[currentModelId]?.cost || (template.mediaType === 'video' ? 10 : 5);
+
     return (
         <motion.div
             initial={{ opacity: 0, x: 50 }}
@@ -433,7 +436,7 @@ const TemplateView = () => {
                     <span className="flex items-center gap-2">
                         {isProcessing ? 'Генерируем...' : (
                             <>
-                                <Film size={20} className="fill-current" /> СГЕНЕРИРОВАТЬ
+                                <Film size={20} className="fill-current" /> СГЕНЕРИРОВАТЬ ({cost})
                             </>
                         )}
                     </span>

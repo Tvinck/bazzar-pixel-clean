@@ -15,6 +15,8 @@ import galleryAPI from '../lib/galleryAPI';
 import GenerationLoader from '../components/GenerationLoader';
 import GenerationResult from '../components/GenerationResult';
 
+import { MODEL_CATALOG } from '../config/models';
+
 // --- Visual Components ---
 const RatioVisual = ({ ratio }) => {
     const getDims = (r) => {
@@ -360,24 +362,25 @@ const GenerationView = ({ onOpenPayment }) => {
 
     // Cost Calculation Logic
     const getCost = () => {
+        // 1. Try server/loaded config first (dynamic overrides from DB)
         if (serverConfig && serverConfig.models && serverConfig.models[model]) {
             let cost = serverConfig.models[model].cost;
             return cost * genCount;
         }
-        let cost = 1;
-        if (currentModeKey === 'replace-object' || currentModeKey === 'remove-object' || currentModeKey === 'add-object') return 2;
+
+        // 2. Try Local Config (Catalog) - Source of Truth
+        if (MODEL_CATALOG[model]) {
+            return MODEL_CATALOG[model].cost * genCount;
+        }
+
+        // 3. Fallbacks for specific modes/tools not mapped clearly to a model ID
+        if (['replace-object', 'remove-object', 'add-object', 'inpainting_v2', 'eraser_pro'].includes(currentModeKey) || ['replace-object', 'remove-object', 'add-object'].includes(model)) {
+            return (MODEL_CATALOG['replace_object']?.cost || 20) * genCount;
+        }
         if (currentModeKey === 'describe') return 1;
 
-        const mId = model.toLowerCase();
-        if (['seedream_3', 'grok_text', 'recraft_remove_bg', 'recraft_upscale', 'grok_upscale'].includes(mId)) cost = 1;
-        else if (['seedream_45_text', 'gpt_image_15_text', 'gpt_image_15_edit', 'z_image', 'ideogram_reframe', 'seedream_v4_text', 'seedream_v4_edit', 'seedream_45_edit', 'grok_image'].includes(mId)) cost = 2;
-        else if (['flux_flex', 'flux_pro'].includes(mId)) cost = 3;
-        else if (mId === 'kling_motion_control') cost = 8;
-        else if (mId === 'grok_text_video') cost = 10;
-        else if (mId === 'grok_image_video') cost = 12;
-        else if (mId.includes('veo') || mId.includes('sora')) cost = 15;
-        else if (mId.includes('suno') || mId.includes('chip')) cost = 5;
-        return cost * genCount;
+        // 4. Default Fallback
+        return 5 * genCount;
     };
 
     const cost = getCost();
