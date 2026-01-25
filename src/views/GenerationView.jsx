@@ -575,9 +575,7 @@ const GenerationView = ({ onOpenPayment }) => {
 
             {/* ... (We need to keep the structure valid, so I will target specific blocks if possible or just the footer area) */}
             <div className="px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] flex items-center justify-between sticky top-0 z-40 backdrop-blur-xl bg-[#0f0f10]/80 border-b border-white/5">
-                <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/70 hover:text-white hover:bg-white/10 transition-all border border-white/5">
-                    <ChevronLeft size={22} />
-                </button>
+                <div className="w-10" />
 
                 <div className="relative">
                     <button

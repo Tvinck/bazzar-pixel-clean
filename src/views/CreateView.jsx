@@ -78,13 +78,8 @@ const CreateView = () => {
 
                 {/* Top Navigation Bar */}
                 <div className="flex items-center justify-between px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] backdrop-blur-sm sticky top-0 z-50">
-                    <button
-                        onClick={() => navigate(-1)}
-                        className="flex items-center gap-1 text-white/70 hover:text-white transition-colors bg-white/5 px-3 py-2 rounded-xl border border-white/5 active:scale-95"
-                    >
-                        <ChevronLeft size={20} />
-                        <span className="text-sm font-bold">Back</span>
-                    </button>
+                    <div />
+
                     <div className="flex items-center gap-3">
                         <div className="bg-white/5 px-3 py-1.5 rounded-full border border-white/5 flex items-center gap-2">
                             <span className="text-xs font-bold text-white/60 uppercase tracking-wider">Balance</span>

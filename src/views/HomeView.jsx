@@ -146,21 +146,21 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                 {/* Glassy Categories */}
                 <div className="flex gap-2 overflow-x-auto no-scrollbar px-6 pb-2">
                     {[
-                        { id: 'all', label: t('gallery.all') },
-                        { id: 'dances', label: t('categories.dances') },
-                        { id: 'trends', label: t('categories.trends') },
-                        { id: 'christmas', label: t('categories.christmas') },
-                        { id: 'angels', label: t('categories.angels') },
-                        { id: 'cars', label: 'Авто' },
-                        { id: 'pets', label: 'Питомцы' },
-                        { id: 'oldTrends', label: t('categories.oldTrends') }
+                        { id: 'all', label: 'Все' },
+                        { id: 'trends', label: '🔥 Тренды' },
+                        { id: 'dances', label: '💃 Танцы' },
+                        { id: 'cars', label: '🏎 Авто' },
+                        { id: 'pets', label: '🐾 Животные' },
+                        { id: 'christmas', label: '🎄 Праздник' },
+                        { id: 'angels', label: '👼 Ангелы' },
+                        { id: 'oldTrends', label: '📼 Классика' }
                     ].map((cat) => (
                         <button
                             key={cat.id}
                             onClick={() => { setActiveCategory(cat.id); triggerHaptic('light'); }}
                             className={`px-5 py-2.5 rounded-[1rem] text-xs font-bold whitespace-nowrap transition-all duration-300 border backdrop-blur-md ${activeCategory === cat.id
-                                    ? 'bg-slate-900 text-white dark:bg-white dark:text-black border-transparent shadow-lg shadow-black/10 scale-105'
-                                    : 'bg-white/50 dark:bg-white/5 text-slate-600 dark:text-white/60 border-slate-200 dark:border-white/5 hover:bg-white dark:hover:bg-white/10'
+                                ? 'bg-slate-900 text-white dark:bg-white dark:text-black border-transparent shadow-lg shadow-black/10 scale-105'
+                                : 'bg-white/50 dark:bg-white/5 text-slate-600 dark:text-white/60 border-slate-200 dark:border-white/5 hover:bg-white dark:hover:bg-white/10'
                                 }`}
                         >
                             {cat.label}
@@ -279,9 +279,26 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                             {/* Top Right Category Badge */}
                             <div className="absolute top-3 right-3 z-30">
                                 {item.category && item.category !== 'all' && (
-                                    <span className={`backdrop-blur-xl border border-white/10 text-white text-[9px] font-bold px-2 py-1 rounded-full uppercase tracking-wider shadow-sm ${item.category === 'love' ? 'bg-pink-500/80' : 'bg-black/40' // Special pink badge for Love
+                                    <span className={`backdrop-blur-xl border border-white/20 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest shadow-lg ${item.category === 'love' ? 'bg-gradient-to-r from-pink-500 to-rose-500' :
+                                        item.category === 'trends' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
+                                            item.category === 'dances' ? 'bg-gradient-to-r from-indigo-500 to-violet-500' :
+                                                item.category === 'cars' ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
+                                                    'bg-black/60'
                                         }`}>
-                                        {item.categories?.[0] || item.category}
+                                        {(() => {
+                                            const cat = item.categories?.[0] || item.category;
+                                            const map = {
+                                                'dances': 'Танцы',
+                                                'trends': 'Тренды',
+                                                'christmas': 'Праздник',
+                                                'angels': 'Ангелы',
+                                                'cars': 'Авто',
+                                                'pets': 'Животные',
+                                                'oldTrends': 'Классика',
+                                                'love': 'Любовь'
+                                            };
+                                            return map[cat] || cat;
+                                        })()}
                                     </span>
                                 )}
                             </div>

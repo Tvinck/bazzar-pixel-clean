@@ -320,9 +320,7 @@ const TemplateView = () => {
 
             {/* Header (Glassy) */}
             <div className="px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] flex items-center justify-between sticky top-0 bg-[#0f0f10]/80 backdrop-blur-xl z-50 border-b border-white/5">
-                <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-white/70 hover:bg-white/10 transition-colors border border-white/5">
-                    <ChevronLeft size={22} />
-                </button>
+                <div className="w-10" />
                 <div className="font-black text-sm uppercase tracking-widest text-white/90 pr-10">{template.title}</div>
                 <div />
             </div>
