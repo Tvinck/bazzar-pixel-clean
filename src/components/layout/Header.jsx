@@ -1,6 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../context/LanguageContext';
+import headerLogo from '../../assets/header-logo.png';
+import headerCoin from '../../assets/header-coin.png';
 
 const Header = ({ onTabChange, onOpenPayment, balance = 10, isDark }) => {
     const { t } = useLanguage();
@@ -8,27 +10,28 @@ const Header = ({ onTabChange, onOpenPayment, balance = 10, isDark }) => {
     return (
         <header className="fixed top-28 left-2 right-2 z-50 transition-all duration-300">
             {/* Premium Floating Island Header */}
-            <div className="bg-[#0f0f10]/80 backdrop-blur-xl border border-white/10 shadow-2xl rounded-[2rem] mx-auto max-w-screen-xl relative overflow-hidden">
+            <div className="bg-[#0f0f10]/90 backdrop-blur-2xl border border-white/10 shadow-2xl rounded-[2rem] mx-auto max-w-screen-xl relative overflow-hidden ring-1 ring-white/5">
                 {/* Shine Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] animate-[shimmer_8s_infinite]" />
+                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] animate-[shimmer_6s_infinite]" />
 
                 <div className="px-5 h-16 flex items-center justify-between relative z-10">
 
-                    {/* Left: Premium Logo */}
-                    <div className="flex items-center gap-3.5 cursor-pointer group" onClick={() => onTabChange('home')}>
-                        <div className="relative">
-                            <div className="absolute -inset-2 bg-indigo-500/20 rounded-full blur-md opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                            <div className="w-10 h-10 bg-gradient-to-br from-[#1c1c1e] to-black rounded-[14px] flex items-center justify-center shadow-lg ring-1 ring-white/10 group-hover:scale-105 transition-transform duration-300 relative overflow-hidden">
-                                <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                                <span className="font-display font-black text-transparent bg-clip-text bg-gradient-to-br from-indigo-400 to-purple-400 text-xl translate-y-[1px]">P</span>
-                            </div>
-                        </div>
-                        <div className="flex flex-col justify-center -space-y-0.5">
-                            <span className="font-display font-bold text-xl text-white tracking-tight leading-none group-hover:text-indigo-400 transition-colors">
+                    {/* Left: Premium Generated Logo */}
+                    <div className="flex items-center gap-3 cursor-pointer group" onClick={() => onTabChange('home')}>
+                        <motion.div
+                            whileHover={{ scale: 1.05, rotate: 5 }}
+                            whileTap={{ scale: 0.95 }}
+                            className="relative w-11 h-11"
+                        >
+                            <div className="absolute inset-0 bg-indigo-500/30 blur-lg rounded-full opacity-50 group-hover:opacity-100 transition-opacity" />
+                            <img src={headerLogo} alt="Pixel AI" className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                        </motion.div>
+                        <div className="flex flex-col justify-center gap-0.5">
+                            <span className="font-display font-black text-xl text-white tracking-tight leading-none group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-indigo-400 group-hover:to-purple-400 transition-all">
                                 Pixel
                             </span>
-                            <span className="text-[9px] font-bold text-white/30 tracking-[0.3em] uppercase">
-                                Studio
+                            <span className="text-[9px] font-bold text-white/40 tracking-[0.3em] uppercase">
+                                AI Studio
                             </span>
                         </div>
                     </div>
@@ -37,26 +40,32 @@ const Header = ({ onTabChange, onOpenPayment, balance = 10, isDark }) => {
                     <motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={onOpenPayment}
-                        className="relative flex items-center bg-[#1c1c1e] border border-white/10 rounded-full h-10 pl-1.5 pr-5 transition-all hover:bg-white/5 group overflow-hidden shadow-lg shadow-black/20"
+                        className="relative flex items-center bg-[#1c1c1e] border border-white/10 rounded-full h-11 pl-2 pr-5 transition-all hover:bg-white/5 group overflow-hidden shadow-lg shadow-black/20"
                     >
-                        {/* Coin Container */}
-                        <div className="w-7 h-7 rounded-full bg-gradient-to-br from-amber-300 to-yellow-600 flex items-center justify-center shadow-sm relative z-10 box-content border-2 border-[#1c1c1e] group-hover:scale-110 transition-transform duration-300">
-                            <div className="w-5 h-5 rounded-full border border-white/30 flex items-center justify-center">
-                                <span className="text-[10px] font-black text-yellow-900">₽</span>
-                            </div>
+                        {/* Coin Container (Generated 3D Icon) */}
+                        <div className="w-8 h-8 relative box-content group-hover:scale-110 transition-transform duration-300 mr-3">
+                            <div className="absolute inset-0 bg-amber-500/20 blur-md rounded-full" />
+                            <img src={headerCoin} alt="Credits" className="w-full h-full object-contain relative z-10" />
                         </div>
 
                         {/* Balance Text */}
-                        <div className="flex flex-col items-start ml-2.5 mr-3 relative z-10">
-                            <span className="text-[10px] font-bold text-white/40 uppercase leading-none mb-0.5 group-hover:text-white/60 transition-colors">Balance</span>
-                            <span className="text-sm font-black text-white leading-none tabular-nums">{balance}</span>
+                        <div className="flex flex-col items-start mr-4 relative z-10">
+                            <span className="text-[9px] font-bold text-white/40 uppercase leading-none mb-0.5 group-hover:text-white/60 transition-colors tracking-wider">
+                                БАЛАНС
+                            </span>
+                            <span className="text-sm font-black text-white leading-none tabular-nums tracking-wide drop-shadow-sm">
+                                {balance.toLocaleString()}
+                            </span>
                         </div>
 
-                        {/* Animated Plus */}
-                        <div className="w-6 h-6 rounded-full bg-white/5 flex items-center justify-center absolute right-1.5 group-hover:bg-indigo-500 group-hover:text-white transition-colors duration-300">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round" className="text-white/50 group-hover:text-white transition-colors">
-                                <path d="M12 5v14M5 12h14" />
-                            </svg>
+                        {/* Vertical Separator */}
+                        <div className="w-[1px] h-4 bg-white/10 mr-4" />
+
+                        {/* Animated Buy Text */}
+                        <div className="relative overflow-hidden">
+                            <span className="text-[10px] font-black uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 via-purple-400 to-indigo-400 animate-gradient-x">
+                                КУПИТЬ
+                            </span>
                         </div>
 
                         {/* Gradient Glow on Hover */}
