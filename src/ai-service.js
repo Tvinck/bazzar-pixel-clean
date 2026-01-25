@@ -388,9 +388,13 @@ const aiService = {
             }
             // 5. VEO
             else if (kieModelId.includes('veo')) {
+                input.resolution = '1080p';
+                input.duration = (options.duration || '5').replace('s', '');
+
                 if (hasSourceFiles) {
                     // Google Veo typically expects 'image_url' for image-to-video
                     input.image_url = firstImg;
+                    delete input.aspect_ratio;
                 }
             }
         }
