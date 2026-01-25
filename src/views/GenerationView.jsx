@@ -1148,7 +1148,7 @@ const GenerationView = ({ onOpenPayment }) => {
                 {modeConfig.customFields && (
                     <div className="flex flex-wrap gap-4 mb-8">
                         {modeConfig.customFields
-                            .filter(field => !field.condition || field.condition(selectedTask || selectedModel))
+                            .filter(field => !field.condition || field.condition(model))
                             .map(field => (
                                 <div key={field.id} className="flex-1 min-w-[45%]">
                                     <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">{field.label}</label>
