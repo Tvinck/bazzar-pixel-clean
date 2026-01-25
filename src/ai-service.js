@@ -394,13 +394,20 @@ const aiService = {
                     if (options.generate_audio) input.generate_audio = true;
                     if (options.fixed_lens) input.fixed_lens = true;
                 }
-                else {
-                    // Standard Bytedance / Hailuo
-                    if (kieModelId.includes('hailuo')) input.duration = '6';
-                    else input.duration = rawDuration;
+                // Hailuo 2.3 (NO resolution support, fixed duration)
+                else if (kieModelId.includes('hailuo')) {
+                    input.duration = '6'; // Fixed duration for Hailuo
+                    // CRITICAL: Hailuo does NOT support resolution parameter
+                    delete input.resolution;
 
-                    input.resolution = options.resolution || (kieModelId.includes('bytedance') ? '720p' : '1080P');
-                    if (kieModelId.includes('hailuo') && input.resolution === '1080p') input.resolution = '1080P';
+                    if (hasSourceFiles) {
+                        input.image_url = firstImg;
+                    }
+                }
+                // Bytedance (supports resolution)
+                else {
+                    input.duration = rawDuration;
+                    input.resolution = options.resolution || '720p'; // 720p or 1080p
 
                     if (hasSourceFiles) {
                         input.image_url = firstImg;

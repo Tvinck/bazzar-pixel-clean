@@ -244,7 +244,13 @@ const getModes = (t) => ({
             }
         ],
         customFields: [
-            { id: 'resolution', label: 'Разрешение', type: 'selector', options: ['720p', '1080p'] },
+            {
+                id: 'resolution',
+                label: 'Разрешение',
+                type: 'selector',
+                options: ['720p', '1080p'],
+                condition: (modelId) => !modelId.includes('hailuo') // Hailuo doesn't support resolution
+            },
             { id: 'duration', label: 'Длительность', type: 'selector', options: ['5s', '10s'] },
             { id: 'generate_audio', label: 'Генерировать звук', type: 'toggle', options: [t('profile.on'), t('profile.off')], condition: (m) => m === 'seedance_pro' }
         ]
@@ -1137,25 +1143,28 @@ const GenerationView = ({ onOpenPayment }) => {
                     </div>
                 ))}
 
+
                 {/* 4. Custom Fields (Glassy Pills) */}
                 {modeConfig.customFields && (
                     <div className="flex flex-wrap gap-4 mb-8">
-                        {modeConfig.customFields.map(field => (
-                            <div key={field.id} className="flex-1 min-w-[45%]">
-                                <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">{field.label}</label>
-                                <div className="bg-white/5 h-[52px] rounded-[1.2rem] p-1 flex items-center border border-white/5 backdrop-blur-md">
-                                    {field.options.map(opt => (
-                                        <button
-                                            key={opt}
-                                            onClick={() => { setCustomValues(prev => ({ ...prev, [field.id]: opt })); playClick(); }}
-                                            className={`flex-1 h-full rounded-[1rem] text-[10px] sm:text-xs font-bold transition-all px-1 ${customValues[field.id] === opt ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-white/30 hover:text-white/60'}`}
-                                        >
-                                            {opt}
-                                        </button>
-                                    ))}
+                        {modeConfig.customFields
+                            .filter(field => !field.condition || field.condition(selectedTask || selectedModel))
+                            .map(field => (
+                                <div key={field.id} className="flex-1 min-w-[45%]">
+                                    <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">{field.label}</label>
+                                    <div className="bg-white/5 h-[52px] rounded-[1.2rem] p-1 flex items-center border border-white/5 backdrop-blur-md">
+                                        {field.options.map(opt => (
+                                            <button
+                                                key={opt}
+                                                onClick={() => { setCustomValues(prev => ({ ...prev, [field.id]: opt })); playClick(); }}
+                                                className={`flex-1 h-full rounded-[1rem] text-[10px] sm:text-xs font-bold transition-all px-1 ${customValues[field.id] === opt ? 'bg-white/10 text-white shadow-sm border border-white/5' : 'text-white/30 hover:text-white/60'}`}
+                                            >
+                                                {opt}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        ))}
+                            ))}
                     </div>
                 )}
 
@@ -1163,11 +1172,11 @@ const GenerationView = ({ onOpenPayment }) => {
                 {(modeConfig.hasRatio || modeConfig.hasCount) && (
                     <div className="flex gap-4 mb-8">
                         {modeConfig.hasRatio && (
-                            <div className="flex-1">
+                            <div className="flex-1 relative">
                                 <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">Формат</label>
                                 <div
                                     onClick={() => { setIsRatioOpen(!isRatioOpen); playClick(); }}
-                                    className="bg-white/5 h-[52px] rounded-[1.2rem] px-4 flex items-center justify-between border border-white/10 active:scale-[0.98] transition-all cursor-pointer shadow-sm relative hover:bg-white/10 backdrop-blur-md"
+                                    className="bg-white/5 h-[52px] rounded-[1.2rem] px-4 flex items-center justify-between border border-white/10 active:scale-[0.98] transition-all cursor-pointer shadow-sm hover:bg-white/10 backdrop-blur-md"
                                 >
                                     <span className="font-bold text-sm text-white/90">{aspectRatio}</span>
                                     <ChevronDown size={16} className={`text-white/50 transition-transform ${isRatioOpen ? 'rotate-180' : ''}`} />
@@ -1178,8 +1187,7 @@ const GenerationView = ({ onOpenPayment }) => {
                                             initial={{ height: 0, opacity: 0, y: -10 }}
                                             animate={{ height: 'auto', opacity: 1, y: 0 }}
                                             exit={{ height: 0, opacity: 0, y: -10 }}
-                                            className="overflow-hidden bg-[#151517]/95 backdrop-blur-2xl border border-white/10 rounded-2xl mt-2 shadow-2xl absolute z-20 w-[90%] left-0 ring-1 ring-black/50"
-                                            style={{ width: 'calc(100vw - 40px)' }}
+                                            className="overflow-hidden bg-[#151517]/95 backdrop-blur-2xl border border-white/10 rounded-2xl mt-2 shadow-2xl absolute z-50 left-0 right-0 ring-1 ring-black/50"
                                         >
                                             <div className="p-2 grid grid-cols-1 divide-y divide-white/5">
                                                 {ratios.map(r => (
