@@ -637,7 +637,6 @@ const aiService = {
 
                     let data;
                     try {
-
                         let res;
                         if (isBrowser) {
                             res = await fetch(`/api/proxy?action=check&provider=kie&taskId=${taskId}`);
@@ -654,7 +653,7 @@ const aiService = {
 
                     // Log full response for debugging
                     if (i === 0 || i % 10 === 0) {
-                        console.log(`�� Poll Response:`, JSON.stringify(data, null, 2));
+                        console.log(`📡 Poll Response:`, JSON.stringify(data, null, 2));
                     }
 
                     // Parse status (Kie.ai uses 'state' not 'status')
