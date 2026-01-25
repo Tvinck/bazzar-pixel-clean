@@ -79,12 +79,17 @@ const PaymentSuccessView = () => {
     }, [user, navigate]); // Removed refreshUser to avoid loop, though ref handles it.
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-slate-50 dark:bg-[#0f1014] text-center">
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#0f0f10] text-center relative overflow-hidden">
+            {/* Ambient Background */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-sm max-h-sm bg-indigo-500/10 blur-[100px] pointer-events-none" />
+
             {status === 'checking' && (
-                <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin"></div>
-                    <h2 className="text-xl font-bold dark:text-white">Подтверждаем оплату в банке...</h2>
-                    <p className="text-slate-500 text-sm">Секундочку</p>
+                <div className="flex flex-col items-center gap-6 relative z-10">
+                    <div className="w-16 h-16 border-4 border-indigo-500 border-t-white rounded-full animate-spin shadow-[0_0_20px_rgba(99,102,241,0.3)]"></div>
+                    <div>
+                        <h2 className="text-2xl font-black text-white mb-2">Verifying...</h2>
+                        <p className="text-white/40 text-sm font-medium">Connecting to bank secure gateway</p>
+                    </div>
                 </div>
             )}
 
@@ -92,20 +97,23 @@ const PaymentSuccessView = () => {
                 <motion.div
                     initial={{ scale: 0.8, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    className="flex flex-col items-center gap-4"
+                    className="flex flex-col items-center gap-6 relative z-10"
                 >
-                    <div className="w-20 h-20 bg-green-500 rounded-full flex items-center justify-center shadow-lg shadow-green-500/30">
-                        <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    <div className="w-24 h-24 bg-gradient-to-tr from-green-500 to-emerald-400 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(34,197,94,0.4)] relative">
+                        <div className="absolute inset-0 bg-white/20 blur-xl rounded-full" />
+                        <svg className="w-10 h-10 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
-                    <h2 className="text-2xl font-bold dark:text-white">Успешно!</h2>
-                    <p className="text-slate-500">Ваш баланс обновлен</p>
+                    <div>
+                        <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Success!</h2>
+                        <p className="text-white/50 font-medium">Your balance has been updated</p>
+                    </div>
                     <button
                         onClick={() => navigate('/profile')}
-                        className="mt-6 px-6 py-3 bg-slate-900 dark:bg-white text-white dark:text-black rounded-xl font-bold"
+                        className="mt-8 px-8 py-4 bg-white text-black hover:bg-white/90 rounded-2xl font-black uppercase tracking-wide shadow-lg shadow-white/10 transition-all active:scale-95"
                     >
-                        В профиль
+                        Back to Profile
                     </button>
                 </motion.div>
             )}

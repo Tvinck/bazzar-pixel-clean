@@ -134,36 +134,39 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed bottom-0 left-0 w-full h-[85%] max-h-dvh bg-[#F8F9FC] dark:bg-[#0f1014] rounded-t-[2.5rem] z-[90] shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white"
+                        className="fixed bottom-0 left-0 w-full h-[85%] max-h-dvh bg-[#0f0f10] rounded-t-[2.5rem] z-[90] shadow-2xl flex flex-col overflow-hidden text-white border-t border-white/10"
                         onClick={(e) => e.stopPropagation()}
                     >
+                        {/* Ambient Glow */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-64 bg-indigo-500/10 blur-[100px] pointer-events-none" />
+
                         {/* Drag Handle */}
-                        <div className="w-full flex justify-center pt-4 pb-2 flex-shrink-0" onClick={onClose}>
-                            <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full" />
+                        <div className="w-full flex justify-center pt-5 pb-3 flex-shrink-0 relative z-10" onClick={onClose}>
+                            <div className="w-12 h-1 bg-white/20 rounded-full" />
                         </div>
 
                         {!selectedPlan ? (
                             // --- MAIN SELECTOR VIEW ---
-                            <div className="flex-1 flex flex-col p-6 pt-2 min-h-0">
+                            <div className="flex-1 flex flex-col p-6 pt-2 min-h-0 relative z-10">
                                 <header className="mb-6 px-2 flex-shrink-0">
-                                    <h2 className="font-display font-black text-2xl mb-1">Магазин Pixel</h2>
-                                    <p className="text-slate-500 text-sm">Пополните баланс для генераций</p>
+                                    <h2 className="font-black text-3xl mb-1 tracking-tight">Магазин Pixel</h2>
+                                    <p className="text-white/40 text-sm font-medium">Пополните баланс для генераций</p>
                                 </header>
 
                                 {/* Tabs */}
-                                <div className="bg-slate-100 dark:bg-slate-900 p-1 rounded-2xl flex mb-6 shadow-inner flex-shrink-0">
+                                <div className="bg-white/5 p-1.5 rounded-2xl flex mb-6 border border-white/5 flex-shrink-0">
                                     <button
                                         onClick={() => setActiveTab('packs')}
-                                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'packs' ? 'bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white' : 'text-slate-400'}`}
+                                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'packs' ? 'bg-[#1c1c1e] shadow-lg text-white ring-1 ring-white/10' : 'text-white/40 hover:text-white/60'}`}
                                     >
-                                        <Coins size={16} className={activeTab === 'packs' ? 'text-amber-500' : ''} />
+                                        <Coins size={16} className={activeTab === 'packs' ? 'text-amber-400' : 'text-current'} />
                                         Пакеты
                                     </button>
                                     <button
                                         onClick={() => setActiveTab('subs')}
-                                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'subs' ? 'bg-white dark:bg-slate-800 shadow-sm text-slate-900 dark:text-white' : 'text-slate-400'}`}
+                                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'subs' ? 'bg-[#1c1c1e] shadow-lg text-white ring-1 ring-white/10' : 'text-white/40 hover:text-white/60'}`}
                                     >
-                                        <Calendar size={16} className={activeTab === 'subs' ? 'text-indigo-500' : ''} />
+                                        <Calendar size={16} className={activeTab === 'subs' ? 'text-indigo-400' : 'text-current'} />
                                         Подписки
                                     </button>
                                 </div>
@@ -182,49 +185,52 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                 key={plan.id}
                                                 whileTap={!plan.comingSoon ? { scale: 0.98 } : {}}
                                                 onClick={() => !plan.comingSoon && handleSelectPlan(plan)}
-                                                className={`relative group bg-white dark:bg-slate-800 p-5 rounded-[2rem] border-2 transition-all ${plan.comingSoon ? 'opacity-70 cursor-not-allowed grayscale-[0.5]' : 'cursor-pointer'} ${plan.bestValue && !plan.comingSoon ? 'border-indigo-500 dark:border-indigo-500 shadow-lg shadow-indigo-500/10' : 'border-transparent hover:border-slate-200 dark:hover:border-slate-700'}`}
+                                                className={`relative group p-5 rounded-[2rem] border transition-all ${plan.comingSoon ? 'opacity-50 cursor-not-allowed grayscale-[0.8] bg-white/5 border-white/5' : 'cursor-pointer bg-[#1c1c1e]'} ${plan.bestValue && !plan.comingSoon ? 'border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.15)] bg-gradient-to-b from-[#1c1c1e] to-[#252528]' : 'border-white/5 hover:border-white/20'}`}
                                             >
                                                 {plan.bestValue && (
-                                                    <div className="absolute -top-3 left-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-[10px] uppercase font-bold px-3 py-1 rounded-full shadow-md">
-                                                        Выгодно
+                                                    <div className="absolute -top-3 left-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-[9px] uppercase font-black px-3 py-1 rounded-full shadow-lg shadow-indigo-500/30 tracking-widest">
+                                                        Best Choice
                                                     </div>
                                                 )}
 
-                                                <div className="flex justify-between items-center mb-4">
+                                                <div className="flex justify-between items-center mb-5">
                                                     <div className="flex items-center gap-4">
-                                                        <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${plan.color} flex items-center justify-center shadow-lg text-white`}>
-                                                            <plan.icon size={24} />
+                                                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${plan.color} flex items-center justify-center shadow-lg text-white relative overflow-hidden group-hover:scale-110 transition-transform duration-500`}>
+                                                            <div className="absolute inset-0 bg-black/10" />
+                                                            <plan.icon size={28} className="relative z-10" />
                                                         </div>
                                                         <div>
-                                                            <h3 className="font-bold text-lg leading-tight">{plan.name}</h3>
-                                                            <div className="text-xs text-slate-400 font-medium">
+                                                            <h3 className="font-bold text-lg leading-tight text-white mb-0.5">{plan.name}</h3>
+                                                            <div className="text-xs text-white/40 font-medium">
                                                                 {plan.isSubscription ? 'Ежемесячно' : 'Навсегда'}
                                                             </div>
                                                         </div>
                                                     </div>
                                                     <div className="text-right">
-                                                        <div className="font-black text-xl">{plan.price}₽</div>
+                                                        <div className="font-black text-2xl text-white tracking-tight">{plan.price}₽</div>
                                                         {plan.originalPrice && (
-                                                            <div className="text-xs text-slate-400 line-through decoration-red-400">{plan.originalPrice}₽</div>
+                                                            <div className="text-xs text-white/30 line-through decoration-white/30">{plan.originalPrice}₽</div>
                                                         )}
                                                     </div>
                                                 </div>
 
-                                                <div className="space-y-2">
+                                                <div className="space-y-2 mb-4">
                                                     {plan.features.slice(0, 2).map((feat, i) => (
-                                                        <div key={i} className="flex items-center gap-2 text-xs font-medium text-slate-500 dark:text-slate-400">
-                                                            <Check size={12} className="text-green-500" strokeWidth={3} />
+                                                        <div key={i} className="flex items-center gap-2.5 text-xs font-medium text-white/60">
+                                                            <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+                                                                <Check size={10} className="text-white" strokeWidth={3} />
+                                                            </div>
                                                             {feat}
                                                         </div>
                                                     ))}
                                                 </div>
 
-                                                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700/50 flex items-center justify-between">
-                                                    <span className="text-xs font-bold text-slate-400 uppercase tracking-widest">{plan.credits} CR</span>
+                                                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
+                                                    <span className={`text-xs font-black uppercase tracking-widest ${plan.bestValue ? 'text-indigo-400' : 'text-white/40'}`}>{plan.credits} CR</span>
                                                     {plan.comingSoon ? (
-                                                        <span className="text-[10px] font-black uppercase text-slate-400 bg-slate-100 dark:bg-slate-700/50 px-3 py-1.5 rounded-lg">Скоро</span>
+                                                        <span className="text-[9px] font-black uppercase text-white/20 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">Soon</span>
                                                     ) : (
-                                                        <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-700 flex items-center justify-center group-hover:bg-indigo-500 group-hover:text-white transition-colors">
+                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${plan.bestValue ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'bg-white/10 text-white/50 group-hover:bg-white group-hover:text-black'}`}>
                                                             <ArrowRight size={16} />
                                                         </div>
                                                     )}
@@ -235,18 +241,18 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
 
                                     {/* Info Banner */}
                                     {activeTab === 'subs' && (
-                                        <div className="mt-6 bg-indigo-50 dark:bg-indigo-900/20 p-4 rounded-2xl flex gap-3 text-xs text-indigo-800 dark:text-indigo-200">
-                                            <Zap size={20} className="flex-shrink-0" />
-                                            <p>Подписки продлеваются автоматически. Вы можете отменить их в любой момент в настройках профиля.</p>
+                                        <div className="mt-6 bg-indigo-500/10 p-4 rounded-2xl flex gap-3 text-xs text-indigo-300 border border-indigo-500/20">
+                                            <Zap size={20} className="flex-shrink-0 text-indigo-400" />
+                                            <p className="font-medium">Подписки продлеваются автоматически. Вы можете отменить их в любой момент в настройках профиля.</p>
                                         </div>
                                     )}
                                 </div>
                             </div>
                         ) : (
                             // --- DETAIL/PAYMENT VIEW ---
-                            <div className="flex-1 flex flex-col relative h-full">
+                            <div className="flex-1 flex flex-col relative h-full relative z-10">
                                 <div className="px-6 pt-2 pb-0">
-                                    <button onClick={handleBack} className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center text-slate-500 mb-2 hover:bg-slate-200 transition-colors">
+                                    <button onClick={handleBack} className="w-10 h-10 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-white/50 mb-2 hover:bg-white/10 hover:text-white transition-colors">
                                         <ChevronRight className="rotate-180" size={20} />
                                     </button>
                                 </div>
@@ -256,80 +262,78 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                     style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
                                 >
                                     <div className="text-center mb-8">
-                                        <div className={`w-24 h-24 mx-auto rounded-[2rem] bg-gradient-to-br ${selectedPlan.color} flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20`}>
-                                            <selectedPlan.icon size={40} className="text-white" />
+                                        <div className={`w-28 h-28 mx-auto rounded-[2.5rem] bg-gradient-to-br ${selectedPlan.color} flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20 relative overflow-hidden`}>
+                                            <div className="absolute inset-0 bg-black/10" />
+                                            <selectedPlan.icon size={48} className="text-white relative z-10" />
                                         </div>
-                                        <h2 className="font-display font-black text-3xl mb-2">{selectedPlan.name}</h2>
-                                        <p className="text-slate-500 mb-4 text-sm">{selectedPlan.description}</p>
+                                        <h2 className="font-black text-3xl mb-2 text-white tracking-tight">{selectedPlan.name}</h2>
+                                        <p className="text-white/50 mb-6 text-sm font-medium">{selectedPlan.description}</p>
 
-                                        <div className="inline-flex items-baseline gap-1">
-                                            <span className="font-black text-4xl">{getFinalPrice(selectedPlan)}₽</span>
-                                            {selectedPlan.isSubscription && <span className="text-slate-400 font-bold">/мес</span>}
+                                        <div className="inline-flex items-baseline gap-1 bg-white/5 px-6 py-2 rounded-2xl border border-white/5">
+                                            <span className="font-black text-4xl text-white">{getFinalPrice(selectedPlan)}₽</span>
+                                            {selectedPlan.isSubscription && <span className="text-white/40 font-bold text-sm">/мес</span>}
                                         </div>
                                     </div>
 
                                     {/* Features Box */}
-                                    <div className="bg-slate-50 dark:bg-slate-800/50 rounded-3xl p-6 mb-6 space-y-4 border border-slate-100 dark:border-slate-700">
-                                        <h4 className="font-bold text-xs text-slate-400 uppercase tracking-widest mb-2">Входит в пакет</h4>
+                                    <div className="bg-[#1c1c1e] rounded-[1.5rem] p-6 mb-6 space-y-4 border border-white/5">
+                                        <h4 className="font-bold text-[10px] text-white/30 uppercase tracking-widest mb-2">Входит в пакет</h4>
                                         {selectedPlan.features.map((feature, idx) => (
                                             <div key={idx} className="flex items-center gap-3">
-                                                <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${selectedPlan.color} flex items-center justify-center flex-shrink-0 text-white shadow-sm`}>
+                                                <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${selectedPlan.color} flex items-center justify-center flex-shrink-0 text-white shadow-lg`}>
                                                     <Check size={12} strokeWidth={4} />
                                                 </div>
-                                                <span className="font-medium text-sm">{feature}</span>
+                                                <span className="font-bold text-sm text-white/80">{feature}</span>
                                             </div>
                                         ))}
                                     </div>
 
                                     {/* Promo Code Input */}
-                                    <div className="mb-6">
-                                        <label className="text-xs font-bold text-slate-400 uppercase ml-1 mb-2 block">Промокод</label>
-                                        <div className="flex gap-2">
-                                            <div className="relative flex-1">
-                                                <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-slate-400">
-                                                    <TicketPercent size={18} />
-                                                </div>
-                                                <input
-                                                    type="text"
-                                                    value={promoCode}
-                                                    onChange={(e) => setPromoCode(e.target.value)}
-                                                    placeholder="CODE"
-                                                    className="w-full bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white rounded-xl py-3 pl-10 pr-4 focus:ring-2 focus:ring-indigo-500 focus:outline-none font-bold uppercase text-sm"
-                                                />
+                                    <div className="mb-6 bg-white/5 p-1 rounded-2xl border border-white/5">
+                                        <div className="flex relative">
+                                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-white/30">
+                                                <TicketPercent size={18} />
                                             </div>
+                                            <input
+                                                type="text"
+                                                value={promoCode}
+                                                onChange={(e) => setPromoCode(e.target.value)}
+                                                placeholder="PROMO CODE"
+                                                className="w-full bg-transparent text-white rounded-xl py-3 pl-10 pr-4 focus:outline-none font-bold uppercase text-sm placeholder:text-white/20"
+                                            />
                                             <button
                                                 onClick={handlePromoCheck}
                                                 disabled={isPromoApplied || !promoCode}
-                                                className={`px-4 rounded-xl font-bold font-display text-sm transition-all active:scale-95 ${isPromoApplied ? 'bg-green-500 text-white' : 'bg-slate-900 dark:bg-white text-white dark:text-slate-900'}`}
+                                                className={`mx-1 my-1 px-4 rounded-xl font-bold text-xs transition-all active:scale-95 flex items-center ${isPromoApplied ? 'bg-green-500 text-white' : 'bg-white text-black hover:bg-slate-200'}`}
                                             >
-                                                {isPromoApplied ? <Check size={20} /> : 'Apply'}
+                                                {isPromoApplied ? <Check size={16} /> : 'APPLY'}
                                             </button>
                                         </div>
-                                        {isPromoApplied && <p className="text-green-500 text-xs font-bold mt-2 ml-1">Скидка 10% применена!</p>}
+                                        {isPromoApplied && <p className="text-green-500 text-[10px] font-bold px-4 pb-2">Скидка 10% применена!</p>}
                                     </div>
 
                                     {/* Policies */}
                                     <div className="space-y-4 mb-8">
-                                        <label className="flex items-start gap-3 p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-100 dark:border-slate-700 cursor-pointer transition-colors hover:border-indigo-200 dark:hover:border-indigo-900">
-                                            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0 ${termsAccepted ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300 dark:border-slate-600'}`}>
+                                        <label className="flex items-start gap-3 p-4 rounded-2xl bg-white/5 border border-white/5 cursor-pointer transition-colors hover:bg-white/10">
+                                            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0 ${termsAccepted ? 'bg-indigo-500 border-indigo-500' : 'border-white/20'}`}>
                                                 {termsAccepted && <Check size={12} className="text-white" strokeWidth={4} />}
                                             </div>
                                             <input type="checkbox" className="hidden" checked={termsAccepted} onChange={() => setTermsAccepted(!termsAccepted)} />
-                                            <p className="text-xs text-slate-500 leading-snug">
-                                                Я принимаю <a href="#" className="text-indigo-500 font-bold hover:underline">Условия использования</a> и <a href="#" className="text-indigo-500 font-bold hover:underline">Политику конфиденциальности</a>.
+                                            <p className="text-xs text-white/40 leading-snug">
+                                                Я принимаю <a href="#" className="text-indigo-400 font-bold hover:underline">Условия использования</a> и <a href="#" className="text-indigo-400 font-bold hover:underline">Политику конфиденциальности</a>.
                                             </p>
                                         </label>
 
                                         {selectedPlan.isSubscription && (
-                                            <div className="bg-indigo-50/50 dark:bg-indigo-900/10 rounded-2xl p-4 border border-indigo-100 dark:border-indigo-900/30">
+                                            <div className="bg-indigo-500/10 rounded-2xl p-4 border border-indigo-500/20">
                                                 <label className="flex items-start gap-3 cursor-pointer">
-                                                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0 ${subscriptionAccepted ? 'bg-indigo-500 border-indigo-500' : 'border-slate-300 dark:border-slate-600'}`}>
+                                                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0 ${subscriptionAccepted ? 'bg-indigo-500 border-indigo-500' : 'border-indigo-300/30'}`}>
                                                         {subscriptionAccepted && <Check size={12} className="text-white" strokeWidth={4} />}
                                                     </div>
                                                     <input type="checkbox" className="hidden" checked={subscriptionAccepted} onChange={() => setSubscriptionAccepted(!subscriptionAccepted)} />
-                                                    <div className="text-xs text-slate-600 dark:text-slate-400 leading-snug">
-                                                        <span className="font-bold block mb-1 text-slate-900 dark:text-white">Автосписание</span>
-                                                        С карты будет списываться <b>{getFinalPrice(selectedPlan)}₽</b> каждые 30 дней. Отмена в 1 клик.
+                                                    <div className="text-xs text-indigo-200/60 leading-snug">
+                                                        <span className="font-bold block mb-1 text-indigo-300">Автосписание</span>
+                                                        С карты будет списываться <b className="text-white">{getFinalPrice(selectedPlan)}₽</b> каждые 30 дней. Отмена в 1 клик.
                                                     </div>
                                                 </label>
                                             </div>
@@ -351,13 +355,13 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                     </div>
 
                                     {/* Trust Badges */}
-                                    <div className="flex flex-col items-center gap-4 mb-32 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+                                    <div className="flex flex-col items-center gap-4 mb-32 opacity-30 grayscale hover:grayscale-0 transition-all duration-500">
                                         <div className="flex flex-wrap justify-center gap-3">
-                                            <div className="bg-white dark:bg-slate-800 rounded-lg p-1.5 border border-slate-200 dark:border-slate-700"><MIRLogo className="w-10 h-5" /></div>
-                                            <div className="bg-white dark:bg-slate-800 rounded-lg p-1.5 border border-slate-200 dark:border-slate-700"><TBankLogo className="w-10 h-5" /></div>
-                                            <div className="bg-white dark:bg-slate-800 rounded-lg p-1.5 border border-slate-200 dark:border-slate-700"><SBPLogo className="w-10 h-5" /></div>
+                                            <div className="bg-white/10 rounded-lg p-1.5 border border-white/5"><MIRLogo className="w-10 h-5" /></div>
+                                            <div className="bg-white/10 rounded-lg p-1.5 border border-white/5"><TBankLogo className="w-10 h-5" /></div>
+                                            <div className="bg-white/10 rounded-lg p-1.5 border border-white/5"><SBPLogo className="w-10 h-5" /></div>
                                         </div>
-                                        <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-slate-400">
+                                        <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-white/40">
                                             <ShieldCheck size={14} /> 100% SECURE PAYMENT
                                         </div>
                                     </div>
@@ -365,8 +369,8 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
 
                                 {/* Placeholder for non-accepted state */}
                                 {!termsAccepted && (
-                                    <div className="absolute bottom-0 left-0 w-full p-6 bg-white/80 dark:bg-[#0f1014]/80 backdrop-blur-xl border-t border-slate-100 dark:border-slate-800 z-50">
-                                        <div className="w-full py-4 rounded-2xl font-bold text-sm bg-slate-100 dark:bg-slate-800 text-slate-400 text-center">
+                                    <div className="absolute bottom-0 left-0 w-full p-6 bg-[#0f0f10]/80 backdrop-blur-xl border-t border-white/5 z-50">
+                                        <div className="w-full py-4 rounded-xl font-bold text-sm bg-white/5 text-white/30 text-center border border-white/5">
                                             Подтвердите условия выше
                                         </div>
                                     </div>
