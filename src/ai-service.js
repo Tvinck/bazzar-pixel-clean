@@ -324,19 +324,19 @@ const aiService = {
                         if (!firstImg) throw new Error('Kling Motion Control missing source image.');
                         if (!firstVid) throw new Error('Kling Motion Control missing reference video.');
 
-                        // Specific Schema for Motion Control (verified)
-                        input.image_url = firstImg; // Docs say image_url or input_urls? Let's check logic below. 
-                        // Actually, docs usually prefer scalar for single items, but arrays for lists.
-                        // The previous block used input_urls = [firstImg], let's stick to what we had if verified,
-                        // BUT standardizing on image_url often is safer for Kie adapters.
-                        // Let's stick to the code we are moving:
+                        // STRICT CLEANUP for Motion Control
+                        // 1. Remove parameters that cause 500 error if present
+                        delete input.aspect_ratio;
+                        delete input.duration; // Motion control duration depends on ref video usually
+                        delete input.image_url; // Use input_urls only
+
+                        // 2. Set Required Fields
                         input.input_urls = [firstImg];
                         input.video_urls = [firstVid];
-
                         input.character_orientation = 'video';
-                        // input.mode = '720p'; // Removed hardcoded mode if not strictly needed or causing conflict 
+                        // input.mode = '720p'; // Optional
 
-                        // Motion Control might fail if prompt is missing, so ensure it
+                        // 3. Ensure prompt
                         if (!input.prompt || input.prompt.trim() === '') input.prompt = "animate";
                     } else {
                         throw new Error('Kling Motion Control requires a reference video.');
