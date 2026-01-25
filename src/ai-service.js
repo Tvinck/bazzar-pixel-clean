@@ -334,7 +334,7 @@ const aiService = {
                         input.input_urls = [firstImg];
                         input.video_urls = [firstVid];
                         input.character_orientation = 'video';
-                        // input.mode = '720p'; // Optional
+                        input.mode = '720p'; // REQUIRED by API
 
                         // 3. Ensure prompt
                         if (!input.prompt || input.prompt.trim() === '') input.prompt = "animate";
@@ -406,6 +406,7 @@ const aiService = {
                     if (hasSourceFiles) {
                         input.image_url = firstImg;
                         input.input_image = firstImg;
+                        delete input.input_urls; // Ensure clean input
                     }
                 }
             }
