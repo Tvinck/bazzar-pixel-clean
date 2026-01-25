@@ -998,6 +998,7 @@ const GenerationView = ({ onOpenPayment }) => {
                     </div>
 
                     {/* Generate Button (Gradient Glass) */}
+                    {/* Generate Button (Gradient Glass) */}
                     <motion.button
                         whileTap={{ scale: 0.97 }}
                         whileHover={{ scale: 1.02 }}
@@ -1022,12 +1023,12 @@ const GenerationView = ({ onOpenPayment }) => {
                         ) : canAfford ? (
                             <>
                                 <Sparkles size={20} className="text-[#321805]" strokeWidth={2.5} />
-                                <span className="tracking-wide">ГЕНЕРИРОВАТЬ</span>
+                                <span className="tracking-wide">ГЕНЕРИРОВАТЬ ({cost})</span>
                             </>
                         ) : (
                             <>
                                 <Zap size={20} className="fill-current" />
-                                <span>ПОПОЛНИТЬ</span>
+                                <span>ПОПОЛНИТЬ ({cost})</span>
                             </>
                         )}
                     </motion.button>
