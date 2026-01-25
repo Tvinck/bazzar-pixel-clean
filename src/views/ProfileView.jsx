@@ -49,6 +49,12 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
         try { return JSON.parse(localStorage.getItem('pixel_completed_tasks') || '[]'); } catch { return []; }
     });
 
+    // Referral System State
+    const [referralStats, setReferralStats] = useState(null);
+    const [referralList, setReferralList] = useState([]);
+    const [promoInput, setPromoInput] = useState('');
+    const [isCreatingPromo, setIsCreatingPromo] = useState(false);
+
     useEffect(() => {
         if (activeSection === 'account' && window.Telegram?.WebApp?.initData) {
             setIsTxLoading(true);
@@ -88,7 +94,20 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
     const handleTaskComplete = (taskId, reward, link, action) => {
         playClick();
 
-        // 1. ALWAYS Execute action (Open Link / Copy)
+        // Special check for Invite Task
+        if (taskId === 'invite_friend_task') {
+            // Always copy link first
+            handleCopyReflink();
+
+            // Check requirement
+            const inviteCount = referralStats?.invited_count || 0;
+            if (inviteCount < 1) {
+                toast.error('Пригласите хотя бы 1 друга, чтобы забрать награду!');
+                return;
+            }
+        }
+
+        // 1. ALWAYS Execute action (Open Link)
         // This ensures the link works even if the task is already "Done"
         if (link) {
             try {
@@ -100,8 +119,6 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
             } catch (e) {
                 window.open(link, '_blank');
             }
-        } else if (action === 'copy') {
-            handleCopyReflink();
         }
 
         // 2. Check if already rewarded
@@ -115,6 +132,11 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
         if (userData?.id) {
             addCreditsMutation.mutate({ userId: userData.id, amount: reward });
             analytics.trackEvent(userData.id, 'loyalty_task_completed', { task_id: taskId, reward });
+
+            // Show success toast
+            if (window.Telegram?.WebApp?.HapticFeedback) {
+                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+            }
         }
     };
 
@@ -353,10 +375,6 @@ const ProfileView = ({ isDark, onOpenPayment }) => {
     );
 
     // 2. PARTNERSHIP VIEW (Updated with Referral System)
-    const [referralStats, setReferralStats] = useState(null);
-    const [referralList, setReferralList] = useState([]);
-    const [promoInput, setPromoInput] = useState('');
-    const [isCreatingPromo, setIsCreatingPromo] = useState(false);
 
     useEffect(() => {
         if (activeSection === 'partnership' && userData?.id) {
