@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
@@ -180,107 +181,143 @@ const HistoryView = () => {
                 ))}
             </div>
 
-            {/* --- PREMIUM DETAIL MODAL --- */}
-            <AnimatePresence>
-                {selectedItem && (
-                    <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center sm:p-4">
-                        {/* Backdrop */}
-                        <motion.div
-                            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-                            onClick={() => setSelectedItem(null)}
-                            className="absolute inset-0 bg-[#0f0f10]/95 backdrop-blur-xl"
-                        />
+            {/* --- PREMIUM DETAIL MODAL (Portal to escape PageTransition transform) --- */}
+            {typeof document !== 'undefined' && createPortal(
+                <AnimatePresence>
+                    {selectedItem && (
+                        <div className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center sm:p-4 font-sans">
+                            {/* Backdrop */}
+                            <motion.div
+                                initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                                onClick={() => setSelectedItem(null)}
+                                className="absolute inset-0 bg-[#0f0f10]/95 backdrop-blur-xl"
+                            />
 
-                        {/* Content */}
-                        <motion.div
-                            layoutId={`card-${selectedItem.id}`}
-                            className="relative bg-[#151517] w-full max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl border-t sm:border border-white/10 max-h-[92vh] flex flex-col"
-                        >
-                            {/* Drag Handle (Mobile) */}
-                            <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1 bg-white/20 rounded-full z-50 sm:hidden" />
+                            {/* Content */}
+                            <motion.div
+                                layoutId={`card-${selectedItem.id}`}
+                                className="relative bg-[#151517] w-full max-w-sm rounded-t-[2.5rem] sm:rounded-[2.5rem] overflow-hidden shadow-2xl border-t sm:border border-white/10 max-h-[92vh] flex flex-col"
+                            >
+                                {/* Drag Handle (Mobile) */}
+                                <div className="absolute top-3 left-1/2 -translate-x-1/2 w-12 h-1 bg-white/20 rounded-full z-50 sm:hidden" />
 
-                            {/* Image Container */}
-                            <div className="relative w-full aspect-square bg-black/50 overflow-hidden group">
-                                {selectedItem.type === 'video' ? (
-                                    <video src={selectedItem.image_url} className="w-full h-full object-contain" controls loop autoPlay />
-                                ) : (
-                                    <img src={selectedItem.image_url} className="w-full h-full object-cover" />
-                                )}
+                                {/* Image Container */}
+                                <div className="relative w-full aspect-square bg-black/50 overflow-hidden group">
+                                    {selectedItem.type === 'video' ? (
+                                        <video src={selectedItem.image_url} className="w-full h-full object-contain" controls loop autoPlay />
+                                    ) : (
+                                        <img src={selectedItem.image_url} className="w-full h-full object-cover" />
+                                    )}
 
-                                {/* Close Button */}
-                                <button
-                                    onClick={() => setSelectedItem(null)}
-                                    className="absolute top-5 right-5 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center backdrop-blur-xl border border-white/10 hover:bg-black/60 transition-all z-20"
-                                >
-                                    <X size={20} />
-                                </button>
-                            </div>
+                                    {/* Close Button */}
+                                    <button
+                                        onClick={() => setSelectedItem(null)}
+                                        className="absolute top-5 right-5 w-10 h-10 bg-black/40 text-white rounded-full flex items-center justify-center backdrop-blur-xl border border-white/10 hover:bg-black/60 transition-all z-20"
+                                    >
+                                        <X size={20} />
+                                    </button>
+                                </div>
 
-                            {/* Scrollable Content */}
-                            <div className="p-6 overflow-y-auto">
-                                <div className="mb-6">
-                                    <div className="flex items-start justify-between gap-4 mb-4">
-                                        <h3 className="font-black text-2xl text-white leading-tight tracking-tight">
-                                            Generative Art
-                                        </h3>
-                                        {/* Actions */}
-                                        <div className="flex gap-2">
-                                            <button className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/70 transition-colors border border-white/5">
-                                                <Share2 size={18} />
-                                            </button>
+                                {/* Scrollable Content */}
+                                <div className="p-6 overflow-y-auto">
+                                    <div className="mb-6">
+                                        <div className="flex items-start justify-between gap-4 mb-4">
+                                            <h3 className="font-black text-2xl text-white leading-tight tracking-tight">
+                                                Generative Art
+                                            </h3>
+                                            {/* Actions */}
+                                            <div className="flex gap-2">
+                                                <button
+                                                    onClick={() => {
+                                                        const shareUrl = `https://t.me/share/url?url=${encodeURIComponent(selectedItem.image_url)}&text=${encodeURIComponent('Сгенерировано в Pixel AI ✨')}`;
+                                                        if (window.Telegram?.WebApp?.openTelegramLink) {
+                                                            window.Telegram.WebApp.openTelegramLink(shareUrl);
+                                                        } else {
+                                                            window.open(shareUrl, '_blank');
+                                                        }
+                                                    }}
+                                                    className="w-10 h-10 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/70 transition-colors border border-white/5"
+                                                >
+                                                    <Share2 size={18} />
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white/5 rounded-2xl p-4 border border-white/5 mb-4 shadow-inner">
+                                            <p className="text-sm text-white/80 leading-relaxed font-medium">
+                                                {selectedItem.prompt}
+                                            </p>
+                                        </div>
+
+                                        <div className="flex gap-2 text-[10px] text-white/40 font-mono overflow-x-auto pb-2 scrollbar-none">
+                                            <span className="bg-white/5 border border-white/5 px-3 py-1.5 rounded-lg whitespace-nowrap uppercase tracking-wider">{selectedItem.model_id}</span>
+                                            <span className="bg-white/5 border border-white/5 px-3 py-1.5 rounded-lg whitespace-nowrap uppercase tracking-wider">{selectedItem.ratio || '1:1'}</span>
+                                            <span className="bg-white/5 border border-white/5 px-3 py-1.5 rounded-lg whitespace-nowrap">{new Date(selectedItem.created_at).toLocaleDateString()}</span>
                                         </div>
                                     </div>
 
-                                    <div className="bg-white/5 rounded-2xl p-4 border border-white/5 mb-4 shadow-inner">
-                                        <p className="text-sm text-white/80 leading-relaxed font-medium">
-                                            {selectedItem.prompt}
-                                        </p>
-                                    </div>
+                                    {/* Actions Grid */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <button
+                                            onClick={() => handleRepeat(selectedItem)}
+                                            className="col-span-2 py-4 bg-white text-black hover:bg-white/90 rounded-2xl font-black text-sm uppercase tracking-wide flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-white/5 relative overflow-hidden group"
+                                        >
+                                            <div className="absolute inset-0 bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+                                            <Repeat size={18} />
+                                            <span>Remix / Повторить</span>
+                                        </button>
 
-                                    <div className="flex gap-2 text-[10px] text-white/40 font-mono overflow-x-auto pb-2 scrollbar-none">
-                                        <span className="bg-white/5 border border-white/5 px-3 py-1.5 rounded-lg whitespace-nowrap uppercase tracking-wider">{selectedItem.model_id}</span>
-                                        <span className="bg-white/5 border border-white/5 px-3 py-1.5 rounded-lg whitespace-nowrap uppercase tracking-wider">{selectedItem.ratio || '1:1'}</span>
-                                        <span className="bg-white/5 border border-white/5 px-3 py-1.5 rounded-lg whitespace-nowrap">{new Date(selectedItem.created_at).toLocaleDateString()}</span>
+                                        <button
+                                            onClick={() => handlePublish(selectedItem)}
+                                            className={`py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-2 transition-all border backdrop-blur-md ${selectedItem.is_public
+                                                ? 'bg-green-500/20 text-green-400 border-green-500/20'
+                                                : 'bg-white/5 text-white/80 border-white/5 hover:bg-white/10'}`}
+                                        >
+                                            <Globe size={16} />
+                                            {selectedItem.is_public ? 'Public' : 'Private'}
+                                        </button>
+
+                                        <button
+                                            onClick={async () => {
+                                                const url = selectedItem.image_url;
+                                                const fileName = `pixel-history-${selectedItem.id}.${selectedItem.type === 'video' ? 'mp4' : 'png'}`;
+
+                                                if (window.Telegram?.WebApp?.downloadFile) {
+                                                    try {
+                                                        window.Telegram.WebApp.downloadFile({ url, file_name: fileName });
+                                                        return;
+                                                    } catch (e) { console.warn('TG DL fail', e); }
+                                                }
+
+                                                try {
+                                                    const res = await fetch(url, { mode: 'cors' });
+                                                    if (!res.ok) throw new Error('Net err');
+                                                    const blob = await res.blob();
+                                                    const blobUrl = window.URL.createObjectURL(blob);
+                                                    const a = document.createElement('a');
+                                                    a.href = blobUrl;
+                                                    a.download = fileName;
+                                                    document.body.appendChild(a);
+                                                    a.click();
+                                                    window.URL.revokeObjectURL(blobUrl);
+                                                    document.body.removeChild(a);
+                                                } catch (e) {
+                                                    window.open(url, '_blank');
+                                                }
+                                            }}
+                                            className="py-3.5 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-2 transition-all border border-white/5 backdrop-blur-md"
+                                        >
+                                            <Download size={16} />
+                                            <span>Save</span>
+                                        </button>
                                     </div>
                                 </div>
-
-                                {/* Actions Grid */}
-                                <div className="grid grid-cols-2 gap-3">
-                                    <button
-                                        onClick={() => handleRepeat(selectedItem)}
-                                        className="col-span-2 py-4 bg-white text-black hover:bg-white/90 rounded-2xl font-black text-sm uppercase tracking-wide flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg shadow-white/5 relative overflow-hidden group"
-                                    >
-                                        <div className="absolute inset-0 bg-black/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
-                                        <Repeat size={18} />
-                                        <span>Remix / Повторить</span>
-                                    </button>
-
-                                    <button
-                                        onClick={() => handlePublish(selectedItem)}
-                                        className={`py-3.5 rounded-2xl font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-2 transition-all border backdrop-blur-md ${selectedItem.is_public
-                                            ? 'bg-green-500/20 text-green-400 border-green-500/20'
-                                            : 'bg-white/5 text-white/80 border-white/5 hover:bg-white/10'}`}
-                                    >
-                                        <Globe size={16} />
-                                        {selectedItem.is_public ? 'Public' : 'Private'}
-                                    </button>
-
-                                    <a
-                                        href={selectedItem.image_url}
-                                        download={`generation_${selectedItem.id}.png`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="py-3.5 bg-white/5 hover:bg-white/10 text-white rounded-2xl font-bold text-xs uppercase tracking-wide flex items-center justify-center gap-2 transition-all border border-white/5 backdrop-blur-md"
-                                    >
-                                        <Download size={16} />
-                                        <span>Save</span>
-                                    </a>
-                                </div>
-                            </div>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>,
+                document.body
+            )}
         </motion.div>
     );
 };
