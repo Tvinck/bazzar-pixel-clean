@@ -326,15 +326,14 @@ const aiService = {
                     if (kieModelId.includes('image-to-video')) {
                         if (!firstImg) throw new Error('Kling 2.6 I2V needs image');
 
-                        // Try ALL standard keys to hit the right one
-                        input.image = firstImg;
+                        // STRICT: Only use image_url for Kling 2.6
                         input.image_url = firstImg;
 
                         // Remove aspect_ratio for Img2Vid as it conflicts with source image
                         delete input.aspect_ratio;
 
                         // Ensure prompt is not empty if required
-                        if (!input.prompt || input.prompt.trim() === '') input.prompt = '.';
+                        if (!input.prompt || input.prompt.trim() === '') input.prompt = 'animate this image';
                     } else {
                         // Text
                         if (options.aspect_ratio) input.aspect_ratio = options.aspect_ratio;
