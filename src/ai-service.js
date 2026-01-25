@@ -323,6 +323,9 @@ const aiService = {
                     input.duration = (options.duration || '5').replace('s', '');
                     if (options.sound) input.sound = true;
 
+                    // cfg_scale is REQUIRED for Kling 2.6
+                    input.cfg_scale = options.cfg_scale || 0.5;
+
                     if (kieModelId.includes('image-to-video')) {
                         if (!firstImg) throw new Error('Kling 2.6 I2V needs image');
 
@@ -337,9 +340,6 @@ const aiService = {
 
                         // Ensure prompt is not empty if required
                         if (!input.prompt || input.prompt.trim() === '') input.prompt = 'animate this image';
-
-                        // Add cfg_scale if provided
-                        if (options.cfg_scale) input.cfg_scale = options.cfg_scale;
                     } else {
                         // Text-to-Video: Keep aspect_ratio AND add mode
                         if (!input.aspect_ratio) input.aspect_ratio = aspectRatio || '16:9';
@@ -403,7 +403,13 @@ const aiService = {
 
                 // Seedance 1.5 Pro
                 if (kieModelId.includes('seedance')) {
-                    input.duration = rawDuration; // e.g., '4', '8', '12'
+                    // Seedance accepts only: 4, 8, 12
+                    // Map common values to allowed ones
+                    if (rawDuration === '5' || rawDuration === '6') rawDuration = '4';
+                    else if (rawDuration === '10') rawDuration = '8';
+                    else if (!['4', '8', '12'].includes(rawDuration)) rawDuration = '4'; // Default
+
+                    input.duration = rawDuration;
                     if (hasSourceFiles) input.input_urls = options.source_files;
                     if (options.aspect_ratio) input.aspect_ratio = options.aspect_ratio;
                     if (options.resolution) input.resolution = options.resolution; // 480p, 720p
