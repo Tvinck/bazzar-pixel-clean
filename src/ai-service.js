@@ -356,7 +356,11 @@ const aiService = {
             else if (kieModelId.includes('sora')) {
                 if (kieModelId.includes('storyboard')) {
                     input.n_frames = options.duration === '10' ? '10' : '15'; // 10, 15, 25 options
-                    if (hasSourceFiles) input.image_urls = options.source_files;
+                    if (hasSourceFiles) {
+                        input.image_urls = options.source_files;
+                        // Fix for 500 Error: Aspect Ratio not allowed with Image Input
+                        delete input.aspect_ratio;
+                    }
                 }
             }
             // 5. VEO
