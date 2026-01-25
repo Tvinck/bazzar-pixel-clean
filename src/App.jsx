@@ -61,58 +61,46 @@ import PageTransition from './components/PageTransition'; // Import Transition
   )
 }
 
-{/* Global Modals (Only non-page ones left) */ }
-{
-  (isPaymentOpen || hasPaymentMounted) && (
-    <Suspense fallback={null}>
-      <PaymentDrawer isOpen={isPaymentOpen} onClose={() => setIsPaymentOpen(false)} />
-    </Suspense>
-  )
-}
+{/* Global Modals */ }
+      <Suspense fallback={null}>
+        {isPaymentOpen || hasPaymentMounted ? (
+          <PaymentDrawer isOpen={isPaymentOpen} onClose={() => setIsPaymentOpen(false)} />
+        ) : null}
+      </Suspense>
 
-{
-  (isLeaderboardOpen || hasLeaderboardMounted) && (
-    <Suspense fallback={null}>
-      <LeaderboardDrawer isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
-    </Suspense>
-  )
-}
+      <Suspense fallback={null}>
+        {isLeaderboardOpen || hasLeaderboardMounted ? (
+          <LeaderboardDrawer isOpen={isLeaderboardOpen} onClose={() => setIsLeaderboardOpen(false)} />
+        ) : null}
+      </Suspense>
 
-{
-  (isInpaintingOpen || hasInpaintingMounted) && (
-    <Suspense fallback={null}>
-      <InpaintingEditor isOpen={isInpaintingOpen} onClose={() => setIsInpaintingOpen(false)} />
-    </Suspense>
-  )
-}
+      <Suspense fallback={null}>
+        {isInpaintingOpen || hasInpaintingMounted ? (
+            <InpaintingEditor isOpen={isInpaintingOpen} onClose={() => setIsInpaintingOpen(false)} />
+        ) : null}
+      </Suspense>
 
-{
-  (isFaceSwapOpen || hasFaceSwapMounted) && (
-    <Suspense fallback={null}>
-      <FaceSwap isOpen={isFaceSwapOpen} onClose={() => setIsFaceSwapOpen(false)} />
-    </Suspense>
-  )
-}
+      <Suspense fallback={null}>
+        {isFaceSwapOpen || hasFaceSwapMounted ? (
+            <FaceSwap isOpen={isFaceSwapOpen} onClose={() => setIsFaceSwapOpen(false)} />
+        ) : null}
+      </Suspense>
 
-{
-  (isAvatarTrainerOpen || hasAvatarTrainerMounted) && (
-    <Suspense fallback={null}>
-      <AvatarTrainer isOpen={isAvatarTrainerOpen} onClose={() => setIsAvatarTrainerOpen(false)} />
-    </Suspense>
-  )
-}
+      <Suspense fallback={null}>
+        {isAvatarTrainerOpen || hasAvatarTrainerMounted ? (
+            <AvatarTrainer isOpen={isAvatarTrainerOpen} onClose={() => setIsAvatarTrainerOpen(false)} />
+        ) : null}
+      </Suspense>
 
-{
-  (isOnboardingVisible) && (
-    <Suspense fallback={null}>
-      <OnboardingOverlay
-        isVisible={isOnboardingVisible}
-        onComplete={handleOnboardingComplete}
-        onStepAction={handleOnboardingAction}
-      />
-    </Suspense>
-  )
-}
+      <Suspense fallback={null}>
+        {isOnboardingVisible && (
+            <OnboardingOverlay
+                isVisible={isOnboardingVisible}
+                onComplete={handleOnboardingComplete}
+                onStepAction={handleOnboardingAction}
+            />
+        )}
+      </Suspense>
 
       <Suspense fallback={null}>
         <DailyBonusModal isOpen={showDailyBonus} onClose={() => setShowDailyBonus(false)} user={telegramUser} />
@@ -125,7 +113,7 @@ import PageTransition from './components/PageTransition'; // Import Transition
         />
       </Suspense>
 
-{/* Global Generation UI (Moved here to fix React Error #310) */ }
+{/* Global Generation UI */ }
 <GlobalGenerationOverlay />
     </div >
   );
