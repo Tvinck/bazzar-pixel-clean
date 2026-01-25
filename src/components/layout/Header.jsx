@@ -24,7 +24,7 @@ const Header = ({ onTabChange, onOpenPayment, balance = 10, isDark }) => {
                             className="relative w-11 h-11"
                         >
                             <div className="absolute inset-0 bg-indigo-500/30 blur-lg rounded-full opacity-50 group-hover:opacity-100 transition-opacity" />
-                            <img src={headerLogo} alt="Pixel AI" className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
+                            <img src={headerLogo} alt="Pixel AI" className="w-full h-full object-contain relative z-10 drop-shadow-[0_0_10px_rgba(99,102,241,0.5)] mix-blend-screen" />
                         </motion.div>
                         <div className="flex flex-col justify-center gap-0.5">
                             <span className="font-display font-black text-xl text-white tracking-tight leading-none group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-indigo-400 group-hover:to-purple-400 transition-all">
@@ -45,7 +45,7 @@ const Header = ({ onTabChange, onOpenPayment, balance = 10, isDark }) => {
                         {/* Coin Container (Generated 3D Icon) */}
                         <div className="w-8 h-8 relative box-content group-hover:scale-110 transition-transform duration-300 mr-3">
                             <div className="absolute inset-0 bg-amber-500/20 blur-md rounded-full" />
-                            <img src={headerCoin} alt="Credits" className="w-full h-full object-contain relative z-10" />
+                            <img src={headerCoin} alt="Credits" className="w-full h-full object-contain relative z-10 mix-blend-screen" />
                         </div>
 
                         {/* Balance Text */}
