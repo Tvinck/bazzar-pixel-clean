@@ -329,17 +329,22 @@ const aiService = {
                         // STRICT: Only use image_url for Kling 2.6
                         input.image_url = firstImg;
 
-                        // CRITICAL: Remove both aspect_ratio AND mode for image-to-video
-                        delete input.aspect_ratio;
+                        // Keep aspect_ratio for i2v (may be required)
+                        if (!input.aspect_ratio) input.aspect_ratio = '16:9';
+
+                        // Remove mode for i2v
                         delete input.mode;
 
                         // Ensure prompt is not empty if required
                         if (!input.prompt || input.prompt.trim() === '') input.prompt = 'animate this image';
-                    } else {
-                        // Text-to-Video: Use 'mode' instead of 'aspect_ratio'
-                        delete input.aspect_ratio;
 
-                        // Map aspect_ratio to mode
+                        // Add cfg_scale if provided
+                        if (options.cfg_scale) input.cfg_scale = options.cfg_scale;
+                    } else {
+                        // Text-to-Video: Keep aspect_ratio AND add mode
+                        if (!input.aspect_ratio) input.aspect_ratio = aspectRatio || '16:9';
+
+                        // Map aspect_ratio to mode (both may be needed)
                         const aspectRatioValue = options.aspect_ratio || aspectRatio || '16:9';
                         if (aspectRatioValue === '16:9') {
                             input.mode = '1080p';
