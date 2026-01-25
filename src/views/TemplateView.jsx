@@ -216,7 +216,7 @@ const TemplateView = () => {
                         let width = img.width;
                         let height = img.height;
                         const MAX_SIZE = 1280; // Allow slightly larger max
-                        const MIN_SIZE = 512; // Increase safety margin (was 340)
+                        const MIN_SIZE = 340; // Reverted to 340 per user request
 
                         // 1. Upscale if too small
                         if (width < MIN_SIZE || height < MIN_SIZE) {
