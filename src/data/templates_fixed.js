@@ -38,7 +38,7 @@ export const templatesData = [
         id: 'trend_dance',
         title: "ТРЕНДОВЫЙ ТАНЕЦ",
         description: "Сгенерируй танец из этих ваших Тиктоков!",
-        category: TEMPLATE_CATEGORIES.VIDEO,
+        category: TEMPLATE_CATEGORIES.DANCE,
         likes: "15k",
         src: "/videos/dance_trend.mp4",
         mediaType: 'video',
@@ -116,9 +116,9 @@ export const templatesData = [
     },
     {
         id: 'moscow',
-        title: "MOSCOW",
+        title: "MOSCOW DANCE",
         description: "Сгенерируй танец на любом фото!",
-        category: TEMPLATE_CATEGORIES.VIDEO,
+        category: TEMPLATE_CATEGORIES.DANCE,
         likes: "8k",
         src: "/videos/moscow.mp4",
         mediaType: 'video',
@@ -131,10 +131,26 @@ export const templatesData = [
         }
     },
     {
+        id: 'crazy_frog',
+        title: "CRAZY FROG DANCE",
+        description: "Тот самый танец Crazy Frog!",
+        category: TEMPLATE_CATEGORIES.DANCE,
+        likes: "25k",
+        src: "/videos/crazy_frog.mp4",
+        mediaType: 'video',
+        model_id: 'kling_motion_control',
+        cost: 15,
+        generation_prompt: 'The character is performing the iconic Crazy Frog dance with energetic, whimsical, and exaggerated movements. Fun and nostalgic choreography.',
+        configuration: {
+            mode: '720p',
+            character_orientation: 'video'
+        }
+    },
+    {
         id: 'big_guy',
-        title: "BIG GUY",
-        description: "Превратись в большого парня!",
-        category: TEMPLATE_CATEGORIES.VIDEO,
+        title: "BIG GUY DANCE",
+        description: "Превратись в танцующего большого парня!",
+        category: TEMPLATE_CATEGORIES.DANCE,
         likes: "18k",
         src: "/videos/big_guy.mp4",
         mediaType: 'video',
@@ -212,9 +228,9 @@ export const templatesData = [
     },
     {
         id: 'nobody',
-        title: "NOBODY",
-        description: "Танец Nobody",
-        category: TEMPLATE_CATEGORIES.VIDEO,
+        title: "NOBODY DANCE",
+        description: "Трендовый танец Nobody",
+        category: TEMPLATE_CATEGORIES.DANCE,
         likes: "19k",
         src: "/videos/nobody.mp4",
         mediaType: 'video',
