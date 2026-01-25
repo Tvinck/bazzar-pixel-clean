@@ -143,33 +143,33 @@ const aiService = {
 
             // --- WAN FAMILY (NEW) ---
             'wan_2_6_text': 'wan/2-6-text-to-video',
-            'wan_2_6_image': 'wan/2-6-image-to-video',
             'wan_2_6_video': 'wan/2-6-video-to-video',
+
             'wan_2_5_text': 'wan/2-5-text-to-video',
             'wan_2_5_image': 'wan/2-5-image-to-video',
-            'wan_2_2_animate_move': 'wan/2-2-animate-move',
-            'wan_2_2_animate_replace': 'wan/2-2-animate-replace',
 
-            // --- KLING TURBO FAMILY (NEW) ---
-            'kling_2_5_turbo_text_pro': 'kling/v2-5-turbo-text-to-video-pro',
+            'wan_2_2_move': 'wan/2-2-animate-move',
+            'wan_2_2_replace': 'wan/2-2-animate-replace',
+
+            'wan_turbo_text': 'wan/2-2-a14b-text-to-video-turbo',
+            'wan_turbo_image': 'wan/2-2-a14b-image-to-video-turbo',
+            'wan_turbo_speech': 'wan/2-2-a14b-speech-to-video-turbo',
+
+            // --- KLING FAMILY ---
+            'kling_2_6_text': 'kling-2.6/text-to-video',
+            'kling_2_6_image': 'kling-2.6/image-to-video',
             'kling_2_5_turbo_image_pro': 'kling/v2-5-turbo-image-to-video-pro',
+            'kling_motion_control': 'kling-2.6/motion-control',
             'kling_ai_avatar_std': 'kling/ai-avatar-standard',
-            'ai_avatar_standard': 'kling/ai-avatar-standard',
-            'ai_avatar_pro': 'kling/ai-avatar-pro',
 
-            // --- HAILUO FAMILY (NEW) ---
+            // --- BYTEDANCE / SEEDANCE ---
+            'seedance_pro': 'bytedance/seedance-1.5-pro',
+            'bytedance_fast': 'bytedance/v1-pro-fast-image-to-video',
+
+            // --- HAILUO / SORA / VEO ---
             'hailuo_2_3_image_pro': 'hailuo/2-3-image-to-video-pro',
-            'hailuo_2_3_image_std': 'hailuo/2-3-image-to-video-standard',
-
-            // --- BYTEDANCE ---
-            'v1_pro_fast_image': 'bytedance/v1-pro-fast-image-to-video',
-
-            // --- SORA ---
             'sora_2_pro_storyboard': 'sora-2-pro-storyboard',
-
-            // --- VEO (Google) ---
-            'veo_3': 'google/veo',
-            'veo_3_1': 'google/veo'
+            'veo_3': 'google/veo'
         };
 
         // 1. Determine Correct Model ID
@@ -278,34 +278,56 @@ const aiService = {
 
             // 1. WAN FAMILY
             if (kieModelId.startsWith('wan/')) {
-                input.resolution = options.resolution || '1080p';
-                input.duration = options.duration || '5';
+                // Common resolution/duration
+                if (options.resolution) input.resolution = options.resolution; // 720p, 1080p
+                if (options.duration) input.duration = options.duration.replace('s', ''); // 5, 10
 
+                // Specific Subtypes
                 if (kieModelId.includes('2-6')) {
-                    // Wan 2.6
-                    if (kieModelId.includes('image-to-video')) {
-                        if (!firstImg) throw new Error(`${kieModelId} requires an input image.`);
-                        input.image_urls = [firstImg]; // Array
-                    } else if (kieModelId.includes('video-to-video')) {
-                        if (!firstVid) throw new Error(`${kieModelId} requires an input video.`);
-                        input.video_urls = [firstVid]; // Array
+                    if (kieModelId.includes('video-to-video')) {
+                        if (!firstVid) throw new Error(`${kieModelId} requires video input`);
+                        input.video_urls = [firstVid];
                     }
-                } else if (kieModelId.includes('2-5')) {
-                    // Wan 2.5
+                }
+                else if (kieModelId.includes('2-5')) {
                     if (kieModelId.includes('image-to-video')) {
-                        if (!firstImg) throw new Error(`${kieModelId} requires an input image.`);
-                        input.image_url = firstImg; // String
+                        if (!firstImg) throw new Error(`${kieModelId} requires image input`);
+                        input.image_url = firstImg;
+                        // 2.5 params
+                        if (options.enable_prompt_expansion) input.enable_prompt_expansion = true;
+                    } else {
+                        // Text to video
+                        if (options.aspect_ratio) input.aspect_ratio = options.aspect_ratio;
                     }
-                } else if (kieModelId.includes('animate')) {
-                    // Animate Move/Replace
-                    if (!firstImg || !firstVid) throw new Error(`${kieModelId} requires both image and video.`);
-                    input.video_url = firstVid;
-                    input.image_url = firstImg;
-                    input.resolution = '480p'; // Default 480p
+                }
+                else if (kieModelId.includes('turbo')) {
+                    // 2.2 Turbo
+                    if (kieModelId.includes('speech')) {
+                        if (!firstImg || !options.audio_files?.[0]) throw new Error('Speech Turbo needs image + audio');
+                        input.image_url = firstImg;
+                        input.audio_url = options.audio_files[0];
+                    } else if (kieModelId.includes('image-to-video')) {
+                        if (!firstImg) throw new Error('Image Turbo needs image');
+                        input.image_url = firstImg;
+                    }
+                    if (options.aspect_ratio) input.aspect_ratio = options.aspect_ratio;
                 }
             }
             // 2. KLING FAMILY
             else if (kieModelId.includes('kling')) {
+                // Kling 2.6
+                if (kieModelId.includes('kling-2.6')) {
+                    input.duration = (options.duration || '5').replace('s', '');
+                    if (options.sound) input.sound = true;
+
+                    if (kieModelId.includes('image-to-video')) {
+                        if (!firstImg) throw new Error('Kling 2.6 I2V needs image');
+                        input.image_urls = [firstImg];
+                    } else {
+                        // Text
+                        if (options.aspect_ratio) input.aspect_ratio = options.aspect_ratio;
+                    }
+                }
                 // Kling AI Avatar (Talking Head)
                 if (kieModelId.includes('ai-avatar')) {
                     if (!options.source_files?.[0]) throw new Error(`${kieModelId} requires an avatar image.`);
@@ -344,20 +366,31 @@ const aiService = {
                     }
                 }
             }
-            // 3. HAILUO / BYTEDANCE
+            // 3. HAILUO / BYTEDANCE / SEEDANCE
             else if (kieModelId.includes('hailuo') || kieModelId.includes('bytedance')) {
                 // Duration Cleanup
                 let rawDuration = (options.duration || '5').replace('s', '');
 
-                // Hailuo typically supports 6s. Bytedance 5s.
-                if (kieModelId.includes('hailuo')) input.duration = '6';
-                else input.duration = rawDuration;
+                // Seedance 1.5 Pro
+                if (kieModelId.includes('seedance')) {
+                    input.duration = rawDuration; // e.g., '4', '8', '12'
+                    if (hasSourceFiles) input.input_urls = options.source_files;
+                    if (options.aspect_ratio) input.aspect_ratio = options.aspect_ratio;
+                    if (options.resolution) input.resolution = options.resolution; // 480p, 720p
+                    if (options.generate_audio) input.generate_audio = true;
+                    if (options.fixed_lens) input.fixed_lens = true;
+                }
+                else {
+                    // Standard Bytedance / Hailuo
+                    if (kieModelId.includes('hailuo')) input.duration = '6';
+                    else input.duration = rawDuration;
 
-                input.resolution = options.resolution || (kieModelId.includes('bytedance') ? '720p' : '1080P'); // Note casing 1080P for Hailuo
-                if (kieModelId.includes('hailuo') && input.resolution === '1080p') input.resolution = '1080P'; // Case sensitive fix
+                    input.resolution = options.resolution || (kieModelId.includes('bytedance') ? '720p' : '1080P');
+                    if (kieModelId.includes('hailuo') && input.resolution === '1080p') input.resolution = '1080P';
 
-                if (hasSourceFiles) {
-                    input.image_url = firstImg;
+                    if (hasSourceFiles) {
+                        input.image_url = firstImg;
+                    }
                 }
             }
             // 4. SORA

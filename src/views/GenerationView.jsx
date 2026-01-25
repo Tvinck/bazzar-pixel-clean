@@ -98,14 +98,76 @@ const getModes = (t) => ({
         inputs: [
             { id: 'prompt', label: t('creation.describe'), placeholder: t('creation.placeholder'), type: 'textarea', required: true }
         ],
+        // New Hierarchical Structure
+        families: [
+            {
+                id: 'wan',
+                name: 'Wan (Alibaba)',
+                desc: 'State of the art',
+                iconChar: 'W',
+                tasks: [
+                    { id: 'wan_2_6_text', label: '2.6 Text to Video', cost: 70 },
+                    { id: 'wan_2_6_video', label: '2.6 Video to Video', cost: 70, requiresVideo: true },
+                    { id: 'wan_2_5_image', label: '2.5 Image to Video', cost: 60, requiresImage: true },
+                    { id: 'wan_2_5_text', label: '2.5 Text to Video', cost: 60 },
+                    { id: 'wan_turbo_text', label: '2.2 Text Turbo', cost: 20 },
+                    { id: 'wan_turbo_image', label: '2.2 Image Turbo', cost: 20, requiresImage: true },
+                ]
+            },
+            {
+                id: 'kling',
+                name: 'Kling AI',
+                desc: 'Realism & Motion',
+                iconChar: 'K',
+                tasks: [
+                    { id: 'kling_2_6_text', label: '2.6 Text to Video', cost: 60 },
+                    { id: 'kling_2_6_image', label: '2.6 Image to Video', cost: 60, requiresImage: true },
+                    { id: 'kling_2_5_turbo_image_pro', label: 'Turbo Image to Video', cost: 50, requiresImage: true },
+                    { id: 'kling_motion_control', label: 'Motion Control', cost: 60, customUI: 'kling_motion' },
+                    { id: 'kling_ai_avatar_std', label: 'Avatar Standard', cost: 60 },
+                ]
+            },
+            {
+                id: 'seedance',
+                name: 'Seedance / BD',
+                desc: 'Creative & Fast',
+                iconChar: 'S',
+                tasks: [
+                    { id: 'seedance_pro', label: 'Seedance 1.5 Pro', cost: 80 },
+                    { id: 'bytedance_fast', label: 'Fast Image to Video', cost: 40, requiresImage: true }
+                ]
+            },
+            {
+                id: 'hailuo',
+                name: 'Hailuo',
+                desc: 'Minimax',
+                iconChar: 'H',
+                tasks: [
+                    { id: 'hailuo_2_3_image_pro', label: '2.1 Image to Video', cost: 50, requiresImage: true }
+                ]
+            },
+            {
+                id: 'google',
+                name: 'Google Veo',
+                desc: 'Cinematic',
+                iconChar: 'V',
+                tasks: [
+                    { id: 'veo_3', label: 'Veo 3.1', cost: 70 }
+                ]
+            },
+            {
+                id: 'openai',
+                name: 'Sora',
+                desc: 'OpenAI',
+                iconChar: 'S',
+                tasks: [
+                    { id: 'sora_2_pro_storyboard', label: 'Sora Turbo', cost: 30 }
+                ]
+            }
+        ],
+        // Keeping legacy models array for generic prop passing compatibility if needed
         models: [
-            { id: 'wan_2_6_image', name: 'Wan 2.6', desc: 'Alibaba AI (Im2Vid)', iconChar: 'W', badge: { text: 'HIT', icon: '🔥' } },
-            { id: 'kling_motion_control', name: 'Kling Motion', desc: 'Photo + Video Ref', iconChar: 'K', badge: { text: 'NEW', icon: '✨' } },
-            { id: 'hailuo_2_3_image_pro', name: 'Hailuo 2.1', desc: 'Best Quality', iconChar: 'H' },
-            { id: 'sora_2_pro_storyboard', name: 'Sora Turbo', desc: 'OpenAI Video', iconChar: 'S' },
-            { id: 'v1_pro_fast_image', name: 'Bytedance', desc: 'Fast & Fluid', iconChar: 'B' },
-            { id: 'kling_2_5_turbo_image_pro', name: 'Kling Turbo', desc: 'High Speed', iconChar: 'K' },
-            { id: 'veo_3', name: 'Veo 3.1', desc: 'Google Deepmind', iconChar: 'V' }
+            { id: 'wan_2_6_text', name: 'Wan 2.6', desc: 'Alibaba', iconChar: 'W' }
         ],
         customFields: [
             { id: 'resolution', label: 'Разрешение', type: 'selector', options: ['720p', '1080p'] },
@@ -633,89 +695,149 @@ const GenerationView = ({ onOpenPayment }) => {
 
             <div className="flex-1 overflow-y-auto px-5 pb-36">
 
-                {/* 1. Model Selector (Conditional) */}
-                {/* 1. Model Selector (Glassy) */}
-                {modeConfig.models && modeConfig.models.length > 1 && (
-                    <div className="mb-6 mt-2">
-                        <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">Модель</label>
-                        <div
-                            onClick={() => { setIsModelOpen(!isModelOpen); playClick(); }}
-                            className="bg-white/5 backdrop-blur-xl rounded-[1.2rem] p-3 flex items-center justify-between border border-white/10 active:scale-[0.99] transition-all cursor-pointer shadow-lg shadow-black/5 relative overflow-hidden group hover:bg-white/10"
-                        >
-                            <div className="flex items-center gap-3.5">
-                                {selectedModelData && (
-                                    <>
-                                        <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center text-lg font-bold text-white border border-white/10 overflow-hidden shadow-inner">
-                                            {serverConfig?.models?.[model]?.preview ? (
-                                                <img src={serverConfig.models[model].preview} className="w-full h-full object-cover" alt="Selected" />
-                                            ) : (
-                                                selectedModelData.iconChar
-                                            )}
-                                        </div>
-                                        <div>
-                                            <div className="font-bold text-sm text-white flex items-center gap-2">
-                                                {selectedModelData.name}
-                                                {selectedModelData.badge && (
-                                                    <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500 text-black flex items-center gap-0.5 shadow-sm shadow-amber-500/20">
-                                                        {selectedModelData.badge.text} {selectedModelData.badge.icon}
-                                                    </span>
-                                                )}
+                {/* 1. Model Selector (Hierarchical or Simple) */}
+                {modeConfig.families ? (
+                    <div className="mb-6 mt-2 space-y-4">
+                        {/* Family Selector */}
+                        <div>
+                            <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">Провайдер</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                {modeConfig.families.map(fam => {
+                                    const isActive = (modeConfig.families.find(f => f.tasks.some(t => t.id === model))?.id === fam.id) || (model === '' && fam.id === 'wan');
+                                    return (
+                                        <div
+                                            key={fam.id}
+                                            onClick={() => {
+                                                // Select first task of this family
+                                                setModel(fam.tasks[0].id);
+                                                playClick();
+                                            }}
+                                            className={`p-3 rounded-2xl border cursor-pointer transition-all flex items-center gap-3 relative overflow-hidden ${isActive ? 'bg-indigo-500/20 border-indigo-500/40 shadow-[0_0_15px_rgba(99,102,241,0.2)]' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
+                                        >
+                                            <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-lg ${isActive ? 'bg-indigo-500 text-white' : 'bg-white/10 text-white/40'}`}>
+                                                {fam.iconChar}
                                             </div>
-                                            <div className="text-[10px] text-white/40 leading-tight mt-0.5 max-w-[200px]">
-                                                {selectedModelData.desc}
+                                            <div>
+                                                <div className={`text-xs font-bold uppercase ${isActive ? 'text-indigo-300' : 'text-white/80'}`}>{fam.name}</div>
+                                                <div className="text-[9px] text-white/40">{fam.desc}</div>
                                             </div>
                                         </div>
-                                    </>
-                                )}
-                            </div>
-                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
-                                <ChevronDown size={16} className={`text-white/50 transition-transform duration-300 ${isModelOpen ? 'rotate-180' : ''}`} />
+                                    )
+                                })}
                             </div>
                         </div>
-                        <AnimatePresence>
-                            {isModelOpen && (
-                                <motion.div
-                                    initial={{ height: 0, opacity: 0, y: -10 }}
-                                    animate={{ height: 'auto', opacity: 1, y: 0 }}
-                                    exit={{ height: 0, opacity: 0, y: -10 }}
-                                    className="overflow-hidden bg-[#151517]/95 backdrop-blur-2xl border border-white/10 rounded-2xl mt-2 shadow-2xl origin-top ring-1 ring-black/50"
-                                >
-                                    <div className="max-h-[300px] overflow-y-auto p-1.5 space-y-1">
-                                        {modeConfig.models.map(m => (
-                                            <div
-                                                key={m.id}
-                                                onClick={() => { setModel(m.id); setIsModelOpen(false); playClick(); }}
-                                                className={`p-3 rounded-xl flex items-center gap-3 cursor-pointer transition-all border border-transparent ${model === m.id ? 'bg-indigo-500/20 border-indigo-500/30' : 'hover:bg-white/5 hover:border-white/5'}`}
-                                            >
-                                                <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold border overflow-hidden relative ${model === m.id ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/20' : 'bg-white/5 text-white/50 border-white/5'}`}>
-                                                    {serverConfig?.models?.[m.id]?.preview ? (
-                                                        <img
-                                                            src={serverConfig.models[m.id].preview}
-                                                            alt={m.name}
-                                                            className="w-full h-full object-cover"
-                                                        />
-                                                    ) : (
-                                                        m.iconChar
+
+                        {/* Task Selector (Based on active family) */}
+                        <div>
+                            <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">Режим генерации</label>
+                            <div className="flex flex-col gap-2">
+                                {modeConfig.families.find(f => f.tasks.some(t => t.id === model))?.tasks.map(task => (
+                                    <div
+                                        key={task.id}
+                                        onClick={() => { setModel(task.id); playClick(); }}
+                                        className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${model === task.id ? 'bg-white/10 border-indigo-500/50' : 'bg-white/5 border-white/5 hover:bg-white/10'}`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <div className={`w-4 h-4 rounded-full border flex items-center justify-center ${model === task.id ? 'border-indigo-500' : 'border-white/20'}`}>
+                                                {model === task.id && <div className="w-2 h-2 rounded-full bg-indigo-500" />}
+                                            </div>
+                                            <span className={`text-xs font-medium ${model === task.id ? 'text-white' : 'text-white/60'}`}>{task.label}</span>
+                                        </div>
+                                        {task.requiresImage && <span className="text-[9px] px-1.5 py-0.5 bg-blue-500/20 text-blue-300 rounded uppercase font-bold tracking-wider">Image</span>}
+                                        {task.requiresVideo && <span className="text-[9px] px-1.5 py-0.5 bg-pink-500/20 text-pink-300 rounded uppercase font-bold tracking-wider">Video</span>}
+                                        <div className="flex items-center gap-1 bg-black/20 px-2 py-1 rounded text-[10px] font-mono text-white/50">
+                                            <Zap size={10} className={model === task.id ? 'text-amber-400' : 'text-white/20'} />
+                                            {task.cost} CR
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                ) : (
+                    /* Standard Dropdown for non-video modes (Image/Audio/etc) */
+                    (modeConfig.models && modeConfig.models.length > 1) && (
+                        <div className="mb-6 mt-2">
+                            <label className="text-xs font-bold text-white/50 mb-2.5 block uppercase tracking-wide ml-1">Модель</label>
+                            <div
+                                onClick={() => { setIsModelOpen(!isModelOpen); playClick(); }}
+                                className="bg-white/5 backdrop-blur-xl rounded-[1.2rem] p-3 flex items-center justify-between border border-white/10 active:scale-[0.99] transition-all cursor-pointer shadow-lg shadow-black/5 relative overflow-hidden group hover:bg-white/10"
+                            >
+                                <div className="flex items-center gap-3.5">
+                                    {selectedModelData && (
+                                        <>
+                                            <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-white/10 to-white/5 flex items-center justify-center text-lg font-bold text-white border border-white/10 overflow-hidden shadow-inner">
+                                                {serverConfig?.models?.[model]?.preview ? (
+                                                    <img src={serverConfig.models[model].preview} className="w-full h-full object-cover" alt="Selected" />
+                                                ) : (
+                                                    selectedModelData.iconChar
+                                                )}
+                                            </div>
+                                            <div>
+                                                <div className="font-bold text-sm text-white flex items-center gap-2">
+                                                    {selectedModelData.name}
+                                                    {selectedModelData.badge && (
+                                                        <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-amber-500 text-black flex items-center gap-0.5 shadow-sm shadow-amber-500/20">
+                                                            {selectedModelData.badge.text} {selectedModelData.badge.icon}
+                                                        </span>
                                                     )}
                                                 </div>
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex items-center gap-2 mb-0.5">
-                                                        <span className={`font-bold text-xs uppercase tracking-wide ${model === m.id ? 'text-indigo-400' : 'text-white/90'}`}>
-                                                            {m.name}
-                                                        </span>
-                                                    </div>
-                                                    <div className="text-[9px] text-white/40 leading-tight">
-                                                        {m.desc}
-                                                    </div>
+                                                <div className="text-[10px] text-white/40 leading-tight mt-0.5 max-w-[200px]">
+                                                    {selectedModelData.desc}
                                                 </div>
-                                                {model === m.id && <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center"><Check size={10} className="text-white" /></div>}
                                             </div>
-                                        ))}
-                                    </div>
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
-                    </div>
+                                        </>
+                                    )}
+                                </div>
+                                <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/5">
+                                    <ChevronDown size={16} className={`text-white/50 transition-transform duration-300 ${isModelOpen ? 'rotate-180' : ''}`} />
+                                </div>
+                            </div>
+                            <AnimatePresence>
+                                {isModelOpen && (
+                                    <motion.div
+                                        initial={{ height: 0, opacity: 0, y: -10 }}
+                                        animate={{ height: 'auto', opacity: 1, y: 0 }}
+                                        exit={{ height: 0, opacity: 0, y: -10 }}
+                                        className="overflow-hidden bg-[#151517]/95 backdrop-blur-2xl border border-white/10 rounded-2xl mt-2 shadow-2xl origin-top ring-1 ring-black/50"
+                                    >
+                                        <div className="max-h-[300px] overflow-y-auto p-1.5 space-y-1">
+                                            {modeConfig.models.map(m => (
+                                                <div
+                                                    key={m.id}
+                                                    onClick={() => { setModel(m.id); setIsModelOpen(false); playClick(); }}
+                                                    className={`p-3 rounded-xl flex items-center gap-3 cursor-pointer transition-all border border-transparent ${model === m.id ? 'bg-indigo-500/20 border-indigo-500/30' : 'hover:bg-white/5 hover:border-white/5'}`}
+                                                >
+                                                    <div className={`flex-shrink-0 w-10 h-10 rounded-lg flex items-center justify-center text-lg font-bold border overflow-hidden relative ${model === m.id ? 'bg-indigo-500/20 text-indigo-300 border-indigo-500/20' : 'bg-white/5 text-white/50 border-white/5'}`}>
+                                                        {serverConfig?.models?.[m.id]?.preview ? (
+                                                            <img
+                                                                src={serverConfig.models[m.id].preview}
+                                                                alt={m.name}
+                                                                className="w-full h-full object-cover"
+                                                            />
+                                                        ) : (
+                                                            m.iconChar
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-0.5">
+                                                            <span className={`font-bold text-xs uppercase tracking-wide ${model === m.id ? 'text-indigo-400' : 'text-white/90'}`}>
+                                                                {m.name}
+                                                            </span>
+                                                        </div>
+                                                        <div className="text-[9px] text-white/40 leading-tight">
+                                                            {m.desc}
+                                                        </div>
+                                                    </div>
+                                                    {model === m.id && <div className="w-5 h-5 rounded-full bg-indigo-500 flex items-center justify-center"><Check size={10} className="text-white" /></div>}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    </motion.div>
+                                )}
+                            </AnimatePresence>
+                        </div>
+                    )
                 )}
 
                 {/* 2. Images (Upload) - Glassy */}

@@ -82,16 +82,33 @@ export const MODEL_CATALOG = {
     // ============================================
     // ВИДЕО
     // ============================================
-    'wan_2_6_image': { name: 'Wan 2.6 Image-to-Video', type: 'video', cost: 210 },
-    'kling_motion_control': { name: 'Kling 2.6 Motion Control', type: 'video', cost: 60 },
-    'sora_2_pro_storyboard': { name: 'Sora Turbo', type: 'video', cost: 30 },
-    'ai_avatar_standard': { name: 'AI Avatar Standard', type: 'video', cost: 60 },
-    'ai_avatar_pro': { name: 'AI Avatar Pro', type: 'video', cost: 170 },
-    'veo_3_1': { name: 'Veo 3.1', type: 'video', cost: 70 },
-    'veo_3': { name: 'Veo 3.1', type: 'video', cost: 70 }, // Alias
-    'kling_2_5_turbo_image_pro': { name: 'Kling Turbo', type: 'video', cost: 50 },
-    'v1_pro_fast_image': { name: 'Bytedance', type: 'video', cost: 50 },
+    // --- WAN 2.6 ---
+    'wan_2_6_text': { name: 'Wan 2.6 Text', type: 'video', cost: 70 },
+    'wan_2_6_video': { name: 'Wan 2.6 Video', type: 'video', cost: 70 },
+
+    // --- WAN 2.5 ---
+    'wan_2_5_text': { name: 'Wan 2.5 Text', type: 'video', cost: 60 },
+    'wan_2_5_image': { name: 'Wan 2.5 Image', type: 'video', cost: 60 },
+
+    // --- WAN 2.2 TURBO ---
+    'wan_turbo_text': { name: 'Wan 2.2 Turbo Text', type: 'video', cost: 20 },
+    'wan_turbo_image': { name: 'Wan 2.2 Turbo Image', type: 'video', cost: 20 },
+    'wan_turbo_speech': { name: 'Wan 2.2 Turbo Speech', type: 'video', cost: 25 },
+
+    // --- KLING ---
+    'kling_2_6_text': { name: 'Kling 2.6 Text', type: 'video', cost: 60 },
+    'kling_2_6_image': { name: 'Kling 2.6 Image', type: 'video', cost: 60 },
+    'kling_motion_control': { name: 'Kling Motion Control', type: 'video', cost: 60 },
+    'kling_ai_avatar_std': { name: 'Kling AI Avatar', type: 'video', cost: 60 },
+
+    // --- BYTEDANCE / SEEDANCE ---
+    'seedance_pro': { name: 'Seedance 1.5 Pro', type: 'video', cost: 80 }, // High quality
+    'bytedance_fast': { name: 'Bytedance Fast', type: 'video', cost: 40 }, // V1 Pro Fast
+
+    // --- OTHER ---
     'hailuo_2_3_image_pro': { name: 'Hailuo 2.1', type: 'video', cost: 50 },
+    'veo_3': { name: 'Veo 3.1', type: 'video', cost: 70 },
+    'sora_2_pro_storyboard': { name: 'Sora Turbo', type: 'video', cost: 30 },
 
     // ============================================
     // AUDIO
