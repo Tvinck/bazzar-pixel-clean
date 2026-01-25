@@ -827,7 +827,7 @@ const aiService = {
                                 formData.append('userId', options.userId || 'browser_user');
                                 formData.append('initData', window.Telegram?.WebApp?.initData || '');
 
-                                // Handle source files if they are File objects or base64 strings
+                                // Handle source files
                                 if (options.source_files && Array.isArray(options.source_files)) {
                                     options.source_files.forEach((file, i) => {
                                         if (file instanceof File) {
