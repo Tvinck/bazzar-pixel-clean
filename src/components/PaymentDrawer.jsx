@@ -6,6 +6,7 @@ import { useSound } from '../context/SoundContext';
 import { useUser } from '../context/UserContext';
 import { TBankLogo, VisaLogo, MastercardLogo, MIRLogo, SBPLogo } from './PaymentLogos';
 import TBankWidget from './TBankWidget';
+import TBankPaymentWidget from './TBankPaymentWidget';
 
 // 1. One-Time Packs
 const PACKS = [
@@ -339,7 +340,46 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                             </div>
                                         )}
 
-                                        {/* T-Bank Widget */}
+
+                                        {/* T-Bank Payment Widgets (NEW) */}
+                                        {termsAccepted && (!selectedPlan.isSubscription || subscriptionAccepted) && (
+                                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+                                                <TBankPaymentWidget
+                                                    amount={getFinalPrice(selectedPlan)}
+                                                    description={`Pixel AI: ${selectedPlan.name}`}
+                                                    userId={user?.id}
+                                                    telegramId={window.Telegram?.WebApp?.initDataUnsafe?.user?.id}
+                                                    userEmail={user?.email || 'no-email@telegram.org'}
+                                                    widgetTypes={['tpay', 'sbp', 'mirpay']}
+                                                    displayParams={{
+                                                        gap: 0.5,
+                                                        height: 3.5,
+                                                        radius: 0.75,
+                                                        theme: {
+                                                            default: 'accent'
+                                                        }
+                                                    }}
+                                                    onSuccess={() => {
+                                                        // Refresh balance after successful payment
+                                                        window.location.reload();
+                                                    }}
+                                                />
+                                            </div>
+                                        )}
+
+                                        {/* Divider */}
+                                        {termsAccepted && (!selectedPlan.isSubscription || subscriptionAccepted) && (
+                                            <div className="relative my-4 animate-in fade-in duration-500">
+                                                <div className="absolute inset-0 flex items-center">
+                                                    <div className="w-full border-t border-white/10"></div>
+                                                </div>
+                                                <div className="relative flex justify-center text-xs">
+                                                    <span className="bg-gradient-to-b from-indigo-950 to-purple-950 px-3 text-white/40 font-medium">или</span>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* T-Bank Widget (Classic) */}
                                         {termsAccepted && (!selectedPlan.isSubscription || subscriptionAccepted) && (
                                             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
                                                 <TBankWidget
