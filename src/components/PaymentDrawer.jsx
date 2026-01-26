@@ -1,15 +1,62 @@
 // PaymentDrawer Updated: 2026-01-22 22:00
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronRight, Zap, ShieldCheck, X, TicketPercent, Wallet, Coins, Calendar, ArrowRight } from 'lucide-react';
+import { Check, ChevronRight, Zap, ShieldCheck, X, TicketPercent, Wallet, Coins, Calendar, ArrowRight, Timer } from 'lucide-react';
 import { useSound } from '../context/SoundContext';
 import { useUser } from '../context/UserContext';
 import { TBankLogo, VisaLogo, MastercardLogo, MIRLogo, SBPLogo } from './PaymentLogos';
 import TBankWidget from './TBankWidget';
 import TBankPaymentWidget from './TBankPaymentWidget';
 
+
+
+// Promo Timer Hook
+const usePromoTimer = () => {
+    const [timeLeft, setTimeLeft] = useState('');
+
+    React.useEffect(() => {
+        const calculateTime = () => {
+            const now = new Date();
+            const cycleDuration = 5 * 24 * 60 * 60 * 1000; // 5 days
+            const remaining = cycleDuration - (now.getTime() % cycleDuration);
+
+            const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+            const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
+
+            // Pad with zeros
+            const h = hours.toString().padStart(2, '0');
+            const m = minutes.toString().padStart(2, '0');
+            const s = seconds.toString().padStart(2, '0');
+
+            setTimeLeft(`${days}д ${h}:${m}:${s}`);
+        };
+
+        calculateTime();
+        const interval = setInterval(calculateTime, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    return timeLeft;
+};
+
 // 1. One-Time Packs
 const PACKS = [
+    {
+        id: 'pack_promo_250',
+        name: 'Flash Sale',
+        price: 199,
+        originalPrice: 400,
+        credits: 250,
+        isSubscription: false,
+        promo: true,
+        bestValue: true,
+        description: 'Специальное предложение',
+        color: 'from-pink-600 via-rose-500 to-orange-500',
+        features: ['250 кредитов (Выгода X2)', 'Доступ ко всем моделям', 'Ограниченное время'],
+        icon: Zap
+    },
     {
         id: 'pack_100',
         name: 'Starter',
@@ -84,6 +131,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
     const { playClick, playSuccess } = useSound();
     const { user, refreshUser } = useUser();
     const [isLoading, setIsLoading] = useState(false);
+    const promoTimer = usePromoTimer();
 
     // State
     const [activeTab, setActiveTab] = useState('packs'); // 'packs' | 'subs'
@@ -188,9 +236,18 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                 onClick={() => !plan.comingSoon && handleSelectPlan(plan)}
                                                 className={`relative group p-5 rounded-[2rem] border transition-all ${plan.comingSoon ? 'opacity-50 cursor-not-allowed grayscale-[0.8] bg-white/5 border-white/5' : 'cursor-pointer bg-[#1c1c1e]'} ${plan.bestValue && !plan.comingSoon ? 'border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.15)] bg-gradient-to-b from-[#1c1c1e] to-[#252528]' : 'border-white/5 hover:border-white/20'}`}
                                             >
-                                                {plan.bestValue && (
+                                                {plan.bestValue && !plan.promo && (
                                                     <div className="absolute -top-3 left-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-[9px] uppercase font-black px-3 py-1 rounded-full shadow-lg shadow-indigo-500/30 tracking-widest">
                                                         Best Choice
+                                                    </div>
+                                                )}
+
+                                                {plan.promo && (
+                                                    <div className="absolute -top-3 left-0 w-full flex justify-center z-20">
+                                                        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] uppercase font-black px-4 py-1.5 rounded-full shadow-lg shadow-orange-500/50 tracking-widest flex items-center gap-2 animate-pulse">
+                                                            <Timer size={12} strokeWidth={3} />
+                                                            До конца акции: {promoTimer}
+                                                        </div>
                                                     </div>
                                                 )}
 
