@@ -25,14 +25,11 @@ export const templatesData = [
         mediaType: 'video',
         model_id: 'kling_motion_control',
         cost: 15,
-        generation_prompt: 'The character in the photo is smiling, blinking naturally, and making subtle head movements. Smooth, realistic animation with natural facial expressions.',
+        generation_prompt: 'Bring my photo to life with natural movements, realistic blinking, subtle head turns, and a lively expression. High quality, smooth animation, preserving original details.',
         configuration: {
             mode: '720p',
             character_orientation: 'video'
-        },
-        fields: [
-            { id: 'anim_prompt', type: 'text', label: 'Действие', placeholder: 'Улыбнуться, подмигнуть...' }
-        ]
+        }
     },
     {
         id: 'trend_dance',
