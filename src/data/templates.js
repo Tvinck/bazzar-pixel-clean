@@ -167,11 +167,11 @@ export const templatesData = [
         likes: "14k",
         src: "/videos/future_partner.mp4",
         mediaType: 'video',
-        model_id: 'kling_motion_control',
+        model_id: 'grok-imagine/image-to-video',
         cost: 15,
-        generation_prompt: 'The character is making romantic, gentle gestures as if meeting someone special. Soft, warm expressions and inviting body language.',
+        generation_prompt: 'Imagine a suitable person of the opposite sex approaching me and hugging me. Romantic meeting, warm embrace, cinematic lighting, natural movements.',
         configuration: {
-            mode: '720p',
+            mode: 'normal',
             character_orientation: 'video'
         }
     },
