@@ -23,7 +23,7 @@ export const templatesData = [
         likes: "50k",
         src: "/videos/animate_photo.mp4",
         mediaType: 'video',
-        model_id: 'kling_motion_control',
+        model_id: 'grok-imagine/image-to-video',
         cost: 15,
         generation_prompt: 'Bring my photo to life with natural movements, realistic blinking, subtle head turns, and a lively expression. High quality, smooth animation, preserving original details.',
         configuration: {
