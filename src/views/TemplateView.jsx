@@ -25,6 +25,7 @@ const AVAILABLE_MODELS = [
     { id: 'flux_pro', name: '💠 Flux 1.1 Pro', desc: 'Top Tier', type: 'image', credits: MODEL_CATALOG['flux_pro']?.cost || 10 },
     { id: 'flux_flex', name: '💠 Flux Flex', desc: 'Balanced', type: 'image', credits: MODEL_CATALOG['flux_flex']?.cost || 10 },
     { id: 'kling_motion_control', name: '🎬 Kling Motion', desc: 'Image to Video', type: 'video', credits: MODEL_CATALOG['kling_motion_control']?.cost || 70 },
+    { id: 'grok-imagine/image-to-video', name: '🤖 Grok Video', desc: 'Оживить фото', type: 'video', credits: 15 },
     { id: 'wan_2_6_image', name: '🌊 Wan 2.6', desc: 'Alibaba AI', type: 'video', credits: MODEL_CATALOG['wan_2_6_image']?.cost || 50 },
     { id: 'hailuo_2_3_image_pro', name: '🐚 Hailuo 2.1', desc: 'High Quality', type: 'video', credits: MODEL_CATALOG['hailuo_2_3_image_pro']?.cost || 50 }
 ];
@@ -322,7 +323,7 @@ const TemplateView = () => {
     const isReady = isFilesReady;
 
     const currentModelId = selectedModel || template.model_id || (template.mediaType === 'video' ? 'kling_motion_control' : 'nano_banana');
-    const cost = MODEL_CATALOG[currentModelId]?.cost || (template.mediaType === 'video' ? 10 : 5);
+    const cost = AVAILABLE_MODELS.find(m => m.id === currentModelId)?.credits || 15;
 
     return (
         <motion.div
