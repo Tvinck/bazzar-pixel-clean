@@ -300,8 +300,8 @@ export const templatesData = [
         mediaType: 'image',
         model_id: 'flux_pro',
         cost: 5,
-        generation_prompt: 'Two people hugging warmly in a polaroid-style photo, vintage aesthetic, soft colors, nostalgic feeling, intimate moment',
-        requiredFilesCount: 2
+        generation_prompt: 'Two people hugging warmly in a polaroid-style photo, vintage aesthetic, soft colors, nostalgic feeling, intimate moment, (use the face from uploaded photo for both characters or generate a suitable partner)',
+        requiredFilesCount: 1
     },
     {
         id: 'universal_portrait',
