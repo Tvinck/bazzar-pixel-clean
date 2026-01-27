@@ -499,6 +499,8 @@ const GenerationView = ({ onOpenPayment }) => {
         addBalance,
         stats: userStats,
         telegramId,
+        updateStats,
+        refreshUser,
         startGlobalGen,
         setGlobalGenResult,
         closeGlobalGen
@@ -594,6 +596,11 @@ const GenerationView = ({ onOpenPayment }) => {
             currentModeKey.includes('video') ? (model.includes('kling') ? 120 : 60) : 15
         );
 
+        // Optimistic Deduction for immediate feedback
+        if (userStats) {
+            updateStats({ current_balance: userStats.current_balance - cost });
+        }
+
         try {
             let result;
             if (['Replace Object', 'Remove Object', 'Add Object'].includes(currentModeKey)) {
@@ -656,10 +663,12 @@ const GenerationView = ({ onOpenPayment }) => {
                     savedRecordId = savedRecord?.data?.id || savedRecord?.id;
                 }
                 playSuccess();
+                if (result.newBalance !== undefined) updateStats({ current_balance: result.newBalance });
                 setGlobalGenResult({ url: result.imageUrl, id: savedRecordId || result.id, prompt: inputs['prompt'] });
 
             } else {
                 closeGlobalGen();
+                refreshUser();
                 const errorMsg = result.error || 'Unknown error';
                 if (errorMsg.toLowerCase().includes('credit') || errorMsg.toLowerCase().includes('balance')) {
                     toast.error('⚠️ Недостаточно средств.', { duration: 5000 });
@@ -671,6 +680,7 @@ const GenerationView = ({ onOpenPayment }) => {
         } catch (e) {
             console.error(e);
             closeGlobalGen();
+            refreshUser();
             const errorMsg = e.message || 'Unknown error';
             if (errorMsg.toLowerCase().includes('credit') || errorMsg.toLowerCase().includes('balance')) {
                 toast.error('⚠️ Ошибка оплаты.', { duration: 5000 });

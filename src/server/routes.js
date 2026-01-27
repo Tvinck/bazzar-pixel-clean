@@ -158,8 +158,9 @@ export const setupRoutes = (app, bot, boss) => {
             console.log(`💰 Charging ${cost} credits to ${userId} for ${type}`);
 
             // Payment Logic (Supabase)
+            let newBalance = null;
             if (userId !== 'browser_user') {
-                const { error: payError } = await supabase.rpc('process_generation_payment', {
+                const { data: payData, error: payError } = await supabase.rpc('process_generation_payment', {
                     p_user_id: userId,
                     p_cost: cost,
                     p_xp_reward: 2,
@@ -169,6 +170,7 @@ export const setupRoutes = (app, bot, boss) => {
                     console.error('Payment Failed:', payError);
                     return res.status(402).json({ error: 'Insufficient Credit' });
                 }
+                newBalance = payData?.new_balance;
             }
 
             // 3. Handle File Uploads (Supabase)
@@ -251,7 +253,7 @@ export const setupRoutes = (app, bot, boss) => {
 
                 if (jobId) {
                     console.log(`✅ Job persisted in queue: ${jobId}`);
-                    return res.json({ success: true, status: 'queued', jobId, message: 'Processing started in background' });
+                    return res.json({ success: true, status: 'queued', jobId, newBalance, message: 'Processing started in background' });
                 }
             } catch (queueErr) {
                 console.warn('⚠️ Queue not active, falling back to synchronous mode.');
@@ -309,6 +311,7 @@ export const setupRoutes = (app, bot, boss) => {
                         success: true,
                         status: 'queued',
                         jobId: result.taskId,
+                        newBalance,
                         message: 'Video processing started (Async)',
                         db_debug: dbStatus
                     });
@@ -387,7 +390,7 @@ export const setupRoutes = (app, bot, boss) => {
                 }
             }
 
-            res.json({ success: true, data: result });
+            res.json({ success: true, data: result, newBalance });
 
         } catch (e) {
             console.error('API Error:', e);

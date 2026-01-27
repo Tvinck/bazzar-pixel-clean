@@ -1021,9 +1021,10 @@ const aiService = {
 
         const data = await createRes.json();
         const jobId = data.jobId;
+        const newBalance = data.newBalance;
 
         if (!jobId) {
-            if (data.data?.imageUrl) return { success: true, imageUrl: data.data.imageUrl };
+            if (data.data?.imageUrl) return { success: true, imageUrl: data.data.imageUrl, newBalance };
             throw new Error('No Job ID returned from server');
         }
 
@@ -1045,7 +1046,8 @@ const aiService = {
                 return {
                     success: true,
                     imageUrl: job.result_url,
-                    meta: { jobId: jobId }
+                    meta: { jobId: jobId },
+                    newBalance
                 };
             }
 

@@ -57,6 +57,7 @@ export const MODEL_CATALOG = {
         preview: 'https://placehold.co/150x150/000000/ffffff?text=Grok+2'
     },
     'grok_image': { name: 'Grok 2 Image-to-Image', type: 'image', cost: 10 },
+    'grok_high': { name: 'Grok 2 High Quality', type: 'image', cost: 25 },
     'grok_upscale': { name: 'Grok 2 Upscale', type: 'image', cost: 10 },
 
     // ============================================

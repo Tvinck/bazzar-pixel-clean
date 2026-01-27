@@ -177,9 +177,14 @@ export const UserProvider = ({ children }) => {
         });
     }, []);
 
+    const updateStats = useCallback((newStats) => {
+        setStats(prev => ({ ...prev, ...newStats }));
+    }, []);
+
     const value = {
         user,
         stats,
+        updateStats,
         isLoading,
         telegramId,
         refreshUser,

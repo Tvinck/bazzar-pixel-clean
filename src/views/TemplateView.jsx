@@ -21,7 +21,7 @@ const HIDDEN_TEMPLATE_FIELDS = ['generation_prompt', 'prompt', 'configuration'];
 const AVAILABLE_MODELS = [
     { id: 'nano_banana', name: '🍌 Nano Banana', desc: 'Быстро (Flux Flex)', type: 'image', credits: MODEL_CATALOG['nano_banana']?.cost || 10 },
     { id: 'nano_banana_pro', name: '🍌 Nano Banana PRO', desc: 'Качество (Flux Pro)', type: 'image', credits: MODEL_CATALOG['nano_banana_pro']?.cost || 20 },
-    { id: 'grok-high', name: '🤖 Grok Quality', desc: 'Для обработки фото', type: 'image', credits: 25 },
+    { id: 'grok_high', name: '🤖 Grok Quality', desc: 'Для обработки фото', type: 'image', credits: 25 },
     { id: 'flux_pro', name: '💠 Flux 1.1 Pro', desc: 'Top Tier', type: 'image', credits: MODEL_CATALOG['flux_pro']?.cost || 10 },
     { id: 'flux_flex', name: '💠 Flux Flex', desc: 'Balanced', type: 'image', credits: MODEL_CATALOG['flux_flex']?.cost || 10 },
     { id: 'kling_motion_control', name: '🎬 Kling Motion', desc: 'Image to Video', type: 'video', credits: MODEL_CATALOG['kling_motion_control']?.cost || 70 },
@@ -49,6 +49,9 @@ const TemplateView = () => {
     const { playClick, playSuccess } = useSound();
     const {
         user,
+        stats,
+        updateStats,
+        refreshUser,
         pay,
         addBalance,
         startGlobalGen,
@@ -175,6 +178,17 @@ const TemplateView = () => {
     };
 
     const handleGenerate = async () => {
+        const currentModelId = selectedModel || template.model_id || (template.mediaType === 'video' ? 'kling_motion_control' : 'nano_banana');
+        const cost = AVAILABLE_MODELS.find(m => m.id === currentModelId)?.credits || 15;
+
+        // 1. Check Credits Immediately
+        const currentBalance = stats?.current_balance || 0;
+        if (currentBalance < cost) {
+            toaster.error(`Need ${cost} credits. You have ${currentBalance}.`);
+            navigate('/profile');
+            return;
+        }
+
         const validFiles = selectedFiles.filter(f => f).length;
         if (validFiles < requiredFilesCount) return;
 
@@ -191,6 +205,11 @@ const TemplateView = () => {
             isVideoTemplate ? 'video' : 'image',
             isVideoTemplate ? 120 : 15
         );
+
+        // Optimistic Deduction for UI immediate feedback
+        if (stats) {
+            updateStats({ current_balance: stats.current_balance - cost });
+        }
 
         try {
             // 2. Prepare Prompt
@@ -286,6 +305,7 @@ const TemplateView = () => {
             );
             if (result.success) {
                 console.log('✅ Generation flow complete.');
+                if (result.newBalance !== undefined) updateStats({ current_balance: result.newBalance });
 
                 if (isVideoTemplate) {
                     closeGlobalGen();
@@ -306,6 +326,7 @@ const TemplateView = () => {
         } catch (error) {
             console.error('Generation Error:', error);
             closeGlobalGen();
+            refreshUser(); // Sync balance back
             const errMsg = error.message || '';
 
             if (errMsg.includes('Insufficient') || errMsg.includes('Payment Required') || errMsg.includes('402')) {
