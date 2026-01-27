@@ -9,7 +9,7 @@ const InsufficientCreditsModal = ({ isOpen, onClose, onTopUp }) => {
     const handleSubscribe = () => {
         playClick();
         // Replace with actual channel link
-        window.open('https://t.me/bazzar_ai', '_blank');
+        window.open('https://t.me/pixel_imagess', '_blank');
         onClose();
     };
 

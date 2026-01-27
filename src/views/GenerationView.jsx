@@ -1303,7 +1303,10 @@ const GenerationView = ({ onOpenPayment }) => {
             <InsufficientCreditsModal
                 isOpen={showCreditModal}
                 onClose={() => setShowCreditModal(false)}
-                onTopUp={() => onOpenPayment?.()}
+                onTopUp={() => {
+                    navigate('/');
+                    setTimeout(() => onOpenPayment?.(), 100);
+                }}
             />
         </motion.div >
     );

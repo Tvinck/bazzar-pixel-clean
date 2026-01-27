@@ -279,7 +279,7 @@ function AppContent() {
               {/* Full Pages */}
               <Route path="/create" element={<PageTransition><CreateView /></PageTransition>} />
               <Route path="/generate/:type" element={<PageTransition><GenerationView onOpenPayment={openPayment} /></PageTransition>} />
-              <Route path="/template/:id" element={<PageTransition><TemplateView /></PageTransition>} />
+              <Route path="/template/:id" element={<PageTransition><TemplateView onOpenPayment={openPayment} /></PageTransition>} />
               <Route path="/user/:userId" element={<PageTransition><UserProfileView /></PageTransition>} />
               <Route path="/admin" element={<PageTransition><AdminView /></PageTransition>} />
               <Route path="/payment/success" element={<PageTransition><PaymentSuccessView /></PageTransition>} />

@@ -42,9 +42,10 @@ const AVAILABLE_MODELS = [
  * 5. Сборка финального промта (на английском) с подстановкой переменных.
  * 6. Отправка запроса в AI Service.
  */
-const TemplateView = () => {
+const TemplateView = ({ onOpenPayment }) => {
     const { id } = useParams();
     const navigate = useNavigate();
+
     const location = useLocation();
     const { t } = useLanguage();
     const { playClick, playSuccess } = useSound();
@@ -481,7 +482,10 @@ const TemplateView = () => {
             <InsufficientCreditsModal
                 isOpen={showCreditModal}
                 onClose={() => setShowCreditModal(false)}
-                onTopUp={() => navigate('/profile')}
+                onTopUp={() => {
+                    navigate('/');
+                    setTimeout(() => onOpenPayment?.(), 100);
+                }}
             />
         </motion.div >
     );
