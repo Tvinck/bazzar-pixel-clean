@@ -14,6 +14,7 @@ import { aiService } from '../ai-service';
 import galleryAPI from '../lib/galleryAPI';
 import GenerationLoader from '../components/GenerationLoader';
 import GenerationResult from '../components/GenerationResult';
+import InsufficientCreditsModal from '../components/InsufficientCreditsModal';
 
 import { MODEL_CATALOG } from '../config/models';
 
@@ -367,6 +368,7 @@ const GenerationView = ({ onOpenPayment }) => {
     const [isTypeOpen, setIsTypeOpen] = useState(false);
     const [isModelOpen, setIsModelOpen] = useState(false);
     const [isRatioOpen, setIsRatioOpen] = useState(false);
+    const [showCreditModal, setShowCreditModal] = useState(false);
 
     const fileInputRef = useRef(null);
 
@@ -577,11 +579,7 @@ const GenerationView = ({ onOpenPayment }) => {
 
         if (!canAfford) {
             playClick();
-            toast.error(`Недостаточно кредитов! Нужно: ${cost}`, {
-                icon: '⚡',
-                duration: 4000
-            });
-            onOpenPayment?.();
+            setShowCreditModal(true);
             return;
         }
 
@@ -1302,6 +1300,11 @@ const GenerationView = ({ onOpenPayment }) => {
                     </div>
                 </div>
             </div>
+            <InsufficientCreditsModal
+                isOpen={showCreditModal}
+                onClose={() => setShowCreditModal(false)}
+                onTopUp={() => onOpenPayment?.()}
+            />
         </motion.div >
     );
 };

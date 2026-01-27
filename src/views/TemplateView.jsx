@@ -13,6 +13,7 @@ import templatesData from '../data/templates';
 import { MODEL_CATALOG } from '../config/models';
 import GenerationLoader from '../components/GenerationLoader';
 import GenerationResult from '../components/GenerationResult';
+import InsufficientCreditsModal from '../components/InsufficientCreditsModal';
 
 // Templates are now imported from centralized data file
 // Prompts are hidden from users - only used for generation
@@ -67,6 +68,7 @@ const TemplateView = () => {
     // Multi-file support
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [previewUrls, setPreviewUrls] = useState([]);
+    const [showCreditModal, setShowCreditModal] = useState(false);
 
     // Dynamic fields support
     const [formValues, setFormValues] = useState({});
@@ -184,8 +186,7 @@ const TemplateView = () => {
         // 1. Check Credits Immediately
         const currentBalance = stats?.current_balance || 0;
         if (currentBalance < cost) {
-            toaster.error(`Need ${cost} credits. You have ${currentBalance}.`);
-            navigate('/profile');
+            setShowCreditModal(true);
             return;
         }
 
@@ -477,7 +478,12 @@ const TemplateView = () => {
                     </span>
                 </AnimatedButton>
             </div>
-        </motion.div>
+            <InsufficientCreditsModal
+                isOpen={showCreditModal}
+                onClose={() => setShowCreditModal(false)}
+                onTopUp={() => navigate('/profile')}
+            />
+        </motion.div >
     );
 };
 
