@@ -131,7 +131,7 @@ const TransactionHistory = () => {
                         { id: 3, type: 'chat', amount: -1, description: 'Чат', created_at: new Date(Date.now() - 1000000).toISOString() }
                     ];
                 } else {
-                    const res = await fetch('/api/transactions', {
+                    const res = await fetch('/api/payments/transactions', {
                         headers: { 'X-TG-Data': window.Telegram?.WebApp?.initData || '' }
                     });
                     if (res.ok) {
