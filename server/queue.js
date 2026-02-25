@@ -121,8 +121,53 @@ export const initQueue = async (bot) => {
     }
 };
 
+import crypto from 'crypto';
+
 export const addGenerationJob = async (data) => {
-    if (!boss) return null;
+    if (!boss) {
+        console.log('⚡ Fallback: Processing job synchronously since pg-boss is not initialized');
+        const fallbackJobId = crypto.randomUUID();
+
+        // Execute synchronously to ensure Vercel doesn't kill the background process
+        try {
+            const { prompt, type, options, cost, userId } = data;
+            const result = await aiService.generateImage(prompt, type, options);
+
+            if (!result.success) throw new Error(result.error || 'Generation failed');
+
+            if (userId) {
+                const isVideoResult = (type.includes('video') || (result.imageUrl && result.imageUrl.match(/\\.(mp4|mov)$/i)));
+                await supabase.from('creations').insert({
+                    user_id: userId,
+                    generation_id: fallbackJobId,
+                    title: prompt ? prompt.slice(0, 50) : 'Web Generation',
+                    description: prompt || 'Created via Web',
+                    image_url: result.imageUrl,
+                    thumbnail_url: result.imageUrl,
+                    type: isVideoResult ? 'video' : 'image',
+                    prompt: prompt,
+                    is_public: false,
+                    tags: [type, 'web']
+                });
+            }
+        } catch (error) {
+            console.error(`❌ [Fallback Job ${fallbackJobId}] Failed:`, error.message);
+            // Refund logic if needed
+            if (data.options?.telegramId && data.options?.userId !== 'browser_user' && data.cost > 0) {
+                try {
+                    await supabase.rpc('add_user_credits', {
+                        p_telegram_id: data.options.telegramId,
+                        p_amount: data.cost,
+                        p_reason: `Refund: Job ${fallbackJobId} Failed`,
+                        p_source: 'system'
+                    });
+                } catch (e) { }
+            }
+        }
+
+        return fallbackJobId;
+    }
+
     return await boss.send('generate-image', data, {
         retryLimit: 0,
         expireInMinutes: 15
