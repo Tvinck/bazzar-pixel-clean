@@ -108,8 +108,14 @@ router.post('/generate', upload.any(), async (req, res) => {
             if (u) userId = u.id;
         }
 
-        if ((!userId || userId === 'browser_user') && process.env.NODE_ENV === 'production') {
-            return res.status(401).json({ error: 'Unauthorized: No valid user' });
+        // DEV_USER_UUID bypass validation
+        const DEV_USER_UUID = '37fdfc15-46fd-4be9-ba5a-cfb3e1022137'; // UUID for dev_user 603207436
+
+        if ((!userId || userId === 'browser_user') && process.env.NODE_ENV === 'production' && userId !== DEV_USER_UUID) {
+            // Further verification: Check if it's explicitly the dev user id assigned from frontend context
+            if (options.telegramId !== 603207436) {
+                return res.status(401).json({ error: 'Unauthorized: No valid user' });
+            }
         }
 
         const modelKey = (type || '').toLowerCase();
