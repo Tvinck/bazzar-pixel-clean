@@ -160,7 +160,7 @@ const StarGreetingsView = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-TG-Data': window.Telegram?.WebApp?.initData || ''
+                    'X-TG-Data': window.Telegram?.WebApp?.initData || localStorage.getItem('bazzar_web_auth') || ''
                 },
                 body: JSON.stringify({
                     userId: telegramId,
@@ -188,7 +188,7 @@ const StarGreetingsView = () => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-TG-Data': window.Telegram?.WebApp?.initData || ''
+                    'X-TG-Data': window.Telegram?.WebApp?.initData || localStorage.getItem('bazzar_web_auth') || ''
                 },
                 body: JSON.stringify({
                     starId: selectedStar.id,
