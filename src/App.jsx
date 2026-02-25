@@ -160,7 +160,7 @@ function AppContent() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? "dark" : ""}`}>
-      <div className="mx-auto max-w-[480px] md:max-w-none md:ml-64 md:w-auto md:mx-0 min-h-screen bg-[#0f0f0f] relative transition-all duration-300">
+      <div className="mx-auto max-w-[480px] md:max-w-none md:ml-64 md:w-auto md:mx-0 min-h-screen bg-[#0f0f0f] relative transition-all duration-300 pt-[60px] md:pt-0">
 
         <Sidebar activeTab={activeTab} onTabChange={handleTabChange} onCreateClick={() => openCreation('image-gen')} />
 

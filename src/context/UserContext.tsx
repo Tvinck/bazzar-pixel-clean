@@ -130,23 +130,18 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     const userProfile = await dbAnalytics.getUserProfile(tgId);
                     if (userProfile) setProfile(userProfile);
                 } else {
-                    if ((import.meta as any).env.DEV && localStorage.getItem('bazzar_dev_override') === 'true') {
-                        console.log('No Telegram user found - using LOCAL TEST MODE (Development)');
-                        const devId = 603207436;
-                        setTelegramId(devId);
-                        setUser({ id: 'dev_user', telegram_id: devId, username: 'artykosh', first_name: 'Arty' });
+                    // Temporarily force Dev Login for everyone who enters without Telegram
+                    console.log('No Telegram user found - FORCING DEV USER (Bypass Telegram Web Login)');
+                    const devId = 603207436;
+                    setTelegramId(devId);
+                    setUser({ id: 'dev_user', telegram_id: devId, username: 'artykosh', first_name: 'Arty' });
 
-                        try {
-                            const realStats = await dbAnalytics.getUserStats(devId);
-                            if (realStats) setStats(realStats);
-                            else throw new Error('Stats not found');
-                        } catch (e) {
-                            setStats({ current_balance: 112500, total_generations: 10, level: 5, xp: 500 });
-                        }
-                    } else {
-                        console.log('No Telegram user and no web session found.');
-                        setTelegramId(null);
-                        setUser(null);
+                    try {
+                        const realStats = await dbAnalytics.getUserStats(devId);
+                        if (realStats) setStats(realStats);
+                        else throw new Error('Stats not found');
+                    } catch (e) {
+                        setStats({ current_balance: 112500, total_generations: 10, level: 5, xp: 500 });
                     }
                 }
             } catch (error) {
