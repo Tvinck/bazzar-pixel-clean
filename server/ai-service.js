@@ -216,16 +216,13 @@ const aiService = {
             if (options.quality) input.quality = options.quality;
             if (options.camera_motion) input.camera_motion = options.camera_motion;
 
-            // For Image-to-Video models in Kling/Wan, the field is often 'image_url' (single) or 'image_input'
+            // For Image-to-Video models in Kling/Wan/Hailuo, the field is often 'image' or 'image_url'
             if (hasSourceFiles) {
-                if (kieModelId.includes('kling')) {
-                    input.image_url = options.source_files[0];
-                } else if (kieModelId.includes('wan')) {
-                    input.image_url = options.source_files[0];
-                } else if (kieModelId.includes('hailuo')) {
-                    input.image_url = options.source_files[0];
-                }
+                const sourceImg = options.source_files[0];
+                input.image = sourceImg;
+                input.image_url = sourceImg;
             }
+            if (!input.duration) input.duration = 5;
         }
 
         const normalizeKieInput = (targetInput, targetModel) => {
