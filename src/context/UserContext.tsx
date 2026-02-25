@@ -134,13 +134,27 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     console.log('No Telegram user found - FORCING DEV USER (Bypass Telegram Web Login)');
                     const devId = 603207436;
                     setTelegramId(devId);
-                    setUser({ id: 'dev_user', telegram_id: devId, username: 'artykosh', first_name: 'Arty' });
 
                     try {
+                        const devTgUser = {
+                            id: devId,
+                            first_name: 'Arty',
+                            last_name: 'Dev',
+                            username: 'artykosh',
+                            language_code: 'ru'
+                        };
+                        const userData = await dbAnalytics.upsertUser(devId, devTgUser);
+                        setUser(userData);
+
                         const realStats = await dbAnalytics.getUserStats(devId);
                         if (realStats) setStats(realStats);
                         else throw new Error('Stats not found');
+
+                        const userProfile = await dbAnalytics.getUserProfile(devId);
+                        if (userProfile) setProfile(userProfile);
                     } catch (e) {
+                        console.error('Failed to fully load Dev User from DB:', e);
+                        setUser({ id: 'dev_user', telegram_id: devId, username: 'artykosh', first_name: 'Arty' });
                         setStats({ current_balance: 112500, total_generations: 10, level: 5, xp: 500 });
                     }
                 }
