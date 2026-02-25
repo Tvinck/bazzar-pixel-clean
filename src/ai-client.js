@@ -119,7 +119,7 @@ const aiService = {
 
         formData.append('options', JSON.stringify(cleanOptions));
 
-        const createRes = await fetch('/api/generate', {
+        const createRes = await fetch('/api/generation/generate', {
             method: 'POST',
             body: formData
         });
@@ -149,7 +149,7 @@ const aiService = {
         for (let i = 0; i < maxAttempts; i++) {
             await new Promise(r => setTimeout(r, 3000));
 
-            const statusRes = await fetch(`/api/jobs/${jobId}`);
+            const statusRes = await fetch(`/api/generation/jobs/${jobId}`);
             if (!statusRes.ok) continue;
 
             const { job } = await statusRes.json();
