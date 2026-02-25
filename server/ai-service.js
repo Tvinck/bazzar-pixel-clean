@@ -254,18 +254,23 @@ const aiService = {
         const responseData = await createRes.json();
         console.log('📦 Kie.ai Response:', JSON.stringify(responseData, null, 2));
 
-        // Parse task ID
+        // Parse task ID - expanded detection
         let taskId = null;
-        if (responseData.data?.task_id) taskId = responseData.data.task_id;
-        else if (responseData.data?.taskId) taskId = responseData.data.taskId;
-        else if (responseData.task_id) taskId = responseData.task_id;
-        else if (responseData.taskId) taskId = responseData.taskId;
-        else if (responseData.id) taskId = responseData.id;
+        if (responseData.data) {
+            taskId = responseData.data.task_id || responseData.data.taskId || responseData.data.id || responseData.data.taskid;
+        }
+        if (!taskId) {
+            taskId = responseData.task_id || responseData.taskId || responseData.id || responseData.taskid || responseData.task_no;
+        }
 
         if (!taskId) {
             console.error('❌ No task ID found in response:', responseData);
-            if (responseData.code === 402) throw new Error('Недостаточно кредитов на Kie.ai');
-            throw new Error('Kie.ai did not return a task ID');
+            const errMsg = responseData.msg || responseData.message || responseData.error || 'Unknown error';
+
+            if (responseData.code === 402 || errMsg.toLowerCase().includes('balance')) {
+                throw new Error('Недостаточно кредитов на Kie.ai (Баланс исчерпан)');
+            }
+            throw new Error(`Kie.ai did not return a task ID. Response: ${JSON.stringify(responseData)}`);
         }
 
         console.log(`📋 Kie.ai Task created: ${taskId}`);
