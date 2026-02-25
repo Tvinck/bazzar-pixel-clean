@@ -221,15 +221,19 @@ const aiService = {
                 const sourceImg = options.source_files[0];
                 input.image = sourceImg;
                 input.image_url = sourceImg;
+                input.image_input = sourceImg;
             }
             if (!input.duration) input.duration = 5;
+            if (!input.aspect_ratio) input.aspect_ratio = '16:9';
+            if (!input.quality) input.quality = 'standard';
+            if (!input.negative_prompt) input.negative_prompt = '';
         }
 
         const normalizeKieInput = (targetInput, targetModel) => {
-            if (targetModel.includes('kling') || targetModel.includes('wan/') || targetModel.includes('hailuo')) {
-                return targetInput;
-            }
-            return targetInput;
+            // Add model_name inside input just in case Kie.ai requires it there
+            const normalized = { ...targetInput };
+            if (!normalized.model_name) normalized.model_name = targetModel;
+            return normalized;
         };
 
         const finalInput = normalizeKieInput(input, kieModelId);
