@@ -3,7 +3,7 @@
  */
 
 // import rateLimiter from './rateLimiter';
-// import csrfProtection from './csrf';
+import csrfProtection from './csrf';
 import { validatePrompt, sanitizeText } from './validation';
 // React import removed
 
@@ -24,7 +24,9 @@ class SecureAPIClient {
      * Безопасный fetch с всеми защитами
      */
     async secureFetch(endpoint, options = {}) {
-        const url = `${this.baseURL}${endpoint}`;
+        const url = (endpoint.startsWith('http') || endpoint.startsWith('//'))
+            ? endpoint
+            : `${this.baseURL}${endpoint}`;
 
         // 1. Rate Limiting
         // if (this.userId) {

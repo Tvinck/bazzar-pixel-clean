@@ -77,12 +77,7 @@ const TemplateDrawer = ({ isOpen, onClose, template }) => {
         playClick();
         playSuccess();
 
-        console.log('Generating with:', {
-            template: template.id,
-            files: selectedFiles,
-            fields: formValues,
-            count: generationsCount
-        });
+
 
         const fieldSummary = Object.entries(formValues).map(([k, v]) => `${k}: ${v}`).join(', ');
         alert(`Generation Started!\n\nTemplate: ${template.title}\nFiles Uploaded: ${validFiles}\nOptions: ${fieldSummary || 'Default'}\nTotal Cost: ${generationsCount * COST_PER_GEN} credits`);
@@ -115,7 +110,7 @@ const TemplateDrawer = ({ isOpen, onClose, template }) => {
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed bottom-0 left-0 w-full h-[95%] bg-[#F8F9FC] dark:bg-pixel-dark rounded-t-[2.5rem] z-[70] shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white"
+                        className="fixed bottom-0 left-0 md:left-1/2 md:bottom-auto md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full md:w-[480px] h-[95%] md:h-auto md:max-h-[85vh] bg-[#F8F9FC] dark:bg-pixel-dark rounded-t-[2.5rem] md:rounded-[2.5rem] z-[70] shadow-2xl flex flex-col overflow-hidden text-slate-900 dark:text-white"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="w-full flex justify-center pt-4 pb-2" onClick={onClose}>

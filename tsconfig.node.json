@@ -11,7 +11,6 @@
         "allowSyntheticDefaultImports": true,
         "strict": true,
         "allowJs": true,
-        "noEmit": true,
         "outDir": "./dist-config"
     },
     "include": [

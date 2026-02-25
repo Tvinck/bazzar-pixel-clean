@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, ChevronDown, Image as ImageIcon, Sparkles, Trash2 } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, ChevronDown, Image as ImageIcon, Sparkles, Trash2, Settings2 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSound } from '../context/SoundContext';
-import { useToast } from '../context/ToastContext';
 import { useUser } from '../context/UserContext';
+import { TelegramModal, TelegramButton, TelegramListItem } from './TelegramAnimations';
 
 const CreationDrawer = ({ isOpen, onClose, type = 'Картинка', initialPrompt = '' }) => {
     const { t } = useLanguage();
     const { playClick } = useSound();
     const [prompt, setPrompt] = useState(initialPrompt);
-    // Sync prompt if initialPrompt changes
+
     useEffect(() => {
         if (initialPrompt) setPrompt(initialPrompt);
     }, [initialPrompt]);

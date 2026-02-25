@@ -1,340 +1,427 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom'; // Added useNavigate
+import { useNavigate } from 'react-router-dom';
 import {
-    Image as ImageIcon, Video, Music, Wand2, Zap, Sparkles, Layers, Box, Trophy, Smile, UserPlus, Eraser,
-    Banana, Wind, Cloud, PenTool, LayoutTemplate, Search, Heart, User
+    Image as ImageIcon, Video, Send, User as UserIcon,
+    Zap, Smile, ChevronRight, X, Search, Heart, Share, Plus, Sparkles, Star, Maximize2
 } from 'lucide-react';
-import { Canvas } from '@react-three/fiber';
-import { Float } from '@react-three/drei';
-import AbstractCore from '../components/3d/AbstractCore';
-import ToolCard from '../components/ui/ToolCard';
-import LikeButton from '../components/ui/LikeButton';
-import { useLanguage } from '../context/LanguageContext';
-import ErrorBoundary from '../components/ErrorBoundary';
-import OptimizedImage from '../components/ui/OptimizedImage';
-import BannerCarousel from '../components/BannerCarousel';
-import { usePublicCreations, useTemplates, useUserLikedIds } from '../hooks/useGallery';
+import { usePublicCreations, useTemplates } from '../hooks/useGallery';
 import { useUser } from '../context/UserContext';
+import { templatesData } from '../data/templates';
+import { SpringCounter } from '../components/SpringAnimations';
+import { ImageCardSkeleton } from '../components/ui/Skeletons';
+import AnimatedIcon from '../components/ui/AnimatedIcon';
+import { useLanguage } from '../context/LanguageContext';
+import { useABTest } from '../hooks/useABTest';
+import { useMarketing } from '../hooks/useMarketing';
+import { EXPERTS } from '../config/experts';
 
 const triggerHaptic = (style = 'light') => {
-    if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.HapticFeedback) {
+    if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.impactOccurred(style);
     }
 };
 
-const SkeletonLoader = () => (
-    <div className="space-y-8 animate-pulse">
-        <div className="w-full h-64 bg-slate-200 dark:bg-slate-800 rounded-[2rem]"></div>
-        <div className="flex gap-3">
-            <div className="w-24 h-10 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
-            <div className="w-24 h-10 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
-        </div>
-        <div className="grid grid-cols-2 gap-4">
-            <div className="h-48 bg-slate-200 dark:bg-slate-800 rounded-[1.5rem]"></div>
-            <div className="h-48 bg-slate-200 dark:bg-slate-800 rounded-[1.5rem]"></div>
-        </div>
+// Generic Block
+const Block = ({ children, className = '' }) => (
+    <div className={`bg-[#1c1c1e] rounded-[14px] sm:rounded-[20px] shadow-sm ${className}`}>
+        {children}
     </div>
 );
 
-const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeaderboard }) => {
-    const { t } = useLanguage();
+// Generic Row
+const BlockRow = ({ icon, label, subtext, onClick, isLast, iconColor, rightElement }) => (
+    <button
+        onClick={onClick}
+        className={`w-full flex items-center py-2.5 pl-4 pr-3 ${onClick ? 'hover:bg-[#2c2c2e] active:bg-[#3a3a3c]' : ''} transition-colors relative`}
+    >
+        {icon && (
+            <div className={`w-8 h-8 rounded-[8px] sm:rounded-[10px] ${iconColor} flex items-center justify-center mr-3.5 flex-shrink-0`}>
+                {icon}
+            </div>
+        )}
+        <div className="flex-1 flex flex-col items-start justify-center pr-2">
+            <span className="text-[17px] text-white leading-[22px] tracking-[-0.41px] truncate w-full text-left font-medium">
+                {label}
+            </span>
+            {subtext && (
+                <span className="text-[13px] text-gray-400 leading-[18px] tracking-[-0.08px] mt-0.5 truncate w-full text-left">
+                    {subtext}
+                </span>
+            )}
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+            {rightElement}
+            {onClick && !rightElement && <ChevronRight size={20} className="text-[#3a3a3c]" strokeWidth={2.5} />}
+        </div>
+        {!isLast && <div className={`absolute bottom-0 right-0 h-[0.5px] bg-[#38383a] ${icon ? 'left-[50px]' : 'left-4'}`} />}
+    </button>
+);
+
+
+const containerVariants = {
+    hidden: { opacity: 0 },
+    show: {
+        opacity: 1,
+        transition: { staggerChildren: 0.08 }
+    }
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, scale: 0.95, y: 20 },
+    show: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 350, damping: 25 } }
+};
+
+const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeaderboard, onOpenPayment, onOpenStickers }) => {
     const navigate = useNavigate();
-    const { user } = useUser();
+    const { user, stats } = useUser();
+    const { t } = useLanguage();
+    const { variant } = useABTest('home_hero_text');
+    const { trackFunnel } = useMarketing(user);
 
-    // React Query usage
-    const { data: creations, isLoading: isFeedLoading } = usePublicCreations({
-        sortBy: 'trending',
-        limit: 10
-    });
-
+    const { isLoading: isFeedLoading } = usePublicCreations({ sortBy: 'trending', limit: 10 });
     const { data: templates, isLoading: isTemplatesLoading } = useTemplates();
-    const { data: likedIds } = useUserLikedIds(user?.id);
-
-    const [feedItems, setFeedItems] = useState([]);
-    const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
 
-    const tools = [
-        { id: 'image', label: t('toolsCard.image'), icon: ImageIcon, color: 'text-indigo-500', bgColor: 'bg-indigo-500/10', action: () => onOpenCreation('image-gen') },
-        { id: 'video', label: t('toolsCard.video'), icon: Video, color: 'text-rose-500', bgColor: 'bg-rose-500/10', action: () => onOpenCreation('video-gen') },
-        { id: 'avatar', label: 'AI Avatar', icon: User, color: 'text-cyan-500', bgColor: 'bg-cyan-500/10', action: () => onOpenCreation('avatar-gen') },
-        { id: 'banana', label: t('toolsCard.nanoBanana'), icon: Zap, color: 'text-yellow-500', bgColor: 'bg-yellow-500/10', special: true, action: () => onOpenCreation('image-gen', '', 'nano_banana_pro') },
-        { id: 'kling', label: 'Kling 2.6\nMotion', icon: Wind, color: 'text-emerald-500', bgColor: 'bg-emerald-500/10', action: () => onOpenCreation('video-gen', '', 'kling_motion_control') },
-        { id: 'audio', label: t('toolsCard.audio'), icon: Music, color: 'text-blue-500', bgColor: 'bg-blue-500/10', action: () => onOpenCreation('audio-gen') },
-        { id: 'animate', label: t('toolsCard.animate'), icon: Wand2, color: 'text-purple-500', bgColor: 'bg-purple-500/10', action: () => onOpenCreation('animate-photo') },
-        { id: 'veo', label: 'Veo 3', icon: Layers, color: 'text-orange-500', bgColor: 'bg-orange-500/10', action: () => onOpenCreation('video-gen', '', 'veo_3') },
-        { id: 'sora', label: t('toolsCard.sora'), icon: Cloud, color: 'text-sky-500', bgColor: 'bg-sky-500/10', action: () => onOpenCreation('video-gen', '', 'sora_2_pro_storyboard') },
-        { id: 'tools', label: t('toolsCard.tools'), icon: PenTool, color: 'text-slate-500', bgColor: 'bg-slate-500/10', action: () => onOpenCreation('tools') },
-    ];
+    const experts = EXPERTS.slice(0, 5); // Show fewer experts on home initially to keep it clean
+    const finalTemplates = templates?.length > 0 ? templates : (templatesData || []).slice(0, 10);
 
     useEffect(() => {
         if (!isFeedLoading && !isTemplatesLoading) {
-            setFeedItems([...(templates || []), ...(creations || [])]);
             onLoadComplete && onLoadComplete();
+            trackFunnel('onboarding', 'landing');
         }
-    }, [creations, templates, isFeedLoading, isTemplatesLoading, onLoadComplete]);
+    }, [isFeedLoading, isTemplatesLoading, onLoadComplete, trackFunnel]);
 
-    // Removed blocking loader to show skeleton in-place
-    // if (isFeedLoading) return <SkeletonLoader />;
+    const handleSearch = () => {
+        if (searchQuery.trim()) {
+            triggerHaptic('light');
+            navigate('/chat/private', { state: { initialMessage: searchQuery.trim() } });
+        }
+    };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="space-y-8 pb-4"
-        >
-            {/* --- HERO BANNER --- */}
-            <section className="px-6">
-                <BannerCarousel />
-            </section>
+        <div className="min-h-screen bg-black text-white pb-24 relative overflow-y-auto overflow-x-hidden font-sans w-full selection:bg-[#3390ec]/30">
 
-            {/* --- TOOLS CAROUSEL (Premium Glassy) --- */}
-            <section>
-                <div className="px-6 mb-4 flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Создать</h2>
-                    <button className="text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors" onClick={() => onOpenCreation('Quick Gen')}>Все</button>
-                </div>
+            {/* Premium Animated Background */}
+            <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
+                <div className="absolute top-0 left-0 w-full h-[50vh] bg-gradient-to-b from-[#3390ec]/5 to-transparent" />
+                <motion.div
+                    animate={{
+                        scale: [1, 1.2, 1],
+                        opacity: [0.3, 0.5, 0.3],
+                        x: [0, 50, 0],
+                        y: [0, 30, 0]
+                    }}
+                    transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
+                    className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-[#3390ec]/10 blur-[120px]"
+                />
+                <motion.div
+                    animate={{
+                        scale: [1, 1.3, 1],
+                        opacity: [0.2, 0.4, 0.2],
+                        x: [0, -40, 0],
+                        y: [0, -50, 0]
+                    }}
+                    transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 2 }}
+                    className="absolute top-[20%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-purple-500/10 blur-[100px]"
+                />
+            </div>
 
-                <div className="w-full">
-                    <div className="flex overflow-x-auto px-6 gap-3 pb-4 no-scrollbar snap-x snap-mandatory">
-                        {tools.map((tool) => (
-                            <button
-                                key={tool.id}
-                                onClick={tool.action}
-                                className="flex flex-col items-center gap-2 min-w-[76px] snap-start group"
-                            >
-                                {/* Glassy Icon Container */}
-                                <div className={`w-[76px] h-[76px] rounded-[1.8rem] bg-white/5 backdrop-blur-xl border border-white/10 flex items-center justify-center group-active:scale-95 transition-all duration-300 relative overflow-hidden shadow-lg shadow-black/5`}>
-                                    {/* Inner Color Glow */}
-                                    <div className={`absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity bg-current ${tool.color}`} />
+            <motion.div
+                variants={containerVariants}
+                initial="hidden"
+                animate="show"
+                className="px-4 pt-2 max-w-5xl mx-auto flex flex-col gap-6 mt-4 relative z-10"
+            >
 
-                                    {/* Icon */}
-                                    <tool.icon
-                                        size={30}
-                                        strokeWidth={2}
-                                        className={`${tool.color} drop-shadow-lg transition-transform group-hover:scale-110 duration-300`}
-                                    />
-                                </div>
-                                {/* Label */}
-                                <span className="text-[10px] font-semibold text-slate-600 dark:text-white/60 text-center leading-tight whitespace-pre-line group-hover:text-slate-900 dark:group-hover:text-white transition-colors">
-                                    {tool.label}
-                                </span>
-                            </button>
-                        ))}
+                {/* header */}
+                <motion.div variants={itemVariants} className="flex justify-between items-center px-1 mb-2">
+                    <div className="flex items-center gap-3">
+                        <button
+                            onClick={() => { triggerHaptic('light'); navigate('/profile'); }}
+                            className="w-10 h-10 rounded-full bg-gradient-to-br from-[#3390ec] to-blue-600 flex items-center justify-center text-white font-bold text-lg active:opacity-80 transition-opacity flex-shrink-0 shadow-sm"
+                        >
+                            {user?.first_name ? user.first_name.charAt(0).toUpperCase() : 'U'}
+                        </button>
+                        <div className="flex flex-col">
+                            <span className="text-[13px] text-gray-400 font-medium leading-tight">{t('home.welcome')}</span>
+                            <span className="text-[18px] font-bold text-white leading-tight tracking-[-0.01em]">{user?.first_name || t('profile.notSpecified')}</span>
+                        </div>
                     </div>
-                </div>
-            </section>
+                    <button
+                        onClick={() => { triggerHaptic('light'); onOpenPayment && onOpenPayment(); }}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1c1c1e] border border-white/10 shadow-sm active:bg-[#2c2c2e] transition-colors"
+                    >
+                        <Zap size={14} className="text-[#3390ec] fill-current" />
+                        <span className="text-white font-semibold text-[15px] tracking-tight">
+                            <SpringCounter value={stats?.current_balance || 0} />
+                        </span>
+                    </button>
+                </motion.div>
 
-            {/* --- SEARCH & CATEGORIES (Glassy) --- */}
-            <section className="space-y-6">
-                {/* Search */}
-                <div className="px-6 relative">
-                    <div className="absolute left-6 top-1/2 -translate-y-1/2 w-10 h-full flex items-center justify-center pointer-events-none">
-                        <Search className="text-slate-400 dark:text-white/30" size={18} />
-                    </div>
+                {/* Search Bar matching iOS / Telegram style */}
+                <motion.div variants={itemVariants} className="relative group flex items-center w-full">
+                    <Search className="absolute left-3 text-gray-500 z-10" size={18} />
                     <input
                         type="text"
+                        placeholder={t('home.searchPlaceholder')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        placeholder="Поиск идей..."
-                        className="w-full h-12 pl-12 pr-4 bg-white/50 dark:bg-white/5 backdrop-blur-xl rounded-2xl border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-medium placeholder:text-slate-400 dark:placeholder:text-white/30 focus:outline-none focus:border-indigo-500/50 focus:bg-white/80 dark:focus:bg-white/10 transition-all shadow-sm"
+                        onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                        className="w-full bg-[#1c1c1e] rounded-[10px] pl-10 pr-12 py-2 text-[17px] text-white placeholder:text-gray-500 outline-none focus:ring-1 focus:ring-[#007aff] transition-shadow tracking-[-0.41px]"
                     />
-                </div>
-
-                {/* Glassy Categories */}
-                <div className="flex gap-2 overflow-x-auto no-scrollbar px-6 pb-2">
-                    {[
-                        { id: 'all', label: 'Все' },
-                        { id: '14feb', label: '💞 14 февраля' },
-                        { id: '23feb', label: '🛡️ 23 февраля' },
-                        { id: '8march', label: '👑 8 марта' },
-                        { id: 'trends', label: '🔥 Тренды' },
-                        { id: 'dances', label: '💃 Танцы' },
-                        { id: 'cars', label: '🏎 Авто' },
-                        { id: 'pets', label: '🐾 Животные' },
-                        { id: 'christmas', label: '🎄 Праздник' },
-                        { id: 'angels', label: '👼 Ангелы' },
-                        { id: 'oldTrends', label: '📼 Классика' }
-                    ].map((cat) => (
+                    {searchQuery ? (
                         <button
-                            key={cat.id}
-                            onClick={() => { setActiveCategory(cat.id); triggerHaptic('light'); }}
-                            className={`px-5 py-2.5 rounded-[1rem] text-xs font-bold whitespace-nowrap transition-all duration-300 border backdrop-blur-md ${activeCategory === cat.id
-                                ? 'bg-slate-900 text-white dark:bg-white dark:text-black border-transparent shadow-lg shadow-black/10 scale-105'
-                                : 'bg-white/50 dark:bg-white/5 text-slate-600 dark:text-white/60 border-slate-200 dark:border-white/5 hover:bg-white dark:hover:bg-white/10'
-                                }`}
+                            onClick={handleSearch}
+                            className="absolute right-2 w-7 h-7 bg-[#3390ec] rounded-full flex items-center justify-center text-white active:scale-95 transition-transform z-10"
                         >
-                            {cat.label}
+                            <Send size={12} className="translate-x-[1px]" />
                         </button>
-                    ))}
-                </div>
-            </section>
+                    ) : null}
+                </motion.div>
 
-            {/* --- DISCOVER (Premium Masonry) --- */}
-            <section>
-                {/* DYNAMIC HEADER BASED ON CATEGORY */}
-                <div className="px-6 mb-6 mt-4">
-                    <h2 className="text-3xl font-black text-amber-500 uppercase tracking-wide mb-1">
-                        {activeCategory === 'all' ? t('home.discover') :
-                            activeCategory === '14feb' ? '14 Февраля' :
-                                activeCategory === '23feb' ? '23 Февраля' :
-                                    activeCategory === '8march' ? '8 Марта' :
-                                        activeCategory === 'dances' ? t('categories.dances') :
-                                            activeCategory === 'trends' ? t('categories.trends') :
-                                                activeCategory === 'christmas' ? t('categories.christmas') :
-                                                    activeCategory === 'angels' ? t('categories.angels') :
-                                                        activeCategory === 'cars' ? 'АВТО' :
-                                                            activeCategory === 'pets' ? 'ПИТОМЦЫ' :
-                                                                activeCategory === 'oldTrends' ? t('categories.oldTrends') : activeCategory}
-                    </h2>
-                    <p className="text-slate-500 dark:text-white/40 text-sm font-medium">
-                        {activeCategory === 'all' ? 'Популярные шаблоны' :
-                            activeCategory === '14feb' ? 'Романтичные идеи для влюбленных' :
-                                activeCategory === '23feb' ? 'Стильные открытки для защитников' :
-                                    activeCategory === '8march' ? 'Нежные поздравления для прекрасных дам' :
-                                        activeCategory === 'dances' ? 'Сгенерируй трендовые танцевальные видео!' :
-                                            activeCategory === 'trends' ? 'Самые популярные шаблоны этой недели' :
-                                                'Тематические подборки'}
-                    </p>
-                </div>
+                {/* Main Promoted Action */}
+                <motion.button
+                    variants={itemVariants}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => { triggerHaptic('medium'); navigate('/guide'); }}
+                    className="w-full bg-gradient-to-r from-blue-600 via-[#3390ec] to-blue-500 rounded-[20px] p-5 relative overflow-hidden shadow-[0_8px_30px_rgba(51,144,236,0.25)] flex items-center justify-between group"
+                >
+                    <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-300" />
+                    <div className="relative z-10 text-left">
+                        <h3 className="text-[19px] font-bold text-white mb-1 tracking-[-0.02em] leading-tight shadow-sm">
+                            {variant === 'variant_a' ? "Unlock Your Creative Potential" : t('home.guideTitle')}
+                        </h3>
+                        <p className="text-[13px] text-blue-50 font-medium opacity-90">{t('home.guideDesc')}</p>
+                    </div>
+                    <div className="w-12 h-12 rounded-full bg-white/25 flex items-center justify-center flex-shrink-0 backdrop-blur-md shadow-inner border border-white/20">
+                        <AnimatedIcon icon={Zap} size={24} className="text-white fill-white drop-shadow-md" disableHover disableTap />
+                    </div>
+                    <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-2xl pointer-events-none" />
+                </motion.button>
 
-                {/* MASONRY LAYOUT */}
-                <div className="columns-2 gap-3 space-y-3 px-4">
-                    {(isFeedLoading || isTemplatesLoading) && feedItems.length === 0 ? (
-                        Array.from({ length: 6 }).map((_, i) => (
-                            <div key={i} className="break-inside-avoid relative rounded-[1.5rem] overflow-hidden bg-white/5 border border-white/5 animate-pulse">
-                                <div style={{ aspectRatio: i % 2 === 0 ? '3/4' : '1/1' }} className="w-full bg-white/5" />
-                            </div>
-                        ))
-                    ) : feedItems.filter(item => {
-                        const matchesCategory = activeCategory === 'all' || item.category === activeCategory;
-                        const matchesSearch = item.title?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                            item.description?.toLowerCase().includes(searchQuery.toLowerCase());
-                        return matchesCategory && matchesSearch;
-                    }).map((item, i) => (
-                        <motion.div
-                            key={item.id}
-                            initial={{ opacity: 0, y: 30 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, margin: "-50px" }}
-                            transition={{ delay: i * 0.05 }}
-                            className="break-inside-avoid relative group rounded-[1.5rem] overflow-hidden bg-slate-900 cursor-pointer border border-white/10 shadow-lg shadow-black/20"
-                            onClick={() => item.type === 'template' && onOpenTemplate(item)}
-                        >
-                            <div style={{ aspectRatio: item.type === 'template' ? '3/4' : '1/1' }} className="relative">
-                                {item.type === 'template' ? (
-                                    item.mediaType === 'image' ? (
-                                        <OptimizedImage
-                                            src={item.src}
-                                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500 group-hover:scale-105 transition-transform"
-                                            alt={item.title}
-                                        />
-                                    ) : (
-                                        <video
-                                            src={item.src.includes('#') ? item.src : `${item.src}#t=0.1`}
-                                            poster={item.thumbnail_url || item.image_url || item.cover_url}
-                                            className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-500 bg-black group-hover:scale-105 transition-transform"
-                                            autoPlay
-                                            muted
-                                            loop
-                                            playsInline
-                                            preload="metadata"
-                                        />
-                                    )
-                                ) : (
-                                    <OptimizedImage
-                                        src={item.src || item.image_url || item.thumbnail_url}
-                                        className="w-full h-full object-cover hover:scale-105 transition-transform duration-500 opacity-90 group-hover:opacity-100"
-                                        alt={item.title || "Inspiration"}
-                                    />
-                                )}
+                {/* Action Blocks (Grid) */}
+                <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    <motion.button
+                        whileHover={{ scale: 1.02, backgroundColor: "rgba(44, 44, 46, 0.8)" }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => { triggerHaptic('medium'); onOpenCreation('image-gen'); }}
+                        className="bg-[#1c1c1e]/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#3390ec]/0 to-[#3390ec]/0 group-hover:from-[#3390ec]/10 group-hover:to-transparent transition-all duration-500" />
+                        <div className="w-10 h-10 rounded-[12px] bg-[#3390ec]/20 flex items-center justify-center text-[#3390ec] shadow-inner relative z-10">
+                            <ImageIcon size={22} className="drop-shadow-sm" />
+                        </div>
+                        <div className="text-left w-full mt-1 relative z-10">
+                            <div className="text-[15px] font-bold text-white tracking-tight leading-tight">{t('creation.image')}</div>
+                            <div className="text-[11px] text-gray-500 font-medium leading-tight mt-1">{t('home.art')}</div>
+                        </div>
+                    </motion.button>
 
-                                {/* Premium Gradient Overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-60 pointer-events-none" />
-                            </div>
+                    <motion.button
+                        whileHover={{ scale: 1.02, backgroundColor: "rgba(44, 44, 46, 0.8)" }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => { triggerHaptic('medium'); onOpenCreation('video-gen'); }}
+                        className="bg-[#1c1c1e]/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-purple-500/0 group-hover:from-purple-500/10 group-hover:to-transparent transition-all duration-500" />
+                        <div className="w-10 h-10 rounded-[12px] bg-purple-500/20 flex items-center justify-center text-purple-400 shadow-inner relative z-10">
+                            <Video size={22} className="drop-shadow-sm" />
+                        </div>
+                        <div className="text-left w-full mt-1 relative z-10">
+                            <div className="text-[15px] font-bold text-white tracking-tight leading-tight">{t('creation.video')}</div>
+                            <div className="text-[11px] text-gray-500 font-medium leading-tight mt-1">{t('home.animatePhoto')}</div>
+                        </div>
+                    </motion.button>
 
-                            {/* Top Left: User Avatar or Type Icon */}
-                            <div className="absolute top-3 left-3 z-30">
-                                {item.type === 'template' ? (
-                                    <div className="text-white/80 bg-black/30 backdrop-blur-md rounded-full p-1.5 border border-white/10">
-                                        {item.mediaType === 'video' ? <Video size={12} fill="currentColor" className="opacity-90" /> : <ImageIcon size={12} className="opacity-90" />}
-                                    </div>
-                                ) : (
-                                    <div
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            navigate(`/user/${item.user_id}`);
-                                        }}
-                                        className="flex items-center gap-1.5 bg-black/40 backdrop-blur-md border border-white/10 pr-2 rounded-full p-0.5 hover:bg-black/60 transition-colors"
-                                    >
-                                        <div className="w-5 h-5 rounded-full bg-slate-700 overflow-hidden">
-                                            {item.avatar_url ? (
-                                                <img src={item.avatar_url} alt={item.username} className="w-full h-full object-cover" />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center text-[8px] font-bold text-white bg-indigo-500">
-                                                    {item.username?.[0]?.toUpperCase() || 'U'}
-                                                </div>
-                                            )}
-                                        </div>
-                                        <span className="text-[10px] font-bold text-white/90 max-w-[60px] truncate">
-                                            @{item.username || 'User'}
-                                        </span>
-                                    </div>
-                                )}
-                            </div>
+                    <motion.button
+                        whileHover={{ scale: 1.02, backgroundColor: "rgba(44, 44, 46, 0.8)" }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => { triggerHaptic('light'); navigate('/stickers'); }}
+                        className="bg-[#1c1c1e]/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/0 to-yellow-500/0 group-hover:from-yellow-500/10 group-hover:to-transparent transition-all duration-500" />
+                        <div className="w-10 h-10 rounded-[12px] bg-yellow-500/20 flex items-center justify-center text-yellow-400 shadow-inner relative z-10">
+                            <Smile size={22} className="drop-shadow-sm" />
+                        </div>
+                        <div className="text-left w-full mt-1 relative z-10">
+                            <div className="text-[15px] font-bold text-white tracking-tight leading-tight">{t('home.stickers')}</div>
+                            <div className="text-[11px] text-gray-500 font-medium leading-tight mt-1">{t('home.inTelegram')}</div>
+                        </div>
+                    </motion.button>
 
-                            {/* Top Right Category Badge */}
-                            <div className="absolute top-3 right-3 z-30">
-                                {item.category && item.category !== 'all' && (
-                                    <span className={`backdrop-blur-xl border border-white/20 text-white text-[9px] font-black px-2.5 py-1 rounded-full uppercase tracking-widest shadow-lg ${item.category === 'love' ? 'bg-gradient-to-r from-pink-500 to-rose-500' :
-                                        item.category === 'trends' ? 'bg-gradient-to-r from-amber-500 to-orange-500' :
-                                            item.category === 'dances' ? 'bg-gradient-to-r from-indigo-500 to-violet-500' :
-                                                item.category === 'cars' ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
-                                                    'bg-black/60'
-                                        }`}>
-                                        {(() => {
-                                            const cat = item.categories?.[0] || item.category;
-                                            const map = {
-                                                'dances': 'Танцы',
-                                                'trends': 'Тренды',
-                                                'christmas': 'Праздник',
-                                                'angels': 'Ангелы',
-                                                'cars': 'Авто',
-                                                'pets': 'Животные',
-                                                'oldTrends': 'Классика',
-                                                'love': 'Любовь',
-                                                '14feb': '14 Фев',
-                                                '23feb': '23 Фев',
-                                                '8march': '8 Мар'
-                                            };
-                                            return map[cat] || cat;
-                                        })()}
-                                    </span>
-                                )}
-                            </div>
+                    <motion.button
+                        whileHover={{ scale: 1.02, backgroundColor: "rgba(44, 44, 46, 0.8)" }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => { triggerHaptic('light'); onOpenPayment && onOpenPayment(); }}
+                        className="bg-[#1c1c1e]/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-green-500/0 group-hover:from-green-500/10 group-hover:to-transparent transition-all duration-500" />
+                        <div className="w-10 h-10 rounded-[12px] bg-green-500/20 flex items-center justify-center text-green-400 shadow-inner relative z-10">
+                            <Zap size={22} className="fill-current drop-shadow-sm" />
+                        </div>
+                        <div className="text-left w-full mt-1 relative z-10">
+                            <div className="text-[15px] font-bold text-white tracking-tight leading-tight">{t('home.recharge')}</div>
+                            <div className="text-[11px] text-gray-500 font-medium leading-tight mt-1">{t('home.buyTokens')}</div>
+                        </div>
+                    </motion.button>
 
-                            {/* Bottom Content */}
-                            <div className="absolute bottom-4 left-3 right-3 z-20 flex justify-between items-end gap-2">
-                                <h4 className="text-white/90 font-bold text-[13px] leading-tight flex-1 line-clamp-2 drop-shadow-sm">
-                                    {item.title || item.prompt}
-                                </h4>
+                    <motion.button
+                        whileHover={{ scale: 1.02, backgroundColor: "rgba(44, 44, 46, 0.8)" }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => { triggerHaptic('medium'); navigate('/greetings'); }}
+                        className="bg-[#1c1c1e]/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
+                    >
+                        <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-400 to-red-500 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider shadow-sm">New</div>
+                        <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-orange-500/0 group-hover:from-orange-500/10 group-hover:to-transparent transition-all duration-500" />
+                        <div className="w-10 h-10 rounded-[12px] bg-orange-500/20 flex items-center justify-center text-orange-400 shadow-inner relative z-10">
+                            <Star size={22} className="fill-current drop-shadow-sm" />
+                        </div>
+                        <div className="text-left w-full mt-1 relative z-10">
+                            <div className="text-[15px] font-bold text-white tracking-tight leading-tight">Поздравления</div>
+                            <div className="text-[11px] text-gray-500 font-medium leading-tight mt-1">Видео от звёзд</div>
+                        </div>
+                    </motion.button>
 
-                                <div onClick={(e) => e.stopPropagation()} className="scale-90 origin-bottom-right">
-                                    <LikeButton
-                                        creationId={item.id}
-                                        initialCount={item.likes_count || item.likes || 0}
-                                        initialLiked={likedIds?.includes(item.id)}
-                                        size="small"
-                                    />
+                    <motion.button
+                        whileHover={{ scale: 1.02, backgroundColor: "rgba(44, 44, 46, 0.8)" }}
+                        whileTap={{ scale: 0.96 }}
+                        onClick={() => { triggerHaptic('light'); navigate('/history'); }}
+                        className="bg-[#1c1c1e]/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
+                    >
+                        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-indigo-500/0 group-hover:from-indigo-500/10 group-hover:to-transparent transition-all duration-500" />
+                        <div className="w-10 h-10 rounded-[12px] bg-indigo-500/20 flex items-center justify-center text-indigo-400 shadow-inner relative z-10">
+                            <Maximize2 size={22} className="drop-shadow-sm" />
+                        </div>
+                        <div className="text-left w-full mt-1 relative z-10">
+                            <div className="text-[15px] font-bold text-white tracking-tight leading-tight">Upscale HD</div>
+                            <div className="text-[11px] text-gray-500 font-medium leading-tight mt-1">Улучшить качество</div>
+                        </div>
+                    </motion.button>
+
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => { triggerHaptic('medium'); navigate('/marketplace'); }}
+                        className="bg-gradient-to-br from-[#1c1c1e] to-[#242c38] border border-[#3390ec]/30 shadow-[0_4px_20px_rgba(51,144,236,0.1)] rounded-[18px] p-4 flex flex-col gap-2 items-start transition-all col-span-2 group relative overflow-hidden"
+                    >
+                        <div className="absolute inset-0 bg-[#3390ec]/0 group-hover:bg-[#3390ec]/5 transition-colors duration-300" />
+                        <div className="flex items-center justify-between w-full relative z-10">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 rounded-[12px] bg-[#3390ec]/20 flex items-center justify-center text-[#3390ec] shadow-inner">
+                                    <Sparkles size={22} className="fill-current drop-shadow-md" />
+                                </div>
+                                <div className="text-left">
+                                    <div className="text-[16px] font-bold text-white tracking-tight leading-tight drop-shadow-sm">{t('categories.promptMarket')}</div>
+                                    <div className="text-[12px] text-blue-200/70 font-medium leading-tight mt-0.5">{t('creation.marketplaceSubtitle')}</div>
                                 </div>
                             </div>
-                        </motion.div>
-                    ))}
-                </div>
-            </section>
-        </motion.div >
+                            <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors">
+                                <ChevronRight size={18} className="text-white" />
+                            </div>
+                        </div>
+                    </motion.button>
+                </motion.div>
+
+                {/* Templates Horizontal Scroll */}
+                <motion.div variants={itemVariants} className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between px-1">
+                        <span className="text-[17px] font-bold text-white tracking-tight">{t('home.templates')}</span>
+                        <button onClick={() => navigate('/gallery')} className="text-[14px] text-[#3390ec] font-bold active:opacity-70 flex items-center gap-0.5">
+                            {t('home.seeAll')} <ChevronRight size={16} />
+                        </button>
+                    </div>
+                    <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-2 -mx-4 px-4 w-[calc(100%+2rem)] px-5">
+                        {(isTemplatesLoading ? Array(5).fill({}) : finalTemplates?.slice(0, 10))?.map((item, i) => (
+                            isTemplatesLoading ? (
+                                <div key={i} className="min-w-[120px] w-[120px] snap-start flex-shrink-0">
+                                    <ImageCardSkeleton />
+                                </div>
+                            ) : (
+                                <motion.div
+                                    whileHover={{ scale: 1.03 }}
+                                    whileTap={{ scale: 0.95 }}
+                                    key={item.id || i}
+                                    className="min-w-[120px] w-[120px] aspect-[4/5] rounded-[18px] overflow-hidden relative bg-[#2c2c2e] snap-start cursor-pointer flex-shrink-0 shadow-lg border border-white/5"
+                                    onClick={() => { triggerHaptic('medium'); item.id && onOpenTemplate(item); }}
+                                >
+                                    {item.src && (
+                                        <img src={item.src} className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" alt="" />
+                                    )}
+                                    <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
+                                    <div className="absolute bottom-2.5 left-2.5 right-2.5 flex flex-col gap-0.5">
+                                        <p className="text-[12px] font-bold text-white leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] line-clamp-2">
+                                            {item.title || t('home.templates').slice(0, -1)}
+                                        </p>
+                                    </div>
+                                    {item.isNew && (
+                                        <div className="absolute top-2 right-2 bg-gradient-to-r from-green-400 to-green-600 px-1.5 py-0.5 rounded-[6px] text-[8px] font-bold text-white tracking-widest uppercase shadow-md">
+                                            New
+                                        </div>
+                                    )}
+                                </motion.div>
+                            )
+                        ))}
+                    </div>
+                </motion.div>
+
+                {/* Services List Block */}
+                <motion.div variants={itemVariants} className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between px-1">
+                        <span className="text-[17px] font-bold text-white tracking-tight">{t('home.services')}</span>
+                    </div>
+                    <Block>
+                        <BlockRow
+                            icon={<span className="text-[18px]">🔒</span>}
+                            iconColor="bg-gray-500/20"
+                            label={t('home.privateMode')}
+                            subtext={t('home.privateModeDesc')}
+                            onClick={() => { triggerHaptic('light'); navigate('/chat/private'); }}
+                        />
+                        <BlockRow
+                            icon={<span className="text-[18px]">🤔</span>}
+                            iconColor="bg-blue-500/20"
+                            label={t('home.quiz')}
+                            subtext={t('home.quizDesc')}
+                            onClick={() => { triggerHaptic('light'); navigate('/onboarding'); }}
+                        />
+                        <BlockRow
+                            icon={<span className="text-[18px]">⭐</span>}
+                            iconColor="bg-yellow-500/20"
+                            label={t('home.forCreators')}
+                            subtext={t('home.forCreatorsDesc')}
+                            onClick={() => { triggerHaptic('light'); navigate('/chat/creator'); }}
+                            isLast
+                        />
+                    </Block>
+                </motion.div>
+
+                {/* Experts List Block */}
+                <motion.div variants={itemVariants} className="flex flex-col gap-2 mb-6">
+                    <div className="flex items-center justify-between px-1">
+                        <span className="text-[17px] font-bold text-white tracking-tight">{t('home.experts')}</span>
+                        <button onClick={() => navigate('/experts')} className="text-[14px] text-[#3390ec] font-bold active:opacity-70 flex items-center gap-0.5">
+                            {t('home.seeAll')} <ChevronRight size={16} />
+                        </button>
+                    </div>
+                    <Block>
+                        {experts.map((expert, i) => (
+                            <BlockRow
+                                key={expert.id}
+                                icon={<span className="text-[18px]">{expert.emoji || expert.icon}</span>}
+                                iconColor="bg-white/5"
+                                label={expert.name}
+                                subtext={expert.desc}
+                                onClick={() => { triggerHaptic('light'); navigate(`/experts/${expert.id}`); }}
+                                isLast={i === experts.length - 1}
+                            />
+                        ))}
+                    </Block>
+                </motion.div>
+
+            </motion.div>
+        </div>
     );
 };
 

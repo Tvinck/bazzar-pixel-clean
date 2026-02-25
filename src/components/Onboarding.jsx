@@ -1,253 +1,190 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronRight, Sparkles, Zap, Users, Image, Video, Music, Trophy, Gift } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
+import { ChevronRight, Sparkles, Zap, Image, Video, Music, Trophy, Gift, ArrowRight, Check } from 'lucide-react';
+import { useSound } from '../context/SoundContext';
 
 const Onboarding = ({ onComplete }) => {
+    const { playClick, playSuccess } = useSound();
     const [step, setStep] = useState(0);
-    const { t } = useLanguage();
 
     const slides = [
         {
-            id: 0,
-            icon: <Sparkles size={64} className="text-amber-400" />,
-            title: t.onboarding.slide1.title,
-            desc: t.onboarding.slide1.desc,
+            id: 'welcome',
+            icon: <Sparkles size={48} className="text-amber-400" />,
+            title: "Добро пожаловать!",
+            desc: "Pixel AI — ваша творческая студия в кармане. Создавайте шедевры за секунды.",
             bg: "from-indigo-500 to-purple-600",
-            example: "✨ Создавайте уникальный контент"
+            buttonText: "Начать",
+            showSkip: true
         },
         {
-            id: 1,
-            icon: <Image size={64} className="text-violet-400" />,
-            title: t.onboarding.slide2.title,
-            desc: t.onboarding.slide2.desc,
-            bg: "from-violet-500 to-purple-500",
-            example: "🎨 Фото → Фото: Измените стиль, добавьте объекты"
-        },
-        {
-            id: 2,
-            icon: <Video size={64} className="text-blue-400" />,
-            title: t.onboarding.slide3.title,
-            desc: t.onboarding.slide3.desc,
+            id: 'features',
+            icon: <Zap size={48} className="text-blue-400" />,
+            title: "Всё в одном",
+            desc: "Генерация изображений, видео, музыки и анимации. Никаких границ для фантазии.",
             bg: "from-blue-500 to-cyan-500",
-            example: "🎬 Фото → Видео: Оживите изображения"
+            content: (
+                <div className="grid grid-cols-3 gap-2 w-full py-2">
+                    {[
+                        { icon: <Image size={24} />, label: "Арт", color: "text-violet-500", bg: "bg-violet-500/10" },
+                        { icon: <Video size={24} />, label: "Видео", color: "text-pink-500", bg: "bg-pink-500/10" },
+                        { icon: <Music size={24} />, label: "Звук", color: "text-amber-500", bg: "bg-amber-500/10" }
+                    ].map((item, i) => (
+                        <motion.div
+                            key={i}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={`flex flex-col items-center gap-2 p-3 rounded-2xl ${item.bg} border-2 border-transparent hover:border-${item.color.split('-')[1]}-200 transition-colors`}
+                        >
+                            <div className={`${item.color}`}>
+                                {item.icon}
+                            </div>
+                            <span className="text-[11px] font-bold opacity-70">{item.label}</span>
+                        </motion.div>
+                    ))}
+                </div>
+            ),
+            buttonText: "Далее"
         },
         {
-            id: 3,
-            icon: <Music size={64} className="text-pink-400" />,
-            title: t.onboarding.slide4.title,
-            desc: t.onboarding.slide4.desc,
-            bg: "from-pink-500 to-rose-500",
-            example: "🎵 Текст → Музыка: Создайте саундтрек"
-        },
-        {
-            id: 4,
-            icon: <Trophy size={64} className="text-amber-400" />,
-            title: t.onboarding.slide5.title,
-            desc: t.onboarding.slide5.desc,
+            id: 'rewards',
+            icon: <Trophy size={48} className="text-amber-400" />,
+            title: "Играй и Получай",
+            desc: "Выполняйте задания, повышайте уровень и получайте бесплатные кредиты каждый день.",
             bg: "from-amber-500 to-orange-500",
-            example: "🏆 Зарабатывайте уровни и достижения"
+            buttonText: "Круто!"
         },
         {
-            id: 5,
-            icon: <Gift size={64} className="text-emerald-400" />,
-            title: t.onboarding.slide6.title,
-            desc: t.onboarding.slide6.desc,
+            id: 'gift',
+            icon: <Gift size={48} className="text-emerald-400" />,
+            title: "Ваш подарок",
+            desc: "Мы начислили вам стартовый бонус для первых экспериментов.",
             bg: "from-emerald-500 to-teal-500",
-            example: "🎁 100 кредитов в подарок при регистрации!"
+            buttonText: "Забрать 20 кредитов",
+            isFinal: true
         }
     ];
 
     const handleNext = () => {
+        playClick();
         if (step < slides.length - 1) {
             setStep(step + 1);
         } else {
-            localStorage.setItem('pixel_onboarding_complete', 'true');
-            onComplete();
+            completeOnboarding();
         }
     };
 
-    const handleSkip = () => {
+    const completeOnboarding = () => {
+        playSuccess();
         localStorage.setItem('pixel_onboarding_complete', 'true');
         onComplete();
     };
 
+    const currentSlide = slides[step];
+
     return (
-        <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex flex-col items-center justify-between p-6 overflow-hidden"
-        >
-            {/* Animated Background Orbs */}
+        <div className="fixed inset-0 z-[100] flex items-end justify-center sm:items-center p-0 sm:p-4">
+            {/* Backdrop / Wallpaper */}
+            <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-opacity duration-500" />
+
+            {/* Interactive Card */}
             <motion.div
-                animate={{
-                    scale: [1, 1.2, 1],
-                    rotate: [0, 90, 0]
-                }}
-                transition={{
-                    duration: 10,
-                    repeat: Infinity,
-                    ease: "linear"
-                }}
-                className={`absolute top-[-20%] left-[-20%] w-[500px] h-[500px] bg-gradient-to-br ${slides[step].bg} rounded-full blur-[120px] opacity-20`}
-            />
-            <motion.div
-                animate={{
-                    scale: [1.2, 1, 1.2],
-                    rotate: [90, 0, 90]
-                }}
-                transition={{
-                    duration: 10,
-                    repeat: Infinity,
-                    ease: "linear"
-                }}
-                className={`absolute bottom-[-20%] right-[-20%] w-[500px] h-[500px] bg-gradient-to-tl ${slides[step].bg} rounded-full blur-[120px] opacity-20`}
-            />
-
-            {/* Skip Button */}
-            <div className="w-full flex justify-end relative z-10 pt-4">
-                <button
-                    onClick={handleSkip}
-                    className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 font-bold text-sm transition-colors"
-                >
-                    {t.onboarding.skip}
-                </button>
-            </div>
-
-            {/* Content Area */}
-            <div className="flex-1 flex flex-col items-center justify-center w-full relative z-10">
-                <AnimatePresence mode="wait">
-                    <motion.div
-                        key={step}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -20 }}
-                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                        className="flex flex-col items-center text-center space-y-6"
-                    >
-                        {/* Icon Container with Animation */}
-                        <motion.div
-                            initial={{ scale: 0 }}
-                            animate={{ scale: 1 }}
-                            transition={{
-                                type: "spring",
-                                stiffness: 260,
-                                damping: 20,
-                                delay: 0.1
-                            }}
-                            className="relative"
-                        >
-                            <div className="w-40 h-40 bg-white/80 dark:bg-slate-800/80 backdrop-blur-xl rounded-[2.5rem] flex items-center justify-center shadow-2xl border border-white/40 dark:border-slate-700/40">
-                                {slides[step].icon}
-                            </div>
-                            {/* Pulse Ring */}
-                            <motion.div
-                                animate={{
-                                    scale: [1, 1.3, 1],
-                                    opacity: [0.5, 0, 0.5]
-                                }}
-                                transition={{
-                                    duration: 2,
-                                    repeat: Infinity,
-                                    ease: "easeInOut"
-                                }}
-                                className={`absolute inset-0 rounded-[2.5rem] bg-gradient-to-br ${slides[step].bg} -z-10`}
-                            />
-                        </motion.div>
-
-                        {/* Text Content */}
-                        <div className="space-y-4 max-w-sm px-4">
-                            <motion.h2
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.2 }}
-                                className="text-3xl font-display font-bold text-slate-900 dark:text-white"
-                            >
-                                {slides[step].title}
-                            </motion.h2>
-
-                            <motion.p
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                transition={{ delay: 0.3 }}
-                                className="text-slate-600 dark:text-slate-400 font-medium leading-relaxed text-base"
-                            >
-                                {slides[step].desc}
-                            </motion.p>
-
-                            {/* Example Badge */}
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.4 }}
-                                className="inline-block mt-4 px-4 py-2 bg-white/60 dark:bg-slate-800/60 backdrop-blur-md rounded-full border border-slate-200/50 dark:border-slate-700/50"
-                            >
-                                <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
-                                    {slides[step].example}
-                                </p>
-                            </motion.div>
-                        </div>
-                    </motion.div>
-                </AnimatePresence>
-            </div>
-
-            {/* Navigation */}
-            <div className="w-full relative z-10 pb-8 flex flex-col items-center gap-6">
-                {/* Progress Indicators */}
-                <div className="flex gap-2">
-                    {slides.map((_, i) => (
-                        <motion.div
-                            key={i}
-                            initial={false}
-                            animate={{
-                                width: i === step ? 32 : 8,
-                                backgroundColor: i === step
-                                    ? 'rgb(99, 102, 241)'
-                                    : i < step
-                                        ? 'rgb(203, 213, 225)'
-                                        : 'rgb(226, 232, 240)'
-                            }}
-                            className="h-2 rounded-full transition-all duration-300"
-                        />
-                    ))}
+                key={step} // Key change triggers animation
+                initial={{ y: "100%", opacity: 0, scale: 0.9 }}
+                animate={{ y: 0, opacity: 1, scale: 1 }}
+                exit={{ y: "-10%", opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="relative w-full max-w-md bg-white dark:bg-[#1c1c1e] rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+            >
+                {/* Drag Handle (Mobile Visual) */}
+                <div className="absolute top-0 left-0 right-0 h-6 flex justify-center items-center z-20 sm:hidden pointer-events-none">
+                    <div className="w-10 h-1 bg-white/30 rounded-full backdrop-blur-md shadow-sm" />
                 </div>
 
-                {/* Step Counter */}
-                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                    {step + 1} / {slides.length}
-                </p>
+                {/* Decorative Gradient Header */}
+                <div className={`h-32 bg-gradient-to-br ${currentSlide.bg} relative overflow-hidden flex items-center justify-center transition-colors duration-500`}>
+                    <div className="absolute inset-0 bg-white/10 pattern-dots opacity-30" />
 
-                {/* Next/Start Button */}
-                <motion.button
-                    whileTap={{ scale: 0.95 }}
-                    onClick={handleNext}
-                    className={`w-full py-4 bg-gradient-to-r ${slides[step].bg} text-white rounded-2xl font-bold text-lg shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2`}
-                >
-                    {step === slides.length - 1 ? (
-                        <>
-                            {t.onboarding.start}
-                            <Sparkles size={20} />
-                        </>
-                    ) : (
-                        <>
-                            {t.onboarding.next}
-                            <ChevronRight size={20} />
-                        </>
-                    )}
-                </motion.button>
-
-                {/* Back Button (except first slide) */}
-                {step > 0 && (
-                    <button
-                        onClick={() => setStep(step - 1)}
-                        className="text-sm font-medium text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 transition-colors"
+                    {/* Animated Icon */}
+                    <motion.div
+                        initial={{ scale: 0, rotate: -180 }}
+                        animate={{ scale: 1, rotate: 0 }}
+                        transition={{ type: "spring", damping: 15 }}
+                        className="w-20 h-20 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center shadow-lg border border-white/20"
                     >
-                        ← {t.onboarding.back || 'Назад'}
-                    </button>
-                )}
-            </div>
-        </motion.div>
+                        {currentSlide.icon}
+                    </motion.div>
+
+                    {/* Skip Button */}
+                    {currentSlide.showSkip && (
+                        <button
+                            onClick={completeOnboarding}
+                            className="absolute top-4 right-4 text-white/70 hover:text-white text-xs font-bold uppercase tracking-wider px-3 py-1 bg-black/10 rounded-full backdrop-blur-sm transition-colors"
+                        >
+                            Skip
+                        </button>
+                    )}
+                </div>
+
+                {/* Content */}
+                <div className="p-8 flex flex-col items-center text-center space-y-4 flex-1">
+                    <motion.h2
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        delay={0.1}
+                        className="text-2xl font-display font-bold text-slate-900 dark:text-white"
+                    >
+                        {currentSlide.title}
+                    </motion.h2>
+
+                    <motion.p
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        delay={0.2}
+                        className="text-slate-500 dark:text-slate-400 text-base leading-relaxed"
+                    >
+                        {currentSlide.desc}
+                    </motion.p>
+
+                    {/* Custom Content (Features Grid etc) */}
+                    {currentSlide.content && (
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.9 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            delay={0.3}
+                            className="w-full"
+                        >
+                            {currentSlide.content}
+                        </motion.div>
+                    )}
+
+                    <div className="flex-1" /> {/* Spacer */}
+
+                    {/* Indicators */}
+                    <div className="flex gap-1.5 mb-6">
+                        {slides.map((_, i) => (
+                            <div
+                                key={i}
+                                className={`h-1.5 rounded-full transition-all duration-300 ${i === step
+                                    ? `w-6 bg-gradient-to-r ${currentSlide.bg}`
+                                    : 'w-1.5 bg-slate-200 dark:bg-slate-700'
+                                    }`}
+                            />
+                        ))}
+                    </div>
+
+                    {/* Action Button */}
+                    <motion.button
+                        whileTap={{ scale: 0.96 }}
+                        onClick={handleNext}
+                        className={`w-full py-4 rounded-xl font-bold text-white shadow-lg shadow-indigo-500/20 flex items-center justify-center gap-2 transition-all bg-gradient-to-r ${currentSlide.bg}`}
+                    >
+                        {currentSlide.buttonText}
+                        {currentSlide.isFinal ? <Check size={20} /> : <ArrowRight size={20} />}
+                    </motion.button>
+                </div>
+            </motion.div>
+        </div>
     );
 };
 

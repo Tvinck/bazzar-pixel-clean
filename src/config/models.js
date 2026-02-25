@@ -65,6 +65,7 @@ export const MODEL_CATALOG = {
     // ============================================
     'nano_banana': { name: 'Nano Banana', type: 'image', cost: 5 },
     'nano_banana_pro': { name: 'Nano Banana Pro', type: 'image', cost: 20 },
+    'nano_banana_edit': { name: 'Nano Banana Edit', type: 'image', cost: 5 }, // New Edit Model
     'z_image': { name: 'Z-Image', type: 'image', cost: 20 }, // Assuming aligned with high tier
     'ideogram_reframe': { name: 'Ideogram V3 Reframe', type: 'image', cost: 20 }, // Assuming high tier
     'recraft_remove_bg': { name: 'Remove Background', type: 'image', cost: 20 }, // Per user request (remove object)

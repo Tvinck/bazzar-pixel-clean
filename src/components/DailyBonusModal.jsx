@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Zap, X, Check, Calendar } from 'lucide-react';
+import { Zap, X, Check, Calendar, Sparkles } from 'lucide-react';
 import { useSound } from '../context/SoundContext';
 import { analytics } from '../lib/supabase';
+import { useLanguage } from '../context/LanguageContext';
+import AnimatedIcon from './ui/AnimatedIcon';
 
 const STREAK_REWARDS = [
     { day: 1, reward: 1 },
@@ -15,21 +17,28 @@ const STREAK_REWARDS = [
 ];
 
 const DailyBonusModal = ({ isOpen, onClose, user }) => {
-    const { playClick } = useSound();
+    const { playClick, playSuccess } = useSound();
+    const { t } = useLanguage();
     const [currentDay, setCurrentDay] = useState(1);
     const [claimed, setClaimed] = useState(false);
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
         if (isOpen) {
-            // In a real app, calculate streak from user data
-            // For now, check localStorage mock
             const lastClaim = localStorage.getItem('last_bonus_claim');
             const streak = parseInt(localStorage.getItem('bonus_streak') || 0);
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
 
-            // Logic to determine if ready to claim and what day
-            // Simplified for demo: Always show Day 1 if no history, or next day
-            setCurrentDay(streak < 7 ? streak + 1 : 1);
+            // If last claim was NOT yesterday, reset streak (user missed a day)
+            if (lastClaim && lastClaim !== yesterday.toDateString() && lastClaim !== today.toDateString()) {
+                localStorage.setItem('bonus_streak', '0');
+                setCurrentDay(1);
+            } else {
+                setCurrentDay(streak < 7 ? streak + 1 : 1);
+            }
+            setClaimed(false);
         }
     }, [isOpen]);
 
@@ -45,12 +54,11 @@ const DailyBonusModal = ({ isOpen, onClose, user }) => {
         setTimeout(async () => {
             setLoading(false);
             setClaimed(true);
+            playSuccess && playSuccess();
 
-            // Update local storage
-            localStorage.setItem('last_bonus_claim', new Date().toISOString());
+            localStorage.setItem('last_bonus_claim', new Date().toDateString());
             localStorage.setItem('bonus_streak', currentDay.toString());
 
-            // Track event & Add credits
             if (user) {
                 await analytics.addCredits(user.id, STREAK_REWARDS[currentDay - 1].reward);
                 await analytics.trackEvent(user.id, 'daily_bonus_claimed', {
@@ -59,37 +67,52 @@ const DailyBonusModal = ({ isOpen, onClose, user }) => {
                 });
             }
 
-            // Close after delay
             setTimeout(() => {
                 onClose();
-            }, 2000);
-        }, 1500);
+            }, 2500);
+        }, 1200);
     };
 
     return (
         <AnimatePresence>
             {isOpen && (
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md px-4"
-                >
+                <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+                    {/* Backdrop */}
                     <motion.div
-                        initial={{ scale: 0.8, y: 50 }}
-                        animate={{ scale: 1, y: 0 }}
-                        exit={{ scale: 0.8, y: 50 }}
-                        className="w-full max-w-sm bg-white dark:bg-[#1a1c22] rounded-[2.5rem] p-6 shadow-2xl relative overflow-hidden"
-                    >
-                        {/* Background Effects */}
-                        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-indigo-500/20 to-purple-500/20 blur-xl" />
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={onClose}
+                        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+                    />
 
-                        <div className="relative z-10 text-center">
-                            <h2 className="text-2xl font-black font-display text-slate-900 dark:text-white mb-2">
-                                Daily Bonus
+                    {/* Modal Card */}
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        className="w-full max-w-sm bg-[#1c1c1e] rounded-[32px] overflow-hidden relative z-10 border border-white/10 shadow-2xl"
+                    >
+                        {/* Decorative Glow */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-32 bg-[#3390ec]/20 blur-[60px] pointer-events-none" />
+
+                        <div className="relative p-6 text-center">
+                            {/* Icon */}
+                            <motion.div
+                                className="w-20 h-20 mx-auto bg-[#3390ec]/10 rounded-full flex items-center justify-center mb-5 ring-1 ring-[#3390ec]/30 shadow-[0_0_30px_rgba(51,144,236,0.2)]"
+                                whileHover={{ scale: 1.1, rotate: 10 }}
+                                transition={{ type: "spring", stiffness: 300, damping: 15 }}
+                            >
+                                <AnimatedIcon icon={Sparkles} className="text-[#3390ec]" size={40} delay={0.2} />
+                            </motion.div>
+
+                            {/* Title */}
+                            <h2 className="text-2xl font-black text-white mb-2 leading-tight">
+                                ЕЖЕДНЕВНЫЙ<br />БОНУС
                             </h2>
-                            <p className="text-sm text-slate-500 dark:text-slate-400 mb-6 font-medium">
-                                Заходи каждый день и получай награды!
+                            <p className="text-[#3390ec] font-bold text-[13px] uppercase tracking-widest mb-8">
+                                ЗАБИРАЙ ЗАРЯДЫ КАЖДЫЙ ДЕНЬ ⚡
                             </p>
 
                             {/* Streak Grid */}
@@ -100,73 +123,92 @@ const DailyBonusModal = ({ isOpen, onClose, user }) => {
                                     const isBig = item.big;
 
                                     return (
-                                        <div
+                                        <motion.div
                                             key={item.day}
+                                            initial={{ scale: 0.8, opacity: 0 }}
+                                            animate={{ scale: isActive ? 1.05 : 1, opacity: 1 }}
+                                            transition={{ delay: index * 0.05, type: 'spring' }}
                                             className={`
-                                                relative rounded-2xl flex flex-col items-center justify-center p-2 border-2 transition-all
+                                                relative flex flex-col items-center justify-center rounded-xl p-2 transition-all border
                                                 ${isBig ? 'col-span-2 aspect-[2/1]' : 'aspect-square'}
                                                 ${isActive
-                                                    ? 'bg-indigo-500 border-indigo-500 shadow-lg shadow-indigo-500/30 scale-105 z-10'
+                                                    ? 'bg-[#3390ec] border-[#3390ec] shadow-[0_4px_12px_rgba(51,144,236,0.3)] z-10'
                                                     : isPast
-                                                        ? 'bg-green-500/10 border-green-500 dark:border-green-400'
-                                                        : 'bg-slate-100 dark:bg-slate-800 border-transparent opacity-50'}
+                                                        ? 'bg-[#2c2c2e] border-[#3390ec]/30 opacity-60'
+                                                        : 'bg-[#2c2c2e] border-white/5 opacity-40'}
                                             `}
                                         >
                                             {isPast ? (
-                                                <Check size={isBig ? 32 : 20} className="text-green-500" strokeWidth={3} />
+                                                <motion.div
+                                                    initial={{ scale: 0 }}
+                                                    animate={{ scale: 1 }}
+                                                    transition={{ type: 'spring', stiffness: 400, damping: 10 }}
+                                                >
+                                                    <Check size={20} className="text-[#3390ec]" strokeWidth={3} />
+                                                </motion.div>
                                             ) : (
                                                 <>
-                                                    <span className={`text-[10px] font-bold uppercase mb-1 ${isActive ? 'text-white/70' : 'text-slate-400'}`}>
-                                                        Day {item.day}
+                                                    <span className={`text-[9px] font-bold uppercase mb-0.5 ${isActive ? 'text-white/80' : 'text-gray-500'}`}>
+                                                        День {item.day}
                                                     </span>
                                                     <div className="flex items-center gap-0.5">
-                                                        <span className={`font-black ${isBig ? 'text-2xl' : 'text-lg'} ${isActive ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
-                                                            +{item.reward}
+                                                        <span className={`font-black ${isBig ? 'text-xl' : 'text-base'} ${isActive ? 'text-white' : 'text-white'}`}>
+                                                            {item.reward}
                                                         </span>
-                                                        <Zap size={isBig ? 20 : 12} className={`${isActive ? 'text-amber-300 fill-amber-300' : 'text-amber-500 fill-amber-500'}`} />
+                                                        <AnimatedIcon
+                                                            icon={Zap}
+                                                            size={isBig ? 16 : 12}
+                                                            className={isActive ? 'text-white fill-white' : 'text-gray-500 fill-gray-500'}
+                                                            disableHover
+                                                            disableTap
+                                                            delay={0.1 + (index * 0.05)}
+                                                        />
                                                     </div>
                                                 </>
                                             )}
-                                        </div>
+                                        </motion.div>
                                     );
                                 })}
                             </div>
 
-                            {/* Claim Button */}
-                            <button
+                            {/* Action Button */}
+                            <motion.button
                                 onClick={handleClaim}
                                 disabled={claimed || loading}
+                                animate={!claimed && !loading ? { scale: [1, 1.05, 1] } : {}}
+                                transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+                                whileTap={{ scale: 0.95 }}
                                 className={`
-                                    w-full py-4 rounded-2xl font-bold flex items-center justify-center gap-2 text-lg shadow-xl transition-all active:scale-95
+                                    w-full py-4 rounded-2xl font-bold text-base uppercase tracking-wider transition-all relative overflow-hidden
                                     ${claimed
-                                        ? 'bg-green-500 text-white'
-                                        : 'bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 text-white animate-pulse-slow'}
+                                        ? 'bg-green-500 text-white shadow-[0_4px_12px_rgba(34,197,94,0.3)]'
+                                        : 'bg-white text-black hover:bg-white/90 shadow-[0_4px_12px_rgba(255,255,255,0.2)]'}
                                 `}
                             >
-                                {loading ? (
-                                    <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                                ) : claimed ? (
-                                    <>
-                                        <Check size={24} strokeWidth={3} />
-                                        CLAIMED
-                                    </>
-                                ) : (
-                                    <>
-                                        CLAIM BONUS
-                                        <Zap className="fill-white" />
-                                    </>
-                                )}
-                            </button>
+                                <div className="relative z-10 flex items-center justify-center gap-2">
+                                    {loading ? (
+                                        <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                                    ) : claimed ? (
+                                        <motion.div
+                                            initial={{ scale: 0 }}
+                                            animate={{ scale: 1 }}
+                                            transition={{ type: 'spring' }}
+                                            className="flex items-center gap-2"
+                                        >
+                                            <Check size={20} strokeWidth={3} />
+                                            <span>Получено</span>
+                                        </motion.div>
+                                    ) : (
+                                        <motion.div className="flex items-center gap-2">
+                                            <span>Забрать</span>
+                                            <AnimatedIcon icon={Zap} size={18} className="fill-black" disableHover disableTap />
+                                        </motion.div>
+                                    )}
+                                </div>
+                            </motion.button>
                         </div>
-
-                        {/* Close Button (only if not forcing) */}
-                        {!claimed && (
-                            <button onClick={onClose} className="absolute top-4 right-4 text-slate-400 hover:text-slate-600 dark:hover:text-white p-2">
-                                <X size={20} />
-                            </button>
-                        )}
                     </motion.div>
-                </motion.div>
+                </div>
             )}
         </AnimatePresence>
     );

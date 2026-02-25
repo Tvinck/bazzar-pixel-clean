@@ -1,35 +1,14 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
+// import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   plugins: [
-    react(),
-    // VitePWA({
-    //   registerType: 'autoUpdate',
-    //   includeAssets: ['icon-192.png', 'icon-512.png'],
-    //   manifest: {
-    //     name: 'Pixel AI - AI Image & Video Generator',
-    //     short_name: 'Pixel AI',
-    //     description: 'Create stunning AI-generated images, videos, and music',
-    //     theme_color: '#6366F1',
-    //     background_color: '#0B0F19',
-    //     display: 'standalone',
-    //     icons: [
-    //       {
-    //         src: 'icon-192.png',
-    //         sizes: '192x192',
-    //         type: 'image/png'
-    //       },
-    //       {
-    //         src: 'icon-512.png',
-    //         sizes: '512x512',
-    //         type: 'image/png'
-    //       }
-    //     ]
-    //   }
-    // })
+    react()
   ],
+  define: {
+    'process.env': {}
+  },
   build: {
     // Optimization
     target: 'es2015',

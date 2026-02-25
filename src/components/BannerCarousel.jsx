@@ -57,7 +57,7 @@ const BannerCarousel = () => {
     };
 
     return (
-        <div className="relative w-full h-[240px] rounded-[2.5rem] overflow-hidden group cursor-pointer shadow-2xl shadow-indigo-500/10">
+        <div className="relative w-full h-[180px] rounded-3xl overflow-hidden group cursor-pointer shadow-lg">
             {/* Main Carousel Container */}
             <AnimatePresence mode="wait">
                 <motion.div
@@ -67,58 +67,49 @@ const BannerCarousel = () => {
                     exit={{ opacity: 0 }}
                     transition={{ duration: 0.8, ease: "easeInOut" }}
                     onClick={() => handleBannerClick(banners[currentIndex].link)}
-                    className="absolute inset-0 w-full h-full relative overflow-hidden bg-slate-900"
+                    className="absolute inset-0 w-full h-full relative overflow-hidden bg-white"
                 >
-                    {/* 1. Animated Gradient Mesh Background */}
+                    {/* Soft Gradient Background */}
                     <div
-                        className="absolute inset-0 opacity-80 transition-all duration-1000"
+                        className="absolute inset-0 opacity-20 transition-all duration-1000"
                         style={{
                             background: `
-                                radial-gradient(circle at 0% 0%, ${banners[currentIndex].colors[0]}, transparent 50%),
-                                radial-gradient(circle at 100% 0%, ${banners[currentIndex].colors[1]}, transparent 50%),
-                                radial-gradient(circle at 100% 100%, ${banners[currentIndex].colors[2]}, transparent 50%),
-                                radial-gradient(circle at 0% 100%, ${banners[currentIndex].colors[0]}, transparent 50%)
+                                linear-gradient(135deg, 
+                                    ${banners[currentIndex].colors[0]} 0%, 
+                                    ${banners[currentIndex].colors[1]} 50%, 
+                                    ${banners[currentIndex].colors[2]} 100%
+                                )
                             `
                         }}
                     />
 
-                    {/* 2. Moving Blobs (Lava Lamp effect) */}
+                    {/* Decorative Blob */}
                     <motion.div
                         animate={{
-                            x: [-20, 20, -20],
-                            y: [-20, 20, -20],
                             scale: [1, 1.2, 1],
                             rotate: [0, 90, 0]
                         }}
-                        transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-                        className="absolute top-[-20%] left-[-20%] w-[120%] h-[120%] opacity-50 blur-[80px]"
+                        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                        className="absolute -top-20 -right-20 w-64 h-64 opacity-10 blur-3xl rounded-full"
                         style={{
-                            background: `conic-gradient(from 0deg, ${banners[currentIndex].colors[0]}, ${banners[currentIndex].colors[1]}, ${banners[currentIndex].colors[2]}, ${banners[currentIndex].colors[0]})`
+                            background: `radial-gradient(circle, ${banners[currentIndex].colors[1]}, transparent)`
                         }}
                     />
 
-                    {/* 3. Noise Texture Overlay */}
-                    <div className="absolute inset-0 bg-noise opacity-[0.07] mix-blend-overlay pointer-events-none" />
-
-                    {/* 4. Glassmorphism Shine/Reflection */}
-                    <motion.div
-                        initial={{ x: '-150%', opacity: 0 }}
-                        animate={{ x: '150%', opacity: [0, 0.4, 0] }}
-                        transition={{ duration: 3, repeat: Infinity, repeatDelay: 1.5, ease: "easeInOut" }}
-                        className="absolute inset-0 w-2/3 h-full bg-gradient-to-r from-transparent via-white/20 to-transparent transform -skew-x-25 pointer-events-none"
-                    />
-
-                    {/* 5. Typography & Content */}
-                    <div className="absolute inset-0 flex flex-col justify-between p-7 z-10">
+                    {/* Content */}
+                    <div className="absolute inset-0 flex flex-col justify-between p-6 z-10">
                         {/* Top Row: Icon badge & Action */}
                         <div className="flex justify-between items-start">
                             <motion.div
                                 initial={{ y: -20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.2 }}
-                                className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/20 shadow-lg shadow-black/10"
+                                className="w-12 h-12 bg-gradient-to-br rounded-2xl flex items-center justify-center shadow-lg"
+                                style={{
+                                    background: `linear-gradient(135deg, ${banners[currentIndex].colors[0]}, ${banners[currentIndex].colors[1]})`
+                                }}
                             >
-                                {React.createElement(banners[currentIndex].icon, { size: 24, className: "text-white" })}
+                                {React.createElement(banners[currentIndex].icon, { size: 22, className: "text-white" })}
                             </motion.div>
 
                             {banners[currentIndex].action && (
@@ -126,16 +117,22 @@ const BannerCarousel = () => {
                                     initial={{ scale: 0 }}
                                     animate={{ scale: 1 }}
                                     transition={{ type: "spring", delay: 0.4 }}
-                                    className="bg-white text-slate-900 text-[10px] font-black uppercase tracking-widest px-3 py-1.5 rounded-full flex items-center gap-1 shadow-xl"
+                                    className="text-white text-xs font-black uppercase tracking-wider px-4 py-2 rounded-full flex items-center gap-1.5 shadow-lg"
+                                    style={{
+                                        background: `linear-gradient(135deg, ${banners[currentIndex].colors[0]}, ${banners[currentIndex].colors[1]})`
+                                    }}
                                 >
-                                    <Zap size={10} className="fill-slate-900" />
+                                    <Zap size={12} className="fill-white" />
                                     {banners[currentIndex].action}
                                 </motion.div>
                             )}
                         </div>
 
-                        {/* Huge Background Text (Clipped) */}
-                        <h1 className="absolute -right-4 top-1/2 -translate-y-1/2 text-[100px] font-black text-white opacity-[0.06] font-display pointer-events-none select-none tracking-tighter leading-none whitespace-nowrap">
+                        {/* Huge Background Text (Subtle) */}
+                        <h1
+                            className="absolute -right-4 top-1/2 -translate-y-1/2 text-[80px] font-black opacity-[0.03] font-display pointer-events-none select-none tracking-tighter leading-none whitespace-nowrap"
+                            style={{ color: banners[currentIndex].colors[1] }}
+                        >
                             {banners[currentIndex].title}
                         </h1>
 
@@ -145,7 +142,10 @@ const BannerCarousel = () => {
                                 initial={{ y: 20, opacity: 0 }}
                                 animate={{ y: 0, opacity: 1 }}
                                 transition={{ delay: 0.3 }}
-                                className="text-3xl font-black text-white leading-8 mb-2 font-display drop-shadow-lg"
+                                className="text-2xl font-black leading-7 mb-2 font-display bg-gradient-to-r bg-clip-text text-transparent"
+                                style={{
+                                    backgroundImage: `linear-gradient(135deg, ${banners[currentIndex].colors[0]}, ${banners[currentIndex].colors[1]})`
+                                }}
                             >
                                 {banners[currentIndex].subtitle}
                             </motion.h2>
@@ -156,8 +156,11 @@ const BannerCarousel = () => {
                                 transition={{ delay: 0.4 }}
                                 className="flex items-center gap-2"
                             >
-                                <div className="h-0.5 w-6 bg-white/50 rounded-full" />
-                                <p className="text-white/90 font-bold text-sm tracking-wide">{banners[currentIndex].desc}</p>
+                                <div
+                                    className="h-0.5 w-6 rounded-full"
+                                    style={{ backgroundColor: banners[currentIndex].colors[1] }}
+                                />
+                                <p className="text-gray-600 font-semibold text-sm">{banners[currentIndex].desc}</p>
                             </motion.div>
                         </div>
                     </div>
@@ -165,11 +168,18 @@ const BannerCarousel = () => {
             </AnimatePresence>
 
             {/* Custom Paginator */}
-            <div className="absolute top-1/2 right-4 -translate-y-1/2 flex flex-col gap-2 z-20">
-                {banners.map((_, idx) => (
-                    <div
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+                {banners.map((banner, idx) => (
+                    <motion.div
                         key={idx}
-                        className={`w-1.5 rounded-full transition-all duration-500 ${idx === currentIndex ? 'h-6 bg-white' : 'h-1.5 bg-white/30'}`}
+                        whileHover={{ scale: 1.2 }}
+                        className={`rounded-full transition-all duration-300 ${idx === currentIndex ? 'w-6 h-1.5' : 'w-1.5 h-1.5'
+                            }`}
+                        style={{
+                            backgroundColor: idx === currentIndex
+                                ? banner.colors[1]
+                                : '#D1D5DB'
+                        }}
                     />
                 ))}
             </div>

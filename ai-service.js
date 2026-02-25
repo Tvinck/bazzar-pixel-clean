@@ -1,4 +1,4 @@
-import { GOOGLE_API_KEYS, AI_MODELS, DEFAPI_BASE_URL } from './src/config/ai_keys.js';
+import { GOOGLE_API_KEYS, AI_MODELS, DEFAPI_BASE_URL, KIE_API_KEY } from './src/config/ai_keys.js';
 import apiClient from './src/utils/secureAPI.js';
 import { validatePrompt } from './src/utils/validation.js';
 
@@ -62,7 +62,7 @@ class AIService {
                         mode: "normal"
                     }
                 }, {
-                    headers: this._getHeaders(),
+                    headers: { 'Authorization': `Bearer ${KIE_API_KEY}` },
                     rateLimitType: 'generation'
                 });
 
@@ -247,7 +247,7 @@ class AIService {
 
                 if (isKie) {
                     const data = await apiClient.get(`https://api.kie.ai/api/v1/jobs/recordInfo?taskId=${taskId}`, {
-                        headers: this._getHeaders()
+                        headers: { 'Authorization': `Bearer ${KIE_API_KEY}` }
                     });
 
                     if (data.code !== 200) throw new Error(data.msg);

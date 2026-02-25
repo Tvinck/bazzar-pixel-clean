@@ -4,13 +4,16 @@ import { X, Eraser, Download, Undo2, Image as ImageIcon, Wand2, Upload, Paintbru
 import { AnimatedButton } from '../ui/AnimatedButtons';
 import { useLanguage } from '../../context/LanguageContext';
 import { useToast } from '../../context/ToastContext';
-import { aiService } from '../../ai-service';
+import { aiService } from '../../ai-client';
 import { tracking, EVENTS } from '../../lib/tracking';
 import { captureError } from '../../lib/monitoring';
+import { useUser } from '../../context/UserContext';
+import InsufficientCreditsModal from '../InsufficientCreditsModal';
 
 const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
     const { t } = useLanguage();
     const { toast } = useToast();
+    const { stats, updateStats } = useUser();
 
     // Refs
     const containerRef = useRef(null);
@@ -27,6 +30,7 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
     const [mode, setMode] = useState('brush'); // brush, eraser
     const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
     const [history, setHistory] = useState([]); // Undo stack (snapshots of mask)
+    const [showCreditModal, setShowCreditModal] = useState(false);
 
     // Load Image
     const handleImageUpload = useCallback((src) => {
@@ -58,7 +62,7 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
                 // We will rely on useEffect to draw once canvasSize is set
             }
         };
-        img.onerror = () => toast.error('Failed to load image');
+        img.onerror = () => toast.error('Ошибка загрузки изображения');
         img.src = src;
     }, [toast]);
 
@@ -173,7 +177,7 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
         const file = e.target.files[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) {
-                toast.error('File too large (max 5MB)');
+                toast.error('Файл слишком большой (макс. 5MB)');
                 return;
             }
             const reader = new FileReader();
@@ -185,13 +189,23 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
     // Generate
     const handleGenerate = async () => {
         if (!prompt.trim()) {
-            toast.error('Please describe what to fill');
+            toast.error('Опишите, что нужно сделать');
             return;
         }
         if (!image) return;
 
+        // Credit Check
+        const COST = 20; // Estimated cost for inpainting
+        if ((stats?.current_balance || 0) < COST) {
+            setShowCreditModal(true);
+            return;
+        }
+
         setIsProcessing(true);
         tracking.track(EVENTS.GENERATION_STARTED, { type: 'inpainting' });
+
+        // Optimistic update
+        if (stats) updateStats({ current_balance: stats.current_balance - COST });
 
         try {
             // 1. Prepare Mask (White on Black) for API
@@ -204,18 +218,6 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
             maskCtx.fillStyle = 'black';
             maskCtx.fillRect(0, 0, maskCanvas.width, maskCanvas.height);
 
-            // Draw the visible mask as White
-            // We need to use the pixel data from maskCanvasRef (which is pink 0.5 alpha)
-            // Strategy: Draw maskCanvasRef (source-over) onto this black canvas, but we need it to be SOLID WHITE.
-
-            // Better strategy:
-            // Iterate visible mask pixels? No, slow.
-            // Composite operation? 
-            // 'source-in' - retain only where both overlap.
-
-            // Easiest: The maskCanvasRef has pixels where we painted.
-            // We can draw it, then use 'source-in' with white fill.
-
             maskCtx.drawImage(maskCanvasRef.current, 0, 0);
             maskCtx.globalCompositeOperation = 'source-in';
             maskCtx.fillStyle = 'white';
@@ -225,8 +227,6 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
             const maskBase64 = maskCanvas.toDataURL('image/png').split(',')[1];
 
             // Get original image base64 (scaled to canvas size to match mask)
-            // Or use stored image if original resolution is preferred, but mask must match.
-            // Let's use canvas-sized image for consistency.
             const imgBase64 = imageCanvasRef.current.toDataURL('image/jpeg', 0.9).split(',')[1];
 
             // Call API
@@ -239,16 +239,24 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
             if (result.success) {
                 setResultImage(result.imageUrl);
                 tracking.track(EVENTS.GENERATION_COMPLETED, { type: 'inpainting' });
-                toast.success('Magic complete!');
+                toast.success('Готово!');
+
+                // Server should return new balance, update if present
+                if (result.newBalance !== undefined) updateStats({ current_balance: result.newBalance });
+
             } else {
-                throw new Error(result.error || 'Generation failed');
+                throw new Error(result.error || 'Ошибка генерации');
             }
 
         } catch (error) {
             console.error(error);
             captureError(error, { context: 'inpainting' });
-            toast.error('Failed to edit image');
+            toast.error('Не удалось обработать изображение');
             tracking.track(EVENTS.GENERATION_FAILED, { type: 'inpainting', error: error.message });
+
+            // Refund on error (optimistic rollback) - simple version
+            if (stats) updateStats({ current_balance: stats.current_balance + COST });
+
         } finally {
             setIsProcessing(false);
         }
@@ -266,7 +274,7 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
             >
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 bg-slate-900 border-b border-slate-800 z-10">
-                    <h2 className="text-white font-bold flex items-center gap-2"><Eraser className="text-pink-500" /> Magic Eraser</h2>
+                    <h2 className="text-white font-bold flex items-center gap-2"><Eraser className="text-pink-500" /> Волшебный Ластик</h2>
                     <div className="flex gap-2">
                         {history.length > 0 && !resultImage && (
                             <button onClick={undo} className="p-2 rounded-full bg-slate-800 text-white hover:bg-slate-700">
@@ -288,8 +296,8 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
                                     <Upload size={32} className="text-pink-500" />
                                 </div>
                                 <div>
-                                    <span className="text-white font-bold text-lg block mb-1">Upload Photo</span>
-                                    <span className="text-slate-500 text-sm">Tap to browse gallery</span>
+                                    <span className="text-white font-bold text-lg block mb-1">Загрузить фото</span>
+                                    <span className="text-slate-500 text-sm">Нажмите для выбора</span>
                                 </div>
                                 <input type="file" className="hidden" accept="image/*" onChange={onFileChange} />
                             </label>
@@ -304,10 +312,10 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
                                     <img src={resultImage} alt="Result" className="w-full h-full object-contain" />
                                     <div className="absolute bottom-4 right-4 flex gap-2">
                                         <button onClick={() => { setImage(null); setResultImage(null); }} className="px-4 py-2 bg-slate-900/80 text-white rounded-xl backdrop-blur-md text-sm font-bold border border-white/10">
-                                            New
+                                            Новый
                                         </button>
                                         <button className="px-4 py-2 bg-green-500 text-white rounded-xl shadow-lg text-sm font-bold flex items-center gap-1">
-                                            <Download size={16} /> Save
+                                            <Download size={16} /> Сохранить
                                         </button>
                                     </div>
                                 </div>
@@ -337,7 +345,7 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
                             {isProcessing && (
                                 <div className="absolute inset-0 z-40 bg-black/60 backdrop-blur-sm flex items-center justify-center flex-col gap-4">
                                     <Loader2 size={48} className="text-pink-500 animate-spin" />
-                                    <span className="text-white font-bold animate-pulse">Doing Magic...</span>
+                                    <span className="text-white font-bold animate-pulse">Магия в процессе...</span>
                                 </div>
                             )}
                         </div>
@@ -365,7 +373,7 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
                             </div>
 
                             <div className="flex-1 flex items-center gap-3 bg-slate-800 px-4 py-2 rounded-xl">
-                                <span className="text-[10px] text-slate-400 font-bold uppercase w-8">Size</span>
+                                <span className="text-[10px] text-slate-400 font-bold uppercase w-8">Р-р</span>
                                 <input
                                     type="range"
                                     min="10"
@@ -382,7 +390,7 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
                         <div className="flex gap-3">
                             <input
                                 type="text"
-                                placeholder="What should be here?"
+                                placeholder="Что должно быть здесь?"
                                 value={prompt}
                                 onChange={(e) => setPrompt(e.target.value)}
                                 className="flex-1 bg-slate-950 border border-slate-700 focus:border-pink-500 rounded-2xl px-4 text-white placeholder:text-slate-600 outline-none"
@@ -394,11 +402,17 @@ const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
                                 disabled={isProcessing}
                                 className="px-6 bg-gradient-to-r from-pink-500 to-rose-600 whitespace-nowrap"
                             >
-                                Fill
+                                Заполнить
                             </AnimatedButton>
                         </div>
                     </div>
                 )}
+
+                <InsufficientCreditsModal
+                    isOpen={showCreditModal}
+                    onClose={() => setShowCreditModal(false)}
+                    onTopUp={() => { onClose(); /* We should probably navigate to shop or open the drawer? templateView does onOpenPayment. Here we might need a prop or global method */ }}
+                />
             </motion.div>
         </AnimatePresence>
     );

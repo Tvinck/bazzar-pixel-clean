@@ -44,66 +44,64 @@ class ErrorBoundary extends React.Component {
     render() {
         if (this.state.hasError) {
             return (
-                <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 flex items-center justify-center p-4">
+                <div className="min-h-screen bg-[#1c1c1e] flex items-center justify-center p-4 font-sans">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
-                        className="max-w-md w-full bg-white dark:bg-slate-900 rounded-3xl shadow-2xl p-8 text-center"
+                        className="max-w-md w-full bg-[#2c2c2e] rounded-[24px] shadow-2xl p-8 text-center border border-white/10"
                     >
                         {/* Icon */}
                         <motion.div
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ delay: 0.1, type: 'spring' }}
-                            className="w-20 h-20 bg-gradient-to-br from-rose-500 to-orange-500 rounded-3xl flex items-center justify-center mx-auto mb-6"
+                            className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 relative overflow-hidden"
                         >
-                            <AlertTriangle size={40} className="text-white" />
+                            <div className="absolute inset-0 bg-red-500/20 blur-xl"></div>
+                            <AlertTriangle size={40} className="text-red-500 relative z-10" />
                         </motion.div>
 
                         {/* Title */}
-                        <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
+                        <h1 className="text-2xl font-bold text-white mb-3">
                             Упс! Что-то пошло не так
                         </h1>
 
                         {/* Description */}
-                        <p className="text-slate-600 dark:text-slate-400 mb-6">
+                        <p className="text-gray-400 mb-8 text-[15px] leading-relaxed">
                             Произошла непредвиденная ошибка. Мы уже работаем над её исправлением.
                         </p>
 
                         {/* Error Details (Development only) */}
                         {process.env.NODE_ENV === 'development' && this.state.error && (
-                            <details className="mb-6 text-left">
-                                <summary className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                                    Детали ошибки (только для разработки)
-                                </summary>
-                                <div className="bg-slate-100 dark:bg-slate-800 rounded-xl p-4 text-xs font-mono overflow-auto max-h-40">
-                                    <p className="text-rose-600 dark:text-rose-400 mb-2">
+                            <div className="mb-6 text-left">
+                                <div className="bg-black/30 rounded-xl p-4 text-xs font-mono overflow-auto max-h-40 border border-white/5 custom-scrollbar">
+                                    <p className="text-red-400 mb-2 font-bold">
                                         {this.state.error.toString()}
                                     </p>
-                                    <pre className="text-slate-600 dark:text-slate-400 whitespace-pre-wrap">
+                                    <pre className="text-gray-500 whitespace-pre-wrap">
                                         {this.state.errorInfo?.componentStack}
                                     </pre>
                                 </div>
-                            </details>
+                            </div>
                         )}
 
                         {/* Actions */}
-                        <div className="flex gap-3">
+                        <div className="space-y-3">
                             <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={this.handleReset}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-[#007aff] text-white font-bold rounded-[16px] shadow-lg shadow-blue-500/20 transition-all hover:bg-[#0069d9]"
                             >
                                 <RefreshCw size={18} />
                                 Попробовать снова
                             </motion.button>
 
                             <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
                                 onClick={this.handleGoHome}
-                                className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-900 dark:text-white font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-all"
+                                className="w-full flex items-center justify-center gap-2 px-4 py-3.5 bg-white/10 text-white font-bold rounded-[16px] hover:bg-white/15 transition-all"
                             >
                                 <Home size={18} />
                                 На главную

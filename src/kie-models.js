@@ -1,282 +1,268 @@
 // Kie.ai API Integration Module
-// Unified interface for all Kie.ai models
+// Unified interface for all Kie.ai models with Hierarchical Structure
 
-const KIE_API_URL = 'https://api.kie.ai/api/v1';
+export const KIE_API_URL = 'https://api.kie.ai/api/v1';
 
-// Model Categories and Pricing (in credits)
-export const KIE_MODELS = {
+// Grouped by Family for UI Selection
+export const MODEL_FAMILIES = {
     // ============================================
-    // IMAGE GENERATION MODELS
+    // GOOGLE FAMILY
     // ============================================
-    image: {
-        // Google Nano Banana (Fast, High Quality)
-        'nano_banana': {
-            name: 'Nano Banana',
-            endpoint: '/nano-banana/generate',
-            credits: 10,
-            speed: 'fast', // 3-5 seconds
-            description: 'Google Gemini-based fast photorealistic generation'
-        },
-        'nano_banana_pro': {
-            name: 'Nano Banana Pro',
-            endpoint: '/nano-banana-pro/generate',
-            credits: 25,
-            speed: 'fast',
-            description: 'Enhanced version with better quality'
-        },
-
-        // GPT-4o Image (OpenAI)
-        'gpt4o_image': {
-            name: 'GPT-4o Image',
-            endpoint: '/gpt4o-image/generate',
-            credits: 30,
-            speed: 'medium',
-            description: 'OpenAI multimodal model, excellent for text in images'
-        },
-
-        // Flux Series (Professional Quality)
-        'flux_kontext': {
-            name: 'Flux Kontext',
-            endpoint: '/flux-kontext/generate',
-            credits: 40,
-            speed: 'medium',
-            description: 'Professional-grade photorealism'
-        },
-        'flux_pro': {
-            name: 'Flux Pro',
-            endpoint: '/flux-pro/generate',
-            credits: 45,
-            speed: 'slow',
-            description: 'Top-tier professional quality'
-        },
-
-        // Midjourney (Artistic)
-        'midjourney': {
-            name: 'Midjourney',
-            endpoint: '/midjourney/imagine',
-            credits: 35,
-            speed: 'slow',
-            description: 'Artistic and stylized image generation'
-        },
-
-        // Grok Imagine (xAI)
-        'grok_imagine': {
-            name: 'Grok Imagine',
-            endpoint: '/grok-imagine/generate',
-            credits: 20,
-            speed: 'fast',
-            description: 'Image-to-image transformation by xAI'
-        },
-
-        // Specialized Models
-        'ideogram': {
-            name: 'Ideogram',
-            endpoint: '/ideogram/generate',
-            credits: 30,
-            speed: 'medium',
-            description: 'Best for text rendering in images'
-        },
-        'qwen_image': {
-            name: 'Qwen Image',
-            endpoint: '/qwen-image/generate',
-            credits: 25,
-            speed: 'fast',
-            description: 'Alibaba model, great for ads and posters'
-        },
-        'recraft': {
-            name: 'Recraft',
-            endpoint: '/recraft/generate',
-            credits: 30,
-            speed: 'medium',
-            description: 'Vector-style and design-focused'
-        }
+    'google': {
+        id: 'google',
+        name: 'Google',
+        icon: 'G',
+        description: 'Photo-realistic & fast generation',
+        models: [
+            {
+                id: 'nano_banana',
+                name: 'Nano Banana',
+                base_cost: 10,
+                endpoint: 'nano-banana',
+                description: 'Fastest generation',
+                capabilities: ['text-to-image']
+            },
+            {
+                id: 'nano_banana_pro',
+                name: 'Nano Banana Pro',
+                base_cost: 18, // 18 for <2K, 24 for 4K
+                pricing_type: 'resolution',
+                endpoint: 'nano-banana-pro',
+                description: 'High-fidelity, structured typography, consistent scenes',
+                capabilities: ['text-to-image', 'image-to-image', 'inpainting'],
+                resolutions: ['1K', '2K', '4K'],
+                default_res: '1K'
+            },
+            {
+                id: 'nano_banana_edit',
+                name: 'Nano Banana Edit',
+                base_cost: 5,
+                endpoint: 'nano-banana-edit',
+                description: 'Fast editing & inpainting',
+                capabilities: ['edit', 'image-to-image', 'inpainting'],
+                max_images: 1
+            },
+            {
+                id: 'imagen_4',
+                name: 'Imagen 4',
+                base_cost: 20, // Estimated
+                endpoint: 'google/imagen4',
+                description: 'Balanced quality & creativity',
+                capabilities: ['text-to-image'],
+                resolutions: ['1K']
+            },
+            {
+                id: 'imagen_4_ultra',
+                name: 'Imagen 4 Ultra',
+                base_cost: 30,
+                endpoint: 'google/imagen4-ultra',
+                description: 'Maximum speed & fidelity (2K)',
+                capabilities: ['text-to-image'],
+                resolutions: ['2K']
+            }
+        ]
     },
 
     // ============================================
-    // VIDEO GENERATION MODELS
+    // FLUX FAMILY
     // ============================================
-    video: {
-        // --- Wan Series (Alibaba) ---
-        'wan_2_6_text': {
-            name: 'Wan 2.6 Text-to-Video',
-            endpoint: '/wan/generate',
-            credits: 100,
-            speed: 'medium',
-            description: 'Latest Alibaba model, high coherence'
-        },
-        'wan_2_6_image': {
-            name: 'Wan 2.6 Image-to-Video',
-            endpoint: '/wan/generate',
-            credits: 120,
-            speed: 'medium',
-            description: 'Image animation with Wan 2.6'
-        },
-        'wan_2_2_animate_move': {
-            name: 'Wan Animate Move',
-            endpoint: '/wan/animate',
-            credits: 100,
-            speed: 'fast',
-            description: 'Character movement animation'
-        },
-
-        // --- Kling Series ---
-        'kling_2_5_turbo_text_pro': {
-            name: 'Kling 2.5 Turbo Text',
-            endpoint: '/kling/generate',
-            credits: 120,
-            speed: 'fast',
-            description: 'Fast high-quality generation'
-        },
-        'kling_2_5_turbo_image_pro': {
-            name: 'Kling 2.5 Turbo Image',
-            endpoint: '/kling/generate',
-            credits: 140,
-            speed: 'fast',
-            description: 'Pro image to video'
-        },
-        'kling': {
-            name: 'Kling 2.6 Standard',
-            endpoint: '/kling/generate',
-            credits: 80,
-            speed: 'slow',
-            description: 'Classic Kling model'
-        },
-        'ai_avatar_standard': {
-            name: 'AI Avatar Standard',
-            endpoint: '/kling/avatar',
-            credits: 80,
-            speed: 'medium',
-            description: 'Talking avatar from single image'
-        },
-        'ai_avatar_pro': {
-            name: 'AI Avatar Pro',
-            endpoint: '/kling/avatar-pro',
-            credits: 120,
-            speed: 'medium',
-            description: 'High fidelity talking avatar'
-        },
-
-        // --- Hailuo & Others ---
-        'hailuo_2_3_image_pro': {
-            name: 'Hailuo 2.3 Pro',
-            endpoint: '/hailuo/generate',
-            credits: 120,
-            speed: 'medium',
-            description: 'Professional grade animation'
-        },
-        'v1_pro_fast_image': {
-            name: 'Bytedance Fast',
-            endpoint: '/bytedance/generate',
-            credits: 80,
-            speed: 'fast',
-            description: 'Quick image to video'
-        },
-        'sora_2_pro_storyboard': {
-            name: 'Sora 2 Pro Storyboard',
-            endpoint: '/sora/generate',
-            credits: 200,
-            speed: 'very_slow',
-            description: 'Advanced storyboard generation'
-        },
-
-        // --- Google & Runway ---
-        'veo_3': {
-            name: 'Google Veo 3.1',
-            endpoint: '/veo/generate',
-            credits: 100,
-            speed: 'very_slow',
-            description: 'Google latest video model'
-        },
-        'runway': {
-            name: 'Runway Aleph',
-            endpoint: '/runway/generate',
-            credits: 120,
-            speed: 'very_slow',
-            description: 'Professional video generation'
-        }
+    'flux': {
+        id: 'flux',
+        name: 'Flux',
+        icon: 'F',
+        description: 'Professional grade & flexible control',
+        models: [
+            {
+                id: 'flux_pro',
+                name: 'Flux 2 Pro',
+                base_cost: 45,
+                endpoint: 'flux-2/pro-text-to-image',
+                description: 'Production-ready quality',
+                capabilities: ['text-to-image', 'image-to-image']
+            },
+            {
+                id: 'flux_flex',
+                name: 'Flux 2 Flex',
+                base_cost: 35,
+                endpoint: 'flux-2/flex-text-to-image',
+                description: 'Developer control & fine-tuning',
+                capabilities: ['text-to-image', 'image-to-image']
+            }
+        ]
     },
 
     // ============================================
-    // AUDIO/MUSIC GENERATION MODELS
+    // SEEDREAM FAMILY (Bytedance)
     // ============================================
-    audio: {
-        'suno_v4': {
-            name: 'Suno V4',
-            endpoint: '/suno/generate',
-            credits: 50,
-            speed: 'medium',
-            description: 'Music generation with lyrics'
-        },
-        'suno_v4_plus': {
-            name: 'Suno V4.5 Plus',
-            endpoint: '/suno-plus/generate',
-            credits: 70,
-            speed: 'medium',
-            description: 'Enhanced music quality'
-        },
-        'elevenlabs': {
-            name: 'ElevenLabs',
-            endpoint: '/elevenlabs/generate',
-            credits: 40,
-            speed: 'fast',
-            description: 'Voice synthesis and audio generation'
-        }
+    'seedream': {
+        id: 'seedream',
+        name: 'Seedream',
+        icon: 'S',
+        description: 'Multi-image fusion & detailed editing',
+        models: [
+            {
+                id: 'seedream_4_5',
+                name: 'Seedream 4.5',
+                base_cost: 30, // Estimated
+                endpoint: 'seedream/4.5-text-to-image',
+                description: 'High detail & prompt adherence',
+                capabilities: ['text-to-image']
+            },
+            {
+                id: 'seedream_edit',
+                name: 'Seedream Edit',
+                base_cost: 30,
+                endpoint: 'seedream/4.5-edit',
+                description: 'Multi-image editing & fusion',
+                capabilities: ['edit', 'image-to-image'],
+                max_images: 10
+            }
+        ]
     },
 
     // ============================================
-    // CHAT/LLM MODELS
+    // IDEOGRAM FAMILY
     // ============================================
-    chat: {
-        'gemini_3_pro': {
-            name: 'Gemini 3 Pro',
-            endpoint: '/gemini/chat',
-            credits: 5,
-            speed: 'fast',
-            description: 'Google latest LLM'
-        },
-        'deepseek': {
-            name: 'DeepSeek',
-            endpoint: '/deepseek/chat',
-            credits: 3,
-            speed: 'fast',
-            description: 'Cost-effective reasoning model'
-        }
+    'ideogram': {
+        id: 'ideogram',
+        name: 'Ideogram',
+        icon: 'I',
+        description: 'Best for text rendering & design',
+        models: [
+            {
+                id: 'ideogram_v3',
+                name: 'Ideogram V3',
+                base_cost: 30,
+                endpoint: 'ideogram/v3',
+                description: 'Text-heavy designs & posters',
+                capabilities: ['text-to-image', 'remix', 'edit'],
+                modes: ['turbo', 'default', 'quality']
+            },
+            {
+                id: 'ideogram_char',
+                name: 'Ideogram Character',
+                base_cost: 30,
+                endpoint: 'ideogram/character',
+                description: 'Consistent character generation',
+                capabilities: ['text-to-image']
+            }
+        ]
+    },
+
+    // ============================================
+    // QWEN FAMILY
+    // ============================================
+    'qwen': {
+        id: 'qwen',
+        name: 'Qwen',
+        icon: 'Q',
+        description: 'Advanced editing capabilities',
+        models: [
+            {
+                id: 'qwen_edit',
+                name: 'Qwen Image Edit',
+                base_cost: 8, // ~4 credits per image (approx) -> setting safe margin
+                endpoint: 'qwen/image-edit',
+                description: 'Natural language image editing',
+                capabilities: ['edit', 'image-to-image']
+            }
+        ]
+    },
+
+    // ============================================
+    // Z-IMAGE FAMILY
+    // ============================================
+    'z_image': {
+        id: 'z_image',
+        name: 'Z-Image',
+        icon: 'Z',
+        description: 'Fast photorealistic generation',
+        models: [
+            {
+                id: 'z_image_turbo',
+                name: 'Z-Image Turbo',
+                base_cost: 15,
+                endpoint: 'z-image',
+                description: 'Low latency, high quality',
+                capabilities: ['text-to-image']
+            }
+        ]
+    },
+
+    // ============================================
+    // VIDEO FAMILY (Existing + New)
+    // ============================================
+    'video': {
+        id: 'video',
+        name: 'Video Gen',
+        icon: 'V',
+        description: 'Create videos from text or images',
+        models: [
+            {
+                id: 'kling_2_6',
+                name: 'Kling 2.6',
+                base_cost: 100,
+                endpoint: 'kling-2.6',
+                description: 'Start of the art video generation',
+                capabilities: ['text-to-video', 'image-to-video'],
+                durations: ['5s', '10s'],
+                qualities: ['720p', '1080p'] // 1080p costs extra
+            },
+            {
+                id: 'wan_2_6',
+                name: 'Wan 2.6',
+                base_cost: 100,
+                endpoint: 'wan/2-6',
+                description: 'High coherence video',
+                capabilities: ['text-to-video', 'image-to-video'],
+                durations: ['5s']
+            },
+            {
+                id: 'hailuo_2_3',
+                name: 'Hailuo 2.3',
+                base_cost: 120,
+                endpoint: 'hailuo/2-3',
+                description: 'Professional grade animation',
+                capabilities: ['image-to-video'],
+                durations: ['6s']
+            }
+        ]
     }
 };
 
-// Helper: Get model info by ID
-export function getModelInfo(modelId) {
-    for (const category of Object.values(KIE_MODELS)) {
-        if (category[modelId]) {
-            return { ...category[modelId], id: modelId };
+// Flattened list for backend logic by ID
+export const KIE_MODELS_FLAT = Object.values(MODEL_FAMILIES).flatMap(f => f.models).reduce((acc, m) => {
+    acc[m.id] = m;
+    return acc;
+}, {});
+
+// Helper: Get Pricing for Dynamic Models
+export function calculateModelCost(modelId, options = {}) {
+    const model = KIE_MODELS_FLAT[modelId];
+    if (!model) return 20; // Fallback
+
+    let cost = model.base_cost;
+
+    // 1. Resolution Pricing (Nano Banana Pro)
+    if (model.pricing_type === 'resolution') {
+        if (options.resolution === '4K') {
+            cost = 24;
+        } else if (options.resolution === '1K' || options.resolution === '2K') {
+            cost = 18;
         }
     }
-    return null;
-}
 
-// Helper: Get all models by category
-export function getModelsByCategory(category) {
-    return KIE_MODELS[category] || {};
-}
+    // 2. Video Duration/Quality Modifiers (Example)
+    if (modelId === 'kling_2_6') {
+        if (options.quality === '1080p') cost += 50;
+        if (options.duration === '10s') cost += 50;
+    }
 
-// Helper: Get recommended model for task
-export function getRecommendedModel(task) {
-    const recommendations = {
-        'photo': 'nano_banana_pro',
-        'art': 'midjourney',
-        'text_in_image': 'gpt4o_image',
-        'professional': 'flux_pro',
-        'fast': 'nano_banana',
-        'video': 'kling',
-        'music': 'suno_v4',
-        'voice': 'elevenlabs'
-    };
-    return recommendations[task] || 'nano_banana';
+    return cost * (options.count || 1);
 }
 
 export default {
-    KIE_MODELS,
-    getModelInfo,
-    getModelsByCategory,
-    getRecommendedModel
+    MODEL_FAMILIES,
+    KIE_MODELS_FLAT,
+    calculateModelCost
 };

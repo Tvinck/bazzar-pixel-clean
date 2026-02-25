@@ -1,0 +1,124 @@
+import { useEffect, useRef } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+
+/**
+ * Custom hook to handle Telegram Mini App initialization and lifecycle events.
+ */
+export const useTelegramInit = (setTelegramUser?: (user: any) => void) => {
+    const navigate = useNavigate();
+    const location = useLocation();
+    const hasHandledDeepLink = useRef(false);
+
+    useEffect(() => {
+        const tg = (window as any).Telegram?.WebApp;
+        if (tg) {
+            // Set User State
+            if (setTelegramUser) {
+                setTelegramUser(tg.initDataUnsafe?.user);
+            }
+
+            // --- DEEP LINKING ---
+            if (!hasHandledDeepLink.current) {
+                const startParam = tg.initDataUnsafe?.start_param;
+                if (startParam && startParam.startsWith("payment_success")) {
+                    hasHandledDeepLink.current = true;
+                    const parts = startParam.split("__");
+                    const orderId = parts[1];
+
+                    const processedStr = localStorage.getItem("processed_orders") || "[]";
+                    const processed = JSON.parse(processedStr);
+
+                    if (processed.includes(orderId)) {
+                        navigate("/profile");
+                    } else {
+                        navigate("/payment/success", { state: { orderId } });
+                    }
+                } else if (startParam && startParam.startsWith("c_")) {
+                    hasHandledDeepLink.current = true;
+                    const creationId = startParam.substring(2);
+                    navigate(`/c/${creationId}`);
+                } else if (startParam && startParam.startsWith("u_")) {
+                    hasHandledDeepLink.current = true;
+                    const username = startParam.substring(2);
+                    navigate(`/u/${username}`);
+                }
+            }
+
+            // --- CORE INIT ---
+            try {
+                tg.expand();
+                tg.ready();
+
+                // 1. Fullscreen (7.7+)
+                if (tg.requestFullscreen && tg.isVersionAtLeast('7.7')) {
+                    try { tg.requestFullscreen(); } catch (e) { }
+                }
+
+                // 2. Disable Vertical Swipes (7.7+)
+                if (tg.disableVerticalSwipes && tg.isVersionAtLeast('7.7')) {
+                    try { tg.disableVerticalSwipes(); } catch (e) { }
+                }
+
+                // 3. Closing Confirmation (6.2+)
+                if (tg.enableClosingConfirmation && tg.isVersionAtLeast('6.2')) {
+                    try { tg.enableClosingConfirmation(); } catch (e) { }
+                }
+
+                // 4. Theme Optimization
+                const isDark = tg.colorScheme === "dark";
+                if (isDark) {
+                    document.documentElement.classList.add("dark");
+                }
+
+                const headerColor = "#0f0f0f"; // App brand color
+                if (tg.setHeaderColor && tg.isVersionAtLeast('6.1')) {
+                    tg.setHeaderColor(headerColor);
+                    tg.setBackgroundColor(headerColor);
+                }
+
+                // 5. Native Settings Button
+                if (tg.SettingsButton && tg.isVersionAtLeast('6.1')) {
+                    tg.SettingsButton.show();
+                    tg.SettingsButton.onClick(() => navigate("/profile"));
+                }
+
+                // 6. Orientation Lock (8.0+)
+                if (tg.lockOrientation && tg.isVersionAtLeast('8.0')) {
+                    try { tg.lockOrientation("portrait"); } catch (e) { }
+                }
+
+            } catch (e) {
+                console.error("Telegram Mini App Init Error:", e);
+            }
+        }
+    }, [navigate, setTelegramUser]);
+
+    // --- BACK BUTTON LOGIC ---
+    useEffect(() => {
+        const tg = (window as any).Telegram?.WebApp;
+        if (!tg) return;
+
+        const handleBackButton = () => {
+            if (location.pathname !== "/") {
+                navigate(-1);
+            }
+        };
+
+        tg.onEvent("backButtonClicked", handleBackButton);
+
+        const mainRoutes = ["/", "/gallery", "/history", "/profile"];
+        const isMainRoute = mainRoutes.includes(location.pathname);
+
+        if (isMainRoute) {
+            tg.BackButton.hide();
+        } else {
+            tg.BackButton.show();
+        }
+
+        return () => {
+            tg.offEvent("backButtonClicked", handleBackButton);
+        };
+    }, [location.pathname, navigate]);
+
+    return (window as any).Telegram?.WebApp;
+};

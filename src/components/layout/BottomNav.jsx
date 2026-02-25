@@ -1,15 +1,17 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Home, Compass, Sparkles, History, User } from 'lucide-react';
+import { Plus } from 'lucide-react';
+import AnimatedIcon from '../ui/AnimatedIcon';
+import { TelegramHome, TelegramGallery, TelegramHistory, TelegramProfile } from '../ui/TelegramIcons';
 
 const BottomNav = ({ activeTab, onTabChange, onCreateClick, isVisible = true, zIndex = 50 }) => {
     return (
-        <div style={{ zIndex }} className={`fixed bottom-4 left-4 right-4 transition-transform duration-500 cubic-bezier(0.175, 0.885, 0.32, 1.275) ${!isVisible ? 'translate-y-[150%]' : 'translate-y-0'}`}>
-            <nav className="bg-white/90 dark:bg-[#121212]/90 backdrop-blur-2xl border border-slate-200/50 dark:border-white/10 rounded-[2rem] px-2 py-3 shadow-2xl shadow-indigo-500/10 flex justify-between items-center relative">
+        <div style={{ zIndex }} className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 ${!isVisible ? 'translate-y-full' : 'translate-y-0'}`}>
+            <nav className="bg-[#1c1c1e]/95 backdrop-blur-xl border-t border-white/10 px-2 py-2 flex justify-around items-center safe-area-bottom pb-4">
 
                 {/* Home */}
                 <NavButton
-                    icon={Home}
+                    iconComponent={TelegramHome}
                     label="Главная"
                     isActive={activeTab === 'home'}
                     onClick={() => onTabChange('home')}
@@ -17,27 +19,33 @@ const BottomNav = ({ activeTab, onTabChange, onCreateClick, isVisible = true, zI
 
                 {/* Gallery */}
                 <NavButton
-                    icon={Compass}
+                    iconComponent={TelegramGallery}
                     label="Галерея"
                     isActive={activeTab === 'gallery'}
                     onClick={() => onTabChange('gallery')}
                 />
 
-                {/* Create (Floating Center) */}
-                <div className="relative -top-8 mx-2">
-                    <motion.button
-                        whileTap={{ scale: 0.9 }}
-                        onClick={onCreateClick}
-                        className="w-16 h-16 bg-gradient-to-tr from-indigo-500 via-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-xl shadow-indigo-500/40 ring-4 ring-[#F8F9FC] dark:ring-[#0f1014] relative z-20 group"
-                    >
-                        <Sparkles size={28} className="text-white fill-white animate-pulse-slow" />
-                        <div className="absolute inset-0 rounded-full bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    </motion.button>
-                </div>
+                {/* Create (Center) */}
+                <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={onCreateClick}
+                    className="flex flex-col items-center justify-center gap-1 min-w-[60px] relative -translate-y-2"
+                >
+                    <div className="w-14 h-14 bg-gradient-to-tr from-[#2a85e4] to-[#42a5f5] rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(51,144,236,0.4)] overflow-hidden relative">
+                        <motion.div
+                            className="absolute inset-0 bg-white"
+                            initial={{ scale: 0, opacity: 0 }}
+                            whileTap={{ scale: 2, opacity: 0.3 }}
+                            transition={{ duration: 0.4 }}
+                        />
+                        <AnimatedIcon icon={Plus} size={28} className="text-white z-10" />
+                    </div>
+                </motion.button>
 
                 {/* History */}
                 <NavButton
-                    icon={History}
+                    iconComponent={TelegramHistory}
                     label="История"
                     isActive={activeTab === 'history'}
                     onClick={() => onTabChange('history')}
@@ -45,7 +53,7 @@ const BottomNav = ({ activeTab, onTabChange, onCreateClick, isVisible = true, zI
 
                 {/* Profile */}
                 <NavButton
-                    icon={User}
+                    iconComponent={TelegramProfile}
                     label="Профиль"
                     isActive={activeTab === 'profile'}
                     onClick={() => onTabChange('profile')}
@@ -55,21 +63,16 @@ const BottomNav = ({ activeTab, onTabChange, onCreateClick, isVisible = true, zI
     );
 };
 
-const NavButton = ({ icon: Icon, label, isActive, onClick }) => (
+const NavButton = ({ iconComponent: IconComponent, label, isActive, onClick }) => (
     <button
         onClick={onClick}
-        className={`flex-1 flex flex-col items-center gap-1 min-w-[50px] relative transition-colors duration-300 ${isActive ? 'text-indigo-500 dark:text-white' : 'text-slate-400 dark:text-zinc-500 hover:text-slate-600 dark:hover:text-zinc-300'}`}
+        className="flex flex-col items-center justify-center gap-1 min-w-[64px] h-[56px] relative transition-colors duration-200"
     >
-        <div className="relative">
-            <Icon size={24} strokeWidth={isActive ? 2.5 : 2} className="transition-all duration-300" />
-            {isActive && (
-                <motion.div
-                    layoutId="activeTabDot"
-                    className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-indigo-500 dark:bg-white rounded-full"
-                />
-            )}
+        <div className="relative flex items-center justify-center h-8">
+            <IconComponent active={isActive} size={28} />
         </div>
-        <span className={`text-[9px] font-bold transition-all duration-300 ${isActive ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 hidden'}`}>
+        <span className={`text-[11px] font-medium z-10 transition-colors duration-300 ${isActive ? 'text-[#3390ec]' : 'text-white/50'
+            }`}>
             {label}
         </span>
     </button>

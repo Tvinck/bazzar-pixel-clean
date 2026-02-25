@@ -2,151 +2,237 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
-import { useLanguage } from '../context/LanguageContext';
 import {
-    ChevronLeft, MoreHorizontal, ChevronDown,
+    ChevronLeft, Zap,
     Image as ImageIcon, Video, Music, Wand2,
-    Banana, Wind, Cloud, PenTool, Layers
+    Banana, Wind, Layers, PenTool, Sparkles
 } from 'lucide-react';
+
+/**
+ * CreateView - Modern dark-themed tool selection page
+ * Updated design matching the app's dark aesthetic
+ */
 
 const CreateView = () => {
     const navigate = useNavigate();
     const { stats } = useUser();
-    const balance = stats?.current_balance || 10;
-
-    const { t } = useLanguage(); // Import language hook if not already imported, wait, import 'useLanguage' at top first if missing.
-    // It seems 'useLanguage' is not imported in CreateView based on previous view_file. No, it's not imported.
-    // I need to add import first. But I am constrained to replace lines.
-    // Let me check imports in CreateView.
-    // Oh, I see 'import { useUser } from ...', but not 'useLanguage'.
-    // I will assume I need to add import in a separate step or just assume it's available?
-    // No, I must import it.
-    // I'll do a separate step for import.
-    // For now, let's just use useUser as placeholder or skip if strict.
-    // Wait, previous file view showed no useLanguage import.
-    // I must add it.
-
-    // I will replace lines 16-26 with translated tools.
-    // But I can't use 't' if I don't import it.
-    // I'll combine the import and the tools definition update in two steps or use multi_replace.
-    // I'll use multi_replace to add import and update tools.
+    const balance = stats?.current_balance || 0;
 
     const tools = [
-        { id: 'image', label: t('toolsCard.image'), icon: ImageIcon, color: 'text-indigo-400' },
-        { id: 'video', label: t('toolsCard.video'), icon: Video, color: 'text-rose-400' },
-        { id: 'banana', label: t('toolsCard.nanoBanana'), icon: Banana, color: 'text-yellow-400', special: true },
-        { id: 'kling', label: 'Kling 2.6\nMotion', icon: Wind, color: 'text-emerald-400' },
-        { id: 'audio', label: t('toolsCard.audio'), icon: Music, color: 'text-blue-400' },
-        { id: 'animate', label: t('toolsCard.animate'), icon: Wand2, color: 'text-purple-400' },
-        { id: 'veo', label: 'Veo 3', icon: Layers, color: 'text-orange-400' },
-        { id: 'sora', label: t('toolsCard.sora'), icon: Cloud, color: 'text-sky-400' },
-        { id: 'tools', label: t('toolsCard.tools'), icon: PenTool, color: 'text-white/40' },
+        {
+            id: 'image',
+            label: 'Изображение',
+            desc: 'По описанию',
+            icon: ImageIcon,
+            gradient: 'from-indigo-500 to-purple-600',
+            cost: 3
+        },
+        {
+            id: 'video',
+            label: 'Видео',
+            desc: 'Анимация',
+            icon: Video,
+            gradient: 'from-rose-500 to-pink-600',
+            cost: 15
+        },
+        {
+            id: 'banana',
+            label: 'Nano Banana',
+            desc: 'Google Gemini',
+            icon: Banana,
+            gradient: 'from-yellow-400 to-orange-500',
+            special: true,
+            cost: 2
+        },
+        {
+            id: 'kling',
+            label: 'Kling 2.6',
+            desc: 'Motion Control',
+            icon: Wind,
+            gradient: 'from-emerald-500 to-teal-600',
+            cost: 20
+        },
+        {
+            id: 'audio',
+            label: 'Музыка',
+            desc: 'AI Audio',
+            icon: Music,
+            gradient: 'from-blue-500 to-cyan-600',
+            cost: 5
+        },
+        {
+            id: 'animate',
+            label: 'Оживить фото',
+            desc: 'Анимация',
+            icon: Wand2,
+            gradient: 'from-purple-500 to-violet-600',
+            cost: 8
+        },
+        {
+            id: 'veo',
+            label: 'Veo 3',
+            desc: 'Google Video',
+            icon: Layers,
+            gradient: 'from-orange-500 to-red-600',
+            cost: 25
+        },
+        {
+            id: 'tools',
+            label: 'Инструменты',
+            desc: 'Face Swap',
+            icon: PenTool,
+            gradient: 'from-gray-600 to-gray-700',
+            cost: 0
+        },
     ];
 
     const handleSelect = (id) => {
-        let type = 'Image Gen';
+        let type = 'image-gen';
         let model = null;
 
         switch (id) {
             case 'image': type = 'image-gen'; break;
             case 'video': type = 'video-gen'; break;
-            case 'banana': type = 'image-gen'; model = 'nano_banana_pro'; break;
+            case 'banana': type = 'image-gen'; model = 'nano_banana'; break;
             case 'kling': type = 'video-gen'; model = 'kling_motion'; break;
             case 'audio': type = 'audio-gen'; break;
             case 'animate': type = 'animate-photo'; break;
-            case 'sora': type = 'video-gen'; model = 'sora_turbo'; break;
-            case 'veo': type = 'video-gen'; model = 'runway_gen3'; break; // Fallback for Veo to Gen3 or similar
-            case 'tools': type = 'tools'; break;
+            case 'veo': type = 'video-gen'; model = 'veo_3'; break;
+            case 'tools': navigate('/design-lab'); return;
             default: type = 'image-gen';
         }
 
+        window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
         navigate(`/generate/${encodeURIComponent(type)}`, { state: { model } });
     };
 
     return (
-        <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -20 }}
-            className="min-h-screen bg-[#0f0f10] text-white pb-safe relative overflow-hidden"
-        >
-            {/* Ambient Background */}
-            <div className="fixed top-0 left-0 w-full h-96 bg-gradient-to-b from-indigo-900/10 to-transparent pointer-events-none" />
-            <div className="fixed bottom-0 right-0 w-96 h-96 bg-purple-900/10 rounded-full blur-[100px] pointer-events-none" />
+        <div className="min-h-screen bg-black text-white pb-safe md:max-w-3xl md:mx-auto md:px-6">
+            {/* Ambient gradients */}
+            <div className="fixed top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[128px] pointer-events-none" />
+            <div className="fixed bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[128px] pointer-events-none" />
 
-            <div className="max-w-md mx-auto min-h-screen flex flex-col relative z-10">
+            {/* Header */}
+            <div className="sticky top-0 z-50 backdrop-blur-xl bg-black/95 border-b border-white/5">
+                <div className="flex items-center justify-between px-4 py-3">
+                    <button
+                        onClick={() => navigate(-1)}
+                        className="p-2 -ml-2 rounded-full hover:bg-white/10 transition-colors"
+                    >
+                        <ChevronLeft className="w-6 h-6" />
+                    </button>
 
-                {/* Top Navigation Bar */}
-                <div className="flex items-center justify-between px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] backdrop-blur-sm sticky top-0 z-50">
-                    <div />
+                    <h1 className="text-[17px] tracking-tight font-semibold">Создать</h1>
 
-                    <div className="flex items-center gap-3">
-                        <div className="bg-white/5 px-3 py-1.5 rounded-full border border-white/5 flex items-center gap-2">
-                            <span className="text-xs font-bold text-white/60 uppercase tracking-wider">Balance</span>
-                            <span className="text-sm font-black text-white">{balance}</span>
-                        </div>
+                    <div className="flex items-center gap-1.5 bg-[#2c2c2e] px-3 py-1.5 rounded-full">
+                        <Zap className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                        <span className="text-[15px] font-semibold">{balance}</span>
                     </div>
                 </div>
+            </div>
 
-                {/* Promo Banner */}
-                <div className="px-5 mb-8 mt-2">
-                    <div className="relative w-full aspect-[2/1] rounded-[2rem] overflow-hidden bg-gradient-to-br from-amber-600 via-orange-600 to-yellow-600 shadow-2xl border border-white/10 group shadow-orange-500/20">
-                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?q=80&w=800&auto=format&fit=crop')] bg-cover bg-center opacity-30 mix-blend-overlay transition-transform duration-700 group-hover:scale-105" />
-                        <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
+            {/* Content */}
+            <div className="px-4 py-6">
+                {/* Featured Banner */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="relative w-full aspect-[2/1] rounded-[20px] overflow-hidden mb-6 bg-gradient-to-br from-yellow-500 via-orange-500 to-amber-600 shadow-md"
+                >
+                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?q=80&w=800')] bg-cover bg-center opacity-20 mix-blend-overlay" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
 
-                        {/* Shimmer Effect */}
-                        <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
-
-                        <div className="relative h-full flex flex-col justify-center p-6 max-w-[75%]">
-                            <h3 className="text-2xl font-black leading-none mb-2 text-white drop-shadow-lg tracking-tight">
-                                Professional<br />Bananas!
-                            </h3>
-                            <div className="inline-block bg-white text-black text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-widest self-start shadow-xl transform group-hover:scale-105 transition-transform">
-                                New Model
-                            </div>
+                    <div className="relative h-full flex flex-col justify-center p-5">
+                        <div className="flex items-center gap-2 mb-2">
+                            <Sparkles className="w-5 h-5 text-yellow-200" />
+                            <span className="text-[11px] font-bold text-yellow-200 uppercase tracking-wider">NEW</span>
                         </div>
-                        <Banana className="absolute -right-2 -bottom-4 w-36 h-36 text-yellow-300 rotate-[-15deg] opacity-80 drop-shadow-[0_0_20px_rgba(253,224,71,0.5)] group-hover:rotate-0 transition-all duration-500" />
+                        <h3 className="text-[22px] tracking-tight font-black text-white leading-tight mb-2">
+                            Nano Banana
+                        </h3>
+                        <p className="text-[15px] text-white/80 max-w-[70%]">
+                            Google Gemini с генерацией изображений
+                        </p>
                     </div>
-                </div>
 
-                {/* Create Section Title */}
-                <div className="px-6 mb-5 flex items-center gap-3">
-                    <div className="w-1 h-6 bg-indigo-500 rounded-full shadow-[0_0_10px_#6366f1]" />
-                    <h2 className="text-2xl font-black text-white tracking-tight">Create New</h2>
+                    <Banana className="absolute -right-4 -bottom-4 w-32 h-32 text-yellow-200/50 rotate-[-15deg]" />
+                </motion.div>
+
+                {/* Section Title */}
+                <div className="flex items-center gap-2 mb-4">
+                    <div className="w-1 h-5 bg-[#007aff] rounded-full" />
+                    <h2 className="text-[17px] tracking-tight font-semibold">Инструменты</h2>
                 </div>
 
                 {/* Tools Grid */}
-                <div className="w-full mb-8 flex-1">
-                    <div className="grid grid-cols-4 sm:grid-cols-4 gap-3 px-4">
-                        {tools.map((tool) => (
-                            <button
-                                key={tool.id}
-                                onClick={() => handleSelect(tool.id)}
-                                className="flex flex-col items-center gap-2 group w-full"
-                            >
-                                {/* Icon Container */}
-                                <div className="w-full aspect-square rounded-[1.5rem] bg-[#1a1a1c] border border-white/5 flex items-center justify-center shadow-lg group-hover:scale-105 group-hover:border-white/20 transition-all duration-300 relative overflow-hidden group-active:scale-95">
-                                    {/* Inner Glow */}
-                                    <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-                                    <div className={`absolute inset-0 bg-gradient-to-br ${tool.special ? 'from-yellow-500/20' : 'from-indigo-500/10'} to-transparent opacity-0 group-hover:opacity-100 transition-opacity`} />
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                    {tools.map((tool, idx) => (
+                        <motion.button
+                            key={tool.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.05 }}
+                            whileTap={{ scale: 0.97 }}
+                            onClick={() => handleSelect(tool.id)}
+                            className="group relative bg-[#1c1c1e] rounded-[20px] p-4 border border-transparent transition-all text-left overflow-hidden shadow-sm"
+                        >
+                            {/* Background gradient on hover */}
+                            <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} opacity-0 group-hover:opacity-10 transition-opacity`} />
 
-                                    <tool.icon
-                                        size={28}
-                                        strokeWidth={2}
-                                        className={`${tool.color} drop-shadow-lg transition-transform duration-300 group-hover:scale-110`}
-                                    />
+                            {/* Icon */}
+                            <div className={`w-12 h-12 rounded-[14px] bg-gradient-to-br ${tool.gradient} flex items-center justify-center mb-3 shadow-md`}>
+                                <tool.icon className="w-6 h-6 text-white" />
+                            </div>
+
+                            {/* Text */}
+                            <h3 className="font-semibold text-white mb-0.5 tracking-tight">{tool.label}</h3>
+                            <p className="text-[13px] text-gray-400">{tool.desc}</p>
+
+                            {/* Cost badge */}
+                            {tool.cost > 0 && !tool.special && (
+                                <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/10 backdrop-blur-md px-2 py-1 rounded-full">
+                                    <Zap className="w-[10px] h-[10px] text-yellow-400 fill-yellow-400" />
+                                    <span className="text-[11px] font-bold">{tool.cost}</span>
                                 </div>
-                                {/* Label */}
-                                <span className="text-[10px] font-bold text-white/50 text-center leading-tight whitespace-pre-line group-hover:text-white transition-colors uppercase tracking-wide">
-                                    {tool.label}
-                                </span>
-                            </button>
+                            )}
+
+                            {/* Special badge */}
+                            {tool.special && (
+                                <div className="absolute top-3 right-3 bg-yellow-500 text-black px-2 py-1 rounded-full text-[10px] font-bold shadow-sm">
+                                    ✨ HOT
+                                </div>
+                            )}
+                        </motion.button>
+                    ))}
+                </div>
+
+                {/* Quick Actions */}
+                <div className="mt-6">
+                    <div className="flex items-center gap-2 mb-3">
+                        <div className="w-1 h-5 bg-[#bf5af2] rounded-full" />
+                        <h2 className="text-[17px] tracking-tight font-semibold">Быстрые действия</h2>
+                    </div>
+
+                    <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+                        {[
+                            { label: 'Face Swap', icon: '🎭', route: '/design-lab' },
+                            { label: 'Шаблоны', icon: '📋', route: '/image-templates' },
+                            { label: 'Галерея', icon: '🖼️', route: '/gallery' },
+                        ].map((action) => (
+                            <motion.button
+                                key={action.label}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={() => navigate(action.route)}
+                                className="bg-[#1c1c1e] rounded-[16px] py-3 px-2 flex flex-col items-center gap-1.5 transition-colors shadow-sm"
+                            >
+                                <span className="text-xl">{action.icon}</span>
+                                <span className="text-[13px] font-medium text-gray-300">{action.label}</span>
+                            </motion.button>
                         ))}
                     </div>
                 </div>
-
             </div>
-        </motion.div>
+        </div>
     );
 };
 

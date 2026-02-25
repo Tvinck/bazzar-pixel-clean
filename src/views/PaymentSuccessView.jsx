@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 
 const PaymentSuccessView = () => {
     const navigate = useNavigate();
-    const location = useLocation(); // Add location
+    const location = useLocation();
     const { user, refreshUser } = useUser();
     const [status, setStatus] = useState('checking');
 
@@ -15,13 +15,11 @@ const PaymentSuccessView = () => {
         if (!user || hasVerified.current) return;
 
         const verifyPayment = async () => {
-            hasVerified.current = true; // Mark as started
+            hasVerified.current = true;
 
-            // Priority: 1. Deep Link State, 2. Local Storage
             const orderId = location.state?.orderId || localStorage.getItem('pending_order_id');
             const paymentId = localStorage.getItem('pending_payment_id');
 
-            // Если ID нет вообще, просто пробуем обновить профиль
             if (!paymentId && !orderId) {
                 await refreshUser();
                 setStatus('success');
@@ -29,7 +27,6 @@ const PaymentSuccessView = () => {
             }
 
             try {
-                // Активная проверка через наш сервер -> Т-Банк
                 const res = await fetch('/api/payment-check', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -43,7 +40,6 @@ const PaymentSuccessView = () => {
                 const data = await res.json();
 
                 if (data.success || data.status === 'ALREADY_CREDITED') {
-                    // Mark as processed globally
                     if (orderId) {
                         const processed = JSON.parse(localStorage.getItem('processed_orders') || '[]');
                         if (!processed.includes(orderId)) {
@@ -52,11 +48,9 @@ const PaymentSuccessView = () => {
                         }
                     }
 
-                    // Очищаем
                     localStorage.removeItem('pending_payment_id');
                     localStorage.removeItem('pending_order_id');
 
-                    // Обновляем UI
                     await refreshUser();
                     setStatus('success');
                 } else {
@@ -65,7 +59,6 @@ const PaymentSuccessView = () => {
                     setStatus('success');
                 }
 
-                // Авто-редирект
                 setTimeout(() => navigate('/profile', { replace: true, state: {} }), 3000);
 
             } catch (e) {
@@ -76,19 +69,17 @@ const PaymentSuccessView = () => {
         };
 
         verifyPayment();
-    }, [user, navigate]); // Removed refreshUser to avoid loop, though ref handles it.
+    }, [user, navigate]);
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#0f0f10] text-center relative overflow-hidden">
-            {/* Ambient Background */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full max-w-sm max-h-sm bg-indigo-500/10 blur-[100px] pointer-events-none" />
+        <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-black text-center relative overflow-hidden">
 
             {status === 'checking' && (
                 <div className="flex flex-col items-center gap-6 relative z-10">
-                    <div className="w-16 h-16 border-4 border-indigo-500 border-t-white rounded-full animate-spin shadow-[0_0_20px_rgba(99,102,241,0.3)]"></div>
+                    <div className="w-16 h-16 border-4 border-[#007aff] border-t-white rounded-full animate-spin"></div>
                     <div>
-                        <h2 className="text-2xl font-black text-white mb-2">Verifying...</h2>
-                        <p className="text-white/40 text-sm font-medium">Connecting to bank secure gateway</p>
+                        <h2 className="text-[22px] font-bold text-white mb-2 tracking-tight">Проверяем...</h2>
+                        <p className="text-[#8e8e93] text-[15px]">Подключение к платёжному шлюзу</p>
                     </div>
                 </div>
             )}
@@ -99,21 +90,20 @@ const PaymentSuccessView = () => {
                     animate={{ scale: 1, opacity: 1 }}
                     className="flex flex-col items-center gap-6 relative z-10"
                 >
-                    <div className="w-24 h-24 bg-gradient-to-tr from-green-500 to-emerald-400 rounded-full flex items-center justify-center shadow-[0_0_40px_rgba(34,197,94,0.4)] relative">
-                        <div className="absolute inset-0 bg-white/20 blur-xl rounded-full" />
+                    <div className="w-20 h-20 bg-[#34c759] rounded-full flex items-center justify-center relative">
                         <svg className="w-10 h-10 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
                     <div>
-                        <h2 className="text-3xl font-black text-white mb-2 tracking-tight">Success!</h2>
-                        <p className="text-white/50 font-medium">Your balance has been updated</p>
+                        <h2 className="text-[22px] font-bold text-white mb-2 tracking-tight">Успешно!</h2>
+                        <p className="text-[#8e8e93] text-[15px]">Ваш баланс обновлён</p>
                     </div>
                     <button
                         onClick={() => navigate('/profile')}
-                        className="mt-8 px-8 py-4 bg-white text-black hover:bg-white/90 rounded-2xl font-black uppercase tracking-wide shadow-lg shadow-white/10 transition-all active:scale-95"
+                        className="mt-6 px-8 py-3.5 bg-[#007aff] text-white rounded-[12px] text-[17px] font-semibold transition-all active:scale-[0.97]"
                     >
-                        Back to Profile
+                        Вернуться в профиль
                     </button>
                 </motion.div>
             )}

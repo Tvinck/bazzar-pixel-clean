@@ -1,480 +1,332 @@
-// PaymentDrawer Updated: 2026-01-22 22:00
 import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Check, ChevronRight, Zap, ShieldCheck, X, TicketPercent, Wallet, Coins, Calendar, ArrowRight, Timer } from 'lucide-react';
-import { useSound } from '../context/SoundContext';
+import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import { X, Zap, Copy, Star, Check, Sparkles, Users, ArrowLeft } from 'lucide-react';
 import { useUser } from '../context/UserContext';
-import { TBankLogo, VisaLogo, MastercardLogo, MIRLogo, SBPLogo } from './PaymentLogos';
-import TBankWidget from './TBankWidget';
+import { useSound } from '../context/SoundContext';
 import TBankPaymentWidget from './TBankPaymentWidget';
 
+// --- VISUAL ASSETS ---
+const StarParticle = ({ delay = 0 }) => (
+    <motion.div
+        initial={{ opacity: 0, scale: 0, y: 10, x: 0 }}
+        animate={{
+            opacity: [0, 1, 0],
+            scale: [0.5, 1, 0.5],
+            y: -40,
+            x: Math.random() * 40 - 20,
+            rotate: Math.random() * 360
+        }}
+        transition={{
+            duration: 2 + Math.random(),
+            repeat: Infinity,
+            delay: delay,
+            ease: "easeOut"
+        }}
+        className="absolute w-3 h-3 text-blue-200"
+    >
+        <Star size={10} fill="currentColor" stroke="none" />
+    </motion.div>
+);
 
 
-// Promo Timer Hook
-const usePromoTimer = () => {
-    const [timeLeft, setTimeLeft] = useState('');
-
-    React.useEffect(() => {
-        const calculateTime = () => {
-            const now = new Date();
-            const cycleDuration = 5 * 24 * 60 * 60 * 1000; // 5 days
-            const remaining = cycleDuration - (now.getTime() % cycleDuration);
-
-            const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
-            const hours = Math.floor((remaining % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
-            const seconds = Math.floor((remaining % (1000 * 60)) / 1000);
-
-            // Pad with zeros
-            const h = hours.toString().padStart(2, '0');
-            const m = minutes.toString().padStart(2, '0');
-            const s = seconds.toString().padStart(2, '0');
-
-            setTimeLeft(`${days}д ${h}:${m}:${s}`);
-        };
-
-        calculateTime();
-        const interval = setInterval(calculateTime, 1000);
-        return () => clearInterval(interval);
-    }, []);
-
-    return timeLeft;
-};
-
-// 1. One-Time Packs
-const PACKS = [
-    {
-        id: 'pack_promo_250',
-        name: 'Flash Sale',
-        price: 199,
-        originalPrice: 400,
-        credits: 250,
-        isSubscription: false,
-        promo: true,
-        bestValue: true,
-        description: 'Специальное предложение',
-        color: 'from-pink-600 via-rose-500 to-orange-500',
-        features: ['250 кредитов (Выгода X2)', 'Доступ ко всем моделям', 'Ограниченное время'],
-        icon: Zap
-    },
-    {
-        id: 'pack_100',
-        name: 'Starter',
-        price: 99,
-        originalPrice: 199,
-        credits: 100,
-        isSubscription: false,
-        description: 'Для пробы',
-        color: 'from-blue-500 to-cyan-500',
-        features: ['100 кредитов навсегда', 'Доступ ко всем моделям'],
-        icon: Coins
-    },
-    {
-        id: 'pack_500',
-        name: 'Medium',
-        price: 390,
-        originalPrice: 499,
-        credits: 500,
-        isSubscription: false,
-        bestValue: true,
-        description: 'Самый популярный',
-        color: 'from-violet-500 to-purple-500',
-        features: ['500 кредитов навсегда', 'Хватит на ~100 фото', 'Без сгорания'],
-        icon: Coins
-    },
-    {
-        id: 'pack_1500',
-        name: 'Large',
-        price: 990,
-        originalPrice: 1499,
-        credits: 1500,
-        isSubscription: false,
-        description: 'Максимум выгоды',
-        color: 'from-amber-400 to-orange-500',
-        features: ['1500 кредитов навсегда', 'Лучшая цена за 1 кредит', 'Приоритет в очереди'],
-        icon: Coins
-    }
-];
-
-// 2. Subscriptions
-const SUBSCRIPTIONS = [
-    {
-        id: 'sub_standard',
-        name: 'Standard',
-        price: 199,
-        credits: 300,
-        isSubscription: true,
-        period: '/мес',
-        description: 'Ежемесячный бонус',
-        color: 'from-green-500 to-emerald-500',
-        features: ['300 кредитов каждый месяц', 'Цена кредита: 0.6₽', 'Доступ к PRO моделям'],
-        icon: Calendar,
-        comingSoon: true
-    },
-    {
-        id: 'sub_pro',
-        name: 'Pro Club',
-        price: 399,
-        credits: 800,
-        isSubscription: true,
-        period: '/мес',
-        bestValue: true,
-        description: 'Для активных криэйторов',
-        color: 'from-rose-500 to-pink-500',
-        features: ['800 кредитов каждый месяц', 'Цена кредита: 0.5₽', 'Генерация видео без очереди', 'Приватный чат авторов'],
-        icon: Zap,
-        comingSoon: true
-    }
+// Packages Data
+export const PACKS = [
+    { id: 'pack_100', credits: 100, price: 99, bonus: 0, gradient: 'from-blue-500 to-cyan-400' },
+    { id: 'pack_500', credits: 500, price: 390, bonus: 50, gradient: 'from-violet-500 to-purple-500', tag: '-29%' },
+    { id: 'pack_1500', credits: 1500, price: 990, bonus: 200, gradient: 'from-amber-400 to-orange-500', tag: '-50%' }
 ];
 
 const PaymentDrawer = ({ isOpen, onClose }) => {
+    const { user, stats } = useUser();
     const { playClick, playSuccess } = useSound();
-    const { user, refreshUser } = useUser();
-    const [isLoading, setIsLoading] = useState(false);
-    const promoTimer = usePromoTimer();
+    const dragControls = useDragControls();
 
-    // State
-    const [activeTab, setActiveTab] = useState('packs'); // 'packs' | 'subs'
-    const [selectedPlan, setSelectedPlan] = useState(null);
-    const [termsAccepted, setTermsAccepted] = useState(false);
-    const [subscriptionAccepted, setSubscriptionAccepted] = useState(false);
-    const [promoCode, setPromoCode] = useState('');
-    const [isPromoApplied, setIsPromoApplied] = useState(false);
+    // Copy Link Logic
+    const [copied, setCopied] = useState(false);
+    const inviteLink = `https://t.me/bazzar_pixel_bot?start=ref_${user?.telegram_id || user?.id}`;
 
-    const handleSelectPlan = (plan) => {
+    const handleCopy = () => {
+        navigator.clipboard.writeText(inviteLink);
+        setCopied(true);
+        playSuccess();
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    // Calculate capabilities
+    const balance = stats?.current_balance || 0;
+    const videoCount = Math.floor(balance / 100);
+    const imageCount = Math.floor(balance / 25);
+
+    const [selectedPack, setSelectedPack] = useState(null); // If null -> List Mode. If set -> Payment Mode.
+
+    const handleBuy = (pack) => {
         playClick();
-        setSelectedPlan(plan);
-        setTermsAccepted(false);
-        setSubscriptionAccepted(false);
-        setIsPromoApplied(false);
-        setPromoCode('');
+        setSelectedPack(pack);
     };
 
     const handleBack = () => {
         playClick();
-        setSelectedPlan(null);
+        setSelectedPack(null);
     };
-
-    const handlePromoCheck = () => {
-        if (promoCode.toLowerCase() === 'pixel2026') {
-            setIsPromoApplied(true);
-            playSuccess();
-        } else {
-            alert('Неверный промокод');
-        }
-    };
-
-    const getPrice = (plan) => plan.price;
-    const getFinalPrice = (plan) => isPromoApplied ? Math.round(plan.price * 0.9) : plan.price;
 
     return (
         <AnimatePresence>
             {isOpen && (
                 <>
+                    {/* Backdrop */}
                     <motion.div
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
                         onClick={onClose}
-                        className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[80]"
+                        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[90]"
                     />
+
+                    {/* Drawer */}
                     <motion.div
                         initial={{ y: '100%' }}
                         animate={{ y: 0 }}
                         exit={{ y: '100%' }}
-                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed bottom-0 left-0 w-full h-[85%] max-h-dvh bg-[#0f0f10] rounded-t-[2.5rem] z-[90] shadow-2xl flex flex-col overflow-hidden text-white border-t border-white/10"
-                        onClick={(e) => e.stopPropagation()}
+                        transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                        drag="y"
+                        dragControls={dragControls}
+                        dragConstraints={{ top: 0, bottom: 0 }}
+                        dragElastic={0.1}
+                        onDragEnd={(_, info) => { if (info.offset.y > 100) onClose(); }}
+                        className="fixed bottom-0 left-0 right-0 md:left-1/2 md:right-auto md:bottom-auto md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-[100] bg-[#1c1c1e] rounded-t-[32px] md:rounded-[32px] overflow-hidden flex flex-col max-h-[92vh] md:max-h-[85vh] w-full md:w-[480px] shadow-2xl"
                     >
-                        {/* Ambient Glow */}
-                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-64 bg-indigo-500/10 blur-[100px] pointer-events-none" />
-
                         {/* Drag Handle */}
-                        <div className="w-full flex justify-center pt-5 pb-3 flex-shrink-0 relative z-10" onClick={onClose}>
-                            <div className="w-12 h-1 bg-white/20 rounded-full" />
+                        <div className="w-full h-6 flex items-center justify-center pt-2 cursor-grab active:cursor-grabbing" onPointerDown={(e) => dragControls.start(e)}>
+                            <div className="w-10 h-1 rounded-full bg-white/10" />
                         </div>
 
-                        {!selectedPlan ? (
-                            // --- MAIN SELECTOR VIEW ---
-                            <div className="flex-1 flex flex-col p-6 pt-2 min-h-0 relative z-10">
-                                <header className="mb-6 px-2 flex-shrink-0">
-                                    <h2 className="font-black text-3xl mb-1 tracking-tight">Магазин Pixel</h2>
-                                    <p className="text-white/40 text-sm font-medium">Пополните баланс для генераций</p>
-                                </header>
+                        {/* Content Scrollable */}
+                        <div className="flex-1 overflow-y-auto pb-10 px-6">
 
-                                {/* Tabs */}
-                                <div className="bg-white/5 p-1.5 rounded-2xl flex mb-6 border border-white/5 flex-shrink-0">
-                                    <button
-                                        onClick={() => setActiveTab('packs')}
-                                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'packs' ? 'bg-[#1c1c1e] shadow-lg text-white ring-1 ring-white/10' : 'text-white/40 hover:text-white/60'}`}
-                                    >
-                                        <Coins size={16} className={activeTab === 'packs' ? 'text-amber-400' : 'text-current'} />
-                                        Пакеты
+                            {/* --- HEADER ANIMATION (Always visible or shrink?) Keep visible for style --- */}
+                            {!selectedPack && (
+                                <div className="flex flex-col items-center pt-4 pb-8 relative animate-in fade-in zoom-in duration-300">
+                                    <button onClick={onClose} className="absolute top-0 right-0 w-8 h-8 flex items-center justify-center rounded-full bg-white/5 text-white/40">
+                                        <X size={18} />
                                     </button>
-                                    <button
-                                        onClick={() => setActiveTab('subs')}
-                                        className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold flex items-center justify-center gap-2 transition-all ${activeTab === 'subs' ? 'bg-[#1c1c1e] shadow-lg text-white ring-1 ring-white/10' : 'text-white/40 hover:text-white/60'}`}
-                                    >
-                                        <Calendar size={16} className={activeTab === 'subs' ? 'text-indigo-400' : 'text-current'} />
-                                        Подписки
-                                    </button>
+
+                                    {/* Glowing Circle */}
+                                    <div className="relative w-24 h-24 mb-6">
+                                        <div className="absolute inset-0 bg-blue-500/30 blur-[40px] rounded-full animate-pulse" />
+                                        <motion.div
+                                            animate={{ scale: [1, 1.05, 1] }}
+                                            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                                            className="relative w-full h-full rounded-full bg-gradient-to-br from-[#3390ec] to-[#007aff] flex items-center justify-center shadow-2xl shadow-blue-500/40 border border-white/10"
+                                        >
+                                            <Sparkles size={40} className="text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.8)]" fill="white" />
+                                        </motion.div>
+                                        {[0, 1, 2, 3, 4].map(i => <StarParticle key={i} delay={i * 0.5} />)}
+                                    </div>
+
+                                    <h3 className="text-[13px] font-bold text-white/40 uppercase tracking-widest mb-1">
+                                        Мой Баланс
+                                    </h3>
+                                    <div className="flex items-baseline gap-2 mb-2">
+                                        <h1 className="text-[36px] font-[800] text-white leading-none tracking-tight">
+                                            {balance} <span className="text-[20px] font-bold text-white/60">зарядов</span>
+                                        </h1>
+                                    </div>
+                                    <p className="text-[13px] text-white/40 font-medium text-center max-w-[200px] leading-snug">
+                                        Этого хватит на <span className="text-white">{videoCount} видео</span> или <span className="text-white">{imageCount} изображений</span>
+                                    </p>
                                 </div>
+                            )}
 
-                                {/* Content Grid */}
-                                <div
-                                    className="flex-1 overflow-y-scroll pb-40 min-h-0"
-                                    style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
-                                >
-                                    <div className="space-y-3">
-                                        {(activeTab === 'packs' ? PACKS : SUBSCRIPTIONS).map((plan, idx) => (
-                                            <motion.div
-                                                initial={{ opacity: 0, y: 10 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: idx * 0.05 }}
-                                                key={plan.id}
-                                                whileTap={!plan.comingSoon ? { scale: 0.98 } : {}}
-                                                onClick={() => !plan.comingSoon && handleSelectPlan(plan)}
-                                                className={`relative group p-5 rounded-[2rem] border transition-all ${plan.comingSoon ? 'opacity-50 cursor-not-allowed grayscale-[0.8] bg-white/5 border-white/5' : 'cursor-pointer bg-[#1c1c1e]'} ${plan.bestValue && !plan.comingSoon ? 'border-indigo-500/50 shadow-[0_0_30px_rgba(99,102,241,0.15)] bg-gradient-to-b from-[#1c1c1e] to-[#252528]' : 'border-white/5 hover:border-white/20'}`}
-                                            >
-                                                {plan.bestValue && !plan.promo && (
-                                                    <div className="absolute -top-3 left-6 bg-gradient-to-r from-indigo-500 to-purple-500 text-white text-[9px] uppercase font-black px-3 py-1 rounded-full shadow-lg shadow-indigo-500/30 tracking-widest">
-                                                        Best Choice
-                                                    </div>
-                                                )}
-
-                                                {plan.promo && (
-                                                    <div className="absolute -top-3 left-0 w-full flex justify-center z-20">
-                                                        <div className="bg-gradient-to-r from-yellow-400 to-orange-500 text-black text-[10px] uppercase font-black px-4 py-1.5 rounded-full shadow-lg shadow-orange-500/50 tracking-widest flex items-center gap-2 animate-pulse">
-                                                            <Timer size={12} strokeWidth={3} />
-                                                            До конца акции: {promoTimer}
-                                                        </div>
-                                                    </div>
-                                                )}
-
-                                                <div className="flex justify-between items-center mb-5">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${plan.color} flex items-center justify-center shadow-lg text-white relative overflow-hidden group-hover:scale-110 transition-transform duration-500`}>
-                                                            <div className="absolute inset-0 bg-black/10" />
-                                                            <plan.icon size={28} className="relative z-10" />
+                            {/* --- VIEW 1: PACKAGES LIST --- */}
+                            {!selectedPack ? (
+                                <div className="animate-in slide-in-from-right-10 duration-300">
+                                    {/* Packages */}
+                                    <div className="mb-8">
+                                        <h4 className="text-[17px] font-semibold text-white mb-4 flex items-center gap-2">
+                                            Пополнение
+                                        </h4>
+                                        <div className="space-y-3">
+                                            {PACKS.map(pack => (
+                                                <motion.div
+                                                    key={pack.id}
+                                                    whileTap={{ scale: 0.98 }}
+                                                    onClick={() => handleBuy(pack)}
+                                                    className="bg-[#2c2c2e] rounded-[20px] p-4 flex items-center justify-between cursor-pointer border border-white/5 hover:border-blue-500/30 transition-colors group relative overflow-hidden"
+                                                >
+                                                    <div className="flex items-center gap-4 relative z-10">
+                                                        <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${pack.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
+                                                            <Zap size={20} className="text-white fill-white" />
                                                         </div>
                                                         <div>
-                                                            <h3 className="font-bold text-lg leading-tight text-white mb-0.5">{plan.name}</h3>
-                                                            <div className="text-xs text-white/40 font-medium">
-                                                                {plan.isSubscription ? 'Ежемесячно' : 'Навсегда'}
+                                                            <div className="text-[17px] font-bold text-white flex items-center gap-2">
+                                                                {pack.credits} зарядов
                                                             </div>
+                                                            {pack.tag && (
+                                                                <div className="absolute top-[-10px] left-[130px] bg-[#3390ec] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md">
+                                                                    {pack.tag}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <div className="font-black text-2xl text-white tracking-tight">{plan.price}₽</div>
-                                                        {plan.originalPrice && (
-                                                            <div className="text-xs text-white/30 line-through decoration-white/30">{plan.originalPrice}₽</div>
-                                                        )}
+                                                    <div className="flex items-center gap-1.5 text-[#f5c53b]">
+                                                        {/* Assuming Star represents value, or just style choice */}
+                                                        <span className="text-[17px] font-[800]">{pack.price} ₽</span>
                                                     </div>
-                                                </div>
+                                                </motion.div>
+                                            ))}
+                                        </div>
+                                    </div>
 
-                                                <div className="space-y-2 mb-4">
-                                                    {plan.features.slice(0, 2).map((feat, i) => (
-                                                        <div key={i} className="flex items-center gap-2.5 text-xs font-medium text-white/60">
-                                                            <div className="w-4 h-4 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
-                                                                <Check size={10} className="text-white" strokeWidth={3} />
-                                                            </div>
-                                                            {feat}
-                                                        </div>
-                                                    ))}
-                                                </div>
+                                    {/* Earn Section */}
+                                    <div className="mb-8">
+                                        <h4 className="text-[17px] font-semibold text-white mb-4">
+                                            Заработать токены
+                                        </h4>
+                                        <div className="bg-[#2c2c2e] rounded-[24px] p-5 border border-white/5 relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 p-4 opacity-10">
+                                                <Users size={80} />
+                                            </div>
 
-                                                <div className="mt-4 pt-3 border-t border-white/5 flex items-center justify-between">
-                                                    <span className={`text-xs font-black uppercase tracking-widest ${plan.bestValue ? 'text-indigo-400' : 'text-white/40'}`}>{plan.credits} CR</span>
-                                                    {plan.comingSoon ? (
-                                                        <span className="text-[9px] font-black uppercase text-white/20 bg-white/5 px-3 py-1.5 rounded-lg border border-white/5">Soon</span>
-                                                    ) : (
-                                                        <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${plan.bestValue ? 'bg-indigo-500 text-white shadow-lg shadow-indigo-500/30' : 'bg-white/10 text-white/50 group-hover:bg-white group-hover:text-black'}`}>
-                                                            <ArrowRight size={16} />
-                                                        </div>
-                                                    )}
+                                            <div className="flex items-start gap-4 mb-4 relative z-10">
+                                                <div className="w-10 h-10 rounded-full bg-blue-500/20 flex items-center justify-center text-[#3390ec]">
+                                                    <Users size={20} strokeWidth={2.5} />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="flex justify-between items-start">
+                                                        <h5 className="text-[15px] font-bold text-white leading-tight mb-1">
+                                                            Отправить ссылку друзьям
+                                                        </h5>
+                                                        <span className="text-[#3390ec] font-[800] text-[15px] flex items-center gap-1">
+                                                            +30 <Zap size={14} fill="currentColor" />
+                                                        </span>
+                                                    </div>
+                                                    <p className="text-[12px] text-white/50 leading-snug">
+                                                        Вы получите награду за каждого друга, который запустит приложение по Вашей ссылке.
+                                                    </p>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-[#1c1c1e] rounded-[14px] flex items-center p-1 pl-3 border border-white/5">
+                                                <div className="flex-1 truncate text-[13px] text-blue-400 font-medium">
+                                                    {inviteLink}
+                                                </div>
+                                                <button
+                                                    onClick={handleCopy}
+                                                    className={`w-9 h-8 rounded-[10px] flex items-center justify-center transition-all ${copied ? 'bg-green-500 text-white' : 'bg-[#3390ec] text-white checked:bg-green-500'}`}
+                                                >
+                                                    {copied ? <Check size={16} /> : <Copy size={16} />}
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                // --- VIEW 2: CONFIRMATION / PAYMENT ---
+                                <div className="animate-in slide-in-from-right-10 duration-300 relative h-full flex flex-col">
+                                    {/* Close Button styling matching design */}
+                                    <button
+                                        onClick={handleBack}
+                                        className="absolute top-0 left-0 z-50 w-8 h-8 rounded-full bg-white/10 flex items-center justify-center text-white/60 hover:bg-white/20 transition-colors"
+                                    >
+                                        <ArrowLeft size={18} />
+                                    </button>
+
+                                    {/* Content Container */}
+                                    <div className="flex-1 flex flex-col items-center pt-8 px-4 text-center">
+
+                                        {/* Main Icon with Galaxy Effect */}
+                                        <div className="relative w-32 h-32 mb-6 flex items-center justify-center">
+                                            {/* Galaxy Particles */}
+                                            {Array.from({ length: 20 }).map((_, i) => (
+                                                <motion.div
+                                                    key={i}
+                                                    initial={{ opacity: 0, scale: 0, x: 0, y: 0 }}
+                                                    animate={{
+                                                        opacity: [0, 0.8, 0],
+                                                        scale: [0.5, 1, 0.5],
+                                                        x: (Math.random() - 0.5) * 120,
+                                                        y: (Math.random() - 0.5) * 120,
+                                                        rotate: Math.random() * 360
+                                                    }}
+                                                    transition={{
+                                                        duration: 2 + Math.random() * 2,
+                                                        repeat: Infinity,
+                                                        delay: Math.random() * 2
+                                                    }}
+                                                    className={`absolute w-full h-full flex items-center justify-center pointer-events-none`}
+                                                >
+                                                    <Star
+                                                        size={Math.random() * 10 + 4}
+                                                        className={Math.random() > 0.5 ? "text-blue-400" : "text-yellow-400"}
+                                                        fill="currentColor"
+                                                        stroke="none"
+                                                    />
+                                                </motion.div>
+                                            ))}
+
+                                            {/* Central Glow */}
+                                            <div className="absolute inset-0 bg-blue-500/30 blur-[50px] rounded-full animate-pulse" />
+
+                                            {/* Main Icon */}
+                                            <motion.div
+                                                initial={{ scale: 0.8 }}
+                                                animate={{ scale: 1 }}
+                                                className="relative z-10 w-24 h-24 rounded-full bg-gradient-to-br from-[#3390ec] to-[#007aff] flex items-center justify-center shadow-2xl shadow-blue-500/40 border-4 border-[#1c1c1e]"
+                                            >
+                                                <Zap size={40} className="text-white drop-shadow-[0_0_15px_rgba(255,255,255,1)]" fill="white" />
+
+                                                {/* Price Badge */}
+                                                <div className="absolute -bottom-2 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-[12px] font-[900] px-2 py-0.5 rounded-full shadow-lg border-2 border-[#1c1c1e] flex items-center gap-1">
+                                                    <span className="text-[10px]">₽</span>
+                                                    {selectedPack.price}
                                                 </div>
                                             </motion.div>
-                                        ))}
-                                    </div>
-
-                                    {/* Info Banner */}
-                                    {activeTab === 'subs' && (
-                                        <div className="mt-6 bg-indigo-500/10 p-4 rounded-2xl flex gap-3 text-xs text-indigo-300 border border-indigo-500/20">
-                                            <Zap size={20} className="flex-shrink-0 text-indigo-400" />
-                                            <p className="font-medium">Подписки продлеваются автоматически. Вы можете отменить их в любой момент в настройках профиля.</p>
                                         </div>
-                                    )}
-                                </div>
-                            </div>
-                        ) : (
-                            // --- DETAIL/PAYMENT VIEW ---
-                            <div className="flex-1 flex flex-col relative h-full relative z-10">
-                                <div className="px-6 pt-2 pb-0">
-                                    <button onClick={handleBack} className="w-10 h-10 rounded-full bg-white/5 border border-white/5 flex items-center justify-center text-white/50 mb-2 hover:bg-white/10 hover:text-white transition-colors">
-                                        <ChevronRight className="rotate-180" size={20} />
-                                    </button>
-                                </div>
 
-                                <div
-                                    className="px-6 flex-1 overflow-y-scroll pb-40 custom-scrollbar"
-                                    style={{ WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}
-                                >
-                                    <div className="text-center mb-8">
-                                        <div className={`w-28 h-28 mx-auto rounded-[2.5rem] bg-gradient-to-br ${selectedPlan.color} flex items-center justify-center mb-6 shadow-2xl shadow-indigo-500/20 relative overflow-hidden`}>
-                                            <div className="absolute inset-0 bg-black/10" />
-                                            <selectedPlan.icon size={48} className="text-white relative z-10" />
-                                        </div>
-                                        <h2 className="font-black text-3xl mb-2 text-white tracking-tight">{selectedPlan.name}</h2>
-                                        <p className="text-white/50 mb-6 text-sm font-medium">{selectedPlan.description}</p>
+                                        {/* Title */}
+                                        <h2 className="text-[20px] font-bold text-white mb-2">
+                                            Подтверждение покупки
+                                        </h2>
 
-                                        <div className="inline-flex items-baseline gap-1 bg-white/5 px-6 py-2 rounded-2xl border border-white/5">
-                                            <span className="font-black text-4xl text-white">{getFinalPrice(selectedPlan)}₽</span>
-                                            {selectedPlan.isSubscription && <span className="text-white/40 font-bold text-sm">/мес</span>}
-                                        </div>
-                                    </div>
-
-                                    {/* Features Box */}
-                                    <div className="bg-[#1c1c1e] rounded-[1.5rem] p-6 mb-6 space-y-4 border border-white/5">
-                                        <h4 className="font-bold text-[10px] text-white/30 uppercase tracking-widest mb-2">Входит в пакет</h4>
-                                        {selectedPlan.features.map((feature, idx) => (
-                                            <div key={idx} className="flex items-center gap-3">
-                                                <div className={`w-6 h-6 rounded-full bg-gradient-to-br ${selectedPlan.color} flex items-center justify-center flex-shrink-0 text-white shadow-lg`}>
-                                                    <Check size={12} strokeWidth={4} />
-                                                </div>
-                                                <span className="font-bold text-sm text-white/80">{feature}</span>
+                                        {/* Brand Pill */}
+                                        <div className="inline-flex items-center gap-1.5 bg-[#2c2c2e] rounded-full px-3 py-1 mb-4 border border-white/10">
+                                            <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center">
+                                                <Sparkles size={10} className="text-[#3390ec]" fill="currentColor" />
                                             </div>
-                                        ))}
-                                    </div>
+                                            <span className="text-[13px] font-semibold text-white">Pixel</span>
+                                        </div>
 
-                                    {/* Promo Code Input */}
-                                    <div className="mb-6 bg-white/5 p-1 rounded-2xl border border-white/5">
-                                        <div className="flex relative">
-                                            <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-white/30">
-                                                <TicketPercent size={18} />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={promoCode}
-                                                onChange={(e) => setPromoCode(e.target.value)}
-                                                placeholder="PROMO CODE"
-                                                className="w-full bg-transparent text-white rounded-xl py-3 pl-10 pr-4 focus:outline-none font-bold uppercase text-sm placeholder:text-white/20"
+                                        {/* Description */}
+                                        <p className="text-[14px] text-white/60 font-medium leading-relaxed max-w-[280px] mx-auto mb-8">
+                                            Вы точно хотите приобрести <span className="text-white font-bold">{selectedPack.credits} зарядов</span> у Pixel за <span className="text-white font-bold">{selectedPack.price} ₽</span>?
+                                        </p>
+
+                                        {/* Payment Widget Area */}
+                                        <div className="w-full bg-[#1c1c1e] rounded-[24px] overflow-hidden relative min-h-[100px]">
+                                            <TBankPaymentWidget
+                                                amount={selectedPack.price}
+                                                description={`Pixel: ${selectedPack.credits} зарядов`}
+                                                userId={user?.id}
+                                                telegramId={window.Telegram?.WebApp?.initDataUnsafe?.user?.id}
+                                                onSuccess={() => {
+                                                    playSuccess();
+                                                    refreshUser(); // CRITICAL: Update balance instantly
+                                                    setTimeout(() => onClose(), 2000);
+                                                }}
                                             />
-                                            <button
-                                                onClick={handlePromoCheck}
-                                                disabled={isPromoApplied || !promoCode}
-                                                className={`mx-1 my-1 px-4 rounded-xl font-bold text-xs transition-all active:scale-95 flex items-center ${isPromoApplied ? 'bg-green-500 text-white' : 'bg-white text-black hover:bg-slate-200'}`}
-                                            >
-                                                {isPromoApplied ? <Check size={16} /> : 'APPLY'}
-                                            </button>
                                         </div>
-                                        {isPromoApplied && <p className="text-green-500 text-[10px] font-bold px-4 pb-2">Скидка 10% применена!</p>}
                                     </div>
 
-                                    {/* Policies */}
-                                    <div className="space-y-4 mb-8">
-                                        <label className="flex items-start gap-3 p-4 rounded-2xl bg-white/5 border border-white/5 cursor-pointer transition-colors hover:bg-white/10">
-                                            <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0 ${termsAccepted ? 'bg-indigo-500 border-indigo-500' : 'border-white/20'}`}>
-                                                {termsAccepted && <Check size={12} className="text-white" strokeWidth={4} />}
-                                            </div>
-                                            <input type="checkbox" className="hidden" checked={termsAccepted} onChange={() => setTermsAccepted(!termsAccepted)} />
-                                            <p className="text-xs text-white/40 leading-snug">
-                                                Я принимаю <a href="#" className="text-indigo-400 font-bold hover:underline">Условия использования</a> и <a href="#" className="text-indigo-400 font-bold hover:underline">Политику конфиденциальности</a>.
-                                            </p>
-                                        </label>
-
-                                        {selectedPlan.isSubscription && (
-                                            <div className="bg-indigo-500/10 rounded-2xl p-4 border border-indigo-500/20">
-                                                <label className="flex items-start gap-3 cursor-pointer">
-                                                    <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0 ${subscriptionAccepted ? 'bg-indigo-500 border-indigo-500' : 'border-indigo-300/30'}`}>
-                                                        {subscriptionAccepted && <Check size={12} className="text-white" strokeWidth={4} />}
-                                                    </div>
-                                                    <input type="checkbox" className="hidden" checked={subscriptionAccepted} onChange={() => setSubscriptionAccepted(!subscriptionAccepted)} />
-                                                    <div className="text-xs text-indigo-200/60 leading-snug">
-                                                        <span className="font-bold block mb-1 text-indigo-300">Автосписание</span>
-                                                        С карты будет списываться <b className="text-white">{getFinalPrice(selectedPlan)}₽</b> каждые 30 дней. Отмена в 1 клик.
-                                                    </div>
-                                                </label>
-                                            </div>
-                                        )}
-
-
-                                        {/* T-Bank Payment Widgets (NEW) */}
-                                        {termsAccepted && (!selectedPlan.isSubscription || subscriptionAccepted) && (
-                                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                                <TBankPaymentWidget
-                                                    amount={getFinalPrice(selectedPlan)}
-                                                    description={`Pixel AI: ${selectedPlan.name}`}
-                                                    userId={user?.id}
-                                                    telegramId={window.Telegram?.WebApp?.initDataUnsafe?.user?.id}
-                                                    userEmail={user?.email || 'no-email@telegram.org'}
-                                                    terminalKey="1768938209983"
-                                                    widgetTypes={['tpay', 'sbp', 'mirpay']}
-                                                    displayParams={{
-                                                        gap: 0.5,
-                                                        height: 3.5,
-                                                        radius: 0.75,
-                                                        theme: {
-                                                            default: 'accent'
-                                                        }
-                                                    }}
-                                                    onSuccess={() => {
-                                                        // Refresh balance after successful payment
-                                                        window.location.reload();
-                                                    }}
-                                                />
-                                            </div>
-                                        )}
-
-                                        {/* Divider */}
-                                        {termsAccepted && (!selectedPlan.isSubscription || subscriptionAccepted) && (
-                                            <div className="relative my-4 animate-in fade-in duration-500">
-                                                <div className="absolute inset-0 flex items-center">
-                                                    <div className="w-full border-t border-white/10"></div>
-                                                </div>
-                                                <div className="relative flex justify-center text-xs">
-                                                    <span className="bg-gradient-to-b from-indigo-950 to-purple-950 px-3 text-white/40 font-medium">или</span>
-                                                </div>
-                                            </div>
-                                        )}
-
-                                        {/* T-Bank Widget (Classic) */}
-                                        {termsAccepted && (!selectedPlan.isSubscription || subscriptionAccepted) && (
-                                            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-                                                <TBankWidget
-                                                    amount={getFinalPrice(selectedPlan)}
-                                                    description={`Pixel AI: ${selectedPlan.name}`}
-                                                    userId={user?.id}
-                                                    telegramId={window.Telegram?.WebApp?.initDataUnsafe?.user?.id}
-                                                    userEmail={user?.email || 'no-email@telegram.org'}
-                                                    recurrent={selectedPlan.isSubscription && subscriptionAccepted}
-                                                />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Trust Badges */}
-                                    <div className="flex flex-col items-center gap-4 mb-32 opacity-30 grayscale hover:grayscale-0 transition-all duration-500">
-                                        <div className="flex flex-wrap justify-center gap-3">
-                                            <div className="bg-white/10 rounded-lg p-1.5 border border-white/5"><MIRLogo className="w-10 h-5" /></div>
-                                            <div className="bg-white/10 rounded-lg p-1.5 border border-white/5"><TBankLogo className="w-10 h-5" /></div>
-                                            <div className="bg-white/10 rounded-lg p-1.5 border border-white/5"><SBPLogo className="w-10 h-5" /></div>
-                                        </div>
-                                        <div className="flex items-center gap-2 text-[10px] font-bold tracking-widest text-white/40">
-                                            <ShieldCheck size={14} /> 100% SECURE PAYMENT
-                                        </div>
+                                    {/* Footer Terms */}
+                                    <div className="p-4 text-center">
+                                        <p className="text-[10px] text-white/30 leading-snug">
+                                            Совершая покупку, Вы принимаете <a href="#" className="text-blue-400 hover:underline">условия использования</a> и <a href="#" className="text-blue-400 hover:underline">политику конфиденциальности</a>.
+                                        </p>
                                     </div>
                                 </div>
+                            )}
 
-                                {/* Placeholder for non-accepted state */}
-                                {!termsAccepted && (
-                                    <div className="absolute bottom-0 left-0 w-full p-6 bg-[#0f0f10]/80 backdrop-blur-xl border-t border-white/5 z-50">
-                                        <div className="w-full py-4 rounded-xl font-bold text-sm bg-white/5 text-white/30 text-center border border-white/5">
-                                            Подтвердите условия выше
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-                        )}
+                        </div>
                     </motion.div>
                 </>
             )}

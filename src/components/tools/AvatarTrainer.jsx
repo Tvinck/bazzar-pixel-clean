@@ -4,12 +4,15 @@ import { Upload, X, Zap, UserPlus, Image as ImageIcon, CheckCircle, AlertCircle 
 import { AnimatedButton } from '../ui/AnimatedButtons';
 import { useLanguage } from '../../context/LanguageContext';
 import { useSound } from '../../context/SoundContext';
-import { aiService } from '../../../ai-service';
+import { aiService } from '../../ai-client';
 import { validateFile } from '../../utils/validation';
+import { useUser } from '../../context/UserContext';
+import InsufficientCreditsModal from '../InsufficientCreditsModal';
 
 const AvatarTrainer = ({ isOpen, onClose }) => {
     const { t } = useLanguage();
     const { playSuccess, playClick } = useSound();
+    const { stats, updateStats } = useUser();
 
     // State
     const [images, setImages] = useState([]);
@@ -17,6 +20,7 @@ const AvatarTrainer = ({ isOpen, onClose }) => {
     const [modelType, setModelType] = useState('person'); // person, style
     const [isTraining, setIsTraining] = useState(false);
     const [status, setStatus] = useState('idle'); // idle, training, success, error
+    const [showCreditModal, setShowCreditModal] = useState(false);
 
     const handleUpload = (e) => {
         const files = Array.from(e.target.files);
@@ -34,7 +38,7 @@ const AvatarTrainer = ({ isOpen, onClose }) => {
             if (validation.valid) {
                 validFilesToAdd.push(file);
             } else {
-                alert(`Skipped ${file.name}: ${validation.error}`);
+                alert(`Пропущено ${file.name}: ${validation.error}`);
             }
         });
 
@@ -60,12 +64,18 @@ const AvatarTrainer = ({ isOpen, onClose }) => {
         if (images.length < 5) return;
         if (!triggerWord.trim()) return;
 
+        // Cost check (Placeholder: 0 for now as backend is stub)
+        const COST = 0;
+        if ((stats?.current_balance || 0) < COST) {
+            setShowCreditModal(true);
+            return;
+        }
+
         setIsTraining(true);
         setStatus('training');
         playClick();
 
         try {
-            console.log("Starting training for", triggerWord);
 
             // Use Secure API
             const result = await aiService.trainModel(images, triggerWord, modelType);
@@ -74,14 +84,14 @@ const AvatarTrainer = ({ isOpen, onClose }) => {
                 setStatus('success');
                 playSuccess();
             } else {
-                throw new Error(result.error || 'Training failed to start');
+                throw new Error(result.error || 'Не удалось начать тренировку');
             }
 
         } catch (error) {
             console.error('Training Error:', error);
             setStatus('error');
             // If secure API throws, we catch it here
-            alert(`Error: ${error.message}`);
+            alert(`Ошибка: ${error.message}`);
         } finally {
             setIsTraining(false);
         }
@@ -95,92 +105,115 @@ const AvatarTrainer = ({ isOpen, onClose }) => {
 
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
-                    <h2 className="text-white font-bold flex items-center gap-2"><UserPlus className="text-purple-500" /> AI Avatar Training</h2>
+                    <h2 className="text-white font-bold flex items-center gap-2"><UserPlus className="text-purple-500" /> Тренировка AI Аватара</h2>
                     <button onClick={onClose} className="w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center"><X /></button>
                 </div>
 
-                {status === 'success' ? (
-                    <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-6 text-center animate-fade-in">
-                        <CheckCircle size={80} className="text-green-500" />
-                        <h3 className="text-2xl font-bold text-white">Training Started!</h3>
-                        <p className="text-slate-400 max-w-xs">
-                            Your AI Avatar <b>{triggerWord}</b> is being trained. This usually takes about 20-30 minutes. You'll be notified when it's ready.
+                <div className="p-4 space-y-6 max-w-lg mx-auto w-full">
+                    {/* Info Card */}
+                    <div className="bg-slate-800/50 p-4 rounded-2xl border border-white/5">
+                        <h3 className="text-white font-bold mb-2 flex items-center gap-2">
+                            <Zap size={16} className="text-yellow-400" />
+                            Как это работает?
+                        </h3>
+                        <p className="text-slate-400 text-sm">
+                            Загрузите 5-10 фото себя (селфи, разные ракурсы, освещение).
+                            Мы обучим персональную модель, которой вы сможете пользоваться.
                         </p>
-                        <AnimatedButton onClick={onClose} className="bg-slate-800 text-white px-8">Got it</AnimatedButton>
                     </div>
-                ) : (
-                    <div className="p-6 max-w-lg mx-auto w-full space-y-8 pb-20">
 
-                        {/* Info */}
-                        <div className="bg-purple-900/20 border border-purple-500/30 p-4 rounded-xl">
-                            <h4 className="flex items-center gap-2 text-purple-300 font-bold mb-2">
-                                <Zap size={16} /> How it works
-                            </h4>
-                            <p className="text-xs text-purple-200/80 leading-relaxed">
-                                Upload 5-10 clear photos of yourself. We will train a custom AI model (LoRA) that learns your face. Once done, you can generate yourself in any style!
-                            </p>
+                    {/* Upload Area */}
+                    <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                            <span className="text-white font-bold">Фотографии ({images.length}/10)</span>
+                            <span className="text-xs text-slate-500">Мин. 5 фото</span>
                         </div>
 
-                        {/* 1. Trigger Word */}
-                        <div className="space-y-2">
-                            <label className="text-xs font-bold text-slate-400 uppercase">1. Name your Avatar (One Word)</label>
-                            <input
-                                type="text"
-                                placeholder="e.g. oh_bazzar"
-                                value={triggerWord}
-                                onChange={(e) => setTriggerWord(e.target.value.replace(/\s/g, ''))}
-                                className="w-full bg-slate-800 border border-slate-700 rounded-xl p-4 text-white focus:border-purple-500 outline-none"
-                            />
-                            <p className="text-[10px] text-slate-500">This will be the magic word you use in prompts.</p>
-                        </div>
+                        <div className="grid grid-cols-3 gap-2">
+                            {images.map((img, i) => (
+                                <div key={i} className="aspect-square relative rounded-xl overflow-hidden group border border-white/10">
+                                    <img src={img} alt={`Upload ${i}`} className="w-full h-full object-cover" />
+                                    <button
+                                        onClick={() => handleRemoveImage(i)}
+                                        className="absolute top-1 right-1 bg-black/50 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                                    >
+                                        <X size={12} />
+                                    </button>
+                                </div>
+                            ))}
 
-                        {/* 2. Upload Photos */}
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center">
-                                <label className="text-xs font-bold text-slate-400 uppercase">2. Upload Photos ({images.length}/10)</label>
-                                {images.length < 5 && <span className="text-xs text-red-400">Min 5 required</span>}
-                            </div>
-
-                            <div className="grid grid-cols-3 gap-2">
-                                {/* Upload Button */}
-                                <label className="aspect-square bg-slate-800 border-2 border-dashed border-slate-700 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-slate-700/50 transition-colors">
+                            {images.length < 10 && (
+                                <label className="aspect-square bg-slate-800 rounded-xl flex flex-col items-center justify-center cursor-pointer border-2 border-dashed border-slate-700 hover:border-purple-500 transition-colors">
                                     <Upload size={24} className="text-slate-400 mb-1" />
-                                    <span className="text-[10px] text-slate-500 font-bold">Add Photo</span>
+                                    <span className="text-[10px] text-slate-500 font-bold uppercase">Добавить</span>
                                     <input type="file" multiple accept="image/*" className="hidden" onChange={handleUpload} />
                                 </label>
-
-                                {/* Images */}
-                                {images.map((img, i) => (
-                                    <div key={i} className="relative aspect-square rounded-xl overflow-hidden group border border-white/10">
-                                        <img src={img} className="w-full h-full object-cover" />
-                                        <button
-                                            onClick={() => handleRemoveImage(i)}
-                                            className="absolute top-1 right-1 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                                        >
-                                            <X size={14} />
-                                        </button>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Action */}
-                        <div className="pt-4">
-                            <AnimatedButton
-                                variant="primary"
-                                disabled={images.length < 5 || !triggerWord || isTraining}
-                                onClick={startTraining}
-                                className={`w-full py-4 text-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg shadow-purple-500/30 ${isTraining ? 'opacity-80' : ''}`}
-                            >
-                                {isTraining ? 'Uploading & Starting...' : `Start Training (${images.length} Photos)`}
-                            </AnimatedButton>
-                            {status === 'error' && (
-                                <p className="text-center text-red-400 text-xs mt-2">Failed to start training. Try again.</p>
                             )}
                         </div>
-
                     </div>
-                )}
+
+                    {/* Settings */}
+                    <div className="space-y-4">
+                        <div>
+                            <label className="text-slate-400 text-sm font-bold mb-2 block">Кодовое слово (Триггер)</label>
+                            <input
+                                type="text"
+                                placeholder="например: ohwx man"
+                                value={triggerWord}
+                                onChange={(e) => setTriggerWord(e.target.value)}
+                                className="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white outline-none focus:border-purple-500 transition-colors"
+                            />
+                            <p className="text-[10px] text-slate-600 mt-1">Уникальное слово для вызова вашего персонажа в промптах.</p>
+                        </div>
+
+                        <div>
+                            <label className="text-slate-400 text-sm font-bold mb-2 block">Тип модели</label>
+                            <div className="grid grid-cols-2 gap-2">
+                                <button
+                                    onClick={() => setModelType('person')}
+                                    className={`p-3 rounded-xl border text-sm font-bold transition-all ${modelType === 'person' ? 'bg-purple-500/20 border-purple-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
+                                >
+                                    Человек
+                                </button>
+                                <button
+                                    onClick={() => setModelType('style')}
+                                    className={`p-3 rounded-xl border text-sm font-bold transition-all ${modelType === 'style' ? 'bg-purple-500/20 border-purple-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
+                                >
+                                    Стиль
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Action */}
+                    <div className="pt-4">
+                        {status === 'success' ? (
+                            <div className="bg-green-500/20 border border-green-500/50 rounded-2xl p-6 text-center">
+                                <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_20px_rgba(34,197,94,0.4)]">
+                                    <CheckCircle size={32} className="text-white" />
+                                </div>
+                                <h3 className="text-white font-bold text-xl mb-1">Успешно!</h3>
+                                <p className="text-green-200 text-sm">Тренировка началась. Это займет около 20-30 минут. Мы уведомим вас.</p>
+                                <button onClick={onClose} className="mt-4 px-6 py-2 bg-slate-900 text-white rounded-xl font-bold text-sm">Закрыть</button>
+                            </div>
+                        ) : (
+                            <AnimatedButton
+                                onClick={startTraining}
+                                disabled={images.length < 5 || !triggerWord || isTraining}
+                                className={`w-full py-4 text-lg font-black tracking-wide bg-gradient-to-r from-purple-600 to-indigo-600 ${images.length < 5 || !triggerWord ? 'opacity-50 grayscale' : ''}`}
+                            >
+                                {isTraining ? 'Запуск...' : 'Начать тренировку'}
+                            </AnimatedButton>
+                        )}
+                    </div>
+                </div>
+
+                <InsufficientCreditsModal
+                    isOpen={showCreditModal}
+                    onClose={() => setShowCreditModal(false)}
+                    onTopUp={() => { onClose(); }}
+                />
+
             </motion.div>
         </AnimatePresence>
     );

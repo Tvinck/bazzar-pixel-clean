@@ -118,19 +118,38 @@ export const analytics = {
                 return null;
             }
             const data = await response.json();
-
-            // If no stats, logic to create default?
-            // If data is null, we return null, and UserContext handles it?
-            // UserContext: if (userStats) setStats(userStats).
-            // If null, it logs "User initialization error" or defaults?
-            // Wait, src/lib/supabase.js handles default creation in original code.
-            // I should preserve that. But I can't Insert if RLS blocks.
-            // I'll assume for now stats exist (since we created them manually or via bot).
-            // If missing, we might need a create endpoint.
-
             return data;
         } catch (err) {
             console.error('Analytics error:', err);
+            return null;
+        }
+    },
+
+    // Get user profile
+    async getUserProfile(telegramId) {
+        try {
+            // First get userUUID
+            const { data: user } = await supabase
+                .from('users')
+                .select('id')
+                .eq('telegram_id', telegramId)
+                .single();
+
+            if (!user) return null;
+
+            // Then get profile
+            const { data, error } = await supabase
+                .from('user_profiles')
+                .select('*')
+                .eq('user_id', user.id)
+                .single();
+
+            if (error && error.code !== 'PGRST116') {
+                console.error('Profile fetch error:', error);
+            }
+            return data;
+        } catch (err) {
+            console.error('Analytics profile error:', err);
             return null;
         }
     },

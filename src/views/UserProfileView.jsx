@@ -84,56 +84,57 @@ const UserProfileView = () => {
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
-            className="min-h-screen bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-white pb-24"
+            className="min-h-screen bg-black text-white pb-24"
         >
             {/* Header (Glassy) */}
-            <div className="sticky top-0 z-40 bg-slate-50/80 dark:bg-[#09090b]/80 backdrop-blur-xl border-b border-white/5 px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] flex items-center gap-4">
+            <div className="sticky top-0 z-40 bg-black/95 backdrop-blur-xl border-b border-white/5 px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] flex items-center gap-4">
                 <button
                     onClick={() => navigate(-1)}
-                    className="w-10 h-10 rounded-full bg-white/50 dark:bg-white/5 flex items-center justify-center text-slate-700 dark:text-white/70 hover:bg-white/10 transition-colors border border-transparent dark:border-white/5"
+                    className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center text-[#007aff] hover:bg-white/10 transition-colors"
                 >
-                    <ArrowLeft size={20} />
+                    <ArrowLeft size={24} />
                 </button>
                 <div className="flex-1 truncate">
-                    <h1 className="text-lg font-black tracking-tight">@{profile.username || 'User'}</h1>
+                    <h1 className="text-[17px] font-semibold tracking-tight text-center mr-10 relative">
+                        @{profile.username || 'User'}
+                    </h1>
                 </div>
             </div>
 
             {/* Profile Info */}
             <div className="px-6 mt-4 mb-8">
                 <div className="flex flex-col items-center">
-                    {/* Avatar (Premium) */}
-                    <div className="relative group">
-                        <div className="absolute -inset-1 bg-gradient-to-tr from-indigo-500 via-purple-500 to-amber-500 rounded-full blur opacity-75 group-hover:opacity-100 transition duration-1000 animate-tilt"></div>
-                        <div className="relative w-28 h-28 rounded-full border-4 border-slate-50 dark:border-[#09090b] overflow-hidden bg-slate-200 dark:bg-slate-800 shadow-2xl">
+                    {/* Avatar */}
+                    <div className="relative group mb-3">
+                        <div className="relative w-28 h-28 rounded-full overflow-hidden bg-[#1c1c1e]">
                             {profile.avatar_url ? (
                                 <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
                             ) : (
-                                <div className="w-full h-full flex items-center justify-center text-3xl font-bold text-slate-500 bg-white/5">
-                                    {profile.first_name?.[0] || '?'}
+                                <div className="w-full h-full flex items-center justify-center text-[40px] font-semibold text-white bg-gradient-to-br from-blue-500 to-indigo-600">
+                                    {profile.first_name?.[0] || profile.username?.[0] || '?'}
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <h2 className="text-3xl font-black mt-4 mb-1 tracking-tight text-center bg-gradient-to-b from-white to-white/70 bg-clip-text text-transparent">{profile.first_name} {profile.last_name}</h2>
-                    {profile.username && <p className="text-slate-500 dark:text-white/40 font-medium text-sm mb-8">@{profile.username}</p>}
+                    <h2 className="text-[22px] font-bold mb-1 tracking-tight text-center text-white">{profile.first_name} {profile.last_name}</h2>
+                    {profile.username && <p className="text-[#8e8e93] font-medium text-[15px] mb-6">@{profile.username}</p>}
 
                     {/* Stats */}
-                    <div className="flex items-center gap-10 mb-8 px-8 py-4 bg-white/5 rounded-3xl backdrop-blur-sm border border-white/5 shadow-inner">
-                        <div className="text-center group cursor-default">
-                            <div className="text-2xl font-black text-white group-hover:text-indigo-400 transition-colors">{profile.stats?.creations || 0}</div>
-                            <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Creations</div>
+                    <div className="flex items-center gap-6 mb-8 px-6 py-4 bg-[#1c1c1e] rounded-[10px] shadow-sm">
+                        <div className="text-center group cursor-default min-w-[70px]">
+                            <div className="text-[17px] font-semibold text-white">{profile.stats?.creations || 0}</div>
+                            <div className="text-[13px] text-[#8e8e93] font-medium mt-0.5">Создания</div>
                         </div>
-                        <div className="w-px h-8 bg-white/10" />
-                        <div className="text-center group cursor-default">
-                            <div className="text-2xl font-black text-white group-hover:text-purple-400 transition-colors">{profile.stats?.followers || 0}</div>
-                            <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Followers</div>
+                        <div className="w-px h-8 bg-[#2c2c2e]" />
+                        <div className="text-center group cursor-default min-w-[70px]">
+                            <div className="text-[17px] font-semibold text-white">{profile.stats?.followers || 0}</div>
+                            <div className="text-[13px] text-[#8e8e93] font-medium mt-0.5">Подписчиков</div>
                         </div>
-                        <div className="w-px h-8 bg-white/10" />
-                        <div className="text-center group cursor-default">
-                            <div className="text-2xl font-black text-white group-hover:text-amber-400 transition-colors">{profile.stats?.following || 0}</div>
-                            <div className="text-[10px] font-bold text-white/30 uppercase tracking-widest">Following</div>
+                        <div className="w-px h-8 bg-[#2c2c2e]" />
+                        <div className="text-center group cursor-default min-w-[70px]">
+                            <div className="text-[17px] font-semibold text-white">{profile.stats?.following || 0}</div>
+                            <div className="text-[13px] text-[#8e8e93] font-medium mt-0.5">Подписок</div>
                         </div>
                     </div>
 
@@ -143,20 +144,12 @@ const UserProfileView = () => {
                             <button
                                 onClick={handleFollowToggle}
                                 disabled={isFollowLoading}
-                                className={`flex-1 h-12 rounded-2xl font-black text-sm uppercase tracking-wide flex items-center justify-center gap-2 transition-all active:scale-95 shadow-lg ${isFollowing
-                                    ? 'bg-white/10 border border-white/10 text-white hover:bg-white/20'
-                                    : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-indigo-500/25'
+                                className={`flex-1 h-[44px] rounded-[10px] font-semibold text-[17px] flex items-center justify-center gap-2 transition-all active:scale-95 ${isFollowing
+                                    ? 'bg-[#2c2c2e] text-[#ff3b30]'
+                                    : 'bg-[#007aff] text-white hover:bg-blue-600'
                                     }`}
                             >
-                                {isFollowing ? (
-                                    <>
-                                        <UserCheck size={18} /> Following
-                                    </>
-                                ) : (
-                                    <>
-                                        <UserPlus size={18} /> Follow
-                                    </>
-                                )}
+                                {isFollowing ? 'Отписаться' : 'Подписаться'}
                             </button>
                         </div>
                     )}
@@ -164,51 +157,43 @@ const UserProfileView = () => {
             </div>
 
             {/* Content Tabs (Glassy) */}
-            <div className="px-6 mb-4">
-                <div className="bg-white/5 p-1 rounded-2xl flex items-center justify-center border border-white/5">
-                    <button className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl bg-white/10 shadow-sm text-white transition-all">
-                        <Grid size={16} />
-                        <span className="font-bold text-xs tracking-wider">PUBLIC GALLERY</span>
+            <div className="px-4 mb-4">
+                <div className="bg-[#1c1c1e] p-1 rounded-[10px] flex items-center justify-center">
+                    <button className="flex-1 flex items-center justify-center gap-2 py-1.5 rounded-[8px] bg-[#636366] text-white font-medium text-[13px] shadow-sm">
+                        Публичная Галерея
                     </button>
                 </div>
             </div>
 
-            {/* Grid (Masonry) */}
-            <div className="px-2">
-                <div className="grid grid-cols-2 gap-2">
+            {/* Grid (iOS Photos app style) */}
+            <div className="px-0.5 md:px-4">
+                <div className="grid grid-cols-3 gap-0.5 md:gap-4 border-t border-white/5 pt-0.5">
                     {isCreationsLoading ? (
                         // Skeleton
-                        [1, 2, 3, 4].map(i => (
-                            <div key={i} className="aspect-square bg-white/5 rounded-2xl animate-pulse border border-white/5" />
+                        [1, 2, 3, 4, 5, 6].map(i => (
+                            <div key={i} className="aspect-square bg-[#1c1c1e] animate-pulse" />
                         ))
                     ) : (
                         creations?.map((item, i) => (
                             <motion.div
                                 key={item.id}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
                                 transition={{ delay: i * 0.05 }}
-                                className="relative aspect-square bg-slate-900 rounded-[1.2rem] overflow-hidden group border border-white/5 shadow-md cursor-pointer"
+                                className="relative aspect-square bg-[#1c1c1e] overflow-hidden group border-none shadow-none cursor-pointer"
                                 onClick={() => navigate(`/gallery`)} // Or open detail
                             >
                                 <OptimizedImage
                                     src={item.thumbnail_url || item.image_url}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                                     alt={item.prompt}
                                 />
-                                {/* Gradient Overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
 
                                 {/* Type Indicator */}
-                                <div className="absolute top-2 right-2 text-white/80 bg-black/40 backdrop-blur-md p-1.5 rounded-full border border-white/10">
-                                    {item.type?.includes('video') ? <Video size={12} /> : <ImageIcon size={12} />}
+                                <div className="absolute top-1 right-1 text-white bg-black/40 backdrop-blur-md p-1 rounded-full">
+                                    {item.type?.includes('video') ? <Video size={10} /> : null}
                                 </div>
 
-                                {/* Like Overlay */}
-                                <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/40 backdrop-blur-md px-2 py-1 rounded-full border border-white/10">
-                                    <Heart size={12} className="text-white fill-white/50" />
-                                    <span className="text-white text-[10px] font-bold">{item.likes_count || 0}</span>
-                                </div>
                             </motion.div>
                         ))
                     )}
@@ -216,9 +201,9 @@ const UserProfileView = () => {
             </div>
 
             {!isCreationsLoading && creations?.length === 0 && (
-                <div className="py-20 text-center text-white/30 flex flex-col items-center">
+                <div className="py-20 text-center text-[#8e8e93] flex flex-col items-center">
                     <Grid size={48} className="mb-4 opacity-50" />
-                    <p className="font-medium">No public creations yet.</p>
+                    <p className="font-medium text-[15px]">Нет публичных работ</p>
                 </div>
             )}
         </motion.div>

@@ -1,899 +1,485 @@
-import { ProfileSkeleton } from '../components/ui/Skeletons';
-import React, { Suspense, useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Trophy, Star, Award, Globe, Volume2, VolumeX, Users, MessageCircle, Share2, Image, Heart, Gift, Zap, Settings, Sparkles, Video, Crown, Wallet, Moon, Copy, CreditCard, ChevronRight, ChevronLeft, Mail, Receipt, Percent, Check, Palette, ShieldAlert } from 'lucide-react';
-import { Canvas } from '@react-three/fiber';
-import Medal3D from '../components/3d/Medal3D';
-import ThemeSettings from '../components/ThemeSettings';
+import {
+    ChevronRight, Zap, Globe, ShieldAlert, Check,
+    User, MapPin, Briefcase, Heart, MessageCircle, Languages,
+    Edit2, ChevronLeft, X, Wallet, HelpCircle, FileText, Users, Terminal
+} from 'lucide-react';
+import { useUser } from '../context/UserContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useSound } from '../context/SoundContext';
-import ErrorBoundary from '../components/ErrorBoundary';
-import { CircularProgress } from '../components/ui/Progress';
-import { StatsCard } from '../components/ui/AnimatedCards';
-import { AnimatedButton } from '../components/ui/AnimatedButtons';
-import { analytics } from '../lib/supabase';
-import { useUser } from '../context/UserContext';
-import { useUserPublicCreations } from '../hooks/useGallery';
-import { useToast } from '../context/ToastContext';
-import TBankWidget from '../components/TBankWidget';
+import AnimatedIcon from '../components/ui/AnimatedIcon';
 
-const ProfileView = ({ isDark, onOpenPayment }) => {
-    const navigate = useNavigate();
-    const { t, lang, setLang } = useLanguage();
-    const { isSoundEnabled, toggleSound, playClick } = useSound();
-    const toast = useToast();
+// Components
+import { ProfileSkeleton } from '../components/ui/Skeletons';
 
-    // User Context
-    const { user: userData, stats: userStats, isLoading: isStatsLoading, addBalance } = useUser();
+// iOS-style List Block
+const ListBlock = ({ children, className = '' }) => (
+    <div className={`bg-[#1c1c1e] rounded-[10px] overflow-hidden ${className}`}>
+        {children}
+    </div>
+);
 
-    // Fetch user creations
-    const { data: userCreations } = useUserPublicCreations(userData?.id);
+// iOS-style List Row
+const ListRow = ({ icon, label, value, subtext, onClick, isLast, iconColor = 'bg-blue-500', isDestructive }) => (
+    <button
+        onClick={onClick}
+        className={`w-full flex items-center py-2.5 pl-4 pr-3 ${onClick ? 'hover:bg-[#2c2c2e] active:bg-[#3a3a3c]' : ''} transition-colors relative`}
+    >
+        {icon && (
+            <div className={`w-7 h-7 rounded-md ${iconColor} flex items-center justify-center mr-3.5 flex-shrink-0`}>
+                {icon}
+            </div>
+        )}
+        <div className="flex-1 flex flex-col items-start justify-center pr-2">
+            <span className={`text-[17px] ${isDestructive ? 'text-red-500' : 'text-white'} leading-[22px] tracking-[-0.41px] truncate w-full text-left`}>
+                {label}
+            </span>
+            {subtext && (
+                <span className="text-[13px] text-gray-400 leading-[18px] tracking-[-0.08px] mt-0.5 truncate w-full text-left">
+                    {subtext}
+                </span>
+            )}
+        </div>
+        <div className="flex items-center gap-1.5 flex-shrink-0">
+            {value && <span className="text-[17px] text-gray-400 tracking-[-0.41px] max-w-[120px] truncate">{value}</span>}
+            {onClick && <ChevronRight size={20} className="text-[#3a3a3c]" strokeWidth={2.5} />}
+        </div>
+        {!isLast && <div className={`absolute bottom-0 right-0 h-[0.5px] bg-[#38383a] ${icon ? 'left-[46px]' : 'left-4'}`} />}
+    </button>
+);
 
-    // Stub for addCreditsMutation using context
-    const addCreditsMutation = {
-        mutate: ({ userId, amount }) => addBalance(amount)
-    };
-
-    const [activeSection, setActiveSection] = useState('main'); // main, account, partnership, achievements, settings
-    const [isThemeSettingsOpen, setIsThemeSettingsOpen] = useState(false);
-    const [transactions, setTransactions] = useState([]);
-    const [isTxLoading, setIsTxLoading] = useState(false);
-    const [subscription, setSubscription] = useState(null);
-    const [paymentAmount, setPaymentAmount] = useState(null);
-
-    const [email, setEmail] = useState(() => {
-        try { return localStorage.getItem('pixel_user_email') || ''; } catch { return ''; }
-    });
-    const [completedTasks, setCompletedTasks] = useState(() => {
-        try { return JSON.parse(localStorage.getItem('pixel_completed_tasks') || '[]'); } catch { return []; }
-    });
-
-    // Referral System State
-    const [referralStats, setReferralStats] = useState(null);
-    const [referralList, setReferralList] = useState([]);
-    const [promoInput, setPromoInput] = useState('');
-    const [isCreatingPromo, setIsCreatingPromo] = useState(false);
+const EditModal = ({ isOpen, onClose, title, value, onSave, type = 'text', options = [] }) => {
+    const { t } = useLanguage();
+    const [val, setVal] = useState(value || '');
 
     useEffect(() => {
-        if (activeSection === 'account' && window.Telegram?.WebApp?.initData) {
-            setIsTxLoading(true);
+        setVal(value || '');
+    }, [value, isOpen]);
 
-            // 1. Fetch Transactions
-            fetch(`/api/transactions?initData=${encodeURIComponent(window.Telegram.WebApp.initData)}`)
-                .then(res => res.json())
-                .then(data => { if (data.success) setTransactions(data.transactions); })
-                .catch(console.error)
-                .finally(() => setIsTxLoading(false));
-
-            // 2. Fetch Subscription
-            if (userData?.id) {
-                fetch(`/api/subscription?userId=${userData.id}`)
-                    .then(res => res.json())
-                    .then(data => setSubscription(data.subscription))
-                    .catch(console.error);
-            }
-        }
-    }, [activeSection, userData]);
-
-    const handleCancelSubscription = async () => {
-        if (!window.confirm('Вы уверены, что хотите отменить подписку?')) return;
-        try {
-            await fetch('/api/subscription', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ action: 'cancel', userId: userData?.id })
-            });
-            setSubscription(null);
-            alert('Подписка отменена');
-        } catch (e) {
-            alert('Ошибка отмены');
-        }
+    const handleSave = () => {
+        onSave(val);
+        onClose();
     };
 
-    const handleTaskComplete = (taskId, reward, link, action) => {
-        playClick();
+    if (!isOpen) return null;
 
-        // Special check for Invite Task
-        if (taskId === 'invite_friend_task') {
-            // Always copy link first
-            handleCopyReflink();
+    return (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
+            <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="bg-[#1c1c1e] w-full max-w-sm rounded-[14px] p-5 relative z-10 shadow-2xl"
+            >
+                <div className="flex justify-between items-center mb-4">
+                    <h3 className="font-semibold text-white text-[17px] tracking-[-0.41px]">{title}</h3>
+                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#2c2c2e] flex items-center justify-center text-gray-400 active:scale-95 transition-transform"><X size={18} /></button>
+                </div>
 
-            // Check requirement
-            const inviteCount = referralStats?.invited_count || 0;
-            if (inviteCount < 1) {
-                toast.error('Пригласите хотя бы 1 друга, чтобы забрать награду!');
+                {type === 'select' ? (
+                    <div className="space-y-1">
+                        {options.map(opt => (
+                            <button
+                                key={opt}
+                                onClick={() => setVal(opt)}
+                                className={`w-full py-3 px-4 rounded-[10px] text-left text-[17px] tracking-[-0.41px] transition-all flex justify-between items-center ${val === opt ? 'bg-[#007aff]/10 text-[#007aff]' : 'text-white hover:bg-[#2c2c2e]'}`}
+                            >
+                                {opt}
+                                {val === opt && <Check size={20} className="text-[#007aff]" strokeWidth={2.5} />}
+                            </button>
+                        ))}
+                    </div>
+                ) : (
+                    <input
+                        type={type}
+                        value={val}
+                        onChange={e => setVal(e.target.value)}
+                        className="w-full bg-[#2c2c2e] rounded-[10px] py-3 px-4 text-[17px] text-white placeholder:text-gray-500 outline-none focus:ring-1 focus:ring-[#007aff] transition-shadow tracking-[-0.41px]"
+                        placeholder={t('profile.enterValue') || 'Введите значение...'}
+                        autoFocus
+                    />
+                )}
+
+                <button
+                    onClick={handleSave}
+                    className="w-full mt-4 bg-[#007aff] text-white font-semibold text-[17px] py-3 rounded-[10px] active:opacity-80 transition-opacity tracking-[-0.41px]"
+                >
+                    {t('common.save')}
+                </button>
+            </motion.div>
+        </div>
+    );
+};
+
+const TransactionHistory = () => {
+    const { t } = useLanguage();
+    const [transactions, setTransactions] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchTransactions = async () => {
+            try {
+                const isDev = !window.Telegram?.WebApp?.initData;
+                let data = [];
+                if (isDev) {
+                    data = [
+                        { id: 1, type: 'topup', amount: 100, description: 'Пополнение баланса', created_at: new Date(Date.now() - 10000000).toISOString() },
+                        { id: 2, type: 'generation', amount: -5, description: 'Генерация изображения', created_at: new Date(Date.now() - 5000000).toISOString() },
+                        { id: 3, type: 'chat', amount: -1, description: 'Чат', created_at: new Date(Date.now() - 1000000).toISOString() }
+                    ];
+                } else {
+                    const res = await fetch('/api/transactions', {
+                        headers: { 'X-TG-Data': window.Telegram?.WebApp?.initData || '' }
+                    });
+                    if (res.ok) {
+                        const json = await res.json();
+                        data = json.transactions || [];
+                    }
+                }
+                setTransactions(data);
+            } catch (e) {
+                console.error('Failed to fetch transactions', e);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchTransactions();
+    }, []);
+
+    if (loading) return <div className="p-4 text-center text-gray-500 text-[15px] tracking-[-0.24px]">{t('common.loading')}</div>;
+    if (transactions.length === 0) return <div className="p-4 text-center text-gray-500 text-[15px] tracking-[-0.24px]">{t('home.historyEmpty')}</div>;
+
+    return (
+        <div className="flex flex-col">
+            {transactions.slice(0, 5).map((tx, idx) => (
+                <div key={tx.id || idx} className="flex items-center justify-between py-[11px] pl-4 pr-3 relative hover:bg-[#2c2c2e] transition-colors">
+                    <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-green-500/10' : 'bg-[#2c2c2e]'}`}>
+                            <Zap size={16} className={tx.amount > 0 ? "fill-current text-green-500" : "text-white"} />
+                        </div>
+                        <div className="flex flex-col">
+                            <span className="text-[17px] text-white tracking-[-0.41px] leading-[22px]">{tx.description || (tx.amount > 0 ? 'Пополнение' : 'Списание')}</span>
+                            <span className="text-[13px] text-gray-400 tracking-[-0.08px] leading-[18px]">{new Date(tx.created_at).toLocaleDateString('ru-RU')}</span>
+                        </div>
+                    </div>
+                    <span className={`text-[17px] tracking-[-0.41px] ${tx.amount > 0 ? 'text-green-500' : 'text-white'}`}>
+                        {tx.amount > 0 ? '+' : ''}{tx.amount}
+                    </span>
+                    {idx !== Math.min(transactions.length, 5) - 1 && <div className="absolute bottom-0 left-[52px] right-0 h-[0.5px] bg-[#38383a]" />}
+                </div>
+            ))}
+        </div>
+    );
+};
+
+const ProfileView = ({ onOpenPayment }) => {
+    const navigate = useNavigate();
+    const { user, stats, isLoading, profile, refreshUser } = useUser();
+    const { lang, setLang, t } = useLanguage();
+    const { playClick } = useSound();
+
+    const ADMIN_USERS = ['artykosh', 'natelinsss'];
+    const ADMIN_IDS = [603207436, 500096232, 1165860888];
+    const isDev = user?.telegram_id && ADMIN_IDS.includes(Number(user.telegram_id));
+    const isAdmin = (user?.username && ADMIN_USERS.includes(user.username.toLowerCase())) || isDev || profile?.role === 'admin';
+
+    const [profileData, setProfileData] = useState({
+        gender: '',
+        age: '',
+        location: '',
+        activity: '',
+        interests: '',
+        style: '',
+        pixelLang: '',
+        bio: '',
+        website: '',
+        isPublic: false
+    });
+
+    const displayName = user?.first_name || 'Пользователь';
+    const initals = displayName.substring(0, 2).toUpperCase();
+
+    const [editModal, setEditModal] = useState({
+        isOpen: false,
+        field: null,
+        title: '',
+        type: 'text',
+        options: []
+    });
+
+    useEffect(() => {
+        const loadProfile = async () => {
+            if (profile) {
+                setProfileData({
+                    gender: profile.gender || '',
+                    age: profile.age_range || '',
+                    location: profile.location || '',
+                    activity: profile.occupation || '',
+                    interests: Array.isArray(profile.interests) ? profile.interests.join(', ') : (profile.interests || ''),
+                    style: profile.communication_style || '',
+                    pixelLang: profile.language || '',
+                    bio: profile.bio || '',
+                    website: profile.website || '',
+                    isPublic: profile.is_public_profile || false
+                });
                 return;
             }
-        }
 
-        // 1. ALWAYS Execute action (Open Link)
-        // This ensures the link works even if the task is already "Done"
-        if (link) {
             try {
-                if (window.Telegram?.WebApp?.openTelegramLink) {
-                    window.Telegram.WebApp.openTelegramLink(link);
-                } else {
-                    window.open(link, '_blank');
+                const response = await fetch('/api/user/profile', {
+                    headers: { 'X-TG-Data': window.Telegram?.WebApp?.initData || '' }
+                });
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.profile) {
+                        setProfileData({
+                            gender: data.profile.gender || '',
+                            age: data.profile.age_range || '',
+                            location: data.profile.location || '',
+                            activity: data.profile.occupation || '',
+                            interests: (data.profile.interests || []).join(', '),
+                            style: data.profile.communication_style || '',
+                            pixelLang: data.profile.language || ''
+                        });
+                    }
                 }
             } catch (e) {
-                window.open(link, '_blank');
+                console.error('Failed to load profile:', e);
+                try {
+                    const saved = JSON.parse(localStorage.getItem('pixel_profile_data') || '{}');
+                    setProfileData(prev => ({ ...prev, ...saved }));
+                } catch (e) { }
             }
-        }
+        };
+        loadProfile();
+    }, [user, profile]);
 
-        // 2. Check if already rewarded
-        if (completedTasks.includes(taskId)) return;
+    const handleSaveField = async (value) => {
+        const field = editModal.field;
+        const newData = { ...profileData, [field]: value };
+        setProfileData(newData);
+        localStorage.setItem('pixel_profile_data', JSON.stringify(newData));
 
-        // 3. Optimistically complete & Award
-        const newCompleted = [...completedTasks, taskId];
-        setCompletedTasks(newCompleted);
-        localStorage.setItem('pixel_completed_tasks', JSON.stringify(newCompleted));
-
-        if (userData?.id) {
-            addCreditsMutation.mutate({ userId: userData.id, amount: reward });
-            analytics.trackEvent(userData.id, 'loyalty_task_completed', { task_id: taskId, reward });
-
-            // Show success toast
-            if (window.Telegram?.WebApp?.HapticFeedback) {
-                window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-            }
-        }
-    };
-
-    // ... inside render ...
-    {
-        [
-            { id: 'sub_channel', title: 'Подпишись на канал', reward: 9, link: 'https://t.me/pixel_imagess', icon: <Volume2 size={18} className="text-blue-500" />, color: 'text-blue-500 bg-blue-500/10' },
-            { id: 'join_chat', title: 'Вступай в чат', reward: 9, link: 'https://t.me/pixel_communityy', icon: <Users size={18} className="text-violet-500" />, color: 'text-violet-500 bg-violet-500/10' },
-            { id: 'invite_friend_task', title: 'Поделиться ссылкой', reward: 5, action: 'copy', icon: <Share2 size={18} className="text-pink-500" />, color: 'text-pink-500 bg-pink-500/10' },
-        ].map((task) => {
-            const isCompleted = completedTasks.includes(task.id);
-            return (
-                <div
-                    key={task.id}
-                    onClick={() => handleTaskComplete(task.id, task.reward, task.link, task.action)}
-                    className={`bg-white dark:bg-slate-800 p-4 rounded-2xl flex items-center justify-between shadow-sm transition-all active:scale-98 cursor-pointer ${isCompleted ? 'opacity-90' : 'opacity-100 hover:shadow-md'}`}
-                >
-                    <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${task.color}`}>
-                            {isCompleted ? <Check size={18} /> : task.icon}
-                        </div>
-                        <div className="font-bold text-sm text-slate-900 dark:text-white">
-                            {task.title}
-                            {isCompleted && <span className="ml-2 text-[10px] text-green-500 font-bold uppercase">Done</span>}
-                        </div>
-                    </div>
-                    <button
-                        className={`${isCompleted ? 'bg-green-100 text-green-600 dark:bg-green-900/30' : 'bg-slate-100 dark:bg-slate-700 text-slate-500 dark:text-slate-300'} px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1 transition-colors pointer-events-none`}
-                    >
-                        {isCompleted ? 'Claimed' : `+${task.reward}`}
-                        {!isCompleted && <Zap size={10} className="text-amber-500 fill-amber-500" />}
-                    </button>
-                </div>
-            );
-        })
-    }
-
-    const toggleLang = () => {
-        setLang(prev => prev === 'ru' ? 'en' : 'ru');
-        playClick();
-        if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-    };
-
-    const handleToggleSound = () => {
-        toggleSound();
-        if (!isSoundEnabled) playClick();
-        if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-    };
-
-    const handleCopyReflink = () => {
-        playClick();
-        navigator.clipboard.writeText(`https://t.me/Pixel_ai_bot?start=r-${userData?.id || 'ref'}`);
-        if (window.Telegram?.WebApp?.HapticFeedback) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        toast.success('Реферальная ссылка скопирована!');
-    };
-
-    const navigateTo = (section) => {
-        playClick();
-        setActiveSection(section);
-    };
-
-    const handleSaveEmail = () => {
-        playClick();
         try {
-            localStorage.setItem('pixel_user_email', email);
-            toast.success('Email сохранён!');
-        } catch (err) {
-            toast.error('Ошибка сохранения');
-        }
-    };
-
-    const handleBack = () => {
-        playClick();
-        setActiveSection('main');
-    };
-
-    if (isStatsLoading && userData) return <ProfileSkeleton />; // Only show skeleton if we have user but loading stats. If no user yet (init), we might wait or render placeholder.
-
-    // Get Telegram user data if available
-    let telegramUser = window.Telegram?.WebApp?.initDataUnsafe?.user;
-
-    // Fallback: Create mock Telegram user if not in Telegram
-    if (!telegramUser) {
-        console.warn('⚠️ No Telegram data available, using fallback');
-        // In production, this would mean user is not in Telegram
-        // Try to get from userData first
-        if (userData?.telegram_id) {
-            telegramUser = {
-                id: userData.telegram_id,
-                first_name: userData.first_name || 'Пользователь',
-                username: userData.username || 'pixel_user'
+            const apiData = {
+                gender: newData.gender === 'Мужской' ? 'male' : newData.gender === 'Женский' ? 'female' : newData.gender,
+                age_range: newData.age,
+                location: newData.location,
+                occupation: newData.activity,
+                interests: newData.interests ? newData.interests.split(',').map(i => i.trim()) : [],
+                communication_style: newData.style === 'Дружелюбный' ? 'friendly' : newData.style === 'Официальный' ? 'formal' : newData.style === 'Саркастичный' ? 'playful' : newData.style,
+                language: newData.pixelLang === 'Русский' ? 'ru' : newData.pixelLang === 'English' ? 'en' : 'ru',
+                bio: newData.bio,
+                website: newData.website,
+                is_public_profile: newData.isPublic
             };
+
+            await fetch('/api/user/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-TG-Data': window.Telegram?.WebApp?.initData || ''
+                },
+                body: JSON.stringify(apiData)
+            });
+            refreshUser();
+        } catch (err) {
+            console.warn('Failed to sync profile to API', err);
         }
-    }
+    };
 
-    // Debug logging
-    console.log('🔍 Telegram WebApp:', window.Telegram?.WebApp);
-    console.log('👤 Telegram User:', telegramUser);
-    console.log('💾 UserData from context:', userData);
+    const openEdit = (field, title, type = 'text', options = []) => {
+        playClick();
+        setEditModal({ isOpen: true, field, title, type, options });
+    };
 
-    // Try multiple sources for user data
-    const displayName = telegramUser?.first_name
-        || userData?.first_name
-        || 'Пользователь';
+    const filledCount = Object.values(profileData).filter(v => v && v.toString().length > 0).length + 1;
+    const totalFields = 8;
+    const progressPercent = Math.round((filledCount / totalFields) * 100);
 
-    const username = telegramUser?.username
-        || userData?.username
-        || userData?.telegram_username
-        || 'pixel_user';
+    if (isLoading) return <ProfileSkeleton />;
 
-    console.log('✅ Final display name:', displayName);
-    console.log('✅ Final username:', username);
-    const totalCreations = userStats?.total_generations || 0;
-    const totalLikes = userStats?.total_likes_received || 0;
-    const userLevel = Math.floor((userStats?.total_generations || 0) / 10) + 1;
+    return (
+        <div className="min-h-screen bg-black text-white font-sans pb-24 pt-4 px-4 overflow-y-auto w-full md:max-w-2xl md:mx-auto md:px-6">
 
-    // --- SUB-VIEWS ---
-
-    // 1. ACCOUNT VIEW (Premium Glassy)
-    const renderAccountView = () => (
-        <div className="space-y-6">
-            <h3 className="font-black text-2xl mb-4 text-white tracking-tight">Аккаунт и подписка</h3>
-
-            {/* Active Subscription Card */}
-            <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-600 rounded-[2rem] p-6 text-white shadow-2xl shadow-indigo-500/20 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full blur-[80px] -translate-y-1/2 translate-x-1/2 group-hover:bg-white/20 transition-colors duration-700" />
-                <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-4">
-                        <h4 className="font-bold flex items-center gap-2 text-lg"><Sparkles size={20} className="text-amber-300" /> Моя подписка</h4>
-                        {subscription ? (
-                            <span className="bg-white/20 backdrop-blur-md text-[10px] font-black px-3 py-1 rounded-full border border-white/10 uppercase tracking-widest">ACTIVE</span>
-                        ) : (
-                            <span className="bg-black/20 backdrop-blur-md text-[10px] font-black px-3 py-1 rounded-full border border-white/5 uppercase tracking-widest">FREE</span>
-                        )}
-                    </div>
-
-                    {subscription ? (
-                        <div>
-                            <div className="text-4xl font-black mb-1">{subscription.amount} ₽ <span className="text-sm font-medium opacity-60">/мес</span></div>
-                            <div className="text-xs opacity-60 mb-6 font-medium">Следующее списание: {new Date(subscription.current_period_end || Date.now() + 30 * 24 * 60 * 60 * 1000).toLocaleDateString()}</div>
-                            <button
-                                onClick={handleCancelSubscription}
-                                className="bg-white/10 hover:bg-white/20 border border-white/10 text-white text-xs font-bold py-3 px-4 rounded-xl w-full transition-colors backdrop-blur-md"
-                            >
-                                Отменить подписку
-                            </button>
-                        </div>
-                    ) : (
-                        <div>
-                            <p className="text-sm opacity-90 mb-6 leading-relaxed font-light">У вас нет активной подписки. <br />Оформите <span className="font-bold text-amber-300">Pro тариф</span> для максимальной выгоды.</p>
-                            <button
-                                onClick={() => { playClick(); setPaymentAmount(499); }}
-                                className="bg-white text-indigo-600 font-bold py-3.5 px-4 rounded-xl w-full text-sm shadow-xl shadow-indigo-900/20 active:scale-95 transition-transform"
-                            >
-                                Оформить подписку
-                            </button>
-                        </div>
-                    )}
-                </div>
-            </div>
-
-            {/* Email Input */}
-            <div className="bg-white/5 backdrop-blur-xl p-5 rounded-[1.5rem] border border-white/5">
-                <label className="text-[10px] font-bold text-white/40 uppercase mb-3 block flex items-center gap-1.5 tracking-wider"><Mail size={12} /> Email для чеков</label>
-                <form
-                    className="flex gap-2"
-                    onSubmit={(e) => { e.preventDefault(); handleSaveEmail(); }}
-                >
-                    <input
-                        type="email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        placeholder="name@example.com"
-                        className="flex-1 bg-black/20 border border-white/5 focus:border-indigo-500/50 rounded-xl px-4 py-3 text-sm font-medium text-white focus:outline-none transition-colors placeholder:text-white/20"
-                        enterKeyHint="done"
-                    />
-                    <button type="submit" className="bg-white text-black px-5 rounded-xl font-bold text-sm shadow-lg hover:bg-indigo-50 transition-colors active:scale-95">OK</button>
-                </form>
-            </div>
-
-            {/* Payment Section */}
-            <div className="bg-[#151517]/80 backdrop-blur-xl p-5 rounded-[2rem] border border-white/5">
-                <h4 className="font-bold text-sm mb-4 flex items-center gap-2 text-white/90">
-                    <Wallet size={18} className="text-indigo-400" />
-                    Баланс и пополнение
-                </h4>
-
-                <div className="flex justify-between items-center bg-white/5 border border-white/5 p-4 rounded-2xl mb-4 relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-r from-indigo-500/10 to-transparent pointer-events-none" />
-                    <div className="relative z-10">
-                        <div className="text-[10px] text-white/40 font-bold uppercase tracking-wider mb-0.5">Текущий баланс</div>
-                        <div className="text-3xl font-black text-white flex items-center gap-1">
-                            {userStats?.current_balance || 0}
-                            <Zap size={20} className="text-amber-400 fill-amber-400 shadow-amber-400/50" />
-                        </div>
-                    </div>
-                    <button
-                        onClick={() => { playClick(); onOpenPayment(); }}
-                        className="bg-indigo-500 hover:bg-indigo-400 text-white font-bold py-2.5 px-5 rounded-xl shadow-lg shadow-indigo-500/30 active:scale-95 transition-all text-xs flex items-center gap-2 relative z-10"
-                    >
-                        <span>Пополнить</span>
-                        <ChevronRight size={14} />
+            {/* Header Settings Style */}
+            <div className="flex flex-col items-center mb-6">
+                <div className="w-[100px] h-[100px] rounded-full bg-gradient-to-br from-[#3390ec] to-blue-600 flex items-center justify-center text-[40px] font-bold text-white shadow-xl border-2 border-transparent relative mt-2">
+                    {initals}
+                    <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#1c1c1e] border-2 border-black flex items-center justify-center text-white active:bg-[#2c2c2e]">
+                        <Edit2 size={14} />
                     </button>
                 </div>
-
-                <p className="text-[10px] text-center text-white/30">
-                    Нажмите пополнить, чтобы увидеть тарифные планы
+                <h1 className="text-[28px] font-bold mt-3 tracking-[-0.6px]">{displayName}</h1>
+                <p className="text-[17px] text-[#007aff] tracking-[-0.41px] mt-0.5 font-medium cursor-pointer active:opacity-70">
+                    {t('profile.editProfile')}
                 </p>
             </div>
 
-            {/* Payment History */}
-            <div className="bg-white/5 backdrop-blur-xl p-5 rounded-[2rem] border border-white/5">
-                <h4 className="font-bold text-sm mb-4 flex items-center gap-2 text-white/90"><Receipt size={16} className="text-white/40" /> История операций</h4>
+            <div className="space-y-6">
 
-                {isTxLoading ? (
-                    <div className="py-8 text-center text-xs opacity-50 animate-pulse font-mono">Loading history...</div>
-                ) : transactions.length === 0 ? (
-                    <div className="text-center py-8 text-white/30 text-xs font-medium">История пуста</div>
-                ) : (
-                    <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1 custom-scrollbar">
-                        {transactions.map(tx => (
-                            <div key={tx.id} className="flex justify-between items-center text-xs border-b border-white/5 pb-3 last:border-0 last:pb-0">
-                                <div>
-                                    <div className="font-bold text-white/90 line-clamp-1 max-w-[180px]">{tx.description || tx.type}</div>
-                                    <div className="text-[10px] text-white/40 mt-0.5 font-mono">{new Date(tx.created_at).toLocaleDateString()}</div>
-                                </div>
-                                <div className={`font-bold whitespace-nowrap bg-white/5 px-2 py-1 rounded-lg border border-white/5 ${tx.amount > 0 ? 'text-green-400' : 'text-white/70'}`}>
-                                    {tx.amount > 0 ? '+' : ''}{tx.amount} ⚡
-                                </div>
-                            </div>
-                        ))}
-                    </div>
+                {/* 1. Wallet & App Info */}
+                <ListBlock>
+                    <ListRow
+                        icon={<Wallet size={16} className="text-white" />}
+                        iconColor="bg-orange-500"
+                        label={t('profile.walletTokens')}
+                        value={stats?.current_balance || 0}
+                        onClick={() => { playClick(); onOpenPayment(); }}
+                    />
+                    <ListRow
+                        icon={<Globe size={16} className="text-white" />}
+                        iconColor="bg-indigo-500"
+                        label={t('profile.interfaceLang')}
+                        value={lang === 'ru' ? 'Русский' : 'English'}
+                        onClick={() => {
+                            playClick();
+                            setLang(lang === 'ru' ? 'en' : 'ru');
+                        }}
+                        isLast
+                    />
+                </ListBlock>
+
+                {isAdmin && (
+                    <ListBlock>
+                        <ListRow
+                            icon={<ShieldAlert size={16} className="text-white" />}
+                            iconColor="bg-red-500"
+                            label={t('profile.adminPanel')}
+                            subtext={t('profile.adminPanelDesc')}
+                            onClick={() => navigate('/admin')}
+                            isLast
+                        />
+                    </ListBlock>
                 )}
-            </div>
-        </div>
-    );
 
-    // 2. PARTNERSHIP VIEW (Updated with Referral System)
-
-    useEffect(() => {
-        if (activeSection === 'partnership' && userData?.id) {
-            const fetchReferralData = async () => {
-                // 1. Get Stats View
-                const { data: stats } = await supabase
-                    .from('user_referral_stats_view')
-                    .select('*')
-                    .eq('user_id', userData.id)
-                    .single();
-                setReferralStats(stats || { invited_count: 0, earned_from_invites: 0 });
-
-                // 2. Get Referrals List
-                const { data: list } = await supabase
-                    .from('referrals')
-                    .select('created_at, status, users!referrals_invited_user_id_fkey(first_name, username)')
-                    .eq('inviter_id', userData.id)
-                    .order('created_at', { ascending: false })
-                    .limit(20);
-                setReferralList(list || []);
-            };
-            fetchReferralData();
-        }
-    }, [activeSection, userData]);
-
-    const handleCreatePromo = async (e) => {
-        e.preventDefault();
-        if (referralStats?.invited_count < 5) return;
-        setIsCreatingPromo(true);
-        try {
-            const { data, error } = await supabase.rpc('create_custom_promo', {
-                p_user_id: userData.id,
-                p_code: promoInput
-            });
-
-            if (data?.success) {
-                toast.success('Промокод создан!');
-                setReferralStats({ ...referralStats, my_promo_code: data.code });
-            } else {
-                toast.error(data?.error || 'Ошибка создания');
-            }
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setIsCreatingPromo(false);
-        }
-    };
-
-    const renderPartnershipView = () => (
-        <div className="space-y-6">
-            {/* Header Card */}
-            <div className="bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 rounded-[2.5rem] p-6 shadow-2xl shadow-purple-500/20 text-white relative overflow-hidden ring-1 ring-white/10">
-                <div className="absolute top-0 right-0 w-40 h-40 bg-white/20 rounded-full blur-[60px] translate-x-10 -translate-y-10" />
-                <div className="relative z-10">
-                    <div className="flex justify-between items-start mb-6">
-                        <div>
-                            <h3 className="font-black text-xl flex items-center gap-2 tracking-tight"><Users size={22} className="text-white" /> Пригласи и заработай</h3>
-                            <p className="text-white/80 text-xs font-medium mt-1">25 кредитов за друга + 50 за промокод</p>
-                        </div>
-                        <div className="bg-white/20 backdrop-blur-md rounded-2xl p-2.5 border border-white/10 shadow-lg"><Gift size={24} className="text-white" /></div>
-                    </div>
-
-                    {/* Stats Grid */}
-                    <div className="grid grid-cols-2 gap-3 mb-4">
-                        <div className="bg-black/20 rounded-xl p-3 border border-white/10">
-                            <div className="text-[10px] opacity-70 mb-1">Приглашено</div>
-                            <div className="text-xl font-black">{referralStats?.invited_count || 0}</div>
-                        </div>
-                        <div className="bg-black/20 rounded-xl p-3 border border-white/10">
-                            <div className="text-[10px] opacity-70 mb-1">Заработано</div>
-                            <div className="text-xl font-black flex items-center gap-1">
-                                {(referralStats?.earned_from_invites || 0) + (referralStats?.earned_from_promo || 0)} <Zap size={14} className="text-amber-400 fill-amber-400" />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="bg-black/30 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between gap-3 border border-white/10 shadow-inner">
-                        <div className="font-mono text-xs truncate text-white/90">t.me/Pixel_ai_bot?start=r-{userData?.id}</div>
-                        <button onClick={handleCopyReflink} className="bg-white text-indigo-600 p-2.5 rounded-xl flex-shrink-0 active:scale-95 transition-transform hover:bg-indigo-50 shadow-md">
-                            <Copy size={16} />
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-            {/* Custom Promo Code Section */}
-            <div className="bg-white/5 border border-white/5 p-5 rounded-[2rem] relative overflow-hidden">
-                <h3 className="font-bold text-white mb-2">Фирменный промокод</h3>
-                {referralStats?.my_promo_code ? (
-                    <div className="bg-indigo-500/20 border border-indigo-500/30 p-4 rounded-xl text-center">
-                        <div className="text-xs text-indigo-200 mb-1">Ваш активный код</div>
-                        <div className="text-2xl font-black text-white tracking-widest font-mono mb-2">{referralStats.my_promo_code}</div>
-                        <div className="text-[10px] text-white/50">Дает 10% скидку друзьям. Вы получаете 50 <Zap size={8} className="inline fill-amber-400 text-amber-400 text-amber-400" /></div>
-                    </div>
-                ) : (
-                    <div>
-                        {/* Benefits */}
-                        <div className="grid grid-cols-1 gap-2 mb-4">
-                            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
-                                <div className="bg-amber-500/20 p-2 rounded-lg text-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.2)]">
-                                    <Zap size={16} className="fill-amber-400" />
-                                </div>
-                                <div className="leading-tight">
-                                    <div className="font-bold text-xs text-white">50 кредитов вам</div>
-                                    <div className="text-[10px] text-white/50">С каждой активации кода</div>
-                                </div>
-                            </div>
-                            <div className="flex items-center gap-3 bg-white/5 p-3 rounded-xl border border-white/5">
-                                <div className="bg-green-500/20 p-2 rounded-lg text-green-400 shadow-[0_0_10px_rgba(74,222,128,0.2)]">
-                                    <Percent size={16} />
-                                </div>
-                                <div className="leading-tight">
-                                    <div className="font-bold text-xs text-white">Скидка 10% другу</div>
-                                    <div className="text-[10px] text-white/50">На покупку любого тарифа</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <p className="text-[10px] text-white/40 mb-3 text-center">
-                            Пригласите 5 друзей, чтобы создать промокод. <br />
-                            Прогресс: <span className={`font-bold ${referralStats?.invited_count >= 5 ? 'text-green-400' : 'text-amber-400'}`}>{referralStats?.invited_count || 0} / 5</span>
+                {/* 2. Info details block */}
+                <div>
+                    <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">{t('profile.personalData')}</p>
+                    <ListBlock>
+                        <ListRow label={t('profile.name')} value={displayName} />
+                        <ListRow label={t('profile.gender')} value={profileData.gender || t('profile.notSpecified')} onClick={() => openEdit('gender', t('profile.gender'), 'select', ['Мужской', 'Женский'])} />
+                        <ListRow label={t('profile.age')} value={profileData.age || t('profile.notSpecified')} onClick={() => openEdit('age', t('profile.age'), 'number')} />
+                        <ListRow label={t('profile.location')} value={profileData.location || t('profile.setCity')} onClick={() => openEdit('location', t('profile.location'))} />
+                        <ListRow label={t('profile.activity')} value={profileData.activity || t('profile.setActivity')} onClick={() => openEdit('activity', t('profile.activity'))} />
+                        <ListRow label={t('profile.interests')} value={profileData.interests || t('profile.setInterests')} onClick={() => openEdit('interests', t('profile.interests'))} isLast />
+                    </ListBlock>
+                    {progressPercent < 100 && (
+                        <p className="text-[13px] text-gray-500 leading-tight mt-2 ml-4 tracking-[-0.08px]">
+                            {t('profile.profileProgress').replace('{percent}', progressPercent.toString())}
                         </p>
+                    )}
+                </div>
 
-                        <form onSubmit={handleCreatePromo} className="flex gap-2">
-                            <input
-                                type="text"
-                                placeholder="МОЙ КОД"
-                                value={promoInput}
-                                onChange={e => setPromoInput(e.target.value.toUpperCase())}
-                                disabled={(referralStats?.invited_count || 0) < 5}
-                                className="bg-black/30 w-full rounded-xl px-4 py-3 text-sm font-bold text-white placeholder:text-white/20 border border-white/10 focus:border-indigo-500/50 outline-none disabled:opacity-50 tracking-wider uppercase"
-                                maxLength={15}
-                            />
-                            <button
-                                disabled={(referralStats?.invited_count || 0) < 5 || isCreatingPromo || !promoInput}
-                                className="bg-indigo-500 disabled:bg-white/10 disabled:text-white/30 text-white font-bold px-4 rounded-xl text-xs whitespace-nowrap shadow-lg shadow-indigo-500/20"
-                            >
-                                {isCreatingPromo ? '...' : 'Создать'}
-                            </button>
-                        </form>
-                    </div>
+                {/* 3. Pixel Style */}
+                <div>
+                    <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">{t('profile.pixelSettings')}</p>
+                    <ListBlock>
+                        <ListRow
+                            icon={<MessageCircle size={16} className="text-white" />}
+                            iconColor="bg-pink-500"
+                            label={t('profile.communicationStyle')}
+                            value={profileData.style || t('profile.notSpecified')}
+                            onClick={() => openEdit('style', t('profile.communicationStyle'), 'select', ['Дружелюбный', 'Официальный', 'Саркастичный', 'Милый'])}
+                        />
+                        <ListRow
+                            icon={<Languages size={16} className="text-white" />}
+                            iconColor="bg-teal-500"
+                            label={t('profile.responseLang')}
+                            value={profileData.pixelLang || 'Русский'}
+                            onClick={() => openEdit('pixelLang', t('profile.responseLang'), 'select', ['Русский', 'English', 'Español'])}
+                            isLast
+                        />
+                    </ListBlock>
+                </div>
+
+                {/* 4. Social & Privacy */}
+                <div>
+                    <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">{t('profile.socialPrivacy')}</p>
+                    <ListBlock>
+                        <ListRow
+                            icon={<Users size={16} className="text-white" />}
+                            iconColor="bg-blue-600"
+                            label={t('profile.referralDash')}
+                            value={t('profile.bonuses')}
+                            onClick={() => navigate('/referrals')}
+                        />
+                        <ListRow
+                            icon={<User size={16} className="text-white" />}
+                            iconColor="bg-blue-500"
+                            label={t('profile.publicProfile')}
+                            value={profileData.isPublic ? t('profile.on') : t('profile.off')}
+                            onClick={() => handleSaveField(!profileData.isPublic).then(() => setProfileData(p => ({ ...p, isPublic: !p.isPublic })))}
+                        />
+                        <ListRow
+                            icon={<Edit2 size={16} className="text-white" />}
+                            iconColor="bg-purple-500"
+                            label={t('profile.bio')}
+                            value={profileData.bio || t('profile.notSpecified')}
+                            onClick={() => openEdit('bio', t('profile.bio'))}
+                        />
+                        <ListRow
+                            icon={<Terminal size={16} className="text-white" />}
+                            iconColor="bg-gray-700"
+                            label="Developer API"
+                            value={t('profile.manageKeys') || 'Управление'}
+                            onClick={() => navigate('/developer')}
+                            isLast
+                        />
+                    </ListBlock>
+                    <p className="text-[12px] text-gray-500 mt-2 ml-4 px-2">
+                        {t('profile.privacyTip')}
+                    </p>
+                </div>
+
+                {/* 5. Transactions */}
+                <div>
+                    <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">{t('profile.recentTransactions')}</p>
+                    <ListBlock>
+                        <TransactionHistory />
+                    </ListBlock>
+                </div>
+
+                {/* 5. Extra */}
+                <ListBlock>
+                    <ListRow
+                        icon={<HelpCircle size={16} className="text-white" />}
+                        iconColor="bg-blue-500/50"
+                        label={t('profile.support')}
+                        onClick={() => window.open('https://t.me/ArtyKosh', '_blank')}
+                    />
+                    <ListRow
+                        icon={<FileText size={16} className="text-white" />}
+                        iconColor="bg-gray-500"
+                        label={t('profile.about')}
+                        onClick={() => navigate('/guide')}
+                        isLast
+                    />
+                </ListBlock>
+
+            </div>
+
+            {/* Edit Modal */}
+            <AnimatePresence>
+                {editModal.isOpen && (
+                    <EditModal
+                        isOpen={editModal.isOpen}
+                        onClose={() => setEditModal({ ...editModal, isOpen: false })}
+                        title={editModal.title}
+                        value={profileData[editModal.field]}
+                        type={editModal.type}
+                        options={editModal.options}
+                        onSave={handleSaveField}
+                    />
                 )}
-            </div>
-
-            {/* Referral List */}
-            {referralList.length > 0 && (
-                <div className="space-y-3">
-                    <h3 className="font-bold text-sm text-white/60 uppercase tracking-wider ml-1">Мои друзья</h3>
-                    <div className="space-y-2">
-                        {referralList.map((ref, i) => (
-                            <div key={i} className="bg-white/5 p-3 rounded-xl flex items-center justify-between border border-white/5">
-                                <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-500 to-purple-500 flex items-center justify-center text-[10px] font-bold">
-                                        {(ref.users?.username || 'U')[0].toUpperCase()}
-                                    </div>
-                                    <div>
-                                        <div className="text-xs font-bold text-white">{ref.users?.first_name || ref.users?.username || 'Пользователь'}</div>
-                                        <div className="text-[10px] text-white/40">{new Date(ref.created_at).toLocaleDateString()}</div>
-                                    </div>
-                                </div>
-                                <div className="bg-green-500/10 text-green-400 px-2 py-1 rounded-lg text-[10px] font-bold border border-green-500/20">
-                                    +25 CREDITS
-                                </div>
-                            </div>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            <h3 className="font-black text-xl px-2 text-white">Задания лояльности</h3>
-            <div className="space-y-3">
-                {[
-                    { id: 'sub_channel', title: 'Подпишись на канал', reward: 9, link: 'https://t.me/pixel_imagess', icon: <Volume2 size={18} className="text-blue-400" />, color: 'text-blue-400 bg-blue-500/10' },
-                    { id: 'join_chat', title: 'Вступай в чат', reward: 9, link: 'https://t.me/pixel_communityy', icon: <Users size={18} className="text-violet-400" />, color: 'text-violet-400 bg-violet-500/10' },
-                    { id: 'invite_friend_task', title: 'Поделиться ссылкой', reward: 5, action: 'copy', icon: <Share2 size={18} className="text-pink-400" />, color: 'text-pink-400 bg-pink-500/10' },
-                ].map((task) => {
-                    const isCompleted = completedTasks.includes(task.id);
-                    return (
-                        <div key={task.id} className={`bg-white/5 backdrop-blur-xl border border-white/5 p-4 rounded-[1.5rem] flex items-center justify-between transition-all ${isCompleted ? 'opacity-50 grayscale' : 'hover:bg-white/10'}`}>
-                            <div className="flex items-center gap-4">
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${task.color} border border-white/5 shadow-inner`}>
-                                    {isCompleted ? <Check size={20} /> : task.icon}
-                                </div>
-                                <div>
-                                    <div className="font-bold text-sm text-white">
-                                        {task.title}
-                                    </div>
-                                    {isCompleted && <span className="text-[10px] text-green-400 font-bold uppercase tracking-wider">Выполнено</span>}
-                                </div>
-                            </div>
-                            <button
-                                onClick={() => handleTaskComplete(task.id, task.reward, task.link, task.action)}
-                                disabled={isCompleted}
-                                className={`${isCompleted ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white hover:bg-white/20'} px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border border-white/5`}
-                            >
-                                {isCompleted ? 'Claimed' : `+${task.reward}`}
-                                {!isCompleted && <Zap size={10} className="text-amber-400 fill-amber-400" />}
-                            </button>
-                        </div>
-                    );
-                })}
-            </div>
+            </AnimatePresence>
         </div>
-    );
-
-    // 3. ACHIEVEMENTS VIEW (Premium Glassy)
-    const renderAchievementsView = () => (
-        <div className="space-y-6">
-            <h3 className="font-black text-2xl px-2 text-white">Достижения</h3>
-            <div className="grid grid-cols-2 gap-3">
-                {[
-                    { id: 'first_step', icon: Sparkles, color: 'from-blue-400 to-cyan-400', title: 'Первый шаг', desc: 'Сгенерируй 1 изображение', reward: 5, target: 1, current: totalCreations },
-                    { id: 'creator', icon: Image, color: 'from-violet-400 to-purple-400', title: 'Творец', desc: 'Сгенерируй 50 изображений', reward: 15, target: 50, current: totalCreations },
-                    { id: 'videographer', icon: Video, color: 'from-pink-400 to-rose-400', title: 'Режиссер', desc: 'Сгенерируй 10 видео', reward: 20, target: 10, current: Math.floor(totalCreations / 3) },
-                    { id: 'pro', icon: Zap, color: 'from-amber-400 to-orange-400', title: 'PRO User', desc: 'Купи любую подписку', reward: 50, target: 1, current: 0 },
-                    { id: 'social', icon: Users, color: 'from-emerald-400 to-teal-400', title: 'Душа компании', desc: 'Пригласи 5 друзей', reward: 25, target: 5, current: 1 },
-                    { id: 'night', icon: Moon, color: 'from-indigo-400 to-blue-600', title: 'Ночной житель', desc: 'Зайди в приложение ночью', reward: 10, target: 1, current: 1 },
-                    { id: 'rich', icon: Wallet, color: 'from-yellow-400 to-amber-600', title: 'Богач', desc: 'Накопи 1000 кредитов', reward: 30, target: 1000, current: 100 },
-                    { id: 'master', icon: Crown, color: 'from-red-500 to-rose-600', title: 'Легенда', desc: 'Достигни 10 уровня', reward: 100, target: 10, current: userLevel },
-                ].map((ach) => {
-                    const progress = Math.min((ach.current / ach.target) * 100, 100);
-                    const isUnlocked = progress >= 100;
-                    const Icon = ach.icon;
-
-                    return (
-                        <div key={ach.id} className={`relative p-5 rounded-[1.8rem] overflow-hidden border transition-all ${isUnlocked ? 'bg-[#151517] border-indigo-500/30 ring-1 ring-indigo-500/20' : 'bg-white/5 border-white/5 opacity-70 grayscale-[0.8]'}`}>
-                            <div className="absolute inset-0 bg-gradient-to-br from-white/5 to-transparent pointer-events-none" />
-                            {isUnlocked && <div className="absolute -right-5 -top-5 w-20 h-20 bg-indigo-500/20 blur-[40px] rounded-full" />}
-
-                            <div className="absolute bottom-0 left-0 h-1 bg-white/10 w-full" />
-                            <div className={`absolute bottom-0 left-0 h-1 bg-gradient-to-r ${ach.color} shadow-[0_0_10px_currentColor]`} style={{ width: `${progress}%` }} />
-
-                            <div className="flex flex-col h-full relative z-10">
-                                <div className="flex justify-between items-start mb-4">
-                                    <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${ach.color} flex items-center justify-center text-white shadow-lg`}> <Icon size={22} /> </div>
-                                    {isUnlocked ? (
-                                        <button className="bg-green-500 text-white text-[9px] font-black px-2 py-0.5 rounded-md shadow-lg shadow-green-500/20 animate-pulse">DONE</button>
-                                    ) : (
-                                        <span className="text-[10px] font-bold text-white/30 font-mono">{Math.floor(progress)}%</span>
-                                    )}
-                                </div>
-                                <h4 className="font-bold text-sm leading-tight mb-1 text-white">{ach.title}</h4>
-                                <p className="text-[10px] text-white/50 leading-snug mb-4 font-medium">{ach.desc}</p>
-                                <div className="mt-auto flex items-center gap-1.5 self-start bg-white/5 px-2 py-1 rounded-lg border border-white/5">
-                                    <span className="text-[10px] font-black text-white/80">+{ach.reward}</span>
-                                    <Zap size={10} className="fill-amber-400 text-amber-400" />
-                                </div>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-        </div>
-    );
-
-    // 4. SETTINGS VIEW (Premium Glassy)
-    const renderSettingsView = () => (
-        <div className="space-y-4">
-            <h3 className="font-black text-2xl px-2 text-white">Настройки</h3>
-            <button onClick={toggleLang} className="w-full bg-white/5 border border-white/5 backdrop-blur-xl p-5 rounded-[1.5rem] flex items-center justify-between group active:scale-98 transition-all">
-                <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-indigo-500/20 text-indigo-400 rounded-xl flex items-center justify-center border border-indigo-500/20"><Globe size={20} /></div>
-                    <span className="font-bold text-white text-sm">Language / Язык</span>
-                </div>
-                <span className="uppercase font-black text-white/50 text-xs bg-white/5 px-2 py-1 rounded-lg">{lang}</span>
-            </button>
-
-            <button onClick={handleToggleSound} className="w-full bg-white/5 border border-white/5 backdrop-blur-xl p-5 rounded-[1.5rem] flex items-center justify-between group active:scale-98 transition-all">
-                <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 bg-pink-500/20 text-pink-400 rounded-xl flex items-center justify-center border border-pink-500/20">{isSoundEnabled ? <Volume2 size={20} /> : <VolumeX size={20} />}</div>
-                    <span className="font-bold text-white text-sm">Звуковые эффекты</span>
-                </div>
-                <div className={`w-12 h-7 rounded-full relative transition-colors ${isSoundEnabled ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.4)]' : 'bg-white/10'}`}>
-                    <div className={`absolute top-1 w-5 h-5 bg-white rounded-full transition-all shadow-sm ${isSoundEnabled ? 'left-6' : 'left-1'}`} />
-                </div>
-            </button>
-        </div>
-    );
-
-    // 5. GENERATIONS VIEW (Premium Grid)
-    const renderGenerationsView = () => (
-        <div className="space-y-4">
-            <h3 className="font-black text-2xl px-2 text-white">Мои работы</h3>
-            <div className="grid grid-cols-2 gap-3">
-                {!userCreations ? (
-                    <div className="col-span-2 text-center py-10 opacity-50 text-white/50 font-mono text-xs">Загрузка...</div>
-                ) : userCreations.length === 0 ? (
-                    <div className="col-span-2 text-center py-20 opacity-50 text-white/50 flex flex-col items-center">
-                        <Image size={40} className="mb-4 opacity-50" />
-                        <p className="font-bold">Нет публичных работ</p>
-                        <p className="text-xs mt-2 max-w-[200px]">Сделайте свои генерации публичными в истории, чтобы они появились здесь</p>
-                    </div>
-                ) : (
-                    userCreations.map((item) => (
-                        <div key={item.id} className="relative aspect-square rounded-[1.2rem] overflow-hidden bg-white/5 border border-white/10 group shadow-md" onClick={() => navigate('/gallery')}>
-                            <img src={item.image_url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-60" />
-                            <div className="absolute bottom-2 left-2 flex items-center gap-1.5 bg-black/40 px-2 py-1 rounded-full backdrop-blur-md border border-white/10">
-                                <Heart size={12} className="text-white fill-white/50" />
-                                <span className="text-[10px] font-bold text-white">{item.likes_count || 0}</span>
-                            </div>
-                        </div>
-                    ))
-                )}
-            </div>
-        </div>
-    );
-
-    return (
-        <>
-            <AnimatePresence mode="wait">
-                {activeSection === 'main' ? (
-                    <motion.div
-                        key="main"
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: -20 }}
-                        className="space-y-8 pt-4 pb-24 bg-[#0f0f10] min-h-screen relative overflow-hidden text-white"
-                    >
-                        {/* Background Blobs */}
-                        <div className="fixed top-0 left-0 w-full h-96 bg-gradient-to-b from-indigo-900/10 to-transparent pointer-events-none" />
-                        <div className="fixed top-20 right-0 w-64 h-64 bg-purple-500/5 rounded-full blur-[80px] pointer-events-none" />
-
-                        {/* Header Profile Info */}
-                        <div className="flex items-center gap-5 px-4 relative z-10">
-                            <div className="relative">
-                                <div className="absolute -inset-1 bg-gradient-to-tr from-indigo-500 to-fuchsia-500 rounded-[2rem] blur opacity-60"></div>
-                                <div className="w-20 h-20 rounded-[2rem] bg-[#1a1a1c] flex items-center justify-center text-white text-3xl font-black shadow-2xl border border-white/10 relative z-10">
-                                    {displayName.charAt(0).toUpperCase()}
-                                </div>
-                            </div>
-                            <div>
-                                <h2 className="text-2xl font-black font-display tracking-tight text-white mb-0.5">{displayName}</h2>
-                                <p className="text-white/40 text-[11px] font-medium tracking-wide">@{username}</p>
-
-                                {/* Level Progress */}
-                                <div className="mt-3 w-full max-w-[140px]">
-                                    {(() => {
-                                        // Calc Level & XP
-                                        const xp = (totalCreations * 50) + (totalLikes * 10);
-                                        const level = Math.floor(xp / 500) + 1;
-                                        const progress = ((xp % 500) / 500) * 100;
-
-                                        let rank = 'Новичок';
-                                        if (level >= 5) rank = 'Создатель';
-                                        if (level >= 10) rank = 'Мастер';
-                                        if (level >= 20) rank = 'Легенда';
-
-                                        return (
-                                            <div>
-                                                <div className="flex justify-between items-center text-[9px] font-bold uppercase tracking-wider mb-1.5">
-                                                    <span className="text-indigo-400 drop-shadow-sm">{rank}</span>
-                                                    <span className="text-white/30">Lvl {level}</span>
-                                                </div>
-                                                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                                                    <motion.div
-                                                        initial={{ width: 0 }}
-                                                        animate={{ width: `${progress}%` }}
-                                                        className="h-full bg-gradient-to-r from-indigo-500 to-fuchsia-500 shadow-[0_0_10px_currentColor]"
-                                                    />
-                                                </div>
-                                            </div>
-                                        );
-                                    })()}
-                                </div>
-                            </div>
-                            <button className="ml-auto w-10 h-10 bg-white/5 border border-white/5 hover:bg-white/10 rounded-full flex items-center justify-center text-white/50 transition-colors" onClick={() => navigateTo('settings')}><Settings size={20} /></button>
-                        </div>
-
-                        {/* Quick Stats Grid */}
-                        <div className="grid grid-cols-2 gap-3 px-2">
-                            <div className="bg-[#151517] border border-white/10 p-5 rounded-[2rem] relative overflow-hidden shadow-lg">
-                                <div className="relative z-10">
-                                    <div className="text-[10px] text-white/40 font-bold uppercase mb-1 tracking-wider">Баланс</div>
-                                    <div className="text-3xl font-black text-white">{userStats?.current_balance || 0}</div>
-                                </div>
-                                <div className="absolute right-0 bottom-0 opacity-5 pointer-events-none"><Wallet size={70} className="text-white" /></div>
-                            </div>
-                            <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] shadow-lg backdrop-blur-sm">
-                                <div className="text-[10px] text-white/40 font-bold uppercase mb-1 tracking-wider">Всего лайков</div>
-                                <div className="text-3xl font-black text-white flex items-center gap-2">{totalLikes} <Heart size={20} className="text-pink-500 fill-pink-500 drop-shadow-lg" /></div>
-                            </div>
-                        </div>
-
-                        {/* --- MENU LIST (Premium Glassy Style) --- */}
-                        <div className="space-y-3 px-2">
-                            {(userData?.role === 'admin' || userData?.id === '13658f8b-3f48-4394-a320-dd8e2277d079' || window.location.hostname === 'localhost') && (
-                                <motion.button
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => navigate('/admin')}
-                                    className="w-full bg-red-500/10 backdrop-blur-md border border-red-500/20 p-4 rounded-2xl flex items-center justify-between group relative overflow-hidden"
-                                >
-                                    <div className="flex items-center gap-4 relative z-10">
-                                        <div className="w-10 h-10 rounded-xl bg-red-500 text-white flex items-center justify-center shadow-lg shadow-red-500/30">
-                                            <ShieldAlert size={20} />
-                                        </div>
-                                        <div className="text-left">
-                                            <div className="font-bold text-red-500 text-[15px]">Панель персонала</div>
-                                            <div className="text-[11px] text-red-400/80 font-medium">Доступ для администраторов</div>
-                                        </div>
-                                    </div>
-                                    <ChevronRight size={18} className="text-red-500/50" />
-                                </motion.button>
-                            )}
-
-                            {[
-                                {
-                                    id: 'account',
-                                    title: 'Аккаунт',
-                                    desc: 'Подписка и история',
-                                    icon: CreditCard,
-                                    color: 'text-indigo-400',
-                                    bg: 'bg-indigo-500/10',
-                                    border: 'border-indigo-500/10',
-                                    shadow: 'shadow-indigo-500/10'
-                                },
-                                {
-                                    id: 'partnership',
-                                    title: 'Партнёрство',
-                                    desc: 'Рефералы и задания',
-                                    icon: Users,
-                                    color: 'text-purple-400',
-                                    bg: 'bg-purple-500/10',
-                                    border: 'border-purple-500/10',
-                                    shadow: 'shadow-purple-500/10'
-                                },
-                                {
-                                    id: 'achievements',
-                                    title: 'Достижения',
-                                    desc: 'Награды и значки',
-                                    icon: Trophy,
-                                    color: 'text-amber-400',
-                                    bg: 'bg-amber-500/10',
-                                    border: 'border-amber-500/10',
-                                    shadow: 'shadow-amber-500/10'
-                                },
-                                {
-                                    id: 'generations',
-                                    title: 'Мои работы',
-                                    desc: 'Публичные генерации',
-                                    icon: Image,
-                                    color: 'text-pink-400',
-                                    bg: 'bg-pink-500/10',
-                                    border: 'border-pink-500/10',
-                                    shadow: 'shadow-pink-500/10'
-                                },
-                                {
-                                    id: 'settings',
-                                    title: 'Настройки',
-                                    desc: 'Язык и уведомления',
-                                    icon: Settings,
-                                    color: 'text-white/50',
-                                    bg: 'bg-white/5',
-                                    border: 'border-white/5',
-                                    shadow: 'shadow-white/5'
-                                }
-                            ].map((item, i) => (
-                                <motion.button
-                                    key={item.id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: i * 0.05 }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => navigateTo(item.id)}
-                                    className="w-full relative p-4 rounded-[1.5rem] flex items-center justify-between group overflow-hidden bg-white/5 backdrop-blur-md border border-white/5 hover:bg-white/10 transition-colors"
-                                >
-                                    <div className="flex items-center gap-4 relative z-10">
-                                        <div className={`w-12 h-12 rounded-2xl ${item.bg} flex items-center justify-center border ${item.border} ${item.shadow} shadow-lg transition-transform group-hover:scale-105 duration-300`}>
-                                            <item.icon size={22} className={`${item.color} drop-shadow-sm`} />
-                                        </div>
-                                        <div className="text-left">
-                                            <div className="font-bold text-[15px] text-white leading-tight mb-0.5 group-hover:text-indigo-400 transition-colors">
-                                                {item.title}
-                                            </div>
-                                            <div className="text-[11px] font-medium text-white/40">
-                                                {item.desc}
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center border border-white/5 group-hover:bg-white/10 transition-colors">
-                                        <ChevronRight size={16} className="text-white/30" />
-                                    </div>
-                                </motion.button>
-                            ))}
-                        </div>
-                    </motion.div>
-                ) : (
-                    <motion.div
-                        key={activeSection}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        className="pt-4 pb-20 px-2"
-                    >
-                        <div className="flex items-center gap-4 mb-6 sticky top-0 bg-[#0f0f10]/80 backdrop-blur-xl -mx-2 px-4 py-3 z-30" onClick={handleBack}>
-                            <button className="w-10 h-10 bg-white/5 border border-white/5 rounded-full flex items-center justify-center shadow-sm text-white/70 hover:bg-white/10 transition-colors">
-                                <ChevronLeft size={20} />
-                            </button>
-                            <h2 className="font-black text-xl capitalize text-white">
-                                {activeSection === 'account' ? 'Аккаунт' :
-                                    activeSection === 'partnership' ? 'Партнёрство' :
-                                        activeSection === 'achievements' ? 'Достижения' :
-                                            activeSection === 'generations' ? 'Мои работы' :
-                                                activeSection === 'settings' ? 'Настройки' : activeSection}
-                            </h2>
-                        </div>
-
-                        {activeSection === 'account' && renderAccountView()}
-                        {activeSection === 'partnership' && renderPartnershipView()}
-                        {activeSection === 'achievements' && renderAchievementsView()}
-                        {activeSection === 'generations' && renderGenerationsView()}
-                        {activeSection === 'settings' && renderSettingsView()}
-                    </motion.div>
-                )}
-            </AnimatePresence >
-            <ThemeSettings isOpen={isThemeSettingsOpen} onClose={() => setIsThemeSettingsOpen(false)} />
-        </>
     );
 };
 
 export default ProfileView;
+

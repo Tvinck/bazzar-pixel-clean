@@ -27,3 +27,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Server & Bot logs
+bot.log
+server.log
+
+# Test artifacts
+test-results/
+playwright-report/
+.testsprite/
+
+# Misc
+.gemini/

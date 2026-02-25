@@ -10,6 +10,8 @@ import {
     Heart,
     Trophy
 } from 'lucide-react';
+import AnimatedIcon from './AnimatedIcon';
+import { HistoryGraphic } from './GuideGraphics';
 
 const EmptyState = ({
     icon: Icon,
@@ -30,26 +32,42 @@ const EmptyState = ({
                 initial={{ scale: 0.8 }}
                 animate={{ scale: 1 }}
                 transition={{ delay: 0.1 }}
-                className="mb-6"
+                className="mb-6 relative"
             >
+                {/* Subtle background glow */}
+                <motion.div
+                    className="absolute inset-0 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-2xl"
+                    animate={{ scale: [1, 1.2, 1], opacity: [0.5, 0.8, 0.5] }}
+                    transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                />
+
                 {illustration ? (
-                    <div className="w-48 h-48 relative">
+                    <motion.div
+                        className="w-48 h-48 relative z-10"
+                        animate={{ y: [-5, 5, -5] }}
+                        transition={{ repeat: Infinity, duration: 5, ease: "easeInOut" }}
+                    >
                         {illustration}
-                    </div>
+                    </motion.div>
                 ) : (
-                    <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-3xl flex items-center justify-center">
-                        <Icon size={40} className="text-slate-400 dark:text-slate-600" />
-                    </div>
+                    <motion.div
+                        className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-50 dark:from-slate-800 dark:to-slate-900 rounded-3xl flex items-center justify-center relative z-10 shadow-sm border border-slate-200/50 dark:border-slate-700/50"
+                        animate={{ y: [-5, 5, -5] }}
+                        transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+                        whileHover={{ scale: 1.05, rotate: [0, -5, 5, 0] }}
+                    >
+                        <AnimatedIcon icon={Icon} size={40} className="text-slate-400 dark:text-slate-500" delay={0.2} />
+                    </motion.div>
                 )}
             </motion.div>
 
             {/* Title */}
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 relative z-10">
                 {title}
             </h3>
 
             {/* Description */}
-            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+            <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6 relative z-10">
                 {description}
             </p>
 
@@ -59,7 +77,7 @@ const EmptyState = ({
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={action}
-                    className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
+                    className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all relative z-10"
                 >
                     {actionLabel}
                 </motion.button>
@@ -72,10 +90,11 @@ const EmptyState = ({
 export const EmptyHistory = ({ onCreateClick }) => (
     <EmptyState
         icon={History}
+        illustration={<HistoryGraphic />}
         title="История пуста"
         description="Вы еще не создали ни одного изображения. Начните творить прямо сейчас!"
         action={onCreateClick}
-        actionLabel="Создать первое изображение"
+        actionLabel="Создать первый шедевр"
     />
 );
 

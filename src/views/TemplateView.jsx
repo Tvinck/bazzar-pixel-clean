@@ -1,153 +1,168 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import { ChevronLeft, Upload, Zap, Film, Check, Trash2, ChevronRight, ChevronDown } from 'lucide-react';
-import { useLanguage } from '../context/LanguageContext';
-import { useSound } from '../context/SoundContext';
-import { AnimatedButton } from '../components/ui/AnimatedButtons';
+import { Upload, Zap, Image as ImageIcon, Sparkles, X, ChevronRight, Settings2, Film, LayoutGrid, Edit3 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { useToast } from '../context/ToastContext';
-import { aiService } from '../ai-service';
+import { useSound } from '../context/SoundContext';
+import { aiService } from '../ai-client';
 import galleryAPI from '../lib/galleryAPI';
 import templatesData from '../data/templates';
-import { MODEL_CATALOG } from '../config/models';
-import GenerationLoader from '../components/GenerationLoader';
-import GenerationResult from '../components/GenerationResult';
 import InsufficientCreditsModal from '../components/InsufficientCreditsModal';
 
-// Templates are now imported from centralized data file
-// Prompts are hidden from users - only used for generation
-const HIDDEN_TEMPLATE_FIELDS = ['generation_prompt', 'prompt', 'configuration'];
+// Import Dynamic Models & Pricing
+import { MODEL_FAMILIES, calculateModelCost, KIE_MODELS_FLAT } from '../kie-models';
 
-const AVAILABLE_MODELS = [
-    { id: 'nano_banana', name: '🍌 Nano Banana', desc: 'Быстро (Flux Flex)', type: 'image', credits: MODEL_CATALOG['nano_banana']?.cost || 10 },
-    { id: 'nano_banana_pro', name: '🍌 Nano Banana PRO', desc: 'Качество (Flux Pro)', type: 'image', credits: MODEL_CATALOG['nano_banana_pro']?.cost || 20 },
-    { id: 'grok_high', name: '🤖 Grok Quality', desc: 'Для обработки фото', type: 'image', credits: 25 },
-    { id: 'flux_pro', name: '💠 Flux 1.1 Pro', desc: 'Top Tier', type: 'image', credits: MODEL_CATALOG['flux_pro']?.cost || 10 },
-    { id: 'flux_flex', name: '💠 Flux Flex', desc: 'Balanced', type: 'image', credits: MODEL_CATALOG['flux_flex']?.cost || 10 },
-    { id: 'kling_motion_control', name: '🎬 Kling Motion', desc: 'Image to Video', type: 'video', credits: MODEL_CATALOG['kling_motion_control']?.cost || 70 },
-    { id: 'grok-imagine/image-to-video', name: '🤖 Grok Video', desc: 'Оживить фото', type: 'video', credits: 15 },
-    { id: 'wan_2_6_image', name: '🌊 Wan 2.6', desc: 'Alibaba AI', type: 'video', credits: MODEL_CATALOG['wan_2_6_image']?.cost || 50 },
-    { id: 'hailuo_2_3_image_pro', name: '🐚 Hailuo 2.1', desc: 'High Quality', type: 'video', credits: MODEL_CATALOG['hailuo_2_3_image_pro']?.cost || 50 }
-];
+// Typewriter Component
+const TypewriterText = ({ text, speed = 10, startDelay = 500 }) => {
+    const [displayedText, setDisplayedText] = useState('');
 
-/**
- * Представление шаблона (TemplateView)
- * 
- * Этот компонент отвечает за весь процесс генерации на основе шаблона:
- * 1. Загрузка данных шаблона (из БД или статического списка).
- * 2. Интерфейс загрузки файлов пользователем (фото/видео).
- * 3. Форма для ввода дополнительных параметров (динамические поля).
- * 4. Логика оплаты (списание кредитов через UserContext).
- * 5. Сборка финального промта (на английском) с подстановкой переменных.
- * 6. Отправка запроса в AI Service.
- */
+    useEffect(() => {
+        setDisplayedText('');
+        let currentIndex = 0;
+
+        const timeout = setTimeout(() => {
+            const interval = setInterval(() => {
+                if (currentIndex < text.length) {
+                    setDisplayedText(prev => prev + text[currentIndex]);
+                    currentIndex++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, speed);
+
+            return () => clearInterval(interval);
+        }, startDelay);
+
+        return () => clearTimeout(timeout);
+    }, [text, speed, startDelay]);
+
+    return <span>{displayedText}</span>;
+};
+
 const TemplateView = ({ onOpenPayment }) => {
     const { id } = useParams();
     const navigate = useNavigate();
-
     const location = useLocation();
-    const { t } = useLanguage();
-    const { playClick, playSuccess } = useSound();
-    const {
-        user,
-        stats,
-        updateStats,
-        refreshUser,
-        pay,
-        addBalance,
-        startGlobalGen,
-        setGlobalGenResult,
-        closeGlobalGen
-    } = useUser();
+    const { user, stats, updateStats, startGlobalGen, closeGlobalGen, setGlobalGenResult } = useUser();
     const toaster = useToast();
+    const { playClick, playSuccess } = useSound();
 
     const [template, setTemplate] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isProcessing, setIsProcessing] = useState(false);
 
-    // Multi-file support
+    // File State
     const [selectedFiles, setSelectedFiles] = useState([]);
     const [previewUrls, setPreviewUrls] = useState([]);
+
+    // UI State
     const [showCreditModal, setShowCreditModal] = useState(false);
-
-    // Dynamic fields support
-    const [formValues, setFormValues] = useState({});
-    const [generationsCount, setGenerationsCount] = useState(1);
     const [selectedModel, setSelectedModel] = useState(null);
-    const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+    const [aspectRatio, setAspectRatio] = useState('9:16');
+    const [activeTab, setActiveTab] = useState('templates');
+    const [customPrompt, setCustomPrompt] = useState('');
 
+    // Load Template
     useEffect(() => {
-        const loadTemplate = async () => {
+        const load = async () => {
             setIsLoading(true);
-
-            // 1. Try static list
-            let found = templatesData.find(t => t.id === id);
-
-            // 2. Try location state
-            if (!found && location.state?.template) {
-                found = location.state.template;
-            }
-
-            // 3. Fetch from API
-            if (!found) {
-                found = await galleryAPI.getTemplate(id);
-            }
+            let found = await galleryAPI.getTemplate(id);
+            if (!found && location.state?.template) found = location.state.template;
+            if (!found) found = templatesData.find(t => t.id === id);
 
             if (found) {
-                setTemplate(found);
+                // Normalize
+                const norm = {
+                    ...found,
+                    requiredFilesCount: found.requiredFilesCount || 1,
+                    mediaType: found.mediaType || 'image',
+                    model_id: found.model_id || 'nano_banana'
+                };
+                setTemplate(norm);
 
-                // Initialize form
-                const reqCount = found.requiredFilesCount || 1;
-                setSelectedFiles(new Array(reqCount).fill(null));
-                setPreviewUrls(new Array(reqCount).fill(null));
-                setFormValues({});
-                setGenerationsCount(1);
-                // Default model logic:
-                // 1. Use template's model_id if specified and exists in AVAILABLE_MODELS
-                // 2. Otherwise, pick first model matching template type
-                let defaultModel = found.model_id;
+                const initialsFiles = new Array(norm.requiredFilesCount).fill(null);
+                const initialsUrls = new Array(norm.requiredFilesCount).fill(null);
 
-                // Validate model exists in AVAILABLE_MODELS
-                const modelExists = AVAILABLE_MODELS.find(m => m.id === defaultModel);
-
-                if (!modelExists) {
-                    // Pick first model matching template type
-                    const templateType = found.mediaType === 'video' ? 'video' : 'image';
-                    const firstMatchingModel = AVAILABLE_MODELS.find(m => m.type === templateType);
-                    defaultModel = firstMatchingModel?.id || AVAILABLE_MODELS[0].id;
-
-                    console.warn(`Template ${found.id} model_id "${found.model_id}" not found in AVAILABLE_MODELS. Using ${defaultModel} instead.`);
+                if (location.state?.initialFile) {
+                    initialsFiles[0] = location.state.initialFile;
+                    initialsUrls[0] = URL.createObjectURL(location.state.initialFile);
                 }
 
-                setSelectedModel(defaultModel);
+                setSelectedFiles(initialsFiles);
+                setPreviewUrls(initialsUrls);
+
+                setSelectedModel(norm.model_id);
+                // Default Aspect Ratio
+                if (norm.configuration?.aspect_ratio) setAspectRatio(norm.configuration.aspect_ratio);
+                setCustomPrompt(norm.generation_prompt || norm.prompt || norm.description || '');
             }
             setIsLoading(false);
         };
-
-        loadTemplate();
-
-        return () => {
-            // Cleanup
-            previewUrls.forEach(url => { if (url) URL.revokeObjectURL(url); });
-        };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+        load();
+        return () => previewUrls.forEach(url => url && URL.revokeObjectURL(url));
     }, [id]);
 
-    if (isLoading) {
-        return (
-            <div className="min-h-screen bg-slate-50 dark:bg-[#09090b] flex items-center justify-center">
-                <div className="w-8 h-8 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
-            </div>
-        );
-    }
+    const similarTemplates = useMemo(() => {
+        if (!template) return [];
+        let similar = templatesData.filter(t => t.category === template.category && t.id !== template.id);
 
-    if (!template) {
-        return <div className="min-h-screen flex items-center justify-center text-slate-500">Template not found</div>;
-    }
+        // Fallback if not enough similar templates in the exact category
+        if (similar.length < 5) {
+            const others = templatesData.filter(t => t.id !== template.id && t.category !== template.category);
+            similar = [...similar, ...others];
+        }
 
-    const requiredFilesCount = template.requiredFilesCount || 1;
-    const fields = template.fields || [];
+        return similar.slice(0, 15);
+    }, [template]);
+
+    // Compatible Models Computation
+    const compatibleModels = useMemo(() => {
+        if (!template) return [];
+        const isVideo = template.mediaType === 'video' || template.category === 'video' || template.category === 'dances';
+
+        if (isVideo) {
+            return MODEL_FAMILIES.video.models.map(m => ({
+                id: m.id,
+                name: m.name,
+                label: m.description, // 'Video Generation' -> m.description
+                cost: m.base_cost,
+                icon: <Film size={18} />
+            }));
+        } else {
+            // Photo Models: Auto-detect from families
+            const photoFamilies = ['google', 'flux', 'seedream', 'ideogram', 'z_image'];
+            let models = [];
+            photoFamilies.forEach(famId => {
+                if (MODEL_FAMILIES[famId]) {
+                    models = [...models, ...MODEL_FAMILIES[famId].models];
+                }
+            });
+
+            // Filter valid text-to-image or image-to-image models
+            return models
+                .filter(m => m.capabilities.includes('text-to-image') || m.capabilities.includes('image-to-image'))
+                .map(m => ({
+                    id: m.id,
+                    name: m.name,
+                    label: m.description,
+                    cost: m.base_cost,
+                    icon: m.id.includes('flux') ? <Sparkles size={18} /> : <Zap size={18} />
+                }));
+        }
+    }, [template]);
+
+    // Current Cost Calculation
+    const currentCost = useMemo(() => {
+        if (!selectedModel) return 0;
+        // Use the centralized calculator for accurate dynamic pricing
+        return calculateModelCost(selectedModel, {
+            resolution: '1K', // Default context, could be dynamic
+            quality: '720p',
+            duration: '5s'
+        });
+    }, [selectedModel]);
+
 
     const handleFileChange = (e, index) => {
         const file = e.target.files[0];
@@ -164,330 +179,323 @@ const TemplateView = ({ onOpenPayment }) => {
         }
     };
 
-    const handleRemoveFile = (index) => {
-        playClick();
-        const newFiles = [...selectedFiles];
-        newFiles[index] = null;
-        setSelectedFiles(newFiles);
-
-        const newUrls = [...previewUrls];
-        if (newUrls[index]) URL.revokeObjectURL(newUrls[index]);
-        newUrls[index] = null;
-        setPreviewUrls(newUrls);
-    };
-
-    const handleFieldChange = (id, value) => {
-        setFormValues(prev => ({ ...prev, [id]: value }));
-    };
-
     const handleGenerate = async () => {
-        const currentModelId = selectedModel || template.model_id || (template.mediaType === 'video' ? 'kling_motion_control' : 'nano_banana');
-        const cost = AVAILABLE_MODELS.find(m => m.id === currentModelId)?.credits || 15;
+        const currentModelId = selectedModel || template.model_id;
+        const validFiles = selectedFiles.filter(Boolean).length;
 
-        // 1. Check Credits Immediately
-        const currentBalance = stats?.current_balance || 0;
-        if (currentBalance < cost) {
+        if ((stats?.current_balance || 0) < currentCost) {
             setShowCreditModal(true);
             return;
         }
 
-        const validFiles = selectedFiles.filter(f => f).length;
-        if (validFiles < requiredFilesCount) return;
-
-        playClick();
-
-        // Show warning for video generation
-        const isVideoTemplate = template.mediaType === 'video';
-
-        playSuccess();
-        setIsProcessing(true);
-
-        // Trigger GLOBAL LOADER
-        startGlobalGen(
-            isVideoTemplate ? 'video' : 'image',
-            isVideoTemplate ? 120 : 15
-        );
-
-        // Optimistic Deduction for UI immediate feedback
-        if (stats) {
-            updateStats({ current_balance: stats.current_balance - cost });
+        if (validFiles < (template.requiredFilesCount || 1)) {
+            toaster.error('Пожалуйста, загрузите фото');
+            return;
         }
 
+        playClick();
+        playSuccess();
+        setIsProcessing(true);
+        const isVideo = template.category === 'video' || currentModelId.includes('video') || currentModelId.includes('kling');
+        const estTime = isVideo ? 120 : 15;
+        startGlobalGen(isVideo ? 'video' : 'image', estTime);
+
+        // Optimistic Deduction
+        if (stats) updateStats({ current_balance: stats.current_balance - currentCost });
+
         try {
-            // 2. Prepare Prompt
-            let finalPrompt = template.prompt || template.generation_prompt || template.title;
-
-            // Replace variables in prompt (e.g. ${anim_prompt})
-            if (template.fields) {
-                Object.entries(formValues).forEach(([key, value]) => {
-                    finalPrompt = finalPrompt.replace(`\${${key}}`, value);
-                });
-            }
-
-            // 3. Prepare options for AI Service
-            // Convert files to Base64 with compression to prevent 413 errors
+            // Encode files
             const validFilesList = selectedFiles.filter(Boolean);
             const sourceFilesBase64 = await Promise.all(validFilesList.map(file => {
                 return new Promise((resolve, reject) => {
                     const img = new Image();
                     const url = URL.createObjectURL(file);
                     img.src = url;
-
                     img.onload = () => {
                         const canvas = document.createElement('canvas');
-                        let width = img.width;
-                        let height = img.height;
-                        const MAX_SIZE = 1280; // Allow slightly larger max
-                        const MIN_SIZE = 340; // Reverted to 340 per user request
-
-                        // 1. Upscale if too small
-                        if (width < MIN_SIZE || height < MIN_SIZE) {
-                            const scale = Math.max(MIN_SIZE / width, MIN_SIZE / height);
-                            width = Math.round(width * scale);
-                            height = Math.round(height * scale);
-                        }
-
-                        // 2. Downscale if too big
-                        if (width > height) {
-                            if (width > MAX_SIZE) {
-                                height *= MAX_SIZE / width;
-                                width = MAX_SIZE;
-                            }
-                        } else {
-                            if (height > MAX_SIZE) {
-                                width *= MAX_SIZE / height;
-                                height = MAX_SIZE;
-                            }
-                        }
-
-                        // Round for canvas
-                        width = Math.round(width);
-                        height = Math.round(height);
-
-                        canvas.width = width;
-                        canvas.height = height;
+                        let width = img.width, height = img.height;
+                        const MAX_SIZE = 1200;
+                        if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } }
+                        else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
+                        canvas.width = Math.round(width);
+                        canvas.height = Math.round(height);
                         const ctx = canvas.getContext('2d');
-                        ctx.drawImage(img, 0, 0, width, height);
-
-                        // Clean up
+                        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         URL.revokeObjectURL(url);
-
-                        // Get base64 (jpeg 0.8 quality)
-                        const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
-                        resolve(dataUrl.split(',')[1]);
+                        resolve(canvas.toDataURL('image/jpeg', 0.8).split(',')[1]);
                     };
-                    img.onerror = (e) => {
-                        URL.revokeObjectURL(url);
-                        reject(e);
-                    };
+                    img.onerror = () => { URL.revokeObjectURL(url); reject(); };
                 });
             }));
 
-            const generationOptions = {
+            const finalPrompt = customPrompt.trim() !== '' ? customPrompt : (template.generation_prompt || template.prompt);
+            const options = {
                 userId: user?.id,
-                ...template.configuration,
-                source_files: sourceFilesBase64
+                source_files: sourceFilesBase64,
+                template_id: template.id,
+                aspect_ratio: aspectRatio,
+                ...template.configuration // Merge defaults
             };
+            // Force override if user selected
+            options.aspect_ratio = aspectRatio;
 
-            const currentModel = selectedModel || template.model_id || 'nano_banana';
-            if (currentModel === 'kling_motion_control' && template.src && template.mediaType === 'video') {
-                let videoSrc = template.src;
-                // If relative path, make it absolute so server/Kie can download it
-                if (videoSrc.startsWith('/')) {
-                    videoSrc = window.location.origin + videoSrc;
-                }
-                generationOptions.video_files = [videoSrc];
-            }
+            const result = await aiService.generateImageAsync(finalPrompt, currentModelId, options);
 
-            // 4. Call AI Service
-            const result = await aiService.generateImageAsync(
-                finalPrompt,
-                selectedModel || template.model_id || 'nano_banana',
-                generationOptions
-            );
             if (result.success) {
-                console.log('✅ Generation flow complete.');
                 if (result.newBalance !== undefined) updateStats({ current_balance: result.newBalance });
 
-                if (isVideoTemplate) {
+                if (result.status === 'queued') {
+                    // Async Job Started
                     closeGlobalGen();
-                    toaster.success('Видео генерируется! Результат придет в бот.');
-                    navigate('/history');
+                    toaster.success('Генерация началась 🚀', {
+                        description: 'Мы пришлем результат в бот, когда всё будет готово.',
+                        duration: 5000
+                    });
+                    playSuccess();
                 } else {
-                    // Show GLOBAL RESULT
                     setGlobalGenResult({
-                        url: result.imageUrl,
+                        imageUrl: result.imageUrl,
                         id: result.id || ('gen_' + Date.now()),
                         prompt: finalPrompt
                     });
+                    playSuccess();
                 }
             } else {
-                throw new Error(result.error || 'Generation failed');
+                throw new Error(result.error || 'Ошибка');
             }
 
-        } catch (error) {
-            console.error('Generation Error:', error);
+        } catch (e) {
+            console.error(e);
+            toaster.error('Ошибка генерации: ' + e.message);
             closeGlobalGen();
-            refreshUser(); // Sync balance back
-            const errMsg = error.message || '';
-
-            if (errMsg.includes('Insufficient') || errMsg.includes('Payment Required') || errMsg.includes('402')) {
-                toaster.error('Not enough credits! Please top up.');
-                navigate('/profile');
-            } else {
-                toaster.error('Generation failed. Please try again.');
-            }
         } finally {
             setIsProcessing(false);
         }
     };
 
-    const isFilesReady = selectedFiles.filter(f => f).length >= requiredFilesCount;
-    const isReady = isFilesReady;
+    if (isLoading || !template) return <div className="min-h-screen bg-[#1c1c1e] flex items-center justify-center text-white"><div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>;
 
-    const currentModelId = selectedModel || template.model_id || (template.mediaType === 'video' ? 'kling_motion_control' : 'nano_banana');
-    const cost = AVAILABLE_MODELS.find(m => m.id === currentModelId)?.credits || 15;
+    const isReady = selectedFiles.filter(Boolean).length >= (template.requiredFilesCount || 1);
 
     return (
-        <motion.div
-            initial={{ opacity: 0, x: 50 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -50 }}
-            className="min-h-screen bg-[#0f0f10] text-white pb-safe flex flex-col relative overflow-hidden"
-        >
-            {/* Background Blobs (Optional for depth) */}
-            <div className="fixed top-0 left-0 w-full h-96 bg-gradient-to-b from-indigo-900/20 to-transparent pointer-events-none" />
-
-            {/* Header (Glassy) */}
-            <div className="px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] flex items-center justify-between sticky top-0 bg-[#0f0f10]/80 backdrop-blur-xl z-50 border-b border-white/5">
-                <div className="w-10" />
-                <div className="font-black text-sm uppercase tracking-widest text-white/90 pr-10">{template.title}</div>
-                <div />
+        <div className="min-h-screen bg-[#1c1c1e] text-white flex flex-col font-sans md:max-w-3xl md:mx-auto">
+            {/* --- HEADER (No Back Button) --- */}
+            <div className="flex items-center justify-between px-4 py-3 bg-[#1c1c1e] sticky top-0 z-30 pt-[calc(env(safe-area-inset-top)+10px)]">
+                <div className="w-8" />
+                <h1 className="text-[17px] font-semibold text-center absolute left-1/2 -translate-x-1/2">Создать</h1>
+                <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full ml-auto">
+                    <Zap size={14} className="fill-white text-white" />
+                    <span className="text-[13px] font-semibold">{stats?.current_balance || 0}</span>
+                </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto px-6 pb-40 z-10 relative">
-                {/* Preview */}
-                <div className="aspect-[9/16] w-full max-w-[260px] mx-auto rounded-[2rem] overflow-hidden shadow-2xl mb-10 bg-black relative ring-1 ring-white/10 mt-6 group">
-                    {template.mediaType === 'image' ? (
-                        <img src={template.src} className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-700" alt={template.title} />
-                    ) : (
-                        <video src={template.src} autoPlay loop muted playsInline className="w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity duration-700" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none" />
-                </div>
+            <div className="flex-1 overflow-y-auto pb-40 px-4 pt-2 space-y-6">
 
-                {/* Content */}
-                <div className="space-y-8 max-w-sm mx-auto">
+                {/* --- UPLOAD --- */}
+                <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+                    {Array.from({ length: template.requiredFilesCount }).map((_, i) => (
+                        <div key={i} className="relative flex-shrink-0 w-24 h-24">
+                            <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, i)} className="absolute inset-0 z-20 opacity-0 cursor-pointer w-full h-full" />
 
-                    {/* Model Selection Logic */}
-                    {!template.lockModel && template.category !== 'dances' && (
-                        <div className="relative mb-6 z-30">
-                            <h3 className="text-xs font-bold text-white/50 mb-3 uppercase tracking-wide ml-1">{t('model.label') || 'Модель генерации'}</h3>
-                            <button onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)} className="w-full flex items-center justify-between p-3.5 bg-white/5 border border-white/10 rounded-[1.2rem] hover:bg-white/10 transition-colors shadow-lg shadow-black/5 backdrop-blur-sm">
-                                <span className="font-bold text-sm tracking-wide">{AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name || 'Выберите модель'}</span>
-                                <ChevronDown size={18} className={`text-white/50 transition-transform ${isModelDropdownOpen ? 'rotate-180' : ''}`} />
-                            </button>
+                            {previewUrls[i] ? (
+                                <div className="w-full h-full rounded-[16px] overflow-hidden bg-[#2c2c2e] relative border border-white/10 shadow-lg group cursor-pointer">
+                                    <img src={previewUrls[i]} alt="Preview" className="w-full h-full object-cover group-hover:opacity-60 transition-opacity duration-300" />
 
-                            {isModelDropdownOpen && (
-                                <div className="absolute top-full left-0 right-0 mt-3 bg-[#151517]/95 border border-white/10 rounded-2xl shadow-2xl z-50 overflow-hidden max-h-60 overflow-y-auto ring-1 ring-black/50 backdrop-blur-xl">
-                                    {AVAILABLE_MODELS.filter(m => {
-                                        if (template.category === 'photo') return m.type === 'image';
-                                        if (template.category === 'video') return m.type === 'video';
-                                        if (template.category === 'dances') return false;
-                                        return true;
-                                    }).map(m => (
-                                        <button key={m.id} onClick={() => { setSelectedModel(m.id); setIsModelDropdownOpen(false); playClick(); }} className="w-full text-left p-3.5 hover:bg-white/10 flex justify-between items-center bg-transparent border-b border-white/5 last:border-0">
-                                            <div>
-                                                <div className="font-bold text-xs uppercase tracking-wide text-white/90">{m.name}</div>
-                                                <div className="text-[10px] text-white/40 mt-0.5">{m.desc}</div>
-                                            </div>
-                                            <span className="text-[10px] font-bold text-white/30 bg-white/5 px-2 py-1 rounded-lg border border-white/5">{m.credits} CR</span>
-                                        </button>
-                                    ))}
+                                    {/* Edit Overlay */}
+                                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                        <div className="bg-black/50 p-2 rounded-full backdrop-blur-sm">
+                                            <Edit3 size={20} className="text-white" />
+                                        </div>
+                                    </div>
+
+                                    <button
+                                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleFileChange({ target: { files: [] } }, i); }}
+                                        className="absolute top-1.5 right-1.5 bg-black/60 p-1.5 rounded-full z-30 pointer-events-auto hover:bg-black transition-colors"
+                                    >
+                                        <X size={12} strokeWidth={3} className="text-white" />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="w-full h-full bg-[#3390ec]/10 rounded-[16px] flex flex-col items-center justify-center gap-1.5 border-2 border-dashed border-[#3390ec]/30 active:scale-95 transition-transform hover:bg-[#3390ec]/15">
+                                    <Upload size={20} className="text-[#3390ec]" strokeWidth={2.5} />
+                                    <span className="text-[#3390ec] text-[10px] font-bold uppercase tracking-widest text-center leading-none">Фото {i + 1}</span>
                                 </div>
                             )}
                         </div>
-                    )}
-
-                    {/* File Uploads (Glassy) */}
-                    <div className="space-y-4">
-                        <div className="flex items-center justify-between px-1">
-                            <label className="text-xs font-bold flex items-center gap-2 text-white/50 uppercase tracking-wide">
-                                <Upload size={14} className="text-indigo-400" /> {template.fileLabel || 'Ваше фото'}
-                            </label>
-                            <span className="text-[10px] font-bold text-white/60 bg-white/10 px-2 py-0.5 rounded-full border border-white/5">{selectedFiles.filter(Boolean).length}/{requiredFilesCount}</span>
-                        </div>
-                        <div className={`grid gap-3 ${requiredFilesCount > 1 ? 'grid-cols-2' : 'grid-cols-1'}`}>
-                            {Array.from({ length: requiredFilesCount }).map((_, i) => (
-                                <div key={i} className="relative aspect-square group">
-                                    <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, i)} className="absolute inset-0 z-20 opacity-0 cursor-pointer" />
-                                    <div className={`w-full h-full rounded-[1.5rem] border border-dashed flex items-center justify-center transition-all duration-300 ${previewUrls[i] ? 'border-indigo-500/50 bg-black' : 'border-white/10 bg-white/5 hover:bg-white/10'}`}>
-                                        {previewUrls[i] ? (
-                                            <>
-                                                <img src={previewUrls[i]} className="w-full h-full object-cover rounded-[1.4rem] opacity-80" />
-                                                <button onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRemoveFile(i); }} className="absolute top-2 right-2 p-1.5 bg-black/60 rounded-full text-white/70 hover:text-white hover:bg-red-500/80 transition-all z-30">
-                                                    <Trash2 size={12} />
-                                                </button>
-                                            </>
-                                        ) : (
-                                            <div className="text-center p-4">
-                                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center mx-auto mb-2 border border-white/10 group-hover:scale-110 transition-transform">
-                                                    <Upload size={18} className="text-white/40 group-hover:text-indigo-400" />
-                                                </div>
-                                                <span className="text-[10px] text-white/30 font-bold uppercase tracking-wide">Загрузить</span>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-
-                    {/* Fields (Glassy) */}
-                    {fields.map(field => (
-                        <div key={field.id} className="space-y-2">
-                            <label className="text-xs font-bold ml-1 text-white/50 uppercase tracking-wide">{field.label}</label>
-                            <input
-                                type={field.type || 'text'}
-                                placeholder={field.placeholder}
-                                value={formValues[field.id] || ''}
-                                onChange={(e) => handleFieldChange(field.id, e.target.value)}
-                                className="w-full px-4 py-4 rounded-[1.2rem] bg-white/5 border border-white/10 focus:border-indigo-500/50 focus:bg-white/10 outline-none text-sm text-white placeholder:text-white/20 transition-all shadow-inner"
-                            />
-                        </div>
                     ))}
                 </div>
+
+                {/* --- IDEA & TEMPLATES TABS --- */}
+                <div className="bg-[#1c1c1e] rounded-[24px] border border-white/5 shadow-lg overflow-hidden flex flex-col">
+                    {/* Tab Headers */}
+                    <div className="flex border-b border-white/5 bg-[#2c2c2e]/30 p-1">
+                        <button
+                            onClick={() => { setActiveTab('templates'); playClick(); }}
+                            className={`flex-1 py-3 text-[13px] font-bold flex items-center justify-center gap-2 transition-all relative rounded-[20px] ${activeTab === 'templates' ? 'bg-[#3390ec] text-white shadow-lg shadow-[#3390ec]/20' : 'text-gray-500 hover:text-gray-300'}`}
+                        >
+                            <LayoutGrid size={16} /> Похожие
+                        </button>
+                        <button
+                            onClick={() => { setActiveTab('edit'); playClick(); }}
+                            className={`flex-1 py-3 text-[13px] font-bold flex items-center justify-center gap-2 transition-all relative rounded-[20px] ${activeTab === 'edit' ? 'bg-[#3390ec] text-white shadow-lg shadow-[#3390ec]/20' : 'text-gray-500 hover:text-gray-300'}`}
+                        >
+                            <Edit3 size={16} /> Редактировать
+                        </button>
+                    </div>
+
+                    {/* Tab Content */}
+                    <div className="p-4 bg-[#2c2c2e]/10 min-h-[140px] relative">
+                        <AnimatePresence mode="popLayout" initial={false}>
+                            {activeTab === 'templates' ? (
+                                <motion.div
+                                    key="templates"
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="flex gap-3 overflow-x-auto no-scrollbar pb-2"
+                                >
+                                    {similarTemplates.length > 0 ? (
+                                        <>
+                                            {similarTemplates.slice(0, 5).map(t => (
+                                                <button
+                                                    key={t.id}
+                                                    onClick={() => { playClick(); navigate(`/template/${t.id}`, { replace: true }); }}
+                                                    className="flex-shrink-0 w-24 aspect-[3/4] rounded-[16px] overflow-hidden relative border border-white/10 active:scale-95 transition-transform shadow-md group"
+                                                >
+                                                    <img src={t.src} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                </button>
+                                            ))}
+                                            {similarTemplates.length > 5 && (
+                                                <button
+                                                    onClick={() => { playClick(); navigate('/gallery'); }}
+                                                    className="flex-shrink-0 w-24 aspect-[3/4] rounded-[16px] overflow-hidden relative border border-white/10 active:scale-95 transition-transform shadow-md bg-[#2c2c2e] flex flex-col items-center justify-center gap-2 hover:bg-[#323236]"
+                                                >
+                                                    <div className="w-8 h-8 rounded-full bg-[#1c1c1e] flex items-center justify-center">
+                                                        <ChevronRight size={16} className="text-[#3390ec]" />
+                                                    </div>
+                                                    <span className="text-[11px] font-bold text-[#3390ec] text-center leading-tight">Показать<br />больше</span>
+                                                </button>
+                                            )}
+                                        </>
+                                    ) : (
+                                        <div className="w-full text-center text-gray-500 text-[13px] py-6 font-medium">Нет похожих шаблонов</div>
+                                    )}
+                                </motion.div>
+                            ) : (
+                                <motion.div
+                                    key="edit"
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.95 }}
+                                    transition={{ duration: 0.2 }}
+                                    className="relative h-full flex flex-col"
+                                >
+                                    <textarea
+                                        value={customPrompt}
+                                        onChange={(e) => setCustomPrompt(e.target.value)}
+                                        placeholder="Опишите, что вы хотите получить..."
+                                        className="w-full h-full min-h-[100px] bg-transparent text-white text-[14px] leading-relaxed resize-none outline-none placeholder:text-gray-600 font-mono"
+                                    />
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </div>
+
+                {/* --- MODEL SELECTOR (Compact) --- */}
+                <div>
+                    <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3 ml-1">Модель нейросети</div>
+                    <div className="bg-[#2c2c2e]/50 rounded-[20px] p-1.5 flex gap-2 overflow-x-auto no-scrollbar mb-3 border border-white/5">
+                        {compatibleModels.map(model => (
+                            <button
+                                key={model.id}
+                                onClick={() => { setSelectedModel(model.id); playClick(); }}
+                                className={`px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all whitespace-nowrap flex items-center gap-2 flex-shrink-0
+                                    ${selectedModel === model.id
+                                        ? 'bg-[#3390ec] text-white shadow-lg shadow-[#3390ec]/20'
+                                        : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                            >
+                                <span className="text-[16px]">{model.icon}</span>
+                                {model.name}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Selected Model Description + Cost */}
+                    {compatibleModels.find(m => m.id === selectedModel) && (
+                        <div className="px-1 flex justify-between items-center text-[12px] text-gray-400 bg-white/5 rounded-xl p-3 animate-in fade-in slide-in-from-top-1 border border-white/5">
+                            <p className="flex-1 mr-4 leading-relaxed font-medium">
+                                {compatibleModels.find(m => m.id === selectedModel).label}
+                            </p>
+                            <div className="flex items-center gap-1.5 bg-[#3390ec]/20 text-[#3390ec] px-3 py-1.5 rounded-full text-[11px] font-black flex-shrink-0 border border-[#3390ec]/20">
+                                <Zap size={12} className="fill-current" />
+                                {compatibleModels.find(m => m.id === selectedModel).cost}
+                            </div>
+                        </div>
+                    )}
+                </div>
+
+                {/* --- SIZE SELECTOR (Hidden for Video) --- */}
+                {template.mediaType !== 'video' && (
+                    <div>
+                        <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3 ml-1">Размер</div>
+                        <div className="grid grid-cols-4 gap-3">
+                            {['9:16', '3:4', '1:1', '16:9'].map(ratio => {
+                                const isSelected = aspectRatio === ratio;
+                                return (
+                                    <button
+                                        key={ratio}
+                                        onClick={() => { setAspectRatio(ratio); playClick(); }}
+                                        className={`py-3.5 rounded-xl text-[13px] font-bold transition-all border ${isSelected
+                                            ? 'bg-white text-black border-white shadow-lg shadow-white/10 scale-105'
+                                            : 'bg-[#2c2c2e] text-gray-400 border-transparent hover:bg-[#323236]'
+                                            }`}
+                                    >
+                                        {ratio}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                )}
+
+
             </div>
 
-            {/* Footer (Dock) */}
-            <div className="fixed bottom-0 left-0 right-0 p-5 pb-safe-bottom bg-[#0f0f10]/80 backdrop-blur-2xl border-t border-white/5 z-40 transition-all">
-                <AnimatedButton
-                    variant="primary"
-                    size="lg"
-                    fullWidth
+            {/* --- FOOTER BUTTON --- */}
+            <div className="fixed bottom-0 left-0 right-0 p-4 pb-8 bg-[#1c1c1e]/90 backdrop-blur-xl border-t border-white/5 z-40">
+                <button
                     onClick={handleGenerate}
-                    disabled={!isReady || isProcessing}
-                    isLoading={isProcessing}
-                    className="h-14 rounded-[1.2rem] shadow-xl shadow-amber-500/10 font-black text-base tracking-wide"
+                    disabled={isProcessing}
+                    className={`w-full py-4 rounded-[20px] flex items-center justify-center gap-2 text-[17px] font-bold transition-all shadow-xl ${isReady && !isProcessing
+                        ? 'bg-[#3390ec] text-white shadow-[0_8px_30px_rgba(51,144,236,0.3)] hover:brightness-110 active:scale-[0.98]'
+                        : 'bg-[#2c2c2e] text-white/30 shadow-none'
+                        }`}
                 >
-                    <span className="flex items-center gap-2">
-                        {isProcessing ? 'Генерируем...' : (
-                            <>
-                                <Film size={20} className="fill-current" /> СГЕНЕРИРОВАТЬ ({cost})
-                            </>
-                        )}
-                    </span>
-                </AnimatedButton>
+                    {isProcessing ? (
+                        <>
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            <span>Создаем...</span>
+                        </>
+                    ) : (
+                        <>
+                            <span>Сгенерировать</span>
+                            <div className="flex items-center gap-1 bg-white/20 px-2.5 py-0.5 rounded-full text-[13px] font-bold">
+                                <Zap size={12} className="fill-white" /> {currentCost}
+                            </div>
+                        </>
+                    )}
+                </button>
             </div>
+
             <InsufficientCreditsModal
                 isOpen={showCreditModal}
                 onClose={() => setShowCreditModal(false)}
-                onTopUp={() => {
-                    navigate('/');
-                    setTimeout(() => onOpenPayment?.(), 100);
-                }}
+                onTopUp={() => { navigate('/'); setTimeout(() => onOpenPayment?.(), 200); }}
             />
-        </motion.div >
+        </div>
     );
 };
 

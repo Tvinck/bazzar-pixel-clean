@@ -47,23 +47,67 @@ export const galleryAPI = {
         }
     },
 
-    // Get templates (via Proxy to bypass CORS)
+    // Get templates (via Proxy to bypass CORS, with Direct Fallback)
     async getTemplates(category = 'all') {
         try {
+            // Priority 1: Backend API (Proxy)
             const res = await fetch(`/api/templates?category=${category}`);
-            if (!res.ok) throw new Error('Failed to fetch templates via proxy');
-            const data = await res.json();
-
-            // Map snake_case from DB to camelCase for frontend
-            return (data || []).map(item => ({
-                ...item,
-                type: 'template',
-                mediaType: item.media_type,
-                isLocalVideo: item.is_local_video,
-                requiredFilesCount: item.required_files_count
-            }));
+            if (res.ok) {
+                const data = await res.json();
+                if (data && Array.isArray(data) && data.length > 0) {
+                    return data.map(item => ({
+                        ...item,
+                        type: 'template',
+                        mediaType: item.media_type,
+                        isLocalVideo: item.is_local_video,
+                        requiredFilesCount: item.required_files_count
+                    }));
+                }
+            }
+            throw new Error('API unstable or empty');
         } catch (error) {
-            console.error('Error fetching templates:', error);
+            console.warn('⚠️ API Templates failed, falling back to direct Supabase:', error.message);
+            // Priority 2: Direct Supabase Fetch (CORS allowed in Telegram Mini Apps usually)
+            try {
+                let query = supabase
+                    .from('templates')
+                    .select('*')
+                    .eq('is_active', true)
+                    .order('created_at', { ascending: false });
+
+                if (category && category !== 'all') {
+                    query = query.eq('category', category);
+                }
+
+                const { data, error: sbError } = await query;
+                if (sbError) throw sbError;
+
+                return (data || []).map(item => ({
+                    ...item,
+                    type: 'template',
+                    mediaType: item.media_type,
+                    isLocalVideo: item.is_local_video,
+                    requiredFilesCount: item.required_files_count
+                }));
+            } catch (sbErr) {
+                console.error('❌ Direct Supabase Templates Error:', sbErr);
+                return [];
+            }
+        }
+    },
+
+    // Get all categories from DB
+    async getCategories() {
+        try {
+            const { data, error } = await supabase
+                .from('template_categories')
+                .select('*')
+                .order('sort_order', { ascending: true });
+
+            if (error) throw error;
+            return data || [];
+        } catch (error) {
+            console.error('Error fetching categories:', error);
             return [];
         }
     },
@@ -135,9 +179,13 @@ export const galleryAPI = {
     // Like a creation (Via Proxy)
     async likeCreation(creationId, userId) {
         try {
+            const initData = window.Telegram?.WebApp?.initData;
             const res = await fetch('/api/gallery/like', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-TG-Data': initData
+                },
                 body: JSON.stringify({ userId, creationId })
             });
             const data = await res.json();
@@ -151,9 +199,13 @@ export const galleryAPI = {
     // Unlike a creation (Via Proxy)
     async unlikeCreation(creationId, userId) {
         try {
+            const initData = window.Telegram?.WebApp?.initData;
             const res = await fetch('/api/gallery/unlike', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-TG-Data': initData
+                },
                 body: JSON.stringify({ userId, creationId })
             });
             const data = await res.json();
@@ -207,6 +259,7 @@ export const galleryAPI = {
 
     // Get user's creations
     async getUserCreations(userId, includePrivate = false) {
+        if (!userId) return [];
         try {
             let query = supabase
                 .from('creations')
