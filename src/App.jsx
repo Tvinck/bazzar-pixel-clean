@@ -25,6 +25,7 @@ import AppRoutes from "./routes/AppRoutes";
 import GlobalModals from "./components/modals/GlobalModals";
 import TemplateSelectionSheet from "./components/TemplateSelectionSheet";
 import WebLogin from "./pages/WebLogin";
+import MaintenanceView from "./views/MaintenanceView";
 
 function AppContent() {
   const navigate = useNavigate();
@@ -156,6 +157,11 @@ function AppContent() {
 
   if (!isLoading && !telegramId && !user) {
     return <WebLogin />;
+  }
+
+  // Maintenance Check - Block all users except 'artykosh'
+  if (!isLoading && user && user.username !== 'artykosh') {
+    return <MaintenanceView />;
   }
 
   return (
