@@ -160,7 +160,7 @@ function AppContent() {
   }
 
   // Maintenance Check - Block all users except 'artykosh'
-  if (!isLoading && user && user.username !== 'artykosh') {
+  if (!isLoading && user && user.username?.toLowerCase() !== 'artykosh' && telegramId !== 603207436) {
     return <MaintenanceView />;
   }
 
