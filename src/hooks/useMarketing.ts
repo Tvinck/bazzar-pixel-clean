@@ -18,7 +18,7 @@ export const useMarketing = (user: any) => {
         if (!initData && process.env.NODE_ENV === 'production') return;
 
         try {
-            fetch(`${API_URL}/api/user/marketing/track`, {
+            fetch(`${API_URL}/api/marketing/track`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
