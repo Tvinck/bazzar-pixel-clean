@@ -158,7 +158,10 @@ const StarGreetingsView = () => {
             updateStats({ current_balance: (stats?.current_balance || 0) - GREETING_COST });
             const res = await fetch('/api/generate-greeting-v2', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-TG-Data': window.Telegram?.WebApp?.initData || ''
+                },
                 body: JSON.stringify({
                     userId: telegramId,
                     starId: selectedStar.id,
@@ -183,7 +186,10 @@ const StarGreetingsView = () => {
         try {
             const res = await fetch('/api/preview-greeting', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-TG-Data': window.Telegram?.WebApp?.initData || ''
+                },
                 body: JSON.stringify({
                     starId: selectedStar.id,
                     occasion: selectedOccasion.id,
