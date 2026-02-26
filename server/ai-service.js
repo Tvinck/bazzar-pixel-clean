@@ -92,10 +92,10 @@ const aiService = {
         // KIE MODEL MAPPING - Strictly based on Documentation
         const KIE_MAP = {
             // --- GOOGLE FAMILY ---
-            'nano_banana': 'nano-banana',
-            'nano_banana_pro': 'nano-banana-pro',
-            'nano_banana_edit': 'nano-banana-edit',
-            'google/nano-banana-edit': 'nano-banana-edit',
+            'nano_banana': 'google/nano-banana',
+            'nano_banana_pro': 'google/nano-banana-pro',
+            'nano_banana_edit': 'google/nano-banana-edit',
+            'google/nano-banana-edit': 'google/nano-banana-edit',
             'imagen_4': 'google/imagen4',
             'imagen_4_ultra': 'google/imagen4-ultra',
 
@@ -146,8 +146,8 @@ const aiService = {
         }
 
         if (!kieModelId) {
-            console.warn(`⚠️ Unknown model '${modelId}', defaulting to Nano Banana Pro`);
-            kieModelId = 'nano-banana-pro';
+            console.warn(`⚠️ Unknown model '${modelId}', defaulting to google/nano-banana-pro`);
+            kieModelId = 'google/nano-banana-pro';
         }
 
         console.log(`🚀 Using KIE Model: ${kieModelId}`);
@@ -159,16 +159,15 @@ const aiService = {
         const aspectRatio = options.aspect_ratio || '1:1';
 
         // --- GOOGLE FAMILY ---
-        if (modelId === 'nano_banana_pro') {
-            input.aspect_ratio = aspectRatio;
+        if (kieModelId === 'google/nano-banana' || kieModelId === 'google/nano-banana-pro') {
+            input.image_size = aspectRatio; // APIs use image_size instead of aspect_ratio
             input.output_format = 'png';
-            input.resolution = options.resolution || '1K';
-            if (hasSourceFiles) input.image_input = options.source_files;
-        } else if (modelId === 'google/nano-banana-edit' || modelId === 'nano_banana_edit') {
+            // resolution unsupported
+            if (hasSourceFiles) input.image_urls = options.source_files;
+        } else if (kieModelId === 'google/nano-banana-edit') {
             input.output_format = 'png';
-            input.resolution = options.resolution || '1K';
-            input.guidance_scale = options.guidance_scale || 7.5;
-            input.num_inference_steps = 30;
+            input.image_size = aspectRatio; // APIs use image_size instead of aspect_ratio
+            // resolution, guidance_scale, num_inference_steps unsupported
             if (hasSourceFiles) input.image_urls = options.source_files;
         } else if (modelId === 'imagen_4' || modelId === 'imagen_4_ultra') {
             input.aspect_ratio = aspectRatio;
@@ -234,7 +233,10 @@ const aiService = {
         const normalizeKieInput = (targetInput, targetModel) => {
             // Add model_name inside input just in case Kie.ai requires it there
             const normalized = { ...targetInput };
-            if (!normalized.model_name) normalized.model_name = targetModel;
+            // Nano Banana models strictly reject unknown parameters like model_name
+            if (!normalized.model_name && !targetModel.startsWith('google/nano-banana')) {
+                normalized.model_name = targetModel;
+            }
             return normalized;
         };
 
