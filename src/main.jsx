@@ -18,23 +18,37 @@ if (!window.Telegram?.WebApp?.initData && webAuthToken) {
     window.Telegram = window.Telegram || {};
     window.Telegram.WebApp = window.Telegram.WebApp || {};
 
-    Object.defineProperty(window.Telegram.WebApp, 'initData', {
-      value: webAuthToken,
-      writable: true,
-      configurable: true
-    });
+    // Some Telegram SDK versions seal the object. Safest way is to try defineProperty,
+    // if it fails (Cannot redefine), we catch it and try normal assignment.
+    try {
+      Object.defineProperty(window.Telegram.WebApp, 'initData', {
+        value: webAuthToken,
+        writable: true,
+        configurable: true
+      });
 
-    Object.defineProperty(window.Telegram.WebApp, 'initDataUnsafe', {
-      value: {
+      Object.defineProperty(window.Telegram.WebApp, 'initDataUnsafe', {
+        value: {
+          user: {
+            id: decodedPayload.id,
+            username: decodedPayload.username || '',
+            first_name: decodedPayload.first_name || '',
+          }
+        },
+        writable: true,
+        configurable: true
+      });
+    } catch (e) {
+      console.warn('Could not define property on WebApp, falling back to direct assignment');
+      window.Telegram.WebApp.initData = webAuthToken;
+      window.Telegram.WebApp.initDataUnsafe = {
         user: {
           id: decodedPayload.id,
           username: decodedPayload.username || '',
           first_name: decodedPayload.first_name || '',
         }
-      },
-      writable: true,
-      configurable: true
-    });
+      };
+    }
 
     // Mock required SDK functions to prevent runtime errors in the web
     window.Telegram.WebApp.ready = () => { };
