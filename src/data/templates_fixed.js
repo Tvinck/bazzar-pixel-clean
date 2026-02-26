@@ -711,32 +711,6 @@ export const templatesData = [
         generation_prompt: 'Ultra-realistic 3D render of a plastic model kit. Use the input photo car exactly 1:1 as the assembled centerpiece (same shape, details, and design). Place it on a wooden table. Surround it with sprues containing unassembled parts (wheels, bumpers, mirrors, spoilers). Add a branded model kit box with the same car printed on it. Include hobby tools and materials like glue, paint, pliers. Cinematic studio lighting, high detail, sharp textures, realistic hobby workshop atmosphere.'
     },
 
-    // ============================================
-    // ЗИМНИЕ КОЛЛАЖИ (2 шаблона)
-    // Все по 20 кредитов - сложные многокадровые композиции
-    // ============================================
-    {
-        id: 'winter_hateful_eight_1',
-        title: "ОМЕРЗИТЕЛЬНАЯ ВОСЬМЕРКА 1",
-        description: "Сгенерируйте зимний коллаж в стиле Омерзительной восьмерки",
-        category: TEMPLATE_CATEGORIES.WINTER,
-        likes: "42k",
-        src: "/images/winter_hateful_eight_1.jpeg",
-        mediaType: 'image',
-        model_id: 'nano_banana', cost: 10,
-        generation_prompt: 'Описание общей сцены: Триптих, три кадра, связанных одной историей — мужчина в старинном зимнем пейзаже 19 века, в окружении снега, лошадей и экипажа. Фотореализм, снято будто на широкоформатную кинокамеру, холодное освещение, глубокие синие и серые тона. Лицо мужчины с фото сохранено на 100% без изменений: те же черты, кожа, глаза, выражение, борода, текстура волос, мимика и пропорции. Сцена выглядит как из исторического фильма — суровая, холодная, с ощущением одиночества и силы. 🔹 Верхняя панель (панель 1) Крупный портрет мужчины по плечи, лицо в лёгком три четверти повороте, взгляд напряжённый и сосредоточенный, на губах трубка, из которой поднимается лёгкий дым. Он носит тёмное пальто старого фасона с золотыми кантиками, толстый серый шарф, широкополую шляпу, покрытую снежинками. На лице — следы инея, ресницы и борода слегка в снегу. Снег идёт густыми крупными хлопьями, ветер чуть отклоняет их в сторону. Освещение мягкое, холодное, отражающее белизну снега вокруг, акцент на лице. Фон размытый, холодный пейзаж зимнего леса. 🔹 Средняя панель (панель 2) Общий план: мужчина стоит по колено в снегу напротив другого путника в меховой шубе. Позади — запряжённая упряжка из двух лошадей и дилижанс, на котором сидит возница. Окружение — редкий зимний лес из стройных белых берёз, их стволы уходят вглубь симметрично, снег глубокий и чистый. Мужчина в центре композиции, повернут влево, шляпа и плащ обметаны снегом, шарф колышется от ветра. Цветовая палитра — ледяная, голубовато-серая, с контрастом чёрных силуэтов одежды и коричневых лошадей. Атмосфера спокойная, но напряжённая, ощущение диалога в морозном воздухе. 🔹 Нижняя панель (панель 3) Средний план, мужчина идёт вперёд по снегу, взгляд устремлён прямо, лицо частично прикрыто шляпой и снегом. Снежинки оседают на ресницах и бровях, изо рта идёт пар. Ветер развевает края шарфа, позади виднеется экипаж и линии берёз. Камера расположена низко, слегка снизу-вверх, создавая чувство величия и суровой силы. Контрастный свет: холодный отражённый снег внизу, мягкое рассеянное небо сверху.'
-    },
-    {
-        id: 'winter_car_1',
-        title: "В МАШИНЕ 1",
-        description: "Сгенерируйте зимний коллаж в машине",
-        category: TEMPLATE_CATEGORIES.WINTER,
-        likes: "41k",
-        src: "/images/winter_car_1.jpeg",
-        mediaType: 'image',
-        model_id: 'nano_banana', cost: 10,
-        generation_prompt: "Hyper-realistic 8K portrait collage, three vertical stacked frames. Top Frame: Ultra Close-Up Portrait, face fills frame, eye-level, snow hood, winter forest background. Middle Frame: Woman standing back to camera on frozen lake, pine forest background, ivory fur coat. Bottom Frame: Woman inside Maybach car, profile view looking out window at snowy forest. Consistent style: cinematic winter fashion, soft lighting, ivory fur coat, loose hair, quiet luxury atmosphere."
-    },
 
     // ============================================
     // ПОРТРЕТЫ И СТИЛИ - ДОПОЛНИТЕЛЬНЫЕ (10 шаблонов)
