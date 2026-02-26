@@ -139,6 +139,12 @@ const aiService = {
         const jobId = data.jobId;
         const newBalance = data.newBalance;
 
+        // If the server already completed the job synchronously (Vercel fallback), return immediately
+        if (data.imageUrl) {
+            console.log('⚡ Sync result received, skipping poll.');
+            return { success: true, imageUrl: data.imageUrl, id: jobId, newBalance };
+        }
+
         if (!jobId) {
             if (data.data?.imageUrl) return { success: true, imageUrl: data.data.imageUrl, newBalance };
             throw new Error('No Job ID returned from server');

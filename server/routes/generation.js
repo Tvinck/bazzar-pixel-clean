@@ -143,12 +143,18 @@ router.post('/generate', upload.any(), async (req, res) => {
         }
         if (sourceFiles.length > 0) options.source_files = sourceFiles;
 
-        const jobId = await addGenerationJob({
+        const jobResult = await addGenerationJob({
             prompt, type, userId, cost,
             options: { ...options, aspect_ratio: aspectRatio }
         });
 
-        res.json({ success: true, status: 'queued', jobId, newBalance });
+        res.json({
+            success: true,
+            status: jobResult?.imageUrl ? 'completed' : 'queued',
+            jobId: jobResult?.id || jobResult,
+            newBalance,
+            imageUrl: jobResult?.imageUrl || null
+        });
     } catch (e) {
         res.status(500).json({ error: e.message });
     }
