@@ -136,7 +136,7 @@ export const addGenerationJob = async (data) => {
             if (!result.success) throw new Error(result.error || 'Generation failed');
 
             if (userId) {
-                const isVideoResult = (type.includes('video') || (result.imageUrl && result.imageUrl.match(/\\.(mp4|mov)$/i)));
+                const isVideoResult = (type.includes('video') || (result.imageUrl && result.imageUrl.match(/\.(mp4|mov)$/i)));
                 await supabase.from('creations').insert({
                     user_id: userId,
                     generation_id: fallbackJobId,
@@ -150,6 +150,47 @@ export const addGenerationJob = async (data) => {
                     tags: [type, 'web']
                 });
             }
+
+            // --- 3. Notify User (Telegram) ---
+            if (options?.telegramId) {
+                const isVideoModel = type.includes('video') || type.includes('kling') || type.includes('sora') || type.includes('veo');
+                const hasVideoExtension = result.imageUrl && result.imageUrl.match(/\.(mp4|mov|webm|avi)$/i);
+                const isVideo = isVideoModel || hasVideoExtension;
+
+                const caption = `✨ Ваша генерация готова!\n\n🎨 ${type}\n📝 "${prompt ? prompt.slice(0, 50) : '...'}"\n\n@Pixel_ai_bot`;
+
+                try {
+                    console.log(`📨 [Fallback Job] Sending ${isVideo ? 'video' : 'image'} to ${options.telegramId}`);
+                    // Ensure bot dependency is passed or use external fetch function here if bot is not imported globals.
+                    // But typically fallback has access to the token. We can fallback to raw telegram bot calls if `bot` is undefined.
+                    const TG_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+                    const url = `https://api.telegram.org/bot${TG_BOT_TOKEN}/${isVideo ? 'sendVideo' : 'sendPhoto'}`;
+
+                    const payload = {
+                        chat_id: options.telegramId,
+                        caption: caption,
+                        parse_mode: 'Markdown'
+                    };
+
+                    if (isVideo) {
+                        payload.video = result.imageUrl;
+                    } else {
+                        payload.photo = result.imageUrl;
+                    }
+
+                    fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    }).catch(err => console.error("Telegram API sending failed", err));
+
+                } catch (notifyErr) {
+                    console.error(`⚠️ [Fallback Job] Notify failed:`, notifyErr.message);
+                }
+            }
+
+            return { id: fallbackJobId };
+
         } catch (error) {
             console.error(`❌ [Fallback Job ${fallbackJobId}] Failed:`, error.message);
             // Refund logic if needed
