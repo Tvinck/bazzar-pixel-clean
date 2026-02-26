@@ -150,22 +150,29 @@ const StickersView = () => {
         document.body.removeChild(link);
     };
 
+    const [sentToast, setSentToast] = useState(null);
+
     const sendToBot = async (sticker, idx) => {
         setIsSending(prev => ({ ...prev, [idx]: true }));
         try {
-            const response = await fetch('/api/send-result', {
+            const response = await fetch('/api/send-sticker', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     telegramId,
                     imageUrl: sticker.resultUrl,
-                    prompt: sticker.title,
-                    addBranding: useBranding
+                    emoji: sticker.emoji || '😊'
                 })
             });
-            response.ok ? playSuccess() : playError();
+            if (response.ok) {
+                playSuccess();
+                setSentToast(idx);
+                setTimeout(() => setSentToast(null), 2000);
+            } else {
+                playError();
+            }
         } catch (err) {
-            console.error('Send to bot failed:', err);
+            console.error('Send sticker failed:', err);
         } finally {
             setIsSending(prev => ({ ...prev, [idx]: false }));
         }
@@ -491,6 +498,17 @@ const StickersView = () => {
                                                     {isSending[idx] ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                                                 </button>
                                             </div>
+                                            {sentToast === idx && (
+                                                <motion.div
+                                                    initial={{ opacity: 0, scale: 0.8 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    exit={{ opacity: 0 }}
+                                                    className="absolute inset-0 bg-green-600/90 backdrop-blur-sm flex flex-col items-center justify-center rounded-[14px] z-10"
+                                                >
+                                                    <CheckCircle size={28} className="text-white mb-1.5" />
+                                                    <span className="text-[10px] font-bold text-white text-center leading-tight px-2">Отправлено в диалог бота!</span>
+                                                </motion.div>
+                                            )}
                                         </>
                                     ) : sticker.status === 'error' ? (
                                         <div className="w-full h-full flex flex-col items-center justify-center">

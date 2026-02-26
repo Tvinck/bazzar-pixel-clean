@@ -62,6 +62,7 @@ export function registerRoutes(app, bot) {
     app.use('/api/generate-stickers', (req, res, next) => { req.url = '/generate-stickers'; stickersRoutes(req, res, next); });
     app.use('/api/create-sticker-pack', (req, res, next) => { req.url = '/create-sticker-pack'; stickersRoutes(req, res, next); });
     app.use('/api/send-result', (req, res, next) => { req.url = '/send-result'; generationRoutes(req, res, next); });
+    app.use('/api/send-sticker', (req, res, next) => { req.url = '/send-sticker'; stickersRoutes(req, res, next); });
 
     console.log('🛣️ Modular routes registered: gallery, user, marketing, experts, chat, generation, templates, stickers');
 }

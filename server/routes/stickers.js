@@ -66,6 +66,67 @@ router.post('/generate-stickers', async (req, res) => {
 });
 
 /**
+ * POST /api/stickers/send-sticker
+ * Sends a sticker image to user's Telegram as an actual sticker (not a photo).
+ */
+router.post('/send-sticker', async (req, res) => {
+    try {
+        const { telegramId, imageUrl, emoji = '😊' } = req.body;
+        if (!telegramId || !imageUrl) return res.status(400).json({ error: 'Missing telegramId or imageUrl' });
+
+        const botToken = process.env.TELEGRAM_BOT_TOKEN;
+        if (!botToken) return res.status(503).json({ error: 'Bot token not configured' });
+
+        // 1. Download and convert to 512x512 PNG sticker
+        const imgRes = await fetch(imageUrl, { headers: { 'User-Agent': 'PixelBot/1.0' }, redirect: 'follow' });
+        if (!imgRes.ok) return res.status(500).json({ error: 'Failed to download sticker image' });
+        const rawBuf = Buffer.from(await imgRes.arrayBuffer());
+
+        const pngBuf = await sharp(rawBuf, { failOn: 'none' })
+            .resize(512, 512, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+            .png()
+            .toBuffer();
+
+        // 2. Upload as sticker file to Telegram
+        const form = new globalThis.FormData();
+        form.append('user_id', String(telegramId));
+        form.append('sticker', new Blob([pngBuf], { type: 'image/png' }), 'sticker.png');
+        form.append('sticker_format', 'static');
+
+        const upRes = await fetch(`https://api.telegram.org/bot${botToken}/uploadStickerFile`, {
+            method: 'POST',
+            body: form
+        });
+        const upData = await upRes.json();
+        if (!upData.ok) {
+            console.error('uploadStickerFile failed:', upData);
+            return res.status(500).json({ error: upData.description || 'Upload failed' });
+        }
+
+        // 3. Send sticker to user
+        const sendRes = await fetch(`https://api.telegram.org/bot${botToken}/sendSticker`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                chat_id: telegramId,
+                sticker: upData.result.file_id
+            })
+        });
+        const sendData = await sendRes.json();
+        if (!sendData.ok) {
+            console.error('sendSticker failed:', sendData);
+            return res.status(500).json({ error: sendData.description || 'Send failed' });
+        }
+
+        console.log(`📨 Sticker sent to ${telegramId} successfully`);
+        res.json({ success: true });
+    } catch (error) {
+        console.error('Send Sticker Error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
+/**
  * POST /api/chat/create-sticker-pack
  * Creates a Telegram sticker pack from provided image/video URLs.
  */
