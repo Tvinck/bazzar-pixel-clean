@@ -251,7 +251,7 @@ router.post('/generate-greeting-v2', authTG, async (req, res) => {
         }
 
         // Add video generation job
-        const jobId = await addGenerationJob({
+        const jobResult = await addGenerationJob({
             prompt: greetingText,
             type: 'video',
             cost,
@@ -265,7 +265,13 @@ router.post('/generate-greeting-v2', authTG, async (req, res) => {
         });
 
         const newBalance = balance - cost;
-        res.json({ success: true, jobId, newBalance });
+        res.json({
+            success: true,
+            jobId: jobResult?.id,
+            newBalance,
+            videoUrl: jobResult?.imageUrl || null,
+            greetingText
+        });
     } catch (e) {
         console.error('Generate Greeting V2 Error:', e);
         res.status(500).json({ error: e.message });

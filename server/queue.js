@@ -137,7 +137,7 @@ export const addGenerationJob = async (data) => {
 
             if (userId) {
                 const isVideoResult = (type.includes('video') || (result.imageUrl && result.imageUrl.match(/\.(mp4|mov)$/i)));
-                await supabase.from('creations').insert({
+                const { error: dbError } = await supabase.from('creations').insert({
                     user_id: userId,
                     generation_id: fallbackJobId,
                     title: prompt ? prompt.slice(0, 50) : 'Web Generation',
@@ -149,6 +149,11 @@ export const addGenerationJob = async (data) => {
                     is_public: false,
                     tags: [type, 'web']
                 });
+                if (dbError) {
+                    console.error('⚠️ [Fallback Job] DB Creations Insert failed:', dbError);
+                } else {
+                    console.log('✅ [Fallback Job] Saved to creations history successfully.');
+                }
             }
 
             // --- 3. Notify User (Telegram) ---
@@ -178,18 +183,20 @@ export const addGenerationJob = async (data) => {
                         payload.photo = result.imageUrl;
                     }
 
-                    fetch(url, {
+                    const tgRes = await fetch(url, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload)
-                    }).catch(err => console.error("Telegram API sending failed", err));
+                    });
+                    const tgResText = await tgRes.text();
+                    console.log(`📡 [Fallback Job] Telegram API Response: ${tgRes.status} - ${tgResText}`);
 
                 } catch (notifyErr) {
                     console.error(`⚠️ [Fallback Job] Notify failed:`, notifyErr.message);
                 }
             }
 
-            return { id: fallbackJobId };
+            return { id: fallbackJobId, imageUrl: result.imageUrl };
 
         } catch (error) {
             console.error(`❌ [Fallback Job ${fallbackJobId}] Failed:`, error.message);
