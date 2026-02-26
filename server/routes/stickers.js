@@ -15,7 +15,7 @@ if (ffmpegPath) ffmpeg.setFfmpegPath(ffmpegPath);
 
 const router = express.Router();
 
-import aiService from '../ai-service.js';
+import { aiService } from '../ai-service.js';
 import { supabase } from '../lib/supabase.js';
 
 /**
