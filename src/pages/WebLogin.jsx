@@ -8,7 +8,7 @@ import { useToast } from '../context/ToastContext';
 const WebLogin = () => {
     const [isLoading, setIsLoading] = useState(false);
     const { refreshUser } = useUser();
-    const { showToast } = useToast();
+    const { success, error: toastError } = useToast();
 
     const handleTelegramResponse = async (user) => {
         setIsLoading(true);
@@ -27,7 +27,7 @@ const WebLogin = () => {
             if (data.success && data.token) {
                 // Save Web Auth token
                 localStorage.setItem('bazzar_web_auth', data.token);
-                showToast('Успешный вход!', 'success');
+                success('Успешный вход!');
 
                 // Force UserContext to refresh and reload state
                 window.location.reload();
@@ -36,7 +36,7 @@ const WebLogin = () => {
             }
         } catch (error) {
             console.error('Login error:', error);
-            showToast(error.message || 'Ошибка подключения к серверу', 'error');
+            toastError(error.message || 'Ошибка подключения к серверу');
         } finally {
             setIsLoading(false);
         }
