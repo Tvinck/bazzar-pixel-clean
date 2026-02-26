@@ -15,6 +15,56 @@ if (ffmpegPath) ffmpeg.setFfmpegPath(ffmpegPath);
 
 const router = express.Router();
 
+import aiService from '../ai-service.js';
+import { supabase } from '../lib/supabase.js';
+
+/**
+ * POST /api/stickers/generate-stickers
+ * Generates a single sticker image via AI from a source face photo + prompt.
+ */
+router.post('/generate-stickers', async (req, res) => {
+    try {
+        const { source_image, prompt, type, userId } = req.body;
+        if (!source_image || !prompt) {
+            return res.status(400).json({ error: 'Missing source_image or prompt' });
+        }
+
+        // Upload base64 source image to Supabase Storage for a public URL
+        let imageUrl = source_image;
+        if (source_image.startsWith('data:')) {
+            const base64Data = source_image.split(',')[1];
+            const buffer = Buffer.from(base64Data, 'base64');
+            const fileName = `stickers/${Date.now()}_${Math.random().toString(36).substring(7)}.jpg`;
+            const { error: uploadError } = await supabase.storage
+                .from('uploads')
+                .upload(fileName, buffer, { contentType: 'image/jpeg' });
+            if (uploadError) {
+                console.error('⚠️ Sticker upload error:', uploadError);
+                return res.status(500).json({ error: 'Failed to upload source image' });
+            }
+            imageUrl = supabase.storage.from('uploads').getPublicUrl(fileName).data.publicUrl;
+        }
+
+        console.log(`🎨 Generating sticker: "${prompt.slice(0, 50)}" with source: ${imageUrl.slice(0, 60)}...`);
+
+        // Use nano_banana (image-to-image) model for sticker generation
+        const result = await aiService.generateImage(prompt, 'nano_banana', {
+            source_files: [imageUrl],
+            aspect_ratio: '1:1',
+            resolution: '1K'
+        });
+
+        if (!result.success) {
+            return res.status(500).json({ error: result.error || 'Sticker generation failed' });
+        }
+
+        res.json({ success: true, imageUrl: result.imageUrl });
+    } catch (error) {
+        console.error('Generate Sticker Error:', error);
+        res.status(500).json({ error: error.message });
+    }
+});
+
 /**
  * POST /api/chat/create-sticker-pack
  * Creates a Telegram sticker pack from provided image/video URLs.
