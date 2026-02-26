@@ -49,11 +49,13 @@ const AdminView = () => {
 
     useEffect(() => {
         if (user) {
-            const ADMIN_IDS = [603207436, 500096232, 1165860888]; // Common admin IDs for this project
+            const ADMIN_IDS = [603207436, 500096232, 1165860888, 1040481322];
+            const ADMIN_USERS = ['artykosh', 'natelinsss'];
             const isDev = ADMIN_IDS.includes(user.telegram_id) || ADMIN_IDS.includes(Number(user.telegram_id));
+            const isAdminUser = user?.username && ADMIN_USERS.includes(user.username.toLowerCase());
             const hasRole = profile?.role === 'admin' || user?.is_admin === true;
 
-            if (isDev || hasRole) {
+            if (isDev || isAdminUser || hasRole) {
                 setIsAdmin(true);
                 fetchData();
             } else {
