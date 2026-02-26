@@ -166,23 +166,48 @@ router.post('/generate', upload.any(), async (req, res) => {
 router.post('/send-result', async (req, res) => {
     try {
         const { telegramId, imageUrl, prompt, addBranding: applyBranding } = req.body;
-        const bot = req.app.get('bot');
-        if (!bot) return res.status(503).json({ error: 'Bot unavailable' });
+        if (!telegramId || !imageUrl) return res.status(400).json({ error: 'Missing telegramId or imageUrl' });
 
         let finalUrl = imageUrl;
-        if (applyBranding) {
-            const isVideo = imageUrl.match(/\.(mp4|mov|webm|gif)$/i);
-            finalUrl = await addBranding(imageUrl, isVideo ? 'video' : 'image');
-        }
+        // Skip branding on Vercel to avoid Sharp/Fontconfig issues
+        // if (applyBranding) { ... }
 
         const caption = `✨ Готово!\n\n${prompt || 'AI Creation'}\n\n🤖 @Pixel_ai_bot`;
         const isVideo = finalUrl.match(/\.(mp4|mov|webm|gif)$/i);
 
-        if (isVideo) await bot.sendVideo(telegramId, finalUrl, { caption, parse_mode: 'Markdown' });
-        else await bot.sendPhoto(telegramId, finalUrl, { caption, parse_mode: 'Markdown' });
+        // Try bot instance first, fallback to direct Telegram API
+        const bot = req.app.get('bot');
+        if (bot) {
+            if (isVideo) await bot.sendVideo(telegramId, finalUrl, { caption, parse_mode: 'Markdown' });
+            else await bot.sendPhoto(telegramId, finalUrl, { caption, parse_mode: 'Markdown' });
+        } else {
+            const TG_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
+            if (!TG_BOT_TOKEN) return res.status(503).json({ error: 'Bot token not configured' });
+
+            const method = isVideo ? 'sendVideo' : 'sendPhoto';
+            const payload = {
+                chat_id: telegramId,
+                caption,
+                parse_mode: 'Markdown'
+            };
+            if (isVideo) payload.video = finalUrl;
+            else payload.photo = finalUrl;
+
+            const tgRes = await fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/${method}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const tgData = await tgRes.json();
+            if (!tgData.ok) {
+                console.error('Telegram send-result error:', tgData);
+                return res.status(500).json({ error: tgData.description || 'Telegram API error' });
+            }
+        }
 
         res.json({ success: true });
     } catch (err) {
+        console.error('Send-result error:', err);
         res.status(500).json({ error: err.message });
     }
 });
