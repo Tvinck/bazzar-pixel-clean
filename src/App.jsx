@@ -159,11 +159,6 @@ function AppContent() {
     return <WebLogin />;
   }
 
-  // Maintenance Check - Block all users except 'artykosh'
-  if (!isLoading && user && user.username?.toLowerCase() !== 'artykosh' && telegramId !== 603207436) {
-    return <MaintenanceView />;
-  }
-
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? "dark" : ""}`}>
       <div className="mx-auto max-w-[480px] md:max-w-none md:ml-64 md:w-auto md:mx-0 min-h-screen bg-[#0f0f0f] relative transition-all duration-300 pt-[60px] md:pt-0">
