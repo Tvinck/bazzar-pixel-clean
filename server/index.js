@@ -1,4 +1,4 @@
-import { createProxyMiddleware } from 'http-proxy-middleware';
+import { createProxyMiddleware, fixRequestBody } from 'http-proxy-middleware';
 import TelegramBot from 'node-telegram-bot-api';
 import express from 'express';
 import cors from 'cors';
@@ -49,24 +49,24 @@ async function setupRouting() {
     console.log(`   🚀 Generation (${PORTS.GENERATION}):  ${generationUp ? '✅ UP' : '❌ DOWN'}`);
 
     if (paymentsUp) {
-        app.use('/api/payments', createProxyMiddleware({ target: `http://localhost:${PORTS.PAYMENTS}`, changeOrigin: true }));
+        app.use('/api/payments', createProxyMiddleware({ target: `http://localhost:${PORTS.PAYMENTS}`, changeOrigin: true, on: { proxyReq: fixRequestBody } }));
         console.log('   → Proxying /api/payments');
     }
 
     if (usersUp) {
-        app.use('/api/user', createProxyMiddleware({ target: `http://localhost:${PORTS.USERS}`, changeOrigin: true }));
+        app.use('/api/user', createProxyMiddleware({ target: `http://localhost:${PORTS.USERS}`, changeOrigin: true, on: { proxyReq: fixRequestBody } }));
         console.log('   → Proxying /api/user');
     }
 
     if (generationUp) {
-        app.use('/api/generation', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}`, changeOrigin: true }));
+        app.use('/api/generation', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}`, changeOrigin: true, on: { proxyReq: fixRequestBody } }));
         // Legacy compatibility proxies
-        app.use('/api/experts', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/experts`, pathRewrite: { '^/api/experts': '' } }));
-        app.use('/api/stickers', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/stickers`, pathRewrite: { '^/api/stickers': '' } }));
-        app.use('/api/gallery', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/gallery`, pathRewrite: { '^/api/gallery': '' } }));
-        app.use('/api/stars', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/stars`, pathRewrite: { '^/api/stars': '' } }));
-        app.use('/api/preview-greeting', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/preview-greeting`, pathRewrite: { '^/api/preview-greeting': '' } }));
-        app.use('/api/generate-greeting-v2', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/generate-greeting-v2`, pathRewrite: { '^/api/generate-greeting-v2': '' } }));
+        app.use('/api/experts', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/experts`, pathRewrite: { '^/api/experts': '' }, on: { proxyReq: fixRequestBody } }));
+        app.use('/api/stickers', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/stickers`, pathRewrite: { '^/api/stickers': '' }, on: { proxyReq: fixRequestBody } }));
+        app.use('/api/gallery', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/gallery`, pathRewrite: { '^/api/gallery': '' }, on: { proxyReq: fixRequestBody } }));
+        app.use('/api/stars', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/stars`, pathRewrite: { '^/api/stars': '' }, on: { proxyReq: fixRequestBody } }));
+        app.use('/api/preview-greeting', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/preview-greeting`, pathRewrite: { '^/api/preview-greeting': '' }, on: { proxyReq: fixRequestBody } }));
+        app.use('/api/generate-greeting-v2', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/generate-greeting-v2`, pathRewrite: { '^/api/generate-greeting-v2': '' }, on: { proxyReq: fixRequestBody } }));
         console.log('   → Proxying /api/generation + legacy routes');
     }
 
