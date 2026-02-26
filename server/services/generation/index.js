@@ -161,6 +161,12 @@ app.post('/api/generation/generate-greeting-v2', authTG, async (req, res) => {
             greetingText = await aiService.generateText(prompt) || `${targetName}, поздравляю! — ${star.name}`;
         }
 
+        // Reconstruct base URL to satisfy Kie API schema requirements for full URLs
+        const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'https';
+        const host = req.get('host');
+        const baseUrl = `${protocol}://${host}`;
+        const fullImageUrl = star.image_url?.startsWith('/') ? `${baseUrl}${star.image_url}` : star.image_url;
+
         // Add video generation job
         const job = await addJob({
             prompt: greetingText,
@@ -168,7 +174,7 @@ app.post('/api/generation/generate-greeting-v2', authTG, async (req, res) => {
             cost,
             userId: userUUID,
             options: {
-                imageUrl: star.image_url,
+                imageUrl: fullImageUrl,
                 telegramId,
                 greetingMode: true,
                 starName: star.name
