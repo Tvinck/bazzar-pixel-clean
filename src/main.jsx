@@ -17,14 +17,24 @@ if (!window.Telegram?.WebApp?.initData && webAuthToken) {
     // Mock the Telegram WebApp object
     window.Telegram = window.Telegram || {};
     window.Telegram.WebApp = window.Telegram.WebApp || {};
-    window.Telegram.WebApp.initData = webAuthToken;
-    window.Telegram.WebApp.initDataUnsafe = {
-      user: {
-        id: decodedPayload.id,
-        username: decodedPayload.username || '',
-        first_name: decodedPayload.first_name || '',
-      }
-    };
+
+    Object.defineProperty(window.Telegram.WebApp, 'initData', {
+      value: webAuthToken,
+      writable: true,
+      configurable: true
+    });
+
+    Object.defineProperty(window.Telegram.WebApp, 'initDataUnsafe', {
+      value: {
+        user: {
+          id: decodedPayload.id,
+          username: decodedPayload.username || '',
+          first_name: decodedPayload.first_name || '',
+        }
+      },
+      writable: true,
+      configurable: true
+    });
 
     // Mock required SDK functions to prevent runtime errors in the web
     window.Telegram.WebApp.ready = () => { };
