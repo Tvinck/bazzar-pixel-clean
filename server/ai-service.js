@@ -225,7 +225,7 @@ const aiService = {
                 input.image_url = options.source_files[0]; // Fallback for Hailuo
                 input.image = options.source_files[0]; // Fallback for Kling
             }
-            if (!input.duration) input.duration = 5;
+            if (!input.duration) input.duration = '5';
             if (!input.aspect_ratio) input.aspect_ratio = '16:9';
             if (!input.quality) input.quality = 'standard';
             if (!input.negative_prompt) input.negative_prompt = '';
