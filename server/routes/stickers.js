@@ -274,11 +274,18 @@ router.post('/create-sticker-pack', async (req, res) => {
         });
 
         const link = `https://t.me/addstickers/${packName}`;
+        const notifyText = `🎨 *Ваш стикерпак готов!*\n\n📦 ${title}\n🔗 [Добавить в Telegram](${link})`;
         if (bot) {
-            bot.sendMessage(telegramId, `🎨 *Ваш стикерпак готов!*\n\n📦 ${title}\n🔗 [Добавить в Telegram](${link})`, { parse_mode: 'Markdown' }).catch(() => { });
+            bot.sendMessage(telegramId, notifyText, { parse_mode: 'Markdown' }).catch(() => { });
+        } else {
+            fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: telegramId, text: notifyText, parse_mode: 'Markdown' })
+            }).catch(() => { });
         }
 
-        res.json({ success: true, link, packName });
+        res.json({ success: true, packLink: link, packName });
     } catch (error) {
         console.error('Sticker Pack Error:', error);
         res.status(500).json({ error: error.message });
