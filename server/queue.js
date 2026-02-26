@@ -139,7 +139,6 @@ export const addGenerationJob = async (data) => {
                 const isVideoResult = (type.includes('video') || (result.imageUrl && result.imageUrl.match(/\.(mp4|mov)$/i)));
                 const { error: dbError } = await supabase.from('creations').insert({
                     user_id: userId,
-                    generation_id: fallbackJobId,
                     title: prompt ? prompt.slice(0, 50) : 'Web Generation',
                     description: prompt || 'Created via Web',
                     image_url: result.imageUrl,
