@@ -80,7 +80,8 @@ const GenerationLoader = ({ type = 'image', status, result, estimatedTime = 15, 
                         <Sparkles className="w-8 h-8 text-emerald-400" />
                     </div>
                     <h2 className="text-2xl font-display font-bold text-white mb-2">Готово!</h2>
-                    <p className="text-zinc-400 mb-6 text-sm">Ваш шедевр создан успешно</p>
+                    <p className="text-zinc-400 text-sm mb-1">Результат отправлен в бота и сохранён в истории</p>
+                    <p className="text-zinc-500 text-xs mb-6">Срок хранения в истории — 10 дней</p>
 
                     <div className="w-full aspect-square rounded-2xl overflow-hidden mb-6 bg-black border border-white/10 relative group">
                         {type === 'video' ? (
