@@ -48,7 +48,7 @@ router.post('/generate-stickers', async (req, res) => {
         console.log(`🎨 Generating sticker: "${prompt.slice(0, 50)}" with source: ${imageUrl.slice(0, 60)}...`);
 
         // Use nano_banana (image-to-image) model for sticker generation
-        const result = await aiService.generateImage(prompt, 'nano_banana', {
+        const result = await aiService.generateImage(prompt, 'nano_banana_pro', {
             source_files: [imageUrl],
             aspect_ratio: '1:1',
             resolution: '1K'
