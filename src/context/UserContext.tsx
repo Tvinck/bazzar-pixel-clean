@@ -111,10 +111,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const initUser = async () => {
             setIsLoading(true);
             try {
-                // 1. Check for Telegram
+                // 1. Check for Telegram Native SDK
                 const tgId = (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.id;
+
+                // 2. Check for Custom Web Browser Auth (injected by main.jsx)
+                const webAuth = (window as any).__bazzar_auth__;
+
                 const webToken = localStorage.getItem('bazzar_web_auth');
 
+                // Path 1: Native Telegram Mini App
                 if (tgId) {
                     setTelegramId(tgId);
                     const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
@@ -132,11 +137,28 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     const userProfile = await dbAnalytics.getUserProfile(tgId);
                     if (userProfile) setProfile(userProfile);
                 }
-                // 2. Check for Web Auth Token
-                else if (webToken) {
-                    console.log('🌐 Web Auth Token found, validating...');
+                // Path 2: Browser Session with Web Login Widget Token
+                else if (webAuth?.user?.id) {
+                    console.log('🌐 Web Auth Token found via global ref, validating...');
                     try {
-                        // Extract basic info from JWT-like token (stored as web_auth:TOKEN)
+                        const payload = webAuth.user;
+                        setTelegramId(payload.id);
+                        setUser({ id: payload.id.toString(), telegram_id: payload.id, username: payload.username, first_name: payload.first_name });
+
+                        const userStats = await dbAnalytics.getUserStats(payload.id);
+                        if (userStats) setStats(userStats);
+
+                        const userProfile = await dbAnalytics.getUserProfile(payload.id);
+                        if (userProfile) setProfile(userProfile);
+                    } catch (e) {
+                        console.error('❌ Failed to parse web token state:', e);
+                        localStorage.removeItem('bazzar_web_auth');
+                    }
+                }
+                // Path 3: Legacy or Strict Web Token Fallback (if main.jsx injection failed)
+                else if (webToken) {
+                    console.log('🌐 Web Auth Token found in storage, processing directly...');
+                    try {
                         const tokenPart = webToken.replace('web_auth:', '');
                         const payload = JSON.parse(atob(tokenPart.split('.')[1]));
 
@@ -149,11 +171,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         const userProfile = await dbAnalytics.getUserProfile(payload.id);
                         if (userProfile) setProfile(userProfile);
                     } catch (e) {
-                        console.error('❌ Failed to parse web token:', e);
+                        console.error('❌ Failed to parse web token directly:', e);
                         localStorage.removeItem('bazzar_web_auth');
                     }
                 }
-                // 3. Dev Fallback
+                // Path 4: Dev Fallback (localhost bypass)
                 else {
                     console.log('No Auth found - checking for Dev Override');
                     const isDevOverride = localStorage.getItem('bazzar_dev_override') === 'true';

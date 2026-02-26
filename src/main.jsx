@@ -14,52 +14,17 @@ if (!window.Telegram?.WebApp?.initData && webAuthToken) {
       return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
     }).join('')));
 
-    // Mock the Telegram WebApp object
-    window.Telegram = window.Telegram || {};
-    window.Telegram.WebApp = window.Telegram.WebApp || {};
+    // Store securely in our own namespace to avoid Telegram SDK read-only conflicts
+    window.__bazzar_auth__ = {
+      initData: webAuthToken,
+      user: {
+        id: decodedPayload.id,
+        username: decodedPayload.username || '',
+        first_name: decodedPayload.first_name || '',
+      }
+    };
 
-    // Some Telegram SDK versions seal the object. Safest way is to try defineProperty,
-    // if it fails (Cannot redefine), we catch it and try normal assignment.
-    try {
-      Object.defineProperty(window.Telegram.WebApp, 'initData', {
-        value: webAuthToken,
-        writable: true,
-        configurable: true
-      });
-
-      Object.defineProperty(window.Telegram.WebApp, 'initDataUnsafe', {
-        value: {
-          user: {
-            id: decodedPayload.id,
-            username: decodedPayload.username || '',
-            first_name: decodedPayload.first_name || '',
-          }
-        },
-        writable: true,
-        configurable: true
-      });
-    } catch (e) {
-      console.warn('Could not define property on WebApp, falling back to direct assignment');
-      window.Telegram.WebApp.initData = webAuthToken;
-      window.Telegram.WebApp.initDataUnsafe = {
-        user: {
-          id: decodedPayload.id,
-          username: decodedPayload.username || '',
-          first_name: decodedPayload.first_name || '',
-        }
-      };
-    }
-
-    // Mock required SDK functions to prevent runtime errors in the web
-    window.Telegram.WebApp.ready = () => { };
-    window.Telegram.WebApp.expand = () => { };
-    window.Telegram.WebApp.enableClosingConfirmation = () => { };
-    window.Telegram.WebApp.HapticFeedback = { impactOccurred: () => { }, notificationOccurred: () => { }, selectionChanged: () => { } };
-    window.Telegram.WebApp.BackButton = { show: () => { }, hide: () => { }, onClick: () => { }, offClick: () => { } };
-    window.Telegram.WebApp.openTelegramLink = (url) => window.open(url, '_blank');
-    window.Telegram.WebApp.openLink = (url) => window.open(url, '_blank');
-
-    console.log('✅ Injected Web Auth Token for browser session');
+    console.log('✅ Injected Web Auth Token into browser session');
   } catch (e) {
     console.error("Failed to parse web token", e);
     localStorage.removeItem('bazzar_web_auth');
