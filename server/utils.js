@@ -33,7 +33,10 @@ export function verifyTelegramWebLoginData(authData) {
     try {
         const { hash, ...dataToCheck } = authData;
 
-        if (!hash) return null;
+        if (!hash) {
+            console.error('Web Login Validation Error: Missing hash');
+            return null;
+        }
 
         const dataCheckString = Object.keys(dataToCheck)
             .sort()
@@ -45,6 +48,12 @@ export function verifyTelegramWebLoginData(authData) {
 
         if (calculatedHash === hash) {
             return authData;
+        } else {
+            console.error('Web Login Validation Error: Hash mismatch!', {
+                receivedHash: hash,
+                calculatedHash: calculatedHash,
+                dataCheckString: dataCheckString
+            });
         }
     } catch (e) {
         console.error('Web Login Validation Error:', e);
@@ -56,7 +65,7 @@ export function verifyTelegramWebLoginData(authData) {
 export function generateWebAuthToken(user) {
     const JWT_SECRET = process.env.JWT_SECRET || process.env.TELEGRAM_BOT_TOKEN; // Fallback to bot token if no Secret
     return jwt.sign(
-        { id: user.id, username: user.username, first_name: user.first_name },
+        { id: user.telegram_id || user.id, username: user.username, first_name: user.first_name },
         JWT_SECRET,
         { expiresIn: '30d' }
     );
