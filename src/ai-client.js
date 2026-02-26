@@ -136,13 +136,17 @@ const aiService = {
         }
 
         const data = await createRes.json();
-        const jobId = data.jobId;
         const newBalance = data.newBalance;
 
+        // Extract jobId defensively — backend may return string UUID or { id, imageUrl } object
+        const rawJobId = data.jobId;
+        const jobId = typeof rawJobId === 'object' && rawJobId !== null ? rawJobId.id : rawJobId;
+
         // If the server already completed the job synchronously (Vercel fallback), return immediately
-        if (data.imageUrl) {
+        const immediateUrl = data.imageUrl || (typeof rawJobId === 'object' ? rawJobId?.imageUrl : null);
+        if (immediateUrl) {
             console.log('⚡ Sync result received, skipping poll.');
-            return { success: true, imageUrl: data.imageUrl, id: jobId, newBalance };
+            return { success: true, imageUrl: immediateUrl, id: jobId, newBalance };
         }
 
         if (!jobId) {
