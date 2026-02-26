@@ -118,14 +118,14 @@ const aiService = {
             'z_image_turbo': 'z-image',
 
             // --- VIDEO FAMILY (Existing + New) ---
-            'kling_2_6': 'kling-2.6/text-to-video',
+            'kling_2_6': 'wan/2-6-text-to-video',
             'wan_2_6': 'wan/2-6-text-to-video',
             'hailuo_2_3': 'hailuo/2-3-image-to-video-pro',
-            'video': 'kling-2.6/text-to-video', // Default mapping for generic 'video' type
+            'video': 'wan/2-6-text-to-video', // Default mapping for generic 'video' type
 
             // --- LEGACY MAPPINGS ---
-            'kling_video': 'kling-v1.6/image-to-video',
-            'kling_motion_control': 'kling-2.6/motion-control',
+            'kling_video': 'wan/2-6-image-to-video',
+            'kling_motion_control': 'wan/2-6-text-to-video',
             'midjourney': 'midjourney/imagine',
             'gpt4o_image': 'gpt-image/1.5-text-to-image'
         };
@@ -133,7 +133,7 @@ const aiService = {
         // 1. Determine Correct Model ID
         let kieModelId = KIE_MAP[modelId];
 
-        if (modelId === 'kling_motion_control') kieModelId = 'kling-2.6/motion-control';
+        if (modelId === 'kling_motion_control') kieModelId = 'wan/2-6-text-to-video';
         const hasSourceFiles = options.source_files && options.source_files.length > 0;
 
         // Auto-switch logic for Image 2 Image variants
@@ -142,8 +142,7 @@ const aiService = {
             if (modelId === 'flux_flex') kieModelId = 'flux-2/flex-image-to-image';
 
             // Video Models Switching
-            if (modelId === 'kling_2_6' || modelId === 'video') kieModelId = 'kling-2.6/image-to-video';
-            if (modelId === 'wan_2_6') kieModelId = 'wan/2-6-image-to-video';
+            if (modelId === 'kling_2_6' || modelId === 'video' || modelId === 'wan_2_6' || modelId === 'kling_video') kieModelId = 'wan/2-6-image-to-video';
         }
 
         if (!kieModelId) {
@@ -210,18 +209,21 @@ const aiService = {
         }
 
         // --- VIDEO FAMILY ---
-        else if (modelId === 'kling_2_6' || modelId === 'wan_2_6' || modelId === 'hailuo_2_3' || modelId === 'video') {
+        else if (modelId === 'kling_2_6' || modelId === 'wan_2_6' || modelId === 'hailuo_2_3' || modelId === 'video' || modelId === 'kling_video' || modelId === 'kling_motion_control') {
             input.aspect_ratio = options.aspect_ratio || '16:9';
-            if (options.duration) input.duration = options.duration;
+            if (options.duration) {
+                let parsedDuration = parseInt(String(options.duration).replace('s', ''));
+                if (isNaN(parsedDuration)) parsedDuration = 5;
+                input.duration = String(parsedDuration);
+            }
             if (options.quality) input.quality = options.quality;
             if (options.camera_motion) input.camera_motion = options.camera_motion;
 
-            // For Image-to-Video models in Kling/Wan/Hailuo, the field is often 'image' or 'image_url'
+            // Wan 2.6 works stably when 'image_urls' (Array) is provided for Image-to-Video
             if (hasSourceFiles) {
-                const sourceImg = options.source_files[0];
-                input.image = sourceImg;
-                input.image_url = sourceImg;
-                input.image_input = sourceImg;
+                input.image_urls = options.source_files;
+                input.image_url = options.source_files[0]; // Fallback for Hailuo
+                input.image = options.source_files[0]; // Fallback for Kling
             }
             if (!input.duration) input.duration = 5;
             if (!input.aspect_ratio) input.aspect_ratio = '16:9';
