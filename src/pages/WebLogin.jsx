@@ -92,13 +92,38 @@ const WebLogin = () => {
 
                         {import.meta.env.DEV && (
                             <button
-                                onClick={() => {
-                                    localStorage.setItem('bazzar_dev_override', 'true');
-                                    window.location.reload();
+                                onClick={async () => {
+                                    setIsLoading(true);
+                                    try {
+                                        const mockUser = {
+                                            id: 603207436,
+                                            first_name: "Developer",
+                                            username: "dev_user",
+                                            photo_url: "https://github.com/apple.png",
+                                            isDevMock: true
+                                        };
+                                        const response = await fetch('/api/auth/telegram-web', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify(mockUser)
+                                        });
+                                        const data = await response.json();
+                                        if (data.success && data.token) {
+                                            localStorage.setItem('bazzar_web_auth', data.token);
+                                            showToast('DEV Вход успешен!', 'success');
+                                            window.location.reload();
+                                        } else {
+                                            throw new Error(data.error);
+                                        }
+                                    } catch (e) {
+                                        showToast(e.message, 'error');
+                                    } finally {
+                                        setIsLoading(false);
+                                    }
                                 }}
-                                className="text-xs text-[#8e8e93] underline hover:text-white mt-2"
+                                className="text-xs text-[#8e8e93] underline hover:text-white mt-2 pb-4"
                             >
-                                Войти как тестовый пользователь (DEV)
+                                Войти как разработчик (DEV Bypass)
                             </button>
                         )}
                     </div>

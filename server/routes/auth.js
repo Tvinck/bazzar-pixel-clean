@@ -13,7 +13,15 @@ router.post('/telegram-web', async (req, res) => {
         const authData = req.body;
 
         // 1. Verify data from telegram widget
-        const verifiedData = verifyTelegramWebLoginData(authData);
+        let verifiedData;
+
+        // DEV BYPASS: Allow mock logins when running locally
+        if (process.env.NODE_ENV !== 'production' && authData.isDevMock) {
+            verifiedData = authData;
+        } else {
+            verifiedData = verifyTelegramWebLoginData(authData);
+        }
+
         if (!verifiedData) {
             return res.status(401).json({ error: 'Invalid authentication data' });
         }
