@@ -6,13 +6,30 @@ import { verifyTelegramWebAppData, verifyWebAuthToken } from '../utils.js';
  */
 export const authTG = async (req, res, next) => {
     try {
-        const initData = req.headers['x-tg-data'] || (req.body && req.body.initData);
+        let initData = req.headers['x-tg-data'] || (req.body && req.body.initData);
 
-        // Dev fallback when no initData and not in production
-        if (!initData && process.env.NODE_ENV !== 'production') {
-            const devId = req.headers['x-dev-auth-id'];
-            req.tgUser = { id: devId ? parseInt(devId) : 603207436, username: 'dev_user' };
-            return next();
+        // Also check Authorization header for Bearer token
+        const authHeader = req.headers['authorization'];
+        if (!initData && authHeader && authHeader.startsWith('Bearer ')) {
+            const token = authHeader.substring(7);
+            if (token && token !== 'null' && token !== 'undefined') {
+                initData = token;
+                // If it's a JWT from generateWebAuthToken, it might not have the web_auth: prefix
+                // verifyWebAuthToken handles the prefix, so we ensure it's there if it looks like a JWT
+                if (!initData.startsWith('web_auth:') && initData.split('.').length === 3) {
+                    initData = 'web_auth:' + initData;
+                }
+            }
+        }
+
+        // Clean up initData if it's literally "null" or "undefined" from client side
+        if (initData === 'null' || initData === 'undefined') {
+            initData = null;
+        }
+
+        // Dev fallback — DISABLED FOR SECURITY
+        if (process.env.NODE_ENV === 'development' && process.env.ALLOW_DEV_AUTH === 'true') {
+            throw new Error('DEV_AUTH не разрешён — используй настоящую авторизацию');
         }
 
         if (!initData) {
