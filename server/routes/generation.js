@@ -9,9 +9,21 @@ import { verifyTelegramWebAppData } from '../utils.js';
 import { addGenerationJob } from '../queue.js';
 import { authTG } from '../middleware/auth.js';
 import { addBranding } from '../utils/branding.js';
+import { getCache } from '../utils/promptCache.js';
+
+// --- РОУТИНГ ГЕНЕРАЦИИ ---
+// Отвечает за прием заданий на создание контента, проверку баланса пользователя,
+// кэширование результатов и взаимодействие с очередью заданий (pg-boss).
 
 const router = express.Router();
-const upload = multer({ storage: multer.memoryStorage() });
+const upload = multer({
+    storage: multer.memoryStorage(),
+    limits: { fileSize: 10 * 1024 * 1024 }, // 10MB max
+    fileFilter: (req, file, cb) => {
+        const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        cb(null, allowed.includes(file.mimetype));
+    }
+});
 
 /**
  * GET /api/generation/config
@@ -88,6 +100,24 @@ router.get('/jobs/:id', async (req, res) => {
 });
 
 /**
+ * POST /api/generation/enhance-prompt
+ * Enhances a user prompt with GPT for better generation results.
+ */
+router.post('/enhance-prompt', async (req, res) => {
+    try {
+        const { prompt } = req.body;
+        if (!prompt || !prompt.trim()) {
+            return res.status(400).json({ error: 'Prompt is required' });
+        }
+        const enhanced = await aiService.enhancePrompt(prompt.trim());
+        res.json({ enhanced });
+    } catch (e) {
+        console.error('Enhance prompt error:', e);
+        res.status(500).json({ error: e.message });
+    }
+});
+
+/**
  * POST /api/generation/generate
  * Main generation endpoint.
  */
@@ -142,6 +172,22 @@ router.post('/generate', upload.any(), async (req, res) => {
             }
         }
         if (sourceFiles.length > 0) options.source_files = sourceFiles;
+
+        // --- CACHE CHECK ---
+        // Only cache simple text-to-image prompts without source files
+        if (sourceFiles.length === 0 && type !== 'video') {
+            const cachedResult = getCache(prompt, modelKey);
+            if (cachedResult) {
+                console.log(`[Cache Hit] Serving cached result for: "${prompt}" [${modelKey}]`);
+                return res.json({
+                    success: true,
+                    status: 'completed',
+                    jobId: `cached_${Date.now()}`,
+                    newBalance,
+                    imageUrl: cachedResult.imageUrl
+                });
+            }
+        }
 
         const jobResult = await addGenerationJob({
             prompt, type, userId, cost,
@@ -257,7 +303,7 @@ router.post('/generate-greeting-v2', authTG, async (req, res) => {
     try {
         const { starId, occasion, targetName, customText } = req.body;
         const telegramId = req.tgUser.id;
-        const cost = 30;
+        const cost = MODEL_CATALOG['star_greeting']?.cost || 30;
 
         const { data: userRow } = await supabase.from('users').select('id').eq('telegram_id', telegramId).single();
         const userUUID = userRow?.id;

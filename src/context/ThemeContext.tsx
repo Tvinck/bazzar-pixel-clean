@@ -18,6 +18,8 @@ export interface ThemeContextType {
     currentTheme: string;
     setCurrentTheme: (themeId: string) => void;
     themes: Record<string, Theme>;
+    themeMode: 'light' | 'dark' | 'system';
+    setThemeMode: (mode: 'light' | 'dark' | 'system') => void;
 }
 
 // --- CONFIG ---
@@ -76,11 +78,17 @@ const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [currentTheme, setCurrentTheme] = useState<string>('default');
+    const [themeMode, setThemeMode] = useState<'light' | 'dark' | 'system'>('system');
 
     useEffect(() => {
-        const saved = localStorage.getItem('app-theme');
-        if (saved && themes[saved]) {
-            setCurrentTheme(saved);
+        const savedTheme = localStorage.getItem('app-theme');
+        if (savedTheme && themes[savedTheme]) {
+            setCurrentTheme(savedTheme);
+        }
+
+        const savedMode = localStorage.getItem('pixel_theme_mode') as 'light' | 'dark' | 'system' | null;
+        if (savedMode && ['light', 'dark', 'system'].includes(savedMode)) {
+            setThemeMode(savedMode);
         }
     }, []);
 
@@ -95,10 +103,31 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         localStorage.setItem('app-theme', currentTheme);
     }, [currentTheme]);
 
+    useEffect(() => {
+        localStorage.setItem('pixel_theme_mode', themeMode);
+
+        const tg = (window as any).Telegram?.WebApp;
+        let isDark = true; // default to dark
+
+        if (themeMode === 'system') {
+            isDark = tg?.colorScheme === 'dark';
+        } else {
+            isDark = themeMode === 'dark';
+        }
+
+        if (isDark) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+    }, [themeMode]);
+
     const value: ThemeContextType = {
         currentTheme,
         setCurrentTheme,
-        themes
+        themes,
+        themeMode,
+        setThemeMode
     };
 
     return (

@@ -2,8 +2,8 @@ import fetch from 'node-fetch';
 import dotenv from 'dotenv';
 dotenv.config();
 
-// Use KIE_API_KEY from env or fallback
-const KIE_API_KEY = process.env.KIE_API_KEY || '365b6afae3b952cef9297bbc5384ec8e';
+// KIE API key from environment only
+const KIE_API_KEY = process.env.KIE_API_KEY;
 const BASE_URL = 'https://api.kie.ai/api/v1';
 
 export const replicateService = {

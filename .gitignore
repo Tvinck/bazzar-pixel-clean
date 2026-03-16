@@ -39,3 +39,9 @@ playwright-report/
 
 # Misc
 .gemini/
+
+# Lint reports
+*lint-report*.json
+
+# Build artifacts (ensure dist is ignored)
+dist/

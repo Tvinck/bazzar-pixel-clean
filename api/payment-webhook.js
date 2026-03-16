@@ -1,12 +1,10 @@
 import crypto from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
 
-// --- CONFIGURATION ---
-// Hardcoded Logic for maximum stability
-const SUPABASE_URL = 'https://ktookvpqtmzfccojarwm.supabase.co';
-// Using the Service Role Key (starts with eyJ... and allows bypassing RLS for admin tasks)
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODMxMzc2NSwiZXhwIjoyMDgzODg5NzY1fQ.L99oEJS40e0R_l05Jm2kZkItJKdaPAEYrGM0WQ0y08Y';
-const T_BANK_PASSWORD = '7XEqsWfjryCnqCck'; // Production Password
+// --- CONFIGURATION (from environment) ---
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const T_BANK_PASSWORD = process.env.TBANK_PASSWORD;
 
 // Initialize Supabase Admin
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
@@ -117,13 +115,33 @@ export default async function handler(req, res) {
         const amountRub = Math.round(body.Amount / 100);
         let creditsToAdd = 0;
 
-        // Pricing Rules (Must match Frontend)
-        if (amountRub === 99) creditsToAdd = 100;
-        else if (amountRub >= 490 && amountRub <= 510) creditsToAdd = 525;
-        else if (amountRub >= 990 && amountRub <= 1010) creditsToAdd = 1150;
-        else if (amountRub >= 1990 && amountRub <= 2010) creditsToAdd = 2400;
-        else if (amountRub >= 4990) creditsToAdd = 6500;
-        else creditsToAdd = amountRub; // Fallback 1 RUB = 1 Credit
+        // Use securely embedded credits if available (from promo code logic)
+        const embeddedCredits = body.DATA?.credits ? parseInt(body.DATA.credits) : 0;
+
+        if (embeddedCredits > 0) {
+            creditsToAdd = embeddedCredits;
+            console.log(`🎟️ [Webhook] Using embedded credits: ${creditsToAdd} (Promo: ${body.DATA?.promoCode || 'N/A'})`);
+
+            // Increment promo usage if applicable
+            if (body.DATA?.promoCode) {
+                try {
+                    const { data: promoData } = await supabase.from('promo_codes').select('used_count').eq('code', body.DATA.promoCode).single();
+                    if (promoData) {
+                        await supabase.from('promo_codes').update({ used_count: promoData.used_count + 1 }).eq('code', body.DATA.promoCode);
+                    }
+                } catch (e) {
+                    console.error('Failed to increment promo usage:', e);
+                }
+            }
+        } else {
+            // Pricing Rules (Must match Frontend)
+            if (amountRub === 99) creditsToAdd = 100;
+            else if (amountRub >= 490 && amountRub <= 510) creditsToAdd = 525;
+            else if (amountRub >= 990 && amountRub <= 1010) creditsToAdd = 1150;
+            else if (amountRub >= 1990 && amountRub <= 2010) creditsToAdd = 2400;
+            else if (amountRub >= 4990) creditsToAdd = 6500;
+            else creditsToAdd = amountRub; // Fallback 1 RUB = 1 Credit
+        }
 
         console.log(`💰 [Webhook] Crediting ${creditsToAdd} credits to User ${targetUser.id}`);
 

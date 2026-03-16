@@ -10,9 +10,8 @@ import { useUser } from '../../context/UserContext';
 import InsufficientCreditsModal from '../InsufficientCreditsModal';
 
 const AvatarTrainer = ({ isOpen, onClose }) => {
-    const { t } = useLanguage();
     const { playSuccess, playClick } = useSound();
-    const { stats, updateStats } = useUser();
+    const { stats } = useUser();
 
     // State
     const [images, setImages] = useState([]);

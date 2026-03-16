@@ -11,7 +11,6 @@ import { useUser } from '../../context/UserContext';
 import InsufficientCreditsModal from '../InsufficientCreditsModal';
 
 const InpaintingEditor = ({ isOpen, onClose, initialImage }) => {
-    const { t } = useLanguage();
     const { toast } = useToast();
     const { stats, updateStats } = useUser();
 

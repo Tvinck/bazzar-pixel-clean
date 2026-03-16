@@ -7,29 +7,34 @@ dotenv.config();
 // --- CONFIG ---
 export const PORTS = {
     GATEWAY: 3000,
-    PAYMENTS: 3001,
-    USERS: 3002,
-    GENERATION: 3003
+    PAYMENTS: 5301,
+    USERS: 5302,
+    GENERATION: 5303
 };
 
 // --- SUPABASE ---
-const supabaseUrl = process.env.SUPABASE_URL || 'https://ktookvpqtmzfccojarwm.supabase.co';
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODMxMzc2NSwiZXhwIjoyMDgzODg5NzY1fQ.L99oEJS40e0R_l05Jm2kZkItJKdaPAEYrGM0WQ0y08Y';
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 export const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // --- ANALYTICS ---
+const isUUID = (str) => typeof str === 'string' && str.length === 36 && str.includes('-');
+
 export const botAnalytics = {
     async trackEvent(telegramId, eventName, eventData = {}) {
         try {
-            const { data: userData } = await supabase.from('users').select('id').eq('telegram_id', telegramId).single();
-            const userId = userData?.id;
+            let userId = telegramId;
+            if (!isUUID(telegramId)) {
+                const { data: userData } = await supabase.from('users').select('id').eq('telegram_id', telegramId).single();
+                userId = userData?.id;
+            }
             if (!userId) return null;
 
             return await supabase.from('events').insert({
                 user_id: userId,
                 event_name: eventName,
-                event_data: { telegram_id: telegramId, ...eventData },
+                event_data: { telegram_id: isUUID(telegramId) ? null : telegramId, ...eventData },
                 created_at: new Date().toISOString()
             });
         } catch (err) { console.error('Analytics Error:', err); }
@@ -69,6 +74,9 @@ export function verifyTelegramWebAppData(telegramInitData) {
 }
 
 export async function getUserUUID(telegramId, tgUser = null) {
+    if (!telegramId) return null;
+    if (isUUID(telegramId)) return telegramId;
+
     const { data: user } = await supabase.from('users').select('id').eq('telegram_id', telegramId).single();
     if (user) return user.id;
     if (tgUser) {
@@ -80,9 +88,14 @@ export async function getUserUUID(telegramId, tgUser = null) {
 
 export async function getUserBalance(telegramId) {
     try {
-        const { data: user } = await supabase.from('users').select('id').eq('telegram_id', telegramId).single();
-        if (!user) return 0;
-        const { data: stats } = await supabase.from('user_stats').select('current_balance').eq('user_id', user.id).single();
+        let userId = telegramId;
+        if (!isUUID(telegramId)) {
+            const { data: user } = await supabase.from('users').select('id').eq('telegram_id', telegramId).single();
+            if (!user) return 0;
+            userId = user.id;
+        }
+
+        const { data: stats } = await supabase.from('user_stats').select('current_balance').eq('user_id', userId).single();
         return stats?.current_balance || 0;
     } catch (e) { return 0; }
 }
@@ -91,9 +104,9 @@ export async function getUserBalance(telegramId) {
 export const authTG = async (req, res, next) => {
     try {
         const initData = req.headers['x-tg-data'] || (req.body && req.body.initData);
-        if (!initData && process.env.NODE_ENV !== 'production') {
+        if (!initData && process.env.ALLOW_DEV_AUTH === 'true') {
             const devId = req.headers['x-dev-auth-id'];
-            req.tgUser = { id: devId ? parseInt(devId) : 603207436, username: 'dev_user' };
+            req.tgUser = { id: devId ? parseInt(devId) : parseInt(process.env.DEV_USER_ID || '0'), username: 'dev_user' };
             return next();
         }
         if (!initData) return res.status(401).json({ error: 'Auth required' });

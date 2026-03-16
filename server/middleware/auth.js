@@ -1,8 +1,10 @@
 import { verifyTelegramWebAppData, verifyWebAuthToken } from '../utils.js';
 
 /**
- * Telegram WebApp authentication middleware.
- * Validates initData from headers or body, attaches req.tgUser.
+ * Мидлвар для авторизации через Telegram WebApp или JWT.
+ * 1. Извлекает initData из заголовков или тела запроса.
+ * 2. Проверяет валидность данных через HMAC (для Telegram) или публичный ключ (для JWT).
+ * 3. Прикрепляет объект пользователя к req.tgUser.
  */
 export const authTG = async (req, res, next) => {
     try {

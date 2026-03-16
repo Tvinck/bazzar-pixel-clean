@@ -9,8 +9,8 @@ app.use(cors());
 app.use(express.json());
 
 const PORT = PORTS.PAYMENTS;
-const T_BANK_PASSWORD = process.env.T_BANK_PASSWORD || '7XEqsWfjryCnqCck';
-const TERMINAL_KEY = process.env.T_BANK_TERMINAL_KEY || '1768938209983';
+const T_BANK_PASSWORD = process.env.TBANK_PASSWORD;
+const TERMINAL_KEY = process.env.TBANK_TERMINAL_KEY;
 
 // --- ROUTES ---
 
@@ -130,11 +130,27 @@ app.post('/api/payments/webhook', async (req, res) => {
         else if (amountRub >= 1990 && amountRub <= 2010) credits = 2400;
         else if (amountRub >= 4990) credits = 6500;
 
-        // Atomic Credit
+        // Atomic Credit via RPC
+        const { error: rpcError } = await supabase.rpc('add_user_credits', {
+            p_telegram_id: telegramId,
+            p_amount: credits,
+            p_reason: `Deposit: ${amountRub}₽`,
+            p_source: 'tbank'
+        });
+
+        if (rpcError) throw rpcError;
+
+        await supabase.from('transactions').insert({ 
+            user_id: user.id, 
+            amount: credits, 
+            type: 'deposit', 
+            description: `T-Bank: ${amountRub}₽`, 
+            metadata: body 
+        });
+
+        // Get new balance for notification (optional, could be fetched via stats if needed)
         const { data: stats } = await supabase.from('user_stats').select('current_balance').eq('user_id', user.id).single();
-        const newBalance = (stats?.current_balance || 0) + credits;
-        await supabase.from('user_stats').upsert({ user_id: user.id, current_balance: newBalance, updated_at: new Date().toISOString() });
-        await supabase.from('transactions').insert({ user_id: user.id, amount: credits, type: 'deposit', description: `T-Bank: ${amountRub}₽`, metadata: body });
+        const newBalance = stats?.current_balance || 0;
 
         // Telegram Notify
         if (process.env.TELEGRAM_BOT_TOKEN) {

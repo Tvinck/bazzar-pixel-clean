@@ -3,9 +3,10 @@ import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
     Image as ImageIcon, Video, Send, User as UserIcon,
-    Zap, Smile, ChevronRight, X, Search, Heart, Share, Plus, Sparkles, Star, Maximize2
+    Zap, Smile, ChevronRight, X, Search, Heart, Share, Plus, Sparkles, Star, Maximize2, Trophy
 } from 'lucide-react';
 import { usePublicCreations, useTemplates } from '../hooks/useGallery';
+import SEO from '../components/SEO/SEO';
 import { useUser } from '../context/UserContext';
 import { templatesData } from '../data/templates';
 import { SpringCounter } from '../components/SpringAnimations';
@@ -72,7 +73,7 @@ const itemVariants = {
     show: { opacity: 1, scale: 1, y: 0, transition: { type: "spring", stiffness: 350, damping: 25 } }
 };
 
-const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeaderboard, onOpenPayment, onOpenStickers }) => {
+const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPayment }) => {
     const navigate = useNavigate();
     const { user, stats } = useUser();
     const { t } = useLanguage();
@@ -102,6 +103,10 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
 
     return (
         <div className="min-h-screen bg-black text-white pb-24 relative overflow-y-auto overflow-x-hidden font-sans w-full selection:bg-[#3390ec]/30">
+            <SEO 
+                title="Bazzar Pixel — AI генерация"
+                description="Создавай уникальный контент с помощью нейросетей"
+            />
 
             {/* Premium Animated Background */}
             <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">
@@ -200,6 +205,39 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenLeader
                     </div>
                     <div className="absolute -top-10 -right-10 w-40 h-40 bg-white/20 rounded-full blur-2xl pointer-events-none" />
                 </motion.button>
+
+                {/* Challenges Section Banner */}
+                <motion.div
+                    variants={itemVariants}
+                    whileTap={{ scale: 0.98 }}
+                    onClick={() => { triggerHaptic('medium'); navigate('/challenges'); }}
+                    className="w-full bg-gradient-to-br from-[#1c1c1e] to-[#252529] border border-blue-500/20 rounded-[24px] p-5 flex items-center gap-4 relative overflow-hidden group shadow-xl active:border-blue-500/40 transition-colors"
+                >
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl -mr-16 -mt-16 group-hover:bg-blue-500/20 transition-colors" />
+
+                    <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/20 rotate-3 group-hover:rotate-0 transition-transform">
+                        <Trophy size={28} className="text-white drop-shadow-md" />
+                    </div>
+
+                    <div className="flex-1 text-left relative z-10">
+                        <div className="flex items-center gap-2 mb-0.5">
+                            <h4 className="text-[17px] font-black text-white tracking-tight">{t('challenges.title')}</h4>
+                            <div className="bg-red-500/90 px-1.5 py-0.5 rounded-md text-[9px] font-black text-white uppercase tracking-tighter shadow-sm animate-pulse">Live</div>
+                        </div>
+                        <p className="text-[13px] text-gray-400 font-medium leading-tight">
+                            {t('challenges.joinDescription').split(' ').slice(0, 5).join(' ')}...
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-2">
+                            <span className="text-[11px] font-bold text-blue-400">Награда: 500 ⚡</span>
+                            <div className="w-1 h-1 bg-white/20 rounded-full" />
+                            <span className="text-[11px] font-bold text-white/40">2д 14ч</span>
+                        </div>
+                    </div>
+
+                    <div className="w-8 h-8 rounded-full bg-white/5 flex items-center justify-center group-hover:bg-white/10 transition-colors mr-1">
+                        <ChevronRight size={18} className="text-white/30 group-hover:text-white group-hover:translate-x-0.5 transition-all" />
+                    </div>
+                </motion.div>
 
                 {/* Action Blocks (Grid) */}
                 <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

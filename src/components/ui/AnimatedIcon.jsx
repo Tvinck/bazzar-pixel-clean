@@ -16,7 +16,8 @@ import { motion } from 'framer-motion';
  * @param {number|string} props.size - Size of the icon
  */
 const AnimatedIcon = ({
-    icon: Icon,
+// eslint-disable-next-line no-unused-vars
+    icon: _Icon,
     className = '',
     delay = 0,
     isActive = false,
@@ -83,7 +84,7 @@ const AnimatedIcon = ({
                 variants={variants}
                 {...props}
             >
-                <Icon color={color} size={size} className={isActive ? 'text-[#3390ec]' : ''} />
+                <_Icon color={color} size={size} className={isActive ? 'text-[#3390ec]' : ''} />
             </motion.div>
         </div>
     );

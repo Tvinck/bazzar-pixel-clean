@@ -39,7 +39,6 @@ const banners = [
 
 const BannerCarousel = () => {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const { t } = useLanguage();
 
     useEffect(() => {
         const timer = setInterval(() => {

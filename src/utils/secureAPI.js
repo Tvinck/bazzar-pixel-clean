@@ -187,7 +187,7 @@ class SecureAPIClient {
     /**
      * Безопасная генерация изображения
      */
-    async generateImage(prompt, options = {}) {
+    async generateImage(prompt) {
         // Валидация промпта
         const validation = validatePrompt(prompt);
 
@@ -196,8 +196,7 @@ class SecureAPIClient {
         }
 
         return this.post('/generate', {
-            prompt: validation.sanitized,
-            ...options
+            prompt: validation.sanitized
         }, {
             rateLimitType: 'generation'
         });
@@ -206,7 +205,7 @@ class SecureAPIClient {
     /**
      * Безопасная загрузка файла
      */
-    async uploadFile(file, options = {}) {
+    async uploadFile(file) {
         const formData = new FormData();
         formData.append('file', file);
 

@@ -16,6 +16,17 @@ const CATEGORIES = [
     { id: 'cars', label: 'Авто', icon: Box },
 ];
 
+const SAMPLE_TEMPLATES = [
+    { id: 't1', title: 'Cyberpunk Neon City', src: 'https://cdn.midjourney.com/5c960c18-9752-4740-9830-80252b4142d7/0_0.png', category: 'trends', likes_count: 1240 },
+    { id: 't2', title: 'Professional Studio Portrait', src: 'https://cdn.midjourney.com/3d656834-8094-4422-9444-245c3619211c/0_0.png', category: 'all', likes_count: 850 },
+    { id: 't3', title: 'Abstract 3D Shape', src: 'https://cdn.midjourney.com/97828062-8411-4648-968b-592d3348633e/0_0.png', category: 'trends', likes_count: 2100 },
+    { id: 't4', title: 'Valentine Heart Balloon', src: 'https://cdn.midjourney.com/74384144-8848-4389-8064-074900139174/0_0.png', category: '14feb', likes_count: 5300 },
+    { id: 't5', title: 'Cute Cat in Space Suit', src: 'https://cdn.midjourney.com/b8004169-2b73-45cb-866d-176375001362/0_0.png', category: 'pets', likes_count: 1420 },
+    { id: 't6', title: 'Retro Vaporwave Car', src: 'https://cdn.midjourney.com/39322301-447e-40e1-9556-9472314a589e/0_0.png', category: 'cars', likes_count: 980 },
+    { id: 't7', title: 'Golden Luxury Texture', src: 'https://cdn.midjourney.com/15294022-3868-450f-a63e-001007872658/0_0.png', category: 'trends', likes_count: 760 },
+    { id: 't8', title: 'Pastel Dream Cloud', src: 'https://cdn.midjourney.com/83906323-2895-468e-99f2-01990424602f/0_0.png', category: 'oldTrends', likes_count: 1150 },
+];
+
 const ImageTemplatesView = ({ onOpenTemplate }) => {
     const navigate = useNavigate();
     const { user } = useUser();
@@ -25,18 +36,6 @@ const ImageTemplatesView = ({ onOpenTemplate }) => {
     const [activeCategory, setActiveCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
     const [filteredItems, setFilteredItems] = useState([]);
-
-    // REAL HIGH-QUALITY SAMPLES (Fallback)
-    const SAMPLE_TEMPLATES = [
-        { id: 't1', title: 'Cyberpunk Neon City', src: 'https://cdn.midjourney.com/5c960c18-9752-4740-9830-80252b4142d7/0_0.png', category: 'trends', likes_count: 1240 },
-        { id: 't2', title: 'Professional Studio Portrait', src: 'https://cdn.midjourney.com/3d656834-8094-4422-9444-245c3619211c/0_0.png', category: 'all', likes_count: 850 },
-        { id: 't3', title: 'Abstract 3D Shape', src: 'https://cdn.midjourney.com/97828062-8411-4648-968b-592d3348633e/0_0.png', category: 'trends', likes_count: 2100 },
-        { id: 't4', title: 'Valentine Heart Balloon', src: 'https://cdn.midjourney.com/74384144-8848-4389-8064-074900139174/0_0.png', category: '14feb', likes_count: 5300 },
-        { id: 't5', title: 'Cute Cat in Space Suit', src: 'https://cdn.midjourney.com/b8004169-2b73-45cb-866d-176375001362/0_0.png', category: 'pets', likes_count: 1420 },
-        { id: 't6', title: 'Retro Vaporwave Car', src: 'https://cdn.midjourney.com/39322301-447e-40e1-9556-9472314a589e/0_0.png', category: 'cars', likes_count: 980 },
-        { id: 't7', title: 'Golden Luxury Texture', src: 'https://cdn.midjourney.com/15294022-3868-450f-a63e-001007872658/0_0.png', category: 'trends', likes_count: 760 },
-        { id: 't8', title: 'Pastel Dream Cloud', src: 'https://cdn.midjourney.com/83906323-2895-468e-99f2-01990424602f/0_0.png', category: 'oldTrends', likes_count: 1150 },
-    ];
 
     useEffect(() => {
         // Merge API templates with SAMPLES or just use SAMPLES if API empty
@@ -114,7 +113,7 @@ const ImageTemplatesView = ({ onOpenTemplate }) => {
             <div className="relative z-10 px-4 pb-20">
                 <div className="columns-2 gap-3 space-y-3">
                     {isLoading ? (
-                        Array.from({ length: 6 }).map((_, i) => (
+                        Array.from({ length: 6 }).map((_unused, i) => (
                             <div key={i} className="break-inside-avoid relative rounded-[20px] overflow-hidden bg-white dark:bg-white/5 h-48 animate-pulse" />
                         ))
                     ) : filteredItems.length > 0 ? (

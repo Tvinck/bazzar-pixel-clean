@@ -5,6 +5,7 @@ import { AnimatePresence } from 'framer-motion';
 // Layout Components
 import PageTransition from '../components/PageTransition';
 import LoadingScreen from '../components/LoadingScreen';
+import { ScreenErrorBoundary } from '../components/ErrorBoundary';
 
 // Lazy Load Views
 const HomeView = React.lazy(() => import("../views/HomeView"));
@@ -28,11 +29,15 @@ const GuideView = React.lazy(() => import("../views/GuideView"));
 const PublicProfileView = React.lazy(() => import("../views/collaboration/PublicProfileView"));
 const SharedCreationView = React.lazy(() => import("../views/collaboration/SharedCreationView"));
 const ReferralDashView = React.lazy(() => import("../views/ReferralDashView"));
+const AffiliateView = React.lazy(() => import("../views/AffiliateView"));
 const PromptMarketView = React.lazy(() => import("../views/PromptMarketView"));
 const DevDashboardView = React.lazy(() => import("../views/DevDashboardView"));
 const SuperResolutionView = React.lazy(() => import("../views/SuperResolutionView"));
 const StickersView = React.lazy(() => import("../views/StickersView"));
+const OAuthCallback = React.lazy(() => import("../pages/OAuthCallback"));
 const NotFoundView = React.lazy(() => import("../views/NotFoundView"));
+const CollectionsView = React.lazy(() => import("../views/CollectionsView"));
+const ChallengesView = React.lazy(() => import("../views/ChallengesView"));
 
 /**
  * Component for managing all application routes and transitions.
@@ -46,153 +51,239 @@ const AppRoutes = ({ handlers, state }) => {
         openStickerGen
     } = handlers;
 
+    const wrap = (component) => (
+        <ScreenErrorBoundary>
+            {component}
+        </ScreenErrorBoundary>
+    );
+
     return (
         <Suspense fallback={<LoadingScreen />}>
             <AnimatePresence mode="wait" initial={false}>
                 <Routes location={location} key={location.pathname}>
                     {/* Main Tabs */}
                     <Route path="/" element={
-                        <PageTransition>
-                            <HomeView
-                                onOpenCreation={openCreation}
-                                onOpenTemplate={openTemplate}
-                                onOpenLeaderboard={openLeaderboard}
-                                onOpenPayment={openPayment}
-                                onOpenStickers={openStickerGen}
-                            />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <HomeView
+                                    onOpenCreation={openCreation}
+                                    onOpenTemplate={openTemplate}
+                                    onOpenLeaderboard={openLeaderboard}
+                                    onOpenPayment={openPayment}
+                                    onOpenStickers={openStickerGen}
+                                />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/gallery" element={
-                        <PageTransition>
-                            <GalleryView
-                                onRemix={(creation) => openCreation("image-gen", creation.prompt)}
-                                onOpenTemplate={openTemplate}
-                            />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <GalleryView
+                                    onRemix={(creation) => openCreation("image-gen", creation.prompt)}
+                                    onOpenTemplate={openTemplate}
+                                />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/history" element={
-                        <PageTransition>
-                            <HistoryView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <HistoryView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/profile" element={
-                        <PageTransition>
-                            <ProfileView isDark={isDarkMode} onOpenPayment={openPayment} />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <ProfileView isDark={isDarkMode} onOpenPayment={openPayment} />
+                            </PageTransition>
+                        )
                     } />
 
                     {/* Full Pages */}
                     <Route path="/create" element={
-                        <PageTransition>
-                            <CreateView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <CreateView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/generate/:type" element={
-                        <PageTransition>
-                            <GenerationView onOpenPayment={openPayment} />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <GenerationView onOpenPayment={openPayment} />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/template/:id" element={
-                        <PageTransition>
-                            <TemplateView onOpenPayment={openPayment} />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <TemplateView onOpenPayment={openPayment} />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/user/:userId" element={
-                        <PageTransition>
-                            <UserProfileView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <UserProfileView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/admin" element={
-                        <PageTransition>
-                            <AdminView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <AdminView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/payment/success" element={
-                        <PageTransition>
-                            <PaymentSuccessView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <PaymentSuccessView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/greetings" element={
-                        <PageTransition>
-                            <StarGreetingsView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <StarGreetingsView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/stickers" element={
-                        <PageTransition>
-                            <StickersView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <StickersView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/design-lab" element={
-                        <DesignLabView
-                            onOpenPayment={openPayment}
-                            onOpenInpainting={openInpainting}
-                            onOpenFaceSwap={openFaceSwap}
-                        />
+                        wrap(
+                            <DesignLabView
+                                onOpenPayment={openPayment}
+                                onOpenInpainting={openInpainting}
+                                onOpenFaceSwap={openFaceSwap}
+                            />
+                        )
                     } />
                     <Route path="/image-templates" element={
-                        <PageTransition>
-                            <ImageTemplatesView onOpenTemplate={openTemplate} />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <ImageTemplatesView onOpenTemplate={openTemplate} />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/experts" element={
-                        <PageTransition>
-                            <ExpertsView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <ExpertsView />
+                            </PageTransition>
+                        )
+                    } />
+                    <Route path="/collections" element={
+                        wrap(
+                            <PageTransition>
+                                <CollectionsView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/experts/:expertId" element={
-                        <PageTransition>
-                            <ExpertChatView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <ExpertChatView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/chat/:chatType" element={
-                        <PageTransition>
-                            <UniversalChatView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <UniversalChatView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/onboarding" element={
-                        <PageTransition>
-                            <OnboardingView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <OnboardingView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/guide" element={
-                        <PageTransition>
-                            <GuideView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <GuideView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/u/:username" element={
-                        <PageTransition>
-                            <PublicProfileView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <PublicProfileView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/c/:id" element={
-                        <PageTransition>
-                            <SharedCreationView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <SharedCreationView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/referrals" element={
-                        <PageTransition>
-                            <ReferralDashView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <ReferralDashView />
+                            </PageTransition>
+                        )
+                    } />
+                    <Route path="/affiliate" element={
+                        wrap(
+                            <PageTransition>
+                                <AffiliateView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/marketplace" element={
-                        <PageTransition>
-                            <PromptMarketView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <PromptMarketView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/developer" element={
-                        <PageTransition>
-                            <DevDashboardView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <DevDashboardView />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="/upscale/:id" element={
-                        <PageTransition>
-                            <SuperResolutionView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <SuperResolutionView />
+                            </PageTransition>
+                        )
+                    } />
+                    <Route path="/challenges" element={
+                        wrap(
+                            <PageTransition>
+                                <ChallengesView />
+                            </PageTransition>
+                        )
+                    } />
+                    <Route path="/auth/callback" element={
+                        wrap(
+                            <PageTransition>
+                                <OAuthCallback />
+                            </PageTransition>
+                        )
                     } />
                     <Route path="*" element={
-                        <PageTransition>
-                            <NotFoundView />
-                        </PageTransition>
+                        wrap(
+                            <PageTransition>
+                                <NotFoundView />
+                            </PageTransition>
+                        )
                     } />
                 </Routes>
             </AnimatePresence>

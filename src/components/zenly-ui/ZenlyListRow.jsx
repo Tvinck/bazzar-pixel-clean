@@ -1,7 +1,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 
-export const ZenlyListRow = ({ title, subtitle, icon: Icon, gradient, delay = 0, onClick }) => {
+// eslint-disable-next-line no-unused-vars
+export const ZenlyListRow = ({ title, subtitle, icon: _Icon, gradient, delay = 0, onClick }) => {
     return (
         <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -16,7 +17,7 @@ export const ZenlyListRow = ({ title, subtitle, icon: Icon, gradient, delay = 0,
 
             {/* Big Gradient Icon Wrapper */}
             <div className={`relative z-10 w-14 h-14 rounded-[22px] ${gradient} flex items-center justify-center text-white shadow-md shrink-0 mr-4`}>
-                <Icon size={24} strokeWidth={2.5} />
+                <_Icon size={24} strokeWidth={2.5} />
             </div>
 
             {/* Text Content */}

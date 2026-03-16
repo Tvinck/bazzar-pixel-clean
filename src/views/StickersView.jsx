@@ -18,7 +18,7 @@ const StickersView = () => {
     const scrollRef = useRef(null);
 
     const [sourceImage, setSourceImage] = useState(null);
-    const [activePackType, setActivePackType] = useState('static');
+    const [activePackType] = useState('static');
     const filteredPacks = STICKER_PACKS.filter(p => (p.type || 'static') === activePackType);
     const [selectedPack, setSelectedPack] = useState(filteredPacks[0] || STICKER_PACKS[0]);
     const [selectedStickers, setSelectedStickers] = useState({});
@@ -37,7 +37,7 @@ const StickersView = () => {
             setSelectedPack(filteredPacks[0]);
             setSelectedStickers({});
         }
-    }, [activePackType]);
+    }, [activePackType, filteredPacks, selectedPack.id]);
 
     const handleUpload = (e) => {
         const file = e.target.files[0];
@@ -109,7 +109,7 @@ const StickersView = () => {
 
                     const text = await response.text();
                     let data;
-                    try { data = JSON.parse(text); } catch (_) { throw new Error('Invalid server response'); }
+                    try { data = JSON.parse(text); } catch { throw new Error('Invalid server response'); }
                     if (!response.ok) throw new Error(data.error || 'Generation failed');
 
                     if (data.success && data.imageUrl) {
@@ -406,7 +406,7 @@ const StickersView = () => {
                             )}
                         </div>
                         <div className="grid grid-cols-3 md:grid-cols-4 gap-2 mt-6">
-                            {results.map((s, idx) => (
+                                {results.map((s, idx) => (
                                 <div key={idx} className="aspect-square rounded-[12px] bg-[#1c1c1e] border border-white/5 flex items-center justify-center overflow-hidden">
                                     {s.status === 'success' ? (
                                         <img src={s.resultUrl} className="w-full h-full object-contain p-1" alt={s.title} />

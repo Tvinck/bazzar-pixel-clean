@@ -2,10 +2,12 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { useUser } from '../context/UserContext';
+import { MODEL_CATALOG } from '../config/models';
 import {
     ChevronLeft, Zap,
     Image as ImageIcon, Video, Music, Wand2,
-    Banana, Wind, Layers, PenTool, Sparkles
+    Banana, Wind, Layers, PenTool, Sparkles,
+    Mic, Type, Eraser, Scissors, Film, User
 } from 'lucide-react';
 
 /**
@@ -18,92 +20,85 @@ const CreateView = () => {
     const { stats } = useUser();
     const balance = stats?.current_balance || 0;
 
-    const tools = [
+    const TOOLS = [
         {
-            id: 'image',
-            label: 'Изображение',
-            desc: 'По описанию',
-            icon: ImageIcon,
-            gradient: 'from-indigo-500 to-purple-600',
-            cost: 3
-        },
-        {
-            id: 'video',
-            label: 'Видео',
-            desc: 'Анимация',
-            icon: Video,
-            gradient: 'from-rose-500 to-pink-600',
-            cost: 15
-        },
-        {
-            id: 'banana',
-            label: 'Nano Banana',
-            desc: 'Google Gemini',
-            icon: Banana,
-            gradient: 'from-yellow-400 to-orange-500',
+            id: 'ideogram',
+            model: 'ideogram_reframe',
+            label: 'Ideogram v3',
+            desc: 'Текст в Арт',
+            icon: Type,
+            gradient: 'from-blue-600 to-indigo-700',
             special: true,
-            cost: 2
+            cost: MODEL_CATALOG['ideogram_reframe']?.cost || 20
         },
         {
-            id: 'kling',
-            label: 'Kling 2.6',
-            desc: 'Motion Control',
-            icon: Wind,
-            gradient: 'from-emerald-500 to-teal-600',
-            cost: 20
-        },
-        {
-            id: 'audio',
-            label: 'Музыка',
-            desc: 'AI Audio',
+            id: 'suno',
+            model: 'suno_v5',
+            label: 'Suno v4.5',
+            desc: 'AI Музыка',
             icon: Music,
-            gradient: 'from-blue-500 to-cyan-600',
-            cost: 5
-        },
-        {
-            id: 'animate',
-            label: 'Оживить фото',
-            desc: 'Анимация',
-            icon: Wand2,
-            gradient: 'from-purple-500 to-violet-600',
-            cost: 8
+            gradient: 'from-pink-500 to-rose-600',
+            special: true,
+            cost: MODEL_CATALOG['suno_v5']?.cost || 10
         },
         {
             id: 'veo',
-            label: 'Veo 3',
+            model: 'veo_3',
+            label: 'Veo 3.1',
             desc: 'Google Video',
-            icon: Layers,
+            icon: Film,
             gradient: 'from-orange-500 to-red-600',
-            cost: 25
+            cost: MODEL_CATALOG['veo_3']?.cost || 30
         },
         {
-            id: 'tools',
-            label: 'Инструменты',
-            desc: 'Face Swap',
-            icon: PenTool,
-            gradient: 'from-gray-600 to-gray-700',
-            cost: 0
+            id: 'kling',
+            model: 'kling_2_6_text',
+            label: 'Kling 2.6',
+            desc: 'Avatar & Video',
+            icon: User,
+            gradient: 'from-emerald-500 to-teal-600',
+            cost: MODEL_CATALOG['kling_2_6_text']?.cost || 20
         },
+        {
+            id: 'recraft',
+            model: 'recraft_upscale',
+            label: 'Recraft AI',
+            desc: 'Векторы и Дизайн',
+            icon: Wand2,
+            gradient: 'from-blue-400 to-indigo-500',
+            cost: MODEL_CATALOG['recraft_upscale']?.cost || 5
+        },
+        {
+            id: 'audio',
+            model: 'wan_turbo_speech',
+            label: 'ElevenLabs',
+            desc: 'Voice & SFX',
+            icon: Mic,
+            gradient: 'from-cyan-500 to-blue-500',
+            cost: MODEL_CATALOG['wan_turbo_speech']?.cost || 5
+        },
+        {
+            id: 'edit',
+            model: 'recraft_remove_bg',
+            label: 'Удалить фон',
+            desc: 'Recraft Tools',
+            icon: Eraser,
+            gradient: 'from-gray-700 to-gray-800',
+            cost: MODEL_CATALOG['recraft_remove_bg']?.cost || 2
+        }
     ];
 
-    const handleSelect = (id) => {
-        let type = 'image-gen';
-        let model = null;
+    const handleSelect = (toolId) => {
+        const tool = TOOLS.find(t => t.id === toolId);
+        if (!tool) return;
 
-        switch (id) {
-            case 'image': type = 'image-gen'; break;
-            case 'video': type = 'video-gen'; break;
-            case 'banana': type = 'image-gen'; model = 'nano_banana'; break;
-            case 'kling': type = 'video-gen'; model = 'kling_motion'; break;
-            case 'audio': type = 'audio-gen'; break;
-            case 'animate': type = 'animate-photo'; break;
-            case 'veo': type = 'video-gen'; model = 'veo_3'; break;
-            case 'tools': navigate('/design-lab'); return;
-            default: type = 'image-gen';
-        }
+        let type = 'image-gen';
+        if (tool.id === 'suno' || tool.id === 'audio') type = 'audio-gen';
+        else if (tool.id === 'veo' || tool.id === 'kling') type = 'video-gen';
+        else if (tool.id === 'animate') type = 'animate-photo';
 
         window.Telegram?.WebApp?.HapticFeedback?.impactOccurred('light');
-        navigate(`/generate/${encodeURIComponent(type)}`, { state: { model } });
+        navigate(`/generate/${encodeURIComponent(type)}`, { state: { model: tool.model } });
     };
 
     return (
@@ -124,8 +119,11 @@ const CreateView = () => {
 
                     <h1 className="text-[17px] tracking-tight font-semibold">Создать</h1>
 
-                    <div className="flex items-center gap-1.5 bg-[#2c2c2e] px-3 py-1.5 rounded-full">
-                        <Zap className="w-4 h-4 text-yellow-500 fill-yellow-500" />
+                    <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full transition-colors ${balance > 50 ? 'bg-emerald-500/10 text-emerald-500' :
+                            balance > 10 ? 'bg-yellow-500/10 text-yellow-500' :
+                                'bg-red-500/10 text-red-500'
+                        }`}>
+                        <Zap className="w-4 h-4 fill-current" />
                         <span className="text-[15px] font-semibold">{balance}</span>
                     </div>
                 </div>
@@ -166,7 +164,7 @@ const CreateView = () => {
 
                 {/* Tools Grid */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-                    {tools.map((tool, idx) => (
+                    {TOOLS.map((tool, idx) => (
                         <motion.button
                             key={tool.id}
                             initial={{ opacity: 0, y: 20 }}
@@ -190,8 +188,9 @@ const CreateView = () => {
 
                             {/* Cost badge */}
                             {tool.cost > 0 && !tool.special && (
-                                <div className="absolute top-3 right-3 flex items-center gap-1 bg-white/10 backdrop-blur-md px-2 py-1 rounded-full">
-                                    <Zap className="w-[10px] h-[10px] text-yellow-400 fill-yellow-400" />
+                                <div className={`absolute top-3 right-3 flex items-center gap-1 backdrop-blur-md px-2 py-1 rounded-full ${balance >= tool.cost ? 'bg-white/10 text-white' : 'bg-red-500/20 text-red-400'
+                                    }`}>
+                                    <Zap className="w-[10px] h-[10px] fill-current" />
                                     <span className="text-[11px] font-bold">{tool.cost}</span>
                                 </div>
                             )}

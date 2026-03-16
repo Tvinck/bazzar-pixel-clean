@@ -3,11 +3,13 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     Search, Sparkles, ChevronLeft, Zap,
-    Image as ImageIcon, Camera, Palette, Box, Film, Tv
+    Image as ImageIcon, Camera, Palette, Box, Film, Tv, ShoppingCart, Crown
 } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 import { useSound } from '../context/SoundContext';
 import { useToast } from '../context/ToastContext';
+// @ts-ignore
+import { useUser } from '../context/UserContext';
 
 interface PromptItem {
     id: string;
@@ -20,6 +22,9 @@ interface PromptItem {
     category: string;
     is_featured?: boolean;
     usage_count?: number;
+    price?: number;       // 0 = free, 5-50⚡
+    author_name?: string;
+    author_earnings?: number; // total earned
 }
 
 const CATEGORIES = [
@@ -32,9 +37,11 @@ const CATEGORIES = [
 ];
 
 const PromptCard = ({ item, onSelect }: { item: PromptItem, onSelect: (item: PromptItem) => void }) => {
-    const { lang, t } = useLanguage();
+    const { lang } = useLanguage();
     const title = lang === 'ru' ? item.title_ru : (item.title_en || item.title_ru);
     const description = lang === 'ru' ? item.description_ru : (item.description_en || item.description_ru);
+    const price = item.price || 0;
+    const isFree = price === 0;
 
     return (
         <motion.div
@@ -55,9 +62,10 @@ const PromptCard = ({ item, onSelect }: { item: PromptItem, onSelect: (item: Pro
                         <ImageIcon size={40} />
                     </div>
                 )}
-                <div className="absolute top-2 right-2 bg-black/60 backdrop-blur-md px-2 py-1 rounded-full flex items-center gap-1">
-                    <Zap size={10} className="fill-[#ffcc00] text-[#ffcc00]" />
-                    <span className="text-[11px] font-bold text-white">{item.usage_count || 0}</span>
+                {/* Price Badge */}
+                <div className={`absolute top-2 right-2 backdrop-blur-md px-2 py-1 rounded-full flex items-center gap-1 ${isFree ? 'bg-green-500/80' : 'bg-black/60'}`}>
+                    <Zap size={10} className={`fill-[#ffcc00] text-[#ffcc00]`} />
+                    <span className="text-[11px] font-bold text-white">{isFree ? 'Free' : `${price}`}</span>
                 </div>
                 {item.is_featured && (
                     <div className="absolute top-2 left-2 bg-[#007aff] px-2 py-1 rounded-full">
@@ -67,15 +75,28 @@ const PromptCard = ({ item, onSelect }: { item: PromptItem, onSelect: (item: Pro
             </div>
 
             <div className="p-3 flex flex-col flex-1">
-                <h3 className="text-[15px] font-bold text-white leading-tight mb-1 truncate">{title}</h3>
-                <p className="text-[12px] text-gray-400 line-clamp-2 mb-3 h-8 leading-normal">{description || 'Best settings for professional results'}</p>
+                <h3 className="text-[15px] font-bold text-white leading-tight mb-0.5 truncate">{title}</h3>
+                {item.author_name && (
+                    <div className="flex items-center gap-1 mb-1">
+                        <Crown size={10} className="text-yellow-400" />
+                        <span className="text-[11px] text-white/30">{item.author_name}</span>
+                    </div>
+                )}
+                <p className="text-[12px] text-gray-400 line-clamp-2 mb-3 leading-normal">{description || 'Professional prompt for amazing results'}</p>
 
                 <button
                     onClick={() => onSelect(item)}
-                    className="mt-auto w-full bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white text-[13px] font-semibold py-2 rounded-[10px] transition-colors flex items-center justify-center gap-1.5"
+                    className={`mt-auto w-full text-white text-[13px] font-bold py-2.5 rounded-[10px] transition-all flex items-center justify-center gap-1.5 active:scale-[0.97]
+                        ${isFree
+                            ? 'bg-[#2c2c2e] hover:bg-[#3a3a3c]'
+                            : 'bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg shadow-blue-500/20'
+                        }`}
                 >
-                    <Sparkles size={14} className="text-[#007aff]" />
-                    {t('creation.usePrompt')}
+                    {isFree ? (
+                        <><Sparkles size={14} className="text-[#007aff]" /> Использовать</>
+                    ) : (
+                        <><ShoppingCart size={14} /> Купить за {price} ⚡</>
+                    )}
                 </button>
             </div>
         </motion.div>
@@ -86,7 +107,9 @@ const PromptMarketView = () => {
     const navigate = useNavigate();
     const { t } = useLanguage();
     const { playClick, playSuccess } = useSound();
-
+    const toaster = useToast() as any;
+    const { user: _currentUser } = useUser();
+    const [_isPurchasing, setIsPurchasing] = useState(false);
     const [prompts, setPrompts] = useState<PromptItem[]>([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -116,20 +139,61 @@ const PromptMarketView = () => {
     };
 
     const handleSelectPrompt = async (item: PromptItem) => {
-        playSuccess();
-        try {
-            // Track usage (fire & forget)
-            fetch(`/api/generation/marketplace/${item.id}/track`, { method: 'POST' });
+        const price = item.price || 0;
 
-            // Navigate to generator with pre-filled prompt
+        if (price > 0) {
+            // Paid prompt — purchase flow
+            const confirmed = await new Promise<boolean>(resolve => {
+                if ((window.Telegram?.WebApp as any)?.showPopup) {
+                    (window.Telegram!.WebApp as any).showPopup({
+                        title: 'Купить промпт',
+                        message: `"${item.title_ru}" стоит ${price} ⚡. Автор получит ${Math.round(price * 0.7)} ⚡.`,
+                        buttons: [
+                            { id: 'cancel', type: 'cancel', text: 'Отмена' },
+                            { id: 'buy', type: 'default', text: `Купить за ${price} ⚡` }
+                        ]
+                    }, (btnId: string) => resolve(btnId === 'buy'));
+                } else {
+                    resolve(window.confirm(`Купить "${item.title_ru}" за ${price} ⚡?`));
+                }
+            });
+
+            if (!confirmed) return;
+
+            setIsPurchasing(true);
+            try {
+                const token = localStorage.getItem('bazzar_web_auth');
+                const res = await fetch(`/api/generation/marketplace/${item.id}/purchase`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    playSuccess();
+                    toaster.success(`✅ Промпт куплен! -${price} ⚡`);
+                    // Navigate with purchased prompt
+                    navigate('/generate', { state: { prompt: item.prompt } });
+                } else {
+                    toaster.error(data.error || 'Ошибка покупки');
+                }
+            } catch {
+                toaster.error('Ошибка покупки. Попробуйте снова.');
+            } finally {
+                setIsPurchasing(false);
+            }
+        } else {
+            // Free prompt — direct use
+            playSuccess();
+            fetch(`/api/generation/marketplace/${item.id}/track`, { method: 'POST' });
             navigate('/generate', {
                 state: {
                     prompt: item.prompt,
                     model: item.category === 'video' ? 'sora_2' : 'nano_banana'
                 }
             });
-        } catch (e) {
-            console.error('Tracking error', e);
         }
     };
 

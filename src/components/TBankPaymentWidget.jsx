@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 
 /**
  * T-Bank Payment Integration Widget
@@ -11,6 +11,8 @@ const TBankPaymentWidget = ({
     userId,
     telegramId,
     userEmail,
+    credits,
+    promoCode,
     terminalKey, // From env or props
     onSuccess,
     onError,
@@ -67,9 +69,9 @@ const TBankPaymentWidget = ({
             }
             // Don't remove script - it might be used by other components
         };
-    }, []);
+    }, [initializeWidget]);
 
-    const initializeWidget = async () => {
+    const initializeWidget = useCallback(async () => {
         try {
             if (!window.PaymentIntegration) {
                 throw new Error('PaymentIntegration not loaded');
@@ -131,7 +133,7 @@ const TBankPaymentWidget = ({
             await integration.payments.setPaymentStartCallback(async (paymentType) => {
 
                 // Call backend to initialize payment
-                const res = await fetch('/api/payment-init', {
+                const res = await fetch('/api/payments/init', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -140,6 +142,8 @@ const TBankPaymentWidget = ({
                         userId,
                         telegramId,
                         userEmail,
+                        credits,
+                        promoCode,
                         connectionType: 'Widget', // CRITICAL for widget
                         paymentType // For analytics
                     })
@@ -182,7 +186,7 @@ const TBankPaymentWidget = ({
             setLoading(false);
             if (onError) onError(err);
         }
-    };
+    }, [terminalKey, amount, description, userId, telegramId, userEmail, credits, promoCode, onSuccess, onError, widgetTypes, displayParams]);
 
     if (error) {
         // Silently hide widget if it fails - user will see classic button below
@@ -219,6 +223,8 @@ const TBankPaymentWidget = ({
                                         userId,
                                         telegramId,
                                         userEmail,
+                                        credits,
+                                        promoCode,
                                         connectionType: 'Link',
                                         paymentType: 'Card'
                                     })

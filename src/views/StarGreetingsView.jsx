@@ -3,9 +3,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useUser } from '../context/UserContext';
 import { ChevronLeft, Zap, Search, Gift, PartyPopper, Flame, Heart, Trophy, User, Wand2, Star, Play, Download, Share2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { MODEL_CATALOG } from '../config/models';
 import InsufficientCreditsModal from '../components/InsufficientCreditsModal';
 
-const GREETING_COST = 30;
+const GREETING_COST = MODEL_CATALOG['star_greeting']?.cost || 30;
 
 const OCCASIONS = [
     { id: 'birthday', label: 'День рождения', emoji: '🎂', icon: PartyPopper, color: 'text-pink-400', bg: 'bg-pink-500/10', border: 'border-pink-500/20', gradient: 'from-pink-600 to-rose-500' },

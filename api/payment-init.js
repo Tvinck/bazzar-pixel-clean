@@ -2,8 +2,8 @@ import crypto from 'node:crypto';
 import https from 'node:https';
 import { createClient } from '@supabase/supabase-js';
 
-const SUPABASE_URL = 'https://ktookvpqtmzfccojarwm.supabase.co';
-const SUPABASE_SERVICE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2ODMxMzc2NSwiZXhwIjoyMDgzODg5NzY1fQ.L99oEJS40e0R_l05Jm2kZkItJKdaPAEYrGM0WQ0y08Y';
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
@@ -20,11 +20,21 @@ export default async function handler(req, res) {
     }
 
     try {
-        const { amount, description, userId, userEmail, recurrent, connectionType, paymentType } = req.body;
+        const { amount, credits, promoCode, description, userId, userEmail, recurrent, connectionType, paymentType } = req.body;
 
-        // PRODUCTION CREDENTIALS
-        const TERMINAL_KEY = '1768938209983';
-        const PASSWORD = '7XEqsWfjryCnqCck';
+        // Credentials from environment
+        const TERMINAL_KEY = process.env.TBANK_TERMINAL_KEY;
+        const PASSWORD = process.env.TBANK_PASSWORD;
+
+        let validPromo = null;
+        if (promoCode) {
+            const { data: promo } = await supabase.from('promo_codes').select('*').eq('code', promoCode.toUpperCase()).single();
+            if (promo && promo.is_active && (!promo.expires_at || new Date(promo.expires_at) > new Date()) && (!promo.max_uses || promo.used_count < promo.max_uses)) {
+                validPromo = promo;
+            } else {
+                return res.status(400).json({ error: 'Недействительный промокод' });
+            }
+        }
 
         // 1. Prepare Data
         const amountKopeeks = Math.round(Number(amount) * 100);
@@ -44,6 +54,8 @@ export default async function handler(req, res) {
             DATA: {
                 userId: userId,
                 telegramId: req.body.telegramId,
+                credits: credits || 0, // CRITICAL: Safely embedded credits amount
+                promoCode: validPromo ? validPromo.code : null, // Record promo usage
                 // CRITICAL: connection_type = Widget for widget integration
                 ...(connectionType && { connection_type: connectionType }),
                 ...(paymentType && { payment_type: paymentType }) // For analytics

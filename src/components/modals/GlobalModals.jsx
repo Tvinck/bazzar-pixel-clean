@@ -8,7 +8,6 @@ const InpaintingEditor = React.lazy(() => import("../tools/InpaintingEditor"));
 const FaceSwap = React.lazy(() => import("../tools/FaceSwap"));
 const AvatarTrainer = React.lazy(() => import("../tools/AvatarTrainer"));
 const OnboardingOverlay = React.lazy(() => import("../OnboardingOverlay"));
-const DailyBonusModal = React.lazy(() => import("../DailyBonusModal"));
 const StickerGenerator = React.lazy(() => import("../tools/StickerGenerator"));
 const GenerationLoader = React.lazy(() => import("../GenerationLoader"));
 const NotificationsPanel = React.lazy(() => import("../NotificationsPanel"));
@@ -43,9 +42,7 @@ const GlobalModals = ({ state, handlers }) => {
         isAvatarTrainerOpen, hasAvatarTrainerMounted,
         isStickerGenOpen, hasStickerGenMounted,
         isOnboardingVisible,
-        showDailyBonus,
-        isNotificationsOpen,
-        telegramUser
+        isNotificationsOpen
     } = state;
 
     const {
@@ -57,7 +54,6 @@ const GlobalModals = ({ state, handlers }) => {
         setIsStickerGenOpen,
         handleOnboardingComplete,
         handleOnboardingAction,
-        setShowDailyBonus,
         setIsNotificationsOpen
     } = handlers;
 
@@ -110,13 +106,6 @@ const GlobalModals = ({ state, handlers }) => {
                 )}
             </Suspense>
 
-            <Suspense fallback={null}>
-                <DailyBonusModal
-                    isOpen={showDailyBonus}
-                    onClose={() => setShowDailyBonus(false)}
-                    user={telegramUser}
-                />
-            </Suspense>
 
             <Suspense fallback={null}>
                 <NotificationsPanel

@@ -2,6 +2,9 @@ import { PgBoss } from 'pg-boss';
 
 import { aiService } from './ai-service.js';
 import { supabase } from './lib/supabase.js';
+import { setCache } from './utils/promptCache.js';
+import { sendAdminAlert } from './utils/alerts.js';
+import { notifyUserViaWs } from './index.js';
 
 let boss;
 
@@ -28,65 +31,102 @@ export const initQueue = async (bot) => {
             console.log(`⚙️ [Job ${jobId}] Processing: ${type}`);
 
             try {
+                // --- INJECT WEBHOOK URL ---
+                const serverUrl = process.env.SERVER_URL || 'https://api.bazzar-pixel.com';
+                options.callBackUrl = `${serverUrl}/api/kie/webhook/${jobId}`;
+
                 // 1. Generate
                 const result = await aiService.generateImage(prompt, type, options);
 
                 if (!result.success) throw new Error(result.error || 'Generation failed');
 
-                // 2. Save to History (DB)
+                // If async (Webhook mode), it returns pending
+                if (result.status === 'pending') {
+                    console.log(`⏳ [Job ${jobId}] Task offloaded to Kie.ai (Task ID: ${result.taskId}). Waiting for webhook...`);
+
+                    // Save to DB initially as pending
+                    if (userId) {
+                        const isVideoResult = type.includes('video') || type.includes('kling');
+                        const { error: saveErr } = await supabase.from('creations').insert({
+                            id: jobId,
+                            user_id: userId,
+                            generation_id: result.taskId,
+                            title: prompt ? prompt.slice(0, 50) : 'Bot Generation',
+                            description: prompt || 'Created via Bot',
+                            status: 'pending',
+                            type: isVideoResult ? 'video' : 'image',
+                            prompt: prompt,
+                            model_id: type, // Cache the actual model_id for webhook caching
+                            is_public: false,
+                            tags: [type, 'bot'],
+                            metadata: {
+                                cost: cost,
+                                telegramId: options.telegramId
+                            }
+                        });
+                        if (saveErr) console.error('⚠️ Failed to save pending creation to DB:', saveErr.message);
+                    }
+
+                    // We exit early. The WEBHOOK will handle Cache, DB Update, Telegram and WS Notifications.
+                    return { success: true, status: 'pending', taskId: result.taskId };
+                }
+
+                // --- SAVE TO CACHE (SYNC FALLBACK ONLY) ---
+                if (!options.source_files || options.source_files.length === 0) {
+                    setCache(prompt, type, result);
+                }
+
+                // 2. Save to History (DB) (SYNC FALLBACK ONLY)
                 if (userId) {
                     const isVideoResult = (type.includes('video') || (result.imageUrl && result.imageUrl.match(/\.(mp4|mov)$/i)));
 
                     const { error: saveErr } = await supabase.from('creations').insert({
                         user_id: userId,
-                        generation_id: jobId, // Use raw UUID from pg-boss
+                        generation_id: jobId,
                         title: prompt ? prompt.slice(0, 50) : 'Bot Generation',
                         description: prompt || 'Created via Bot',
                         image_url: result.imageUrl,
                         thumbnail_url: result.imageUrl,
+                        status: 'completed',
                         type: isVideoResult ? 'video' : 'image',
                         prompt: prompt,
                         is_public: false,
                         tags: [type, 'bot']
                     });
-                    if (saveErr) {
-                        console.error('⚠️ Failed to save bot creation to DB:', saveErr);
-                        if (saveErr.code === '22P02') {
-                            console.warn('💡 Tip: Run FIX_CREATIONS_UUID.sql if you want to use custom ID formats.');
-                        }
-                    }
+                    if (saveErr) console.error('⚠️ Failed to save completed creation to DB:', saveErr.message);
                 }
 
-                // 3. Notify User (Telegram)
+                // 3. Notify User (Telegram) (SYNC FALLBACK ONLY)
                 if (options.telegramId && bot) {
-                    // Check if it's video by model type or file extension
                     const isVideoModel = type.includes('video') || type.includes('kling') || type.includes('sora') || type.includes('veo');
                     const hasVideoExtension = result.imageUrl && result.imageUrl.match(/\.(mp4|mov|webm|avi)$/i);
                     const isVideo = isVideoModel || hasVideoExtension;
 
-                    const caption = `✨ Ваша генерация готова!
-
-🎨 ${type}
-📝 "${prompt ? prompt.slice(0, 50) : '...'}${prompt && prompt.length > 50 ? '...' : ''}"
-
-@Pixel_ai_bot`;
+                    const caption = `✨ <b>Генерация готова!</b>\n\n🔹 Модель: <code>${type}</code>\n📝 Промпт: <i>"${prompt ? prompt.slice(0, 100) : '...'}"</i>\n\n@Pixel_ai_bot`;
 
                     try {
                         console.log(`📨 [Job ${jobId}] Sending ${isVideo ? 'video' : 'image'} to ${options.telegramId}`);
-                        if (isVideo) {
-                            await bot.sendVideo(options.telegramId, result.imageUrl, { caption });
-                        } else {
-                            await bot.sendPhoto(options.telegramId, result.imageUrl, { caption });
-                        }
+                        if (isVideo) await bot.sendVideo(options.telegramId, result.imageUrl, { caption });
+                        else await bot.sendPhoto(options.telegramId, result.imageUrl, { caption });
                     } catch (notifyErr) {
                         console.error(`⚠️ [Job ${jobId}] Notify failed:`, notifyErr.message);
                     }
+                }
+
+                // 4. Notify via WS (SYNC FALLBACK ONLY)
+                if (userId) {
+                    notifyUserViaWs(userId, { type: 'generation_complete', jobId, imageUrl: result.imageUrl });
                 }
 
                 return { success: true, imageUrl: result.imageUrl };
 
             } catch (error) {
                 console.error(`❌ [Job ${jobId}] Failed:`, error.message);
+
+                // Alert if it's a critical AI provider failure or token issue
+                if (error.message.includes('API') || error.message.includes('401') || error.message.includes('balance')) {
+                    sendAdminAlert(`AI Generation Failed (Job: ${jobId}):\nProvider: ${type}\nError: ${error.message}`, 'ERROR');
+                }
 
                 // 3. REFUND LOGIC (Moved from routes.js to Worker)
                 if (options.telegramId && options.userId !== 'browser_user') {
@@ -109,7 +149,62 @@ export const initQueue = async (bot) => {
                     }
                 }
 
+                // Notify via WS on fail
+                if (userId) {
+                    notifyUserViaWs(userId, {
+                        type: 'generation_failed',
+                        jobId,
+                        error: error.message
+                    });
+                }
+
                 throw error; // Mark job as failed in PgBoss
+            }
+        });
+
+        // --- PUBLISH TO CHANNEL WORKER ---
+        await boss.work('publish-channel-post', async (job) => {
+            const { text, mediaUrl, channelId, isVideo } = job.data;
+            try {
+                if (bot) {
+                    console.log(`📣 [Publish Job] Sending to channel ${channelId}`);
+                    if (isVideo) {
+                        await bot.sendVideo(channelId, mediaUrl, { caption: text, parse_mode: 'Markdown' });
+                    } else {
+                        await bot.sendPhoto(channelId, mediaUrl, { caption: text, parse_mode: 'Markdown' });
+                    }
+                } else {
+                    console.warn(`⚠️ [Publish Job] Telegram bot not initialized`);
+                }
+            } catch (err) {
+                console.error(`❌ [Publish Job ${job.id}] Failed:`, err.message);
+                throw err;
+            }
+        });
+
+        // --- BROADCAST MESSAGE WORKER ---
+        // Processes individual messages to avoid Telegram rate limits
+        await boss.work('broadcast-message', async (job) => {
+            const { userId, telegramId, text, mediaUrl, mediaType } = job.data;
+            try {
+                if (!bot) throw new Error('Telegram bot not initialized');
+
+                // Sleep to respect Telegram limits (max 30 msgs/sec roughly)
+                await new Promise(r => setTimeout(r, 50));
+
+                if (mediaUrl) {
+                    if (mediaType === 'video') {
+                        await bot.sendVideo(telegramId, mediaUrl, { caption: text, parse_mode: 'HTML' });
+                    } else {
+                        await bot.sendPhoto(telegramId, mediaUrl, { caption: text, parse_mode: 'HTML' });
+                    }
+                } else {
+                    await bot.sendMessage(telegramId, text, { parse_mode: 'HTML' });
+                }
+            } catch (err) {
+                // If blocked by user (error code 403), we might want to flag them as inactive in future
+                console.error(`❌ [Broadcast] to ${telegramId} failed:`, err.message);
+                throw err;
             }
         });
 
@@ -117,11 +212,14 @@ export const initQueue = async (bot) => {
 
     } catch (err) {
         console.error('❌ Failed to initialize Queue:', err);
+        sendAdminAlert(`Failed to initialize Job Queue (PgBoss):\n${err.message}`, 'ERROR');
         return null;
     }
 };
 
 import crypto from 'crypto';
+
+export const getQueue = () => boss;
 
 export const addGenerationJob = async (data) => {
     if (!boss) {
@@ -131,10 +229,41 @@ export const addGenerationJob = async (data) => {
         // Execute synchronously to ensure Vercel doesn't kill the background process
         try {
             const { prompt, type, options, cost, userId } = data;
+
+            // --- INJECT WEBHOOK URL ---
+            const serverUrl = process.env.SERVER_URL || 'https://api.bazzar-pixel.com';
+            options.callBackUrl = `${serverUrl}/api/kie/webhook/${fallbackJobId}`;
+
             const result = await aiService.generateImage(prompt, type, options);
 
             if (!result.success) throw new Error(result.error || 'Generation failed');
 
+            if (result.status === 'pending') {
+                console.log(`⏳ [Fallback Job ${fallbackJobId}] Task offloaded to Kie.ai (Task ID: ${result.taskId}).`);
+                if (userId) {
+                    const isVideoResult = type.includes('video') || type.includes('kling');
+                    await supabase.from('creations').insert({
+                        id: fallbackJobId,
+                        user_id: userId,
+                        generation_id: result.taskId,
+                        title: prompt ? prompt.slice(0, 50) : 'Web Generation',
+                        description: prompt || 'Created via Web',
+                        status: 'pending',
+                        type: isVideoResult ? 'video' : 'image',
+                        prompt: prompt,
+                        model_id: type,
+                        is_public: false,
+                        tags: [type, 'web'],
+                        metadata: {
+                            cost: cost,
+                            telegramId: options.telegramId
+                        }
+                    });
+                }
+                return { id: fallbackJobId, status: 'pending', taskId: result.taskId };
+            }
+
+            // Sync fallback logic below
             if (userId) {
                 const isVideoResult = (type.includes('video') || (result.imageUrl && result.imageUrl.match(/\.(mp4|mov)$/i)));
                 const { error: dbError } = await supabase.from('creations').insert({
@@ -143,6 +272,7 @@ export const addGenerationJob = async (data) => {
                     description: prompt || 'Created via Web',
                     image_url: result.imageUrl,
                     thumbnail_url: result.imageUrl,
+                    status: 'completed',
                     type: isVideoResult ? 'video' : 'image',
                     prompt: prompt,
                     is_public: false,

@@ -9,15 +9,17 @@ import { ChevronLeft, Sparkles } from 'lucide-react';
  */
 export default function ExpertsView() {
     const navigate = useNavigate();
-    const [selectedCategory, setSelectedCategory] = useState('all');
+    // const [selectedCategory, setSelectedCategory] = useState('all');
 
     // Group experts by category (for future filtering)
+    /*
     const categories = [
         { id: 'all', label: 'Все', emoji: '✨' },
         { id: 'health', label: 'Здоровье', emoji: '💚' },
         { id: 'lifestyle', label: 'Лайфстайл', emoji: '🌟' },
         { id: 'fun', label: 'Развлечение', emoji: '🎭' },
     ];
+    */
 
     const handleExpertClick = (expert) => {
         // Haptic feedback for Telegram

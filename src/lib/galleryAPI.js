@@ -106,8 +106,8 @@ export const galleryAPI = {
 
             if (error) throw error;
             return data || [];
-        } catch (error) {
-            console.error('Error fetching categories:', error);
+        } catch (Error) {
+            console.error('Error fetching categories:', Error);
             return [];
         }
     },
@@ -210,9 +210,9 @@ export const galleryAPI = {
             });
             const data = await res.json();
             return data;
-        } catch (error) {
-            console.error('Error unliking creation:', error);
-            return { success: false, error: error.message };
+        } catch (Err) {
+            console.error('Error unliking creation:', Err);
+            return { success: false, error: Err.message };
         }
     },
 
@@ -223,7 +223,7 @@ export const galleryAPI = {
             if (!res.ok) return false;
             const data = await res.json();
             return data.liked;
-        } catch (error) {
+        } catch {
             return false;
         }
     },
@@ -520,7 +520,7 @@ export const galleryAPI = {
 
             if (error && error.code !== 'PGRST116') throw error; // PGRST116 is "no rows found"
             return !!data;
-        } catch (error) {
+        } catch {
             return false;
         }
     }

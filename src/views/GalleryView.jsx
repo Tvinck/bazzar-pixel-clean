@@ -1,8 +1,8 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Play, Image as ImageIcon, Sparkles, Heart, Zap, Truck, Snowflake, LayoutGrid, PlaySquare, Smile, Flame, Camera, UserCircle } from 'lucide-react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import { Play as PlayIcon } from 'lucide-react';
+import { Search, Play as PlayIcon, Image as ImageIcon, Sparkles, Heart, Zap, Truck, Snowflake, LayoutGrid, PlaySquare, Smile, Flame, Camera, UserCircle, MessageSquare, Star } from 'lucide-react';
+
 
 const CATEGORY_ICONS = {
     'all': LayoutGrid,
@@ -12,7 +12,8 @@ const CATEGORY_ICONS = {
     'avatar': UserCircle,
     'memes': Zap,
     'hot': Flame,
-    'new': Sparkles
+    'new': Sparkles,
+    'recommended': Star
 };
 
 const getCategoryIcon = (id, label) => {
@@ -25,7 +26,7 @@ const getCategoryIcon = (id, label) => {
 };
 
 // Import Data
-import { usePublicCreations, useTemplates, useUserLikedIds, useCategories } from '../hooks/useGallery';
+import { useTemplates, useCategories } from '../hooks/useGallery';
 import { useUser } from '../context/UserContext';
 import { templatesData } from '../data/templates';
 import { TelegramCard, TelegramButton, TelegramBadge } from '../components/TelegramAnimations';
@@ -50,16 +51,17 @@ const useInView = (options = { threshold: 0.1, rootMargin: '50px' }) => {
             }
         }, options);
 
-        if (ref.current) {
-            observer.observe(ref.current);
+        const currentRef = ref.current;
+        if (currentRef) {
+            observer.observe(currentRef);
         }
 
         return () => {
-            if (observer && ref.current) {
-                observer.unobserve(ref.current);
+            if (observer && currentRef) {
+                observer.unobserve(currentRef);
             }
         };
-    }, []);
+    }, [options]);
 
     return [ref, isInView];
 };
@@ -123,12 +125,11 @@ const LazyMedia = ({ src, type, alt, className }) => {
 const GalleryView = ({ onOpenTemplate }) => {
     const [selectedCategory, setSelectedCategory] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const navigate = useNavigate();
     const { t } = useLanguage();
 
     // Data Fetching
     const { data: categories } = useCategories();
-    const { data: templatesRaw, isLoading } = useTemplates(selectedCategory === 'all' ? null : selectedCategory);
+    const { data: templatesRaw } = useTemplates(selectedCategory === 'all' ? null : selectedCategory);
 
     // Merge API templates with local for safety if API fails
     const templates = useMemo(() => {
@@ -159,16 +160,20 @@ const GalleryView = ({ onOpenTemplate }) => {
         const list = [{ id: 'all', label: t('home.seeAll'), icon: '🔥' }];
         const fetched = (categories && Array.isArray(categories)) ? categories : []; // Normalize
         if (fetched.length > 0) {
-            return [...list, ...fetched.map(c => ({
-                id: c.slug,
-                label: c.label,
-                icon: 'image' // We could add icons to DB later, use generic for now
-            }))];
+            return [
+                ...list,
+                { id: 'recommended', label: t('home.templates'), icon: '⭐' },
+                ...fetched.map(c => ({
+                    id: c.slug,
+                    label: c.label,
+                    icon: 'image'
+                }))
+            ];
         }
         // If no categories from DB, use hardcoded backup?
         // Actually useCategories hook handles fallback.
         return list;
-    }, [categories]);
+    }, [categories, t]);
 
 
     return (
@@ -201,8 +206,8 @@ const GalleryView = ({ onOpenTemplate }) => {
                                     onClick={() => setSelectedCategory(cat.id)}
                                     whileTap={{ scale: 0.94 }}
                                     className={`relative flex flex-col items-center justify-center min-w-[96px] h-[100px] rounded-[24px] p-3 snap-center transition-all duration-300 overflow-hidden ${isActive
-                                            ? 'bg-gradient-to-br from-[#007aff] to-[#005bb5] shadow-lg shadow-[#007aff]/30 border border-white/20'
-                                            : 'bg-[#1c1c1e] hover:bg-[#2c2c2e] border border-white/5'
+                                        ? 'bg-gradient-to-br from-[#007aff] to-[#005bb5] shadow-lg shadow-[#007aff]/30 border border-white/20'
+                                        : 'bg-[#1c1c1e] hover:bg-[#2c2c2e] border border-white/5'
                                         }`}
                                 >
                                     {/* Glow Background */}
@@ -268,11 +273,18 @@ const GalleryView = ({ onOpenTemplate }) => {
                                     </h3>
 
                                     <div className="flex items-center justify-between">
-                                        {template.likes !== undefined && (
-                                            <div className="flex items-center gap-1.5 text-[11px] text-white/90 font-medium">
-                                                <Heart size={12} className="text-[#ff2d55] fill-[#ff2d55]" /> {template.likes}
-                                            </div>
-                                        )}
+                                        <div className="flex items-center gap-3">
+                                            {template.likes !== undefined && (
+                                                <div className="flex items-center gap-1 text-[11px] text-white/90 font-medium">
+                                                    <Heart size={12} className="text-[#ff2d55] fill-[#ff2d55]" /> {template.likes}
+                                                </div>
+                                            )}
+                                            {template.comment_count !== undefined && (
+                                                <div className="flex items-center gap-1 text-[11px] text-white/90 font-medium">
+                                                    <MessageSquare size={12} className="text-[#3390ec]" /> {template.comment_count}
+                                                </div>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
                             </div>

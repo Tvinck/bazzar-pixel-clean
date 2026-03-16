@@ -6,7 +6,6 @@ import { useSound } from '../context/SoundContext';
 import { AnimatedButton } from './ui/AnimatedButtons';
 
 const TemplateDrawer = ({ isOpen, onClose, template }) => {
-    const { t } = useLanguage();
     const { playClick, playSuccess } = useSound();
 
     // Multi-file support
@@ -32,7 +31,7 @@ const TemplateDrawer = ({ isOpen, onClose, template }) => {
                 if (url) URL.revokeObjectURL(url);
             });
         }
-    }, [isOpen, template]);
+    }, [isOpen, previewUrls, template]);
 
     const requiredFilesCount = template?.requiredFilesCount || 1;
     const fields = template?.fields || [];

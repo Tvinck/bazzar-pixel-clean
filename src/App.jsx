@@ -1,8 +1,8 @@
 import "@telegram-apps/telegram-ui/dist/styles.css";
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { motion } from "framer-motion";
 import { AppRoot } from "@telegram-apps/telegram-ui";
-import { BrowserRouter as Router, useLocation, useNavigate } from "react-router-dom";
+import { BrowserRouter as Router, useLocation, useNavigate, Routes, Route } from "react-router-dom";
 
 // Providers
 import { LanguageProvider } from "./context/LanguageContext";
@@ -25,18 +25,18 @@ import AppRoutes from "./routes/AppRoutes";
 import GlobalModals from "./components/modals/GlobalModals";
 import TemplateSelectionSheet from "./components/TemplateSelectionSheet";
 import WebLogin from "./pages/WebLogin";
+import OAuthCallback from "./pages/OAuthCallback";
 import MaintenanceView from "./views/MaintenanceView";
 
 function AppContent() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, stats, isLoading, telegramId } = useUser();
+  const { user, isLoading, telegramId } = useUser();
   const { trackEvent, trackFunnel } = useMarketing(user);
 
   // State
   const [telegramUser, setTelegramUser] = useState(null);
   const [isOnboardingVisible, setIsOnboardingVisible] = useState(false);
-  const [showDailyBonus, setShowDailyBonus] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
   const [hasPaymentMounted, setHasPaymentMounted] = useState(false);
   const [isLeaderboardOpen, setIsLeaderboardOpen] = useState(false);
@@ -75,19 +75,8 @@ function AppContent() {
       setIsOnboardingVisible(true);
       trackFunnel('onboarding', 'view');
     }, 1000);
-  }, []);
+  }, [trackFunnel]);
 
-  useEffect(() => {
-    const isOnboardingCompleted = localStorage.getItem("pixel_onboarding_v2_completed");
-    if (!isOnboardingCompleted) return;
-
-    const lastClaim = localStorage.getItem('last_bonus_claim');
-    const today = new Date().toDateString();
-    if (lastClaim !== today) {
-      const timer = setTimeout(() => setShowDailyBonus(true), 2500);
-      return () => clearTimeout(timer);
-    }
-  }, []);
 
   const triggerHaptic = useCallback((style) => {
     tg?.HapticFeedback?.impactOccurred(style);
@@ -143,7 +132,7 @@ function AppContent() {
     openInpainting, openFaceSwap, openStickerGen,
     setIsPaymentOpen, setIsLeaderboardOpen, setIsInpaintingOpen,
     setIsFaceSwapOpen, setIsAvatarTrainerOpen, setIsStickerGenOpen,
-    handleOnboardingComplete, handleOnboardingAction, setShowDailyBonus,
+    handleOnboardingComplete, handleOnboardingAction,
     setIsNotificationsOpen
   };
 
@@ -152,10 +141,20 @@ function AppContent() {
     hasLeaderboardMounted, isInpaintingOpen, hasInpaintingMounted,
     isFaceSwapOpen, hasFaceSwapMounted, isAvatarTrainerOpen,
     hasAvatarTrainerMounted, isStickerGenOpen, hasStickerGenMounted,
-    isOnboardingVisible, showDailyBonus, isNotificationsOpen, telegramUser
+    isOnboardingVisible, isNotificationsOpen, telegramUser
   };
 
   if (!isLoading && !telegramId && !user) {
+    // Allow OAuth callback to process without auth
+    if (location.pathname === '/auth/callback') {
+      return (
+        <Suspense fallback={<div className="min-h-screen bg-[#0f0f0f]" />}>
+          <Routes>
+            <Route path="/auth/callback" element={<OAuthCallback />} />
+          </Routes>
+        </Suspense>
+      );
+    }
     return <WebLogin />;
   }
 
@@ -201,6 +200,8 @@ function AppContent() {
   );
 }
 
+import UpdateBanner from './components/PWA/UpdateBanner';
+
 function App() {
   return (
     <ErrorBoundary>
@@ -214,6 +215,7 @@ function App() {
                     <Router>
                       <AppRoot appearance={document.documentElement.classList.contains("dark") ? "dark" : "light"}>
                         <AppContent />
+                        <UpdateBanner />
                       </AppRoot>
                     </Router>
                   </ABTestProvider>

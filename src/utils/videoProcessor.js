@@ -44,7 +44,7 @@ export const processVideoTemplate = async (file) => {
             URL.revokeObjectURL(video.src);
         };
 
-        video.onerror = (e) => reject(new Error('Failed to load video metadata'));
+        video.onerror = () => reject(new Error('Failed to load video metadata'));
     });
 };
 

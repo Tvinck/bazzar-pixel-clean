@@ -6,7 +6,6 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useSound } from '../../context/SoundContext';
 
 const FaceSwap = ({ isOpen, onClose }) => {
-    const { t } = useLanguage();
     const { playSuccess, playClick } = useSound();
 
     const [targetImage, setTargetImage] = useState(null); // The body/scene

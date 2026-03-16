@@ -63,13 +63,14 @@ const BottomNav = ({ activeTab, onTabChange, onCreateClick, isVisible = true, zI
     );
 };
 
-const NavButton = ({ iconComponent: IconComponent, label, isActive, onClick }) => (
+// eslint-disable-next-line no-unused-vars
+const NavButton = ({ iconComponent: _IconComponent, label, isActive, onClick }) => (
     <button
         onClick={onClick}
         className="flex flex-col items-center justify-center gap-1 min-w-[64px] h-[56px] relative transition-colors duration-200"
     >
         <div className="relative flex items-center justify-center h-8">
-            <IconComponent active={isActive} size={28} />
+            <_IconComponent active={isActive} size={28} />
         </div>
         <span className={`text-[11px] font-medium z-10 transition-colors duration-300 ${isActive ? 'text-[#3390ec]' : 'text-white/50'
             }`}>

@@ -55,7 +55,7 @@ const GenerationResult = ({ result, type = 'image', onClose, onRemix }) => {
             a.download = `pixel-gen-${Date.now()}.${type === 'video' ? 'mp4' : 'png'}`;
             a.click();
             window.URL.revokeObjectURL(url);
-        } catch (e) {
+        } catch {
             window.open(result.url, '_blank');
         }
     };

@@ -6,7 +6,6 @@ import { AnimatedButton } from './ui/AnimatedButtons';
 import AnimatedIcon from './ui/AnimatedIcon';
 
 const CreationModal = ({ creation, isOpen, onClose, onLike, onNext, onPrev, hasNext, hasPrev, onRemix, onUpscale }) => {
-    const { t } = useLanguage();
     const [touchStart, setTouchStart] = useState(null);
     const [touchEnd, setTouchEnd] = useState(null);
 

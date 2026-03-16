@@ -4,10 +4,10 @@ import { X, Check } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { useLanguage } from '../context/LanguageContext';
 import { AnimatedButton } from './ui/AnimatedButtons';
+import { Sun, Moon, Monitor } from 'lucide-react';
 
 const ThemeSettings = ({ isOpen, onClose }) => {
-    const { themes, currentTheme, setCurrentTheme } = useTheme();
-    const { t } = useLanguage();
+    const { themes, currentTheme, setCurrentTheme, themeMode, setThemeMode } = useTheme();
 
     if (!isOpen) return null;
 
@@ -36,6 +36,27 @@ const ThemeSettings = ({ isOpen, onClose }) => {
                             </button>
                         </div>
 
+                        {/* Theme Mode Selector (Light/Dark/System) */}
+                        <div className="mb-6 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl flex relative w-full">
+                            {[
+                                { id: 'light', icon: <Sun size={16} />, label: 'Light' },
+                                { id: 'system', icon: <Monitor size={16} />, label: 'System' },
+                                { id: 'dark', icon: <Moon size={16} />, label: 'Dark' }
+                            ].map(mode => (
+                                <button
+                                    key={mode.id}
+                                    onClick={() => setThemeMode(mode.id)}
+                                    className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-[14px] text-sm font-medium transition-all relative z-10 ${themeMode === mode.id
+                                        ? 'text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 shadow-sm'
+                                        : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                                        }`}
+                                >
+                                    {mode.icon}
+                                    {mode.label}
+                                </button>
+                            ))}
+                        </div>
+
                         <div className="space-y-4">
                             {Object.values(themes).map((theme) => {
                                 const isSelected = currentTheme === theme.id;
@@ -47,8 +68,8 @@ const ThemeSettings = ({ isOpen, onClose }) => {
                                         key={theme.id}
                                         onClick={() => setCurrentTheme(theme.id)}
                                         className={`w-full flex items-center justify-between p-4 rounded-2xl border-2 transition-all ${isSelected
-                                                ? 'border-indigo-500 bg-indigo-500/5 dark:bg-indigo-500/10'
-                                                : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                                            ? 'border-indigo-500 bg-indigo-500/5 dark:bg-indigo-500/10'
+                                            : 'border-slate-100 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                                             }`}
                                     >
                                         <div className="flex items-center gap-4">

@@ -65,9 +65,13 @@ export const useTelegramInit = (setTelegramUser?: (user: any) => void) => {
                 }
 
                 // 4. Theme Optimization
-                const isDark = tg.colorScheme === "dark";
-                if (isDark) {
+                const savedThemeMode = localStorage.getItem('pixel_theme_mode');
+                const isDarkTheme = savedThemeMode ? savedThemeMode === 'dark' : tg.colorScheme === "dark";
+
+                if (isDarkTheme) {
                     document.documentElement.classList.add("dark");
+                } else {
+                    document.documentElement.classList.remove("dark");
                 }
 
                 const headerColor = "#0f0f0f"; // App brand color

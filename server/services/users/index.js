@@ -20,11 +20,14 @@ app.get('/api/user/stats', async (req, res) => {
         const { telegram_id } = req.query;
         if (!telegram_id) return res.status(400).json({ error: 'Missing telegram_id' });
 
-        const { data: user } = await supabase.from('users').select('id').eq('telegram_id', telegram_id).single();
-        if (!user) return res.json(null);
+        const userUUID = await getUserUUID(telegram_id);
+        if (!userUUID) return res.json(null);
 
-        const stats = await botAnalytics.getUserStats(user.id);
-        res.json(stats);
+        const { data: stats, error } = await supabase.from('user_stats').select('*').eq('user_id', userUUID).single();
+        if (error && error.code !== 'PGRST116') {
+            console.error('Stats fetch error:', error);
+        }
+        res.json(stats || null);
     } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
@@ -33,7 +36,7 @@ app.get('/api/user/stats', async (req, res) => {
  */
 app.get('/api/user/profile', authTG, async (req, res) => {
     try {
-        const telegramId = req.tgUser.id;
+        const telegramId = req.tgUser.id; // Could be a UUID for OAuth users or numeric TG ID
         const userUUID = await getUserUUID(telegramId);
         if (!userUUID) return res.status(404).json({ error: 'User not found' });
 

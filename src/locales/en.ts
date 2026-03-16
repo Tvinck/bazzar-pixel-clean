@@ -237,5 +237,20 @@ export const en: TranslationKeys = {
             title: "Start Creating Now",
             desc: "Get 100 free charges to start your creative journey. Invite friends and earn even more!"
         }
+    },
+    challenges: {
+        title: "Challenges",
+        active: "Active Challenge",
+        participate: "Participate",
+        leaderboard: "Leaderboard",
+        past: "Past Challenges",
+        rules: "Rules",
+        reward: "Reward",
+        timeLeft: "Time Left",
+        joinDescription: "Create a work on the topic and get a chance to win 500 ⚡",
+        currentTheme: "Theme of the week: Future Space",
+        noChallenges: "No active challenges",
+        winners: "Winners",
+        viewAll: "All Challenges"
     }
 };

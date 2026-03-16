@@ -11,15 +11,18 @@ export const initMonitoring = () => {
     const dsn = import.meta.env.VITE_SENTRY_DSN;
 
     if (dsn) {
+        // Get Telegram user info for Sentry context
+        const tgUser = window.Telegram?.WebApp?.initDataUnsafe?.user || window.__bazzar_auth__?.user;
+
         Sentry.init({
             dsn: dsn,
             integrations: [
                 Sentry.browserTracingIntegration(),
                 Sentry.replayIntegration(),
             ],
-            // Performance Monitoring
-            tracesSampleRate: 1.0, // Уменьшить в продакшене (например, до 0.1)
-            tracePropagationTargets: ["localhost", /^https:\/\/yourserver\.io\/api/],
+            // Performance Monitoring — 10% sampling in production
+            tracesSampleRate: import.meta.env.PROD ? 0.1 : 1.0,
+            tracePropagationTargets: ["localhost", /^\/api\//],
 
             // Session Replay
             replaysSessionSampleRate: 0.1,
@@ -27,10 +30,26 @@ export const initMonitoring = () => {
 
             release: `pixel-app@${APP_VERSION}`,
             environment: import.meta.env.MODE,
+
+            // Filter noisy errors
+            ignoreErrors: [
+                'ResizeObserver loop',
+                'Non-Error promise rejection',
+                'Network request failed',
+            ],
         });
+
+        // Set user context for Sentry
+        if (tgUser) {
+            Sentry.setUser({
+                id: String(tgUser.id),
+                username: tgUser.username || undefined,
+            });
+        }
+
         console.log('✅ Sentry Initialized');
     } else {
-        console.warn('⚠️ Sentry DSN not found. Monitoring is disabled in development mode.');
+        console.warn('⚠️ Sentry DSN not found. Monitoring is disabled.');
     }
 
     // Запуск сбора Web Vitals

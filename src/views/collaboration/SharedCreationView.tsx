@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import {
     ChevronLeft, Heart, Share2, Copy, Zap,
-    MessageCircle
+    MessageCircle, Sparkles, ArrowRight, ExternalLink
 } from 'lucide-react';
 // @ts-ignore
 import galleryAPI from '../../lib/galleryAPI';
@@ -10,6 +11,8 @@ import { useLanguage } from '../../context/LanguageContext';
 import { useSound } from '../../context/SoundContext';
 import { useUser } from '../../context/UserContext';
 import { useToast } from '../../context/ToastContext';
+// @ts-ignore
+import CommentsSection from '../../components/CommentsSection';
 
 const SharedCreationView = () => {
     const { id } = useParams();
@@ -22,6 +25,7 @@ const SharedCreationView = () => {
     const [creation, setCreation] = useState<any>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isLiked, setIsLiked] = useState(false);
+    const [similar, setSimilar] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchCreation = async () => {
@@ -44,6 +48,21 @@ const SharedCreationView = () => {
             }
         };
         fetchCreation();
+    }, [id]);
+
+    useEffect(() => {
+        const fetchSimilar = async () => {
+            try {
+                // In a real app, this would be a recommendation API based on tags/author
+                const res = await galleryAPI.getPublicCreations({ limit: 6 });
+                if (Array.isArray(res)) {
+                    setSimilar(res.filter((c: any) => c.id !== id).slice(0, 4));
+                }
+            } catch (e) {
+                console.error('Failed to load similar:', e);
+            }
+        };
+        fetchSimilar();
     }, [id]);
 
     useEffect(() => {
@@ -70,22 +89,25 @@ const SharedCreationView = () => {
         }
     };
 
+    const authorId = creation?.user?.id || 'unknown';
+    const shareUrl = `https://t.me/bazzar_pixel_bot/app?startapp=c_${id}&utm_source=share&utm_medium=creation&utm_campaign=${authorId}`;
+    const ctaUrl = `https://t.me/bazzar_pixel_bot/app?startapp=ref_${authorId}&utm_source=share&utm_medium=cta&utm_campaign=${authorId}`;
+
     const handleShare = () => {
         playClick();
-        const url = `https://t.me/bazzar_pixel_bot/app?startapp=c_${id}`;
         if ((window as any).Telegram?.WebApp) {
             (window as any).Telegram.WebApp.showPopup({
                 title: t('common.share'),
-                message: url,
+                message: shareUrl,
                 buttons: [{ type: 'default', text: t('common.copy'), id: 'copy' }]
             }, (btnId: string) => {
                 if (btnId === 'copy') {
-                    navigator.clipboard.writeText(url);
+                    navigator.clipboard.writeText(shareUrl);
                     toaster.success(t('common.copied'));
                 }
             });
         } else {
-            navigator.clipboard.writeText(url);
+            navigator.clipboard.writeText(shareUrl);
             toaster.success(t('common.copied'));
         }
     };
@@ -144,6 +166,11 @@ const SharedCreationView = () => {
             <main className="pt-14">
                 <div className="aspect-[4/5] w-full bg-gray-900 relative">
                     <img src={creation.image_url} alt="" className="w-full h-full object-contain" />
+                    {/* Watermark */}
+                    <div className="absolute bottom-3 right-3 flex items-center gap-1.5 bg-black/50 backdrop-blur-sm px-2.5 py-1 rounded-lg border border-white/10">
+                        <Sparkles size={12} className="text-blue-400" />
+                        <span className="text-[11px] font-bold text-white/70 tracking-wide">Pixel AI</span>
+                    </div>
                 </div>
 
                 <div className="p-4 space-y-6">
@@ -204,7 +231,88 @@ const SharedCreationView = () => {
                         <span>Created {new Date(creation.created_at).toLocaleDateString()}</span>
                         <span>Model: {creation.tags?.[1] || 'Default'}</span>
                     </div>
+
+                    {/* Referral Bonus Badge */}
+                    <div className="mt-4 bg-[#1c1c1e] rounded-xl p-3 border border-white/5 flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center shrink-0">
+                            <Zap size={16} className="text-yellow-400" fill="currentColor" />
+                        </div>
+                        <p className="text-[12px] text-white/50 leading-snug">
+                            Поделитесь — автор получит <span className="text-yellow-400 font-bold">25 ⚡</span> за каждого нового пользователя
+                        </p>
+                    </div>
                 </div>
+
+                {/* === COMMENTS === */}
+                <CommentsSection creationId={id} />
+
+                {/* === RELATED CREATIONS === */}
+                {similar.length > 0 && (
+                    <div className="px-4 py-8 border-t border-white/5">
+                        <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                            <Sparkles size={18} className="text-blue-400" />
+                            {t('home.templates')} {/* Using existing key for 'Similar/Recommended' style content */}
+                        </h3>
+                        <div className="grid grid-cols-2 gap-3">
+                            {similar.map((item) => (
+                                <motion.div
+                                    key={item.id}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => { playClick(); navigate(`/c/${item.id}`); window.scrollTo(0, 0); }}
+                                    className="relative aspect-[3/4] rounded-2xl overflow-hidden bg-gray-900 border border-white/5 group"
+                                >
+                                    <img src={item.image_url} alt="" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                    <div className="absolute inset-x-0 bottom-0 p-3 bg-gradient-to-t from-black/80 to-transparent">
+                                        <div className="flex items-center gap-1.5 text-[11px] font-bold text-white">
+                                            <Heart size={10} className="text-red-500 fill-current" />
+                                            {item.likes_count}
+                                        </div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {/* === VIRAL CTA BLOCK === */}
+                <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.5, duration: 0.5 }}
+                    className="mx-4 mb-8 mt-2"
+                >
+                    <div className="bg-gradient-to-br from-[#3390ec]/20 via-[#1c1c1e] to-purple-500/20 rounded-[24px] p-5 border border-[#3390ec]/30 relative overflow-hidden">
+                        {/* Glow */}
+                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-40 h-40 bg-blue-500/15 rounded-full blur-[50px] -mt-20" />
+
+                        <div className="relative z-10 text-center">
+                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-[#3390ec] to-[#007aff] flex items-center justify-center mx-auto mb-4 shadow-2xl shadow-blue-500/30">
+                                <Sparkles size={32} className="text-white" />
+                            </div>
+
+                            <h3 className="text-[20px] font-[900] text-white tracking-tight mb-2">
+                                Создай своё изображение
+                            </h3>
+                            <p className="text-[14px] text-white/50 mb-5 max-w-[260px] mx-auto leading-snug">
+                                Генерируй с помощью нейросетей — фото, арты, стикеры и видео за секунды
+                            </p>
+
+                            <a
+                                href={ctaUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-2 bg-[#3390ec] text-white font-bold text-[15px] px-6 py-3.5 rounded-[14px] shadow-lg shadow-blue-500/30 hover:brightness-110 active:scale-[0.97] transition-all"
+                            >
+                                Открыть Pixel AI
+                                <ArrowRight size={18} />
+                            </a>
+
+                            <p className="text-[11px] text-white/30 mt-3 flex items-center justify-center gap-1">
+                                <ExternalLink size={10} /> Бесплатный старт — 50 зарядов
+                            </p>
+                        </div>
+                    </div>
+                </motion.div>
             </main>
         </div>
     );

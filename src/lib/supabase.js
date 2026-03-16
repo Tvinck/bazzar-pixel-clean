@@ -66,13 +66,20 @@ export const analytics = {
     // Track generation
     async trackGeneration(telegramId, type, prompt, status = 'started') {
         try {
-            // Get user first
-            const user = await this.upsertUser(telegramId, {});
+            let userUUID = telegramId;
+            const isUUID = typeof telegramId === 'string' && telegramId.length === 36 && telegramId.includes('-');
+
+            if (!isUUID) {
+                // Get user first
+                const user = await this.upsertUser(telegramId, {});
+                if (!user) return null;
+                userUUID = user.id;
+            }
 
             const { data, error } = await supabase
                 .from('generations')
                 .insert({
-                    user_id: user?.id,
+                    user_id: userUUID,
                     generation_type: type,
                     prompt: prompt,
                     status: status,
@@ -89,13 +96,15 @@ export const analytics = {
     // Track button clicks
     async trackEvent(telegramId, eventName, eventData = {}) {
         try {
+            const isUUID = typeof telegramId === 'string' && telegramId.length === 36 && telegramId.includes('-');
+
             const { data, error } = await supabase
                 .from('events')
                 .insert({
-                    user_id: null,
+                    user_id: isUUID ? telegramId : null,
                     event_name: eventName,
                     event_data: {
-                        telegram_id: telegramId,
+                        telegram_id: isUUID ? null : telegramId,
                         ...eventData
                     },
                     created_at: new Date().toISOString()
@@ -128,20 +137,26 @@ export const analytics = {
     // Get user profile
     async getUserProfile(telegramId) {
         try {
-            // First get userUUID
-            const { data: user } = await supabase
-                .from('users')
-                .select('id')
-                .eq('telegram_id', telegramId)
-                .single();
+            let userUUID = telegramId;
+            const isUUID = typeof telegramId === 'string' && telegramId.length === 36 && telegramId.includes('-');
 
-            if (!user) return null;
+            if (!isUUID) {
+                // First get userUUID
+                const { data: user } = await supabase
+                    .from('users')
+                    .select('id')
+                    .eq('telegram_id', telegramId)
+                    .single();
+
+                if (!user) return null;
+                userUUID = user.id;
+            }
 
             // Then get profile
             const { data, error } = await supabase
                 .from('user_profiles')
                 .select('*')
-                .eq('user_id', user.id)
+                .eq('user_id', userUUID)
                 .single();
 
             if (error && error.code !== 'PGRST116') {

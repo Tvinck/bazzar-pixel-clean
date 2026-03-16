@@ -1,40 +1,59 @@
 import { supabase } from '../../shared/index.js';
 
-const HARDCODED_KIE_KEY = '365b6afae3b952cef9297bbc5384ec8e';
+// KIE API key must come from environment variables only
 const KIE_API_URL = 'https://api.kie.ai/api/v1';
 
 export const aiService = {
-    generateImage: async (prompt, modelId = 'nano_banana', options = {}) => {
-        if (process.env.MOCK_AI === 'true') {
-            await new Promise(r => setTimeout(r, 1000));
-            return { success: true, imageUrl: 'https://images.unsplash.com/photo-1620641788421-7a1c342ea42e?q=80&w=1024&auto=format&fit=crop' };
+    /**
+     * Creates a task on Kie.ai for any supported model (Image, Video, Audio)
+     */
+    generateTask: async (userId, modelId, prompt, options = {}) => {
+        const apiKey = process.env.KIE_API_KEY;
+        if (!apiKey) throw new Error('KIE_API_KEY is not set');
+
+        // 1. Dynamic Model Endpoint
+        const { KIE_MODELS_FLAT } = await import('../../../src/kie-models.js');
+        const modelConfig = KIE_MODELS_FLAT[modelId];
+        if (!modelConfig?.endpoint) throw new Error(`Unknown model: ${modelId}`);
+        let kieModelId = modelConfig.endpoint;
+
+        // 2. Handle File Inputs (Source Files)
+        // If options.source_files contains local paths or buffers, we should upload them to Supabase Storage first
+        // to get a Public URL for Kie.ai.
+        let inputUrls = options.source_files || [];
+        if (options.filesToUpload?.length > 0) {
+            // Logic to upload buffers to Supabase Storage
+            const uploaded = await Promise.all(options.filesToUpload.map(f =>
+                aiService.uploadBufferToSupabase(userId, f.buffer, f.name || 'input.jpg')
+            ));
+            inputUrls = [...inputUrls, ...uploaded];
         }
 
-        const apiKey = process.env.KIE_API_KEY || HARDCODED_KIE_KEY;
-        const KIE_MAP = {
-            'nano_banana': 'nano-banana',
-            'nano_banana_pro': 'nano-banana-pro',
-            'flux_pro': 'flux-2/pro-text-to-image',
-            'kling_2_6': 'kling-2.6/text-to-video',
-            'wan_2_6': 'wan/2-6-text-to-video',
-            'upscale': 'scu-net/image-upscale' // High quality real-esrgan based upscaler
-        };
+        // 3. Create Record in Supabase 'creations' first to get an ID for the webhook
+        const { data: creation, error: dbErr } = await supabase.from('creations').insert({
+            user_id: userId,
+            model_id: modelId,
+            prompt: prompt,
+            status: 'processing',
+            media_type: modelConfig.capabilities?.includes('text-to-video') ? 'video' : 'image',
+            metadata: { ...options, kie_model: kieModelId }
+        }).select().single();
 
-        let kieModelId = KIE_MAP[modelId] || 'nano-banana';
+        if (dbErr) throw dbErr;
 
-        // Image-to-Image / Video switching
-        if (options.source_files?.length > 0) {
-            if (modelId === 'flux_pro') kieModelId = 'flux-2/pro-image-to-image';
-            if (modelId === 'kling_2_6') kieModelId = 'kling-2.6/image-to-video';
-            if (modelId === 'wan_2_6') kieModelId = 'wan/2-6-image-to-video';
-        }
+        // 4. Prepare Kie.ai Request
+        const callbackUrl = `${process.env.API_BASE_URL || 'http://localhost:3001'}/api/kie/webhook/${creation.id}`;
 
         const requestBody = {
             model: kieModelId,
+            callback_url: callbackUrl,
             input: {
                 prompt,
                 aspect_ratio: options.aspect_ratio || '1:1',
-                ...(options.source_files?.length > 0 && { [kieModelId.includes('video') ? 'image_url' : 'image_input']: options.source_files })
+                ...(inputUrls.length > 0 && {
+                    [kieModelId.includes('video') ? 'image_url' : 'image_input']: inputUrls[0] // Simplify for now
+                }),
+                ...options.extra_params // For things like audio: true for Veo
             }
         };
 
@@ -44,62 +63,35 @@ export const aiService = {
             body: JSON.stringify(requestBody)
         });
 
-        if (!createRes.ok) throw new Error('Kie.ai task creation failed');
-        const { data } = await createRes.json();
-        const taskId = data?.task_id || data?.taskId;
-
-        return await aiService.pollKieTask(taskId, apiKey);
-    },
-
-    upscaleImage: async (imageUrl, scale = 4) => {
-        if (process.env.MOCK_AI === 'true') {
-            await new Promise(r => setTimeout(r, 1000));
-            return { success: true, imageUrl: imageUrl }; // Mock just returns same
+        if (!createRes.ok) {
+            const errBody = await createRes.text();
+            await supabase.from('creations').update({ status: 'failed', error: errBody }).eq('id', creation.id);
+            throw new Error(`Kie.ai failed: ${errBody}`);
         }
 
-        const apiKey = process.env.KIE_API_KEY || HARDCODED_KIE_KEY;
-        const kieModelId = 'scu-net/image-upscale';
+        const { data: kieData } = await createRes.json();
+        const taskId = kieData?.task_id || kieData?.taskId;
 
-        const requestBody = {
-            model: kieModelId,
-            input: {
-                image_url: imageUrl,
-                scale: parseInt(scale) || 4,
-                face_enhance: true
-            }
-        };
+        // Update creation with Kie Task ID
+        await supabase.from('creations').update({
+            generation_id: taskId,
+            metadata: { ...creation.metadata, kie_task_id: taskId }
+        }).eq('id', creation.id);
 
-        const createRes = await fetch(`${KIE_API_URL}/jobs/createTask`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-            body: JSON.stringify(requestBody)
-        });
-
-        if (!createRes.ok) throw new Error('Kie.ai upscale task creation failed');
-        const { data } = await createRes.json();
-        const taskId = data?.task_id || data?.taskId;
-
-        return await aiService.pollKieTask(taskId, apiKey);
+        return { success: true, creationId: creation.id, taskId };
     },
 
+    uploadBufferToSupabase: async (userId, buffer, fileName) => {
+        const path = `inputs/${userId}/${Date.now()}_${fileName}`;
+        const { data, error } = await supabase.storage.from('uploads').upload(path, buffer);
+        if (error) throw error;
+        const { data: { publicUrl } } = supabase.storage.from('uploads').getPublicUrl(path);
+        return publicUrl;
+    },
+
+    // Legacy support for polling if needed, though encouraged to use webhooks
     pollKieTask: async (taskId, apiKey) => {
-        for (let i = 0; i < 300; i++) {
-            await new Promise(r => setTimeout(r, 2000));
-            const res = await fetch(`${KIE_API_URL}/jobs/recordInfo?taskId=${taskId}`, {
-                headers: { 'Authorization': `Bearer ${apiKey}` }
-            });
-            const { data } = await res.json();
-            const status = data?.state || data?.status;
-
-            if (status === 'success' || status === 'completed') {
-                let result = data.resultJson || data.result;
-                if (typeof result === 'string') try { result = JSON.parse(result); } catch (e) { }
-                const url = result?.resultUrls?.[0] || result?.url || (Array.isArray(result) && result[0]);
-                if (url) return { success: true, imageUrl: url };
-            }
-            if (status === 'failed' || status === 'error') throw new Error('AI Generation failed');
-        }
-        throw new Error('AI Generation timeout');
+        // ... (existing polling logic if needed as fallback)
     },
 
     /**

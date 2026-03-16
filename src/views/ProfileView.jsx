@@ -4,15 +4,18 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
     ChevronRight, Zap, Globe, ShieldAlert, Check,
     User, MapPin, Briefcase, Heart, MessageCircle, Languages,
-    Edit2, ChevronLeft, X, Wallet, HelpCircle, FileText, Users, Terminal
+    Edit2, ChevronLeft, X, Wallet, HelpCircle, FileText, Users, Terminal,
+    Gift, Crown, ArrowRight, Mail, Bell, Layers
 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useSound } from '../context/SoundContext';
 import AnimatedIcon from '../components/ui/AnimatedIcon';
+import SEO from '../components/SEO/SEO';
 
 // Components
 import { ProfileSkeleton } from '../components/ui/Skeletons';
+import GiftModal from '../components/modals/GiftModal';
 
 // iOS-style List Block
 const ListBlock = ({ children, className = '' }) => (
@@ -211,6 +214,8 @@ const ProfileView = ({ onOpenPayment }) => {
         options: []
     });
 
+    const [isGiftModalOpen, setIsGiftModalOpen] = useState(false);
+
     useEffect(() => {
         const loadProfile = async () => {
             if (profile) {
@@ -247,12 +252,12 @@ const ProfileView = ({ onOpenPayment }) => {
                         });
                     }
                 }
-            } catch (e) {
-                console.error('Failed to load profile:', e);
+            } catch (err) {
+                console.error('Failed to load profile:', err);
                 try {
                     const saved = JSON.parse(localStorage.getItem('pixel_profile_data') || '{}');
                     setProfileData(prev => ({ ...prev, ...saved }));
-                } catch (e) { }
+                } catch { }
             }
         };
         loadProfile();
@@ -305,6 +310,10 @@ const ProfileView = ({ onOpenPayment }) => {
 
     return (
         <div className="min-h-screen bg-black text-white font-sans pb-24 pt-4 px-4 overflow-y-auto w-full md:max-w-2xl md:mx-auto md:px-6">
+            <SEO 
+                title="Профиль — Bazzar Pixel"
+                description="Настройки аккаунта, баланс зарядов и управление подпиской"
+            />
 
             {/* Header Settings Style */}
             <div className="flex flex-col items-center mb-6">
@@ -332,6 +341,13 @@ const ProfileView = ({ onOpenPayment }) => {
                         onClick={() => { playClick(); onOpenPayment(); }}
                     />
                     <ListRow
+                        icon={<Gift size={16} className="text-white" />}
+                        iconColor="bg-pink-500"
+                        label="Подарить ⚡"
+                        value="Отправить"
+                        onClick={() => { playClick(); setIsGiftModalOpen(true); }}
+                    />
+                    <ListRow
                         icon={<Globe size={16} className="text-white" />}
                         iconColor="bg-indigo-500"
                         label={t('profile.interfaceLang')}
@@ -343,6 +359,40 @@ const ProfileView = ({ onOpenPayment }) => {
                         isLast
                     />
                 </ListBlock>
+
+                {/* Subscription Rollover Status */}
+                {user?.subscription && (
+                    <div className="bg-gradient-to-br from-[#1c1c1e] to-[#2c2c2e] rounded-[16px] p-4 border border-purple-500/20 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-[30px] -mr-6 -mt-6" />
+                        <div className="flex items-center gap-3 mb-3 relative z-10">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
+                                <Crown size={20} className="text-white" />
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex items-center gap-2">
+                                    <h4 className="text-[15px] font-bold text-white">Pixel PRO</h4>
+                                    <span className="bg-purple-500/20 text-purple-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">Активна</span>
+                                </div>
+                                <p className="text-[12px] text-white/40">Следующее списание: 10 апр</p>
+                            </div>
+                        </div>
+                        <div className="bg-[#1c1c1e] rounded-[12px] p-3 relative z-10">
+                            <div className="flex justify-between items-center mb-2">
+                                <span className="text-[12px] text-white/50 font-medium">Остаток зарядов</span>
+                                <span className="text-[14px] font-bold text-white">{stats?.current_balance || 0} / 1500 ⚡</span>
+                            </div>
+                            <div className="w-full h-2 bg-[#2c2c2e] rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-gradient-to-r from-purple-500 to-indigo-400 rounded-full transition-all"
+                                    style={{ width: `${Math.min(100, ((stats?.current_balance || 0) / 1500) * 100)}%` }}
+                                />
+                            </div>
+                            <p className="text-[11px] text-purple-400 mt-2 flex items-center gap-1">
+                                <Zap size={10} fill="currentColor" /> Перенос до 30% остатка на след. месяц
+                            </p>
+                        </div>
+                    </div>
+                )}
 
                 {isAdmin && (
                     <ListBlock>
@@ -402,11 +452,25 @@ const ProfileView = ({ onOpenPayment }) => {
                     <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">{t('profile.socialPrivacy')}</p>
                     <ListBlock>
                         <ListRow
+                            icon={<Layers size={16} className="text-white" />}
+                            iconColor="bg-amber-500"
+                            label="Коллекции"
+                            value="Управление"
+                            onClick={() => navigate('/collections')}
+                        />
+                        <ListRow
                             icon={<Users size={16} className="text-white" />}
                             iconColor="bg-blue-600"
                             label={t('profile.referralDash')}
                             value={t('profile.bonuses')}
                             onClick={() => navigate('/referrals')}
+                        />
+                        <ListRow
+                            icon={<Crown size={16} className="text-white" />}
+                            iconColor="bg-purple-500"
+                            label="Партнёрская программа"
+                            value="15% комиссия"
+                            onClick={() => navigate('/affiliate')}
                         />
                         <ListRow
                             icon={<User size={16} className="text-white" />}
@@ -444,6 +508,34 @@ const ProfileView = ({ onOpenPayment }) => {
                     </ListBlock>
                 </div>
 
+                {/* 6. Email for Reactivation */}
+                <div>
+                    <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">Уведомления</p>
+                    <ListBlock>
+                        <ListRow
+                            icon={<Mail size={16} className="text-white" />}
+                            iconColor="bg-orange-500"
+                            label="Email"
+                            value={profileData.email || 'Добавить'}
+                            onClick={() => openEdit('email', 'Email для уведомлений')}
+                        />
+                        <ListRow
+                            icon={<Bell size={16} className="text-white" />}
+                            iconColor="bg-green-500"
+                            label="Новые функции и модели"
+                            value={profileData.emailNotifications ? 'Вкл' : 'Выкл'}
+                            onClick={() => {
+                                playClick();
+                                setProfileData(p => ({ ...p, emailNotifications: !p.emailNotifications }));
+                            }}
+                            isLast
+                        />
+                    </ListBlock>
+                    <p className="text-[12px] text-gray-500 mt-2 ml-4 px-2">
+                        Мы отправим письмо только когда появится что-то новое и крутое ✨
+                    </p>
+                </div>
+
                 {/* 5. Extra */}
                 <ListBlock>
                     <ListRow
@@ -477,6 +569,19 @@ const ProfileView = ({ onOpenPayment }) => {
                     />
                 )}
             </AnimatePresence>
+
+            {/* Gift Modal */}
+            <GiftModal
+                isOpen={isGiftModalOpen}
+                onClose={() => setIsGiftModalOpen(false)}
+                currentBalance={stats?.current_balance || 0}
+                onGiftSuccess={() => {
+                    // Temporarily subtract from local balance 
+                    if (stats && typeof refreshUser === 'function') {
+                        refreshUser();
+                    }
+                }}
+            />
         </div>
     );
 };

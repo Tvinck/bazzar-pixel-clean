@@ -4,7 +4,6 @@ import { X, Gift, Zap, TrendingUp, Bell } from 'lucide-react';
 import { useLanguage } from '../context/LanguageContext';
 
 const NotificationsPanel = ({ isOpen, onClose }) => {
-    const { t } = useLanguage();
 
     const notifications = [
         {

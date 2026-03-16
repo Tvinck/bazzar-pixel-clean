@@ -18,46 +18,25 @@ export const initQueue = async () => {
             const jobId = job.id;
 
             try {
-                let result;
-                if (type === 'upscale' || type === 'super_resolution') {
-                    result = await aiService.upscaleImage(options.imageUrl, options.scale || 4);
-                } else {
-                    result = await aiService.generateImage(prompt, type, options);
-                }
+                // Call the new unified task helper
+                const result = await aiService.generateTask(userId, type, prompt, options);
 
-                if (!result.success) throw new Error(result.error || 'Task failed');
+                if (!result.success) throw new Error(result.error || 'Initial transition to Kie failed');
 
-                // Save to DB
-                if (userId) {
-                    await supabase.from('creations').insert({
-                        user_id: userId, generation_id: jobId,
-                        title: prompt?.slice(0, 50) || 'AI Generation',
-                        description: prompt || '', image_url: result.imageUrl,
-                        thumbnail_url: result.imageUrl, type: type.includes('video') ? 'video' : 'image',
-                        prompt, tags: [type]
-                    });
-                }
-
-                // Notify Telegram
-                if (options.telegramId) {
-                    const isVideo = type.includes('video') || (result.imageUrl && result.imageUrl.match(/\.(mp4|webm)$/i));
-                    const caption = `✨ Ваша генерация готова!\n\n🎨 ${type}\n📝 "${prompt?.slice(0, 50)}..."`;
-
-                    await sendTelegramMessage(options.telegramId, caption, {
-                        reply_markup: { inline_keyboard: [[{ text: '👁 Посмотреть', web_app: { url: `${process.env.WEB_APP_URL}/gallery` } }]] }
-                    });
-                }
-
-                return { success: true, imageUrl: result.imageUrl };
+                // Note: The 'creations' record is now created inside generateTask.
+                // The actual result will be handled by the Kie webhook.
+                return { success: true, creationId: result.creationId };
             } catch (error) {
                 console.error(`❌ Job ${jobId} failed:`, error.message);
                 // Refund
                 if (options.telegramId && cost > 0) {
                     await supabase.rpc('add_user_credits', {
-                        p_telegram_id: options.telegramId, p_amount: cost,
-                        p_reason: `Refund: Job ${jobId} Failed`, p_source: 'system'
+                        p_telegram_id: options.telegramId.toString(),
+                        p_amount: cost,
+                        p_reason: `Refund: Job ${jobId} Creation Failed`,
+                        p_source: 'system'
                     });
-                    await sendTelegramMessage(options.telegramId, `⚠️ <b>Ошибка генерации</b>\n\nМы вернули ${cost} кредитов.`);
+                    await sendTelegramMessage(options.telegramId, `⚠️ <b>Ошибка генерации</b>\n\nНе удалось запустить задачу. Мы вернули ${cost} кредитов.`);
                 }
                 throw error;
             }

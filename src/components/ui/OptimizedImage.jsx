@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-const OptimizedImage = ({ src, alt, className, blurHash = "L6PZfSi_.AyE_3t7t7R**0o#DgR4", priority = false }) => {
+const OptimizedImage = ({ src, alt, className, priority = false }) => {
     const [isLoaded, setIsLoaded] = useState(false);
 
     // Ensure we are requesting WebP from Unsplash if possible

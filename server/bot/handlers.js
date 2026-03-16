@@ -92,4 +92,70 @@ export function setupBotHandlers(bot) {
             }
         } catch (e) { console.error('Callback Error:', e); }
     });
+
+    // Handle Telegram Stars payment pre-checkout
+    bot.on('pre_checkout_query', async (query) => {
+        try {
+            // we can parse payload if needed
+            // const payload = JSON.parse(query.invoice_payload);
+            await bot.answerPreCheckoutQuery(query.id, true);
+        } catch (e) {
+            console.error('PreCheckout Error:', e);
+            bot.answerPreCheckoutQuery(query.id, false, { error_message: 'Ошибка при проверке деталей платежа.' });
+        }
+    });
+
+    // Handle successful Telegram Stars payment
+    bot.on('message', async (msg) => {
+        if (msg.successful_payment) {
+            try {
+                const paymentInfo = msg.successful_payment;
+                const payloadStr = paymentInfo.invoice_payload;
+
+                if (!payloadStr) return;
+
+                const payload = JSON.parse(payloadStr);
+                const { telegramId, credits, promoCode, orderId } = payload;
+
+                if (telegramId && credits) {
+                    await supabase.rpc('add_user_credits', {
+                        p_telegram_id: telegramId,
+                        p_amount: credits,
+                        p_reason: 'Telegram Stars Purchase',
+                        p_source: 'stars_payment'
+                    });
+
+                    // Log successful transaction
+                    const userUUID = await getUserUUID(telegramId);
+                    if (userUUID) {
+                        await supabase.from('transactions').insert({
+                            user_id: userUUID,
+                            amount: paymentInfo.total_amount, // XTR amount 
+                            type: 'stars_purchase',
+                            description: `Оплата Stars: ${paymentInfo.total_amount} XTR за ${credits} ⚡`,
+                            metadata: {
+                                ProviderPaymentChargeId: paymentInfo.provider_payment_charge_id,
+                                TelegramPaymentChargeId: paymentInfo.telegram_payment_charge_id,
+                                OrderId: orderId,
+                                PromoCode: promoCode
+                            },
+                            created_at: new Date().toISOString()
+                        });
+
+                        // Increment used count for promo code
+                        if (promoCode) {
+                            await supabase.rpc('increment_promo_use', {
+                                p_code: promoCode,
+                                p_user_id: userUUID
+                            });
+                        }
+                    }
+
+                    bot.sendMessage(msg.chat.id, `🎉 *Оплата успешно завершена!*\n\nНа ваш баланс зачислено *${credits}* ⚡ зарядов. Приятного использования!`, { parse_mode: 'Markdown' });
+                }
+            } catch (e) {
+                console.error('Successful Stars Payment Error:', e);
+            }
+        }
+    });
 }

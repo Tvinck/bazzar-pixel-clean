@@ -1,10 +1,13 @@
 import { supabase } from './lib/supabase';
 
-// Helper to check if browser (though this file is intended for browser)
-const isBrowser = typeof window !== 'undefined';
-
+/**
+ * СЕРВИС ГЕНЕРАЦИИ (Frontend)
+ * Этот модуль отвечает за взаимодействие фронтенда с API генерации.
+ * Большинство запросов делегируется асинхронной очереди (Job Queue) для 
+ * избежания таймаутов браузера при долгих генерациях.
+ */
 const aiService = {
-    // Main Generation Function (Browser delegates to Async Queue)
+    // Основная функция генерации — ставит задачу в очередь на бэкенд
     generateImage: async (prompt, modelId = 'nano_banana', options = {}) => {
         console.log('🌐 Browser Mode: Delegating to Async Job Queue...');
         try {
@@ -129,7 +132,7 @@ const aiService = {
             try {
                 const err = await createRes.json();
                 errorMsg = err.error || errorMsg;
-            } catch (jsonErr) {
+            } catch {
                 errorMsg = `Server Error (${createRes.status})`;
             }
             throw new Error(errorMsg);
@@ -202,14 +205,14 @@ const aiService = {
     },
 
     // Stub for training
-    trainModel: async (images, triggerWord, type) => {
+    trainModel: async (images, triggerWord) => {
         console.log(`🚂 Training Stub: ${triggerWord}`);
         await new Promise(r => setTimeout(r, 2000));
         return { success: true, taskId: 'mock_train_' + Date.now() };
     },
 
     // Poll logic for browser (reused if needed, though mostly handled by jobs now)
-    pollKieTask: async (taskId) => {
+    pollKieTask: async () => {
         // Implementation via proxy if needed
         // For now, job system handles polling
         return { success: false, error: 'Legacy poll called' };

@@ -1,6 +1,7 @@
 import { encode } from 'blurhash';
 import sharp from 'sharp';
 import fetch from 'node-fetch'; // Built-in in Node 18+, but safe to assume global fetch or import if needed. Since type: module, global fetch is available.
+import { Buffer } from 'buffer';
 
 export async function generateBlurhash(imageUrl) {
     try {

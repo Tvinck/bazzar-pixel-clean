@@ -21,6 +21,14 @@ const GenerationLoader = ({ type = 'image', status, result, estimatedTime = 15, 
     const [progress, setProgress] = useState(0);
     const [currentStep, setCurrentStep] = useState(0);
     const [tipIndex, setTipIndex] = useState(0);
+    const [timeLeft, setTimeLeft] = useState(estimatedTime);
+
+    // Progress Dashboard array for stages
+    const stages = React.useMemo(() => [
+        { label: 'Ставим в очередь', pctToWait: 15 },
+        { label: `Генерируем (${type === 'video' ? 'может долго' : 'почти всё'})`, pctToWait: 85 },
+        { label: 'Финализируем', pctToWait: 100 },
+    ], [type]);
 
     // Progress Simulation
     useEffect(() => {
@@ -40,15 +48,19 @@ const GenerationLoader = ({ type = 'image', status, result, estimatedTime = 15, 
 
             setProgress(adjustedProgress);
 
-            if (adjustedProgress < 20) setCurrentStep(0);
-            else if (adjustedProgress < 50) setCurrentStep(1);
-            else if (adjustedProgress < 85) setCurrentStep(2);
-            else setCurrentStep(3);
+            if (adjustedProgress < stages[0].pctToWait) setCurrentStep(0);
+            else if (adjustedProgress < stages[1].pctToWait) setCurrentStep(1);
+            else setCurrentStep(2);
+
+            // Timer update (countdown)
+            const passedSeconds = (step * intervalTime) / 1000;
+            const remaining = Math.max(0, Math.ceil(estimatedTime - passedSeconds));
+            setTimeLeft(remaining);
 
         }, intervalTime);
 
         return () => clearInterval(interval);
-    }, [estimatedTime]);
+    }, [estimatedTime, stages]);
 
     // Tip Rotation
     useEffect(() => {
@@ -120,15 +132,33 @@ const GenerationLoader = ({ type = 'image', status, result, estimatedTime = 15, 
 
     return (
         <div className="fixed inset-0 z-[9999] bg-[#000] text-white flex flex-col font-sans overflow-hidden">
-            {/* MINIMIZE BUTTON */}
-            {onMinimize && (
-                <button
-                    onClick={onMinimize}
-                    className="absolute top-[calc(env(safe-area-inset-top)+16px)] right-4 z-50 w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 border border-white/10"
-                >
-                    <ChevronDown size={24} />
-                </button>
-            )}
+            {/* MINIMIZE BUTTON & TIMER AREA */}
+            <div className="absolute top-[calc(env(safe-area-inset-top)+16px)] left-0 right-0 px-4 flex justify-between items-center z-50">
+                <AnimatePresence>
+                    {timeLeft > 0 && status !== 'success' && (
+                        <motion.div
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0 }}
+                            className="bg-black/40 backdrop-blur-xl border border-white/10 px-4 py-2 rounded-full flex items-center gap-2"
+                        >
+                            <div className="w-2 h-2 bg-[#ff2d55] rounded-full animate-pulse" />
+                            <span className="text-white/80 text-sm font-medium tabular-nums">
+                                ≈ {timeLeft} сек.
+                            </span>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+
+                {onMinimize && (
+                    <button
+                        onClick={onMinimize}
+                        className="w-10 h-10 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/20 transition-all active:scale-95 border border-white/10 ml-auto"
+                    >
+                        <ChevronDown size={24} />
+                    </button>
+                )}
+            </div>
 
             {/* --- Deep Space Ambient Background --- */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -206,27 +236,29 @@ const GenerationLoader = ({ type = 'image', status, result, estimatedTime = 15, 
                 <div className="text-center mb-16 max-w-xs relative w-full">
                     <AnimatePresence mode='wait'>
                         <motion.div
-                            key={STEPS[currentStep].label}
+                            key={stages[currentStep].label}
                             initial={{ y: 20, opacity: 0, scale: 0.95 }}
                             animate={{ y: 0, opacity: 1, scale: 1 }}
                             exit={{ y: -20, opacity: 0, scale: 0.95 }}
                             transition={{ type: "spring", stiffness: 300, damping: 20 }}
                         >
-                            <h2 className="text-3xl font-display font-[800] tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60 mb-3">
-                                {STEPS[currentStep].label}
+                            <h2 className="text-2xl font-display font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-b from-white to-white/60 mb-4 px-2">
+                                {stages[currentStep].label}
                             </h2>
                         </motion.div>
                     </AnimatePresence>
 
-                    <div className="flex items-center justify-center gap-3">
-                        <div className="h-1.5 w-32 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
+                    <div className="flex flex-col items-center justify-center gap-2 px-6">
+                        <div className="w-full max-w-[200px] h-2 bg-white/10 rounded-full overflow-hidden backdrop-blur-sm">
                             <motion.div
-                                className="h-full bg-white rounded-full shadow-[0_0_10px_white]"
-                                initial={{ width: 0 }}
+                                className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 rounded-full shadow-[0_0_15px_rgba(236,72,153,0.5)]"
+                                initial={{ width: '0%' }}
                                 animate={{ width: `${progress}%` }}
                             />
                         </div>
-                        <span className="text-sm font-bold text-white/60 tabular-nums font-mono">{Math.round(progress)}%</span>
+                        <span className="text-xs font-semibold text-white/50 tabular-nums uppercase tracking-widest mt-1">
+                            {Math.round(progress)}% ГОТОВО
+                        </span>
                     </div>
                 </div>
 

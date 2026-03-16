@@ -17,6 +17,210 @@ import { useUser } from '../context/UserContext';
 
 
 import { CHAT_INFO, MESSAGE_COST } from '../config/chatConfig';
+import { BlockErrorBoundary } from '../components/ErrorBoundary';
+import SEO from '../components/SEO/SEO';
+
+// Sub-components for better error isolation
+const MessagesList = ({ 
+    messages, 
+    isLoadingHistory, 
+    isLoading, 
+    error, 
+    messagesEndRef, 
+    rateMessage,
+    suggestions = [],
+    handleSend
+}) => (
+    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
+        {isLoadingHistory ? (
+            <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
+            </div>
+        ) : (
+            <>
+                <AnimatePresence>
+                    {messages.map((msg) => (
+                        <motion.div
+                            key={msg.id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
+                        >
+                            <div
+                                className={`max-w-[85%] rounded-[18px] px-4 py-3 ${msg.role === 'user'
+                                    ? 'bg-[#007aff] text-white rounded-br-[4px]'
+                                    : 'bg-[#2c2c2e] text-white rounded-bl-[4px] shadow-sm'
+                                    }`}
+                            >
+                                {msg.image && (
+                                    <img src={msg.image} alt="Attachment" className="max-w-full rounded-lg mb-2 border border-white/10" />
+                                )}
+                                <p className="text-[15px] whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
+                            </div>
+
+                            {msg.role === 'assistant' && msg.dbId && (
+                                <div className="flex items-center gap-2 mt-1 ml-1">
+                                    <button
+                                        onClick={() => rateMessage(msg.dbId, 1)}
+                                        className={`p-1.5 rounded-full transition-colors ${msg.rating === 1
+                                            ? 'bg-green-500/30 text-green-400'
+                                            : 'text-gray-500 hover:text-green-400 hover:bg-white/5'
+                                            }`}
+                                    >
+                                        <ThumbsUp className="w-3.5 h-3.5" />
+                                    </button>
+                                    <button
+                                        onClick={() => rateMessage(msg.dbId, -1)}
+                                        className={`p-1.5 rounded-full transition-colors ${msg.rating === -1
+                                            ? 'bg-red-500/30 text-red-400'
+                                            : 'text-gray-500 hover:text-red-400 hover:bg-white/5'
+                                            }`}
+                                    >
+                                        <ThumbsDown className="w-3.5 h-3.5" />
+                                    </button>
+                                </div>
+                            )}
+                        </motion.div>
+                    ))}
+                </AnimatePresence>
+
+                {/* Quick Suggestions */}
+                {messages.length <= 2 && suggestions.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex flex-wrap gap-2 mt-4"
+                    >
+                        {suggestions.slice(0, 4).map((suggestion, idx) => (
+                            <button
+                                key={idx}
+                                onClick={() => handleSend(suggestion)}
+                                disabled={isLoading}
+                                className="px-3.5 py-2 text-[13px] bg-[#1c1c1e] text-white rounded-[10px] active:bg-[#2c2c2e] transition-colors disabled:opacity-50"
+                            >
+                                {suggestion}
+                            </button>
+                        ))}
+                    </motion.div>
+                )}
+
+                {/* Typing Indicator */}
+                {isLoading && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex justify-start"
+                    >
+                        <div className="bg-[#1c1c1e] rounded-[18px] rounded-bl-[6px] px-4 py-3">
+                            <div className="flex gap-1">
+                                <span className="w-2 h-2 bg-[#8e8e93] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                                <span className="w-2 h-2 bg-[#8e8e93] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                                <span className="w-2 h-2 bg-[#8e8e93] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+
+                {error && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="flex items-center gap-2 text-red-400 text-sm justify-center"
+                    >
+                        <AlertCircle className="w-4 h-4" />
+                        {error}
+                    </motion.div>
+                )}
+            </>
+        )}
+        <div ref={messagesEndRef} />
+    </div>
+);
+
+const ChatInput = ({
+    image,
+    setImage,
+    fileInputRef,
+    handleImageChange,
+    inputRef,
+    input,
+    setInput,
+    handleKeyPress,
+    isLoading,
+    handleSend
+}) => (
+    <div className="sticky bottom-0 bg-black/95 backdrop-blur-xl border-t border-white/5 p-3 pb-safe">
+        <div className="flex flex-col gap-2">
+            <AnimatePresence>
+                {image && (
+                    <motion.div
+                        initial={{ opacity: 0, y: 10, height: 0 }}
+                        animate={{ opacity: 1, y: 0, height: 'auto' }}
+                        exit={{ opacity: 0, y: 10, height: 0 }}
+                        className="relative inline-block ml-12"
+                    >
+                        <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-white/10">
+                            <img src={image} className="w-full h-full object-cover" alt="Preview" />
+                            <button
+                                onClick={() => setImage(null)}
+                                className="absolute top-1 right-1 p-1.5 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-black/80 transition-colors"
+                            >
+                                <X className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
+            <div className="flex items-end gap-2">
+                <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="p-3 mb-0.5 rounded-full text-[#8e8e93] active:bg-[#1c1c1e] transition-colors focus:outline-none"
+                >
+                    <Paperclip className="w-[22px] h-[22px]" />
+                    <input
+                        type="file"
+                        ref={fileInputRef}
+                        onChange={handleImageChange}
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                    />
+                </button>
+
+                <div className="flex-1 bg-[#1c1c1e] rounded-[22px] px-4 py-3 border border-white/5 shadow-inner min-h-[46px] flex items-center">
+                    <textarea
+                        ref={inputRef}
+                        value={input}
+                        onChange={(e) => setInput(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        placeholder="Сообщение..."
+                        className="w-full bg-transparent text-white placeholder-[#8e8e93] resize-none outline-none text-[16px] max-h-32"
+                        rows={1}
+                        disabled={isLoading}
+                    />
+                </div>
+
+                <motion.button
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleSend()}
+                    disabled={(!input.trim() && !image) || isLoading}
+                    className={`p-3 mb-0.5 rounded-full transition-all duration-200 ${(input.trim() || image) && !isLoading
+                        ? 'bg-[#007aff] text-white shadow-[0_4px_14px_rgba(0,122,255,0.4)]'
+                        : 'bg-[#1c1c1e] text-[#8e8e93]'
+                        } flex items-center justify-center`}
+                    style={{ width: '46px', height: '46px' }}
+                >
+                    {isLoading ? (
+                        <Loader2 className="w-[22px] h-[22px] animate-spin" />
+                    ) : (
+                        <Send className="w-[22px] h-[22px] -ml-0.5" />
+                    )}
+                </motion.button>
+            </div>
+        </div>
+    </div>
+);
 
 export default function UniversalChatView() {
     const { chatType } = useParams();
@@ -48,7 +252,7 @@ export default function UniversalChatView() {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, []);
 
-    const addGreeting = () => {
+    const addGreeting = useCallback(() => {
         if (!chatInfo) return;
         setMessages([{
             id: 'greeting',
@@ -56,7 +260,7 @@ export default function UniversalChatView() {
             content: chatInfo.greetings.join('\n\n'),
             timestamp: new Date(),
         }]);
-    };
+    }, [chatInfo]);
 
     const rateMessage = async (messageId, rating) => {
         try {
@@ -127,7 +331,7 @@ export default function UniversalChatView() {
         }
     };
 
-    const handleSend = async (messageText = null) => {
+    const handleSend = useCallback(async (messageText = null) => {
         const textToSend = messageText || input.trim();
         if ((!textToSend && !image) || isLoading) return;
 
@@ -198,7 +402,7 @@ export default function UniversalChatView() {
         } finally {
             setIsLoading(false);
         }
-    };
+    }, [input, image, isLoading, chatType, updateStats]);
 
     const handleKeyPress = (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -278,7 +482,7 @@ export default function UniversalChatView() {
         };
 
         loadConversation();
-    }, [chatType, telegramId, isUserLoading, chatInfo]);
+    }, [chatType, telegramId, isUserLoading, chatInfo, addGreeting, updateStats]);
 
     // Sync balance with global stats
     useEffect(() => {
@@ -299,6 +503,10 @@ export default function UniversalChatView() {
 
     return (
         <div className="min-h-screen bg-black flex flex-col md:max-w-3xl md:mx-auto">
+            <SEO 
+                title={`${chatInfo.name} — Bazzar Pixel`}
+                description={`Чат с ${chatInfo.name}. ${chatInfo.greetings[0]}`}
+            />
             {/* Header */}
             <div className="sticky top-0 z-10 bg-black/95 backdrop-blur-xl border-b border-white/5 pt-[calc(env(safe-area-inset-top)+4px)]">
                 <div className="flex items-center gap-3 px-4 py-3">
@@ -377,188 +585,33 @@ export default function UniversalChatView() {
             </AnimatePresence>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
-                {isLoadingHistory ? (
-                    <div className="flex items-center justify-center py-8">
-                        <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
-                    </div>
-                ) : (
-                    <>
-                        <AnimatePresence>
-                            {messages.map((msg) => (
-                                <motion.div
-                                    key={msg.id}
-                                    initial={{ opacity: 0, y: 20 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    exit={{ opacity: 0 }}
-                                    className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}
-                                >
-                                    <div
-                                        className={`max-w-[85%] rounded-[18px] px-4 py-3 ${msg.role === 'user'
-                                            ? 'bg-[#007aff] text-white rounded-br-[4px]'
-                                            : 'bg-[#2c2c2e] text-white rounded-bl-[4px] shadow-sm'
-                                            }`}
-                                    >
-                                        {msg.image && (
-                                            <img src={msg.image} alt="Attachment" className="max-w-full rounded-lg mb-2 border border-white/10" />
-                                        )}
-                                        <p className="text-[15px] whitespace-pre-wrap break-words leading-relaxed">{msg.content}</p>
-                                    </div>
+            <BlockErrorBoundary>
+                <MessagesList 
+                    messages={messages}
+                    isLoadingHistory={isLoadingHistory}
+                    isLoading={isLoading}
+                    error={error}
+                    messagesEndRef={messagesEndRef}
+                    rateMessage={rateMessage}
+                    suggestions={suggestions}
+                    handleSend={handleSend}
+                />
+            </BlockErrorBoundary>
 
-                                    {msg.role === 'assistant' && msg.dbId && (
-                                        <div className="flex items-center gap-2 mt-1 ml-1">
-                                            <button
-                                                onClick={() => rateMessage(msg.dbId, 1)}
-                                                className={`p-1.5 rounded-full transition-colors ${msg.rating === 1
-                                                    ? 'bg-green-500/30 text-green-400'
-                                                    : 'text-gray-500 hover:text-green-400 hover:bg-white/5'
-                                                    }`}
-                                            >
-                                                <ThumbsUp className="w-3.5 h-3.5" />
-                                            </button>
-                                            <button
-                                                onClick={() => rateMessage(msg.dbId, -1)}
-                                                className={`p-1.5 rounded-full transition-colors ${msg.rating === -1
-                                                    ? 'bg-red-500/30 text-red-400'
-                                                    : 'text-gray-500 hover:text-red-400 hover:bg-white/5'
-                                                    }`}
-                                            >
-                                                <ThumbsDown className="w-3.5 h-3.5" />
-                                            </button>
-                                        </div>
-                                    )}
-                                </motion.div>
-                            ))}
-                        </AnimatePresence>
-
-                        {/* Quick Suggestions */}
-                        {messages.length <= 2 && suggestions.length > 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="flex flex-wrap gap-2 mt-4"
-                            >
-                                {suggestions.slice(0, 4).map((suggestion, idx) => (
-                                    <button
-                                        key={idx}
-                                        onClick={() => handleSend(suggestion)}
-                                        disabled={isLoading}
-                                        className="px-3.5 py-2 text-[13px] bg-[#1c1c1e] text-white rounded-[10px] active:bg-[#2c2c2e] transition-colors disabled:opacity-50"
-                                    >
-                                        {suggestion}
-                                    </button>
-                                ))}
-                            </motion.div>
-                        )}
-
-                        {/* Typing Indicator */}
-                        {isLoading && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                className="flex justify-start"
-                            >
-                                <div className="bg-[#1c1c1e] rounded-[18px] rounded-bl-[6px] px-4 py-3">
-                                    <div className="flex gap-1">
-                                        <span className="w-2 h-2 bg-[#8e8e93] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                                        <span className="w-2 h-2 bg-[#8e8e93] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                                        <span className="w-2 h-2 bg-[#8e8e93] rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
-                                    </div>
-                                </div>
-                            </motion.div>
-                        )}
-
-                        {error && (
-                            <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                                className="flex items-center gap-2 text-red-400 text-sm justify-center"
-                            >
-                                <AlertCircle className="w-4 h-4" />
-                                {error}
-                            </motion.div>
-                        )}
-                    </>
-                )}
-
-                <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input Area */}
-            <div className="sticky bottom-0 bg-black/95 backdrop-blur-xl border-t border-white/5 p-3 pb-safe">
-                <div className="flex flex-col gap-2">
-                    {/* Image Preview */}
-                    <AnimatePresence>
-                        {image && (
-                            <motion.div
-                                initial={{ opacity: 0, y: 10, height: 0 }}
-                                animate={{ opacity: 1, y: 0, height: 'auto' }}
-                                exit={{ opacity: 0, y: 10, height: 0 }}
-                                className="relative inline-block ml-12"
-                            >
-                                <div className="relative w-24 h-24 rounded-xl overflow-hidden border border-white/10">
-                                    <img src={image} className="w-full h-full object-cover" alt="Preview" />
-                                    <button
-                                        onClick={() => setImage(null)}
-                                        className="absolute top-1 right-1 p-1.5 bg-black/60 backdrop-blur-md rounded-full text-white hover:bg-black/80 transition-colors"
-                                    >
-                                        <X className="w-3.5 h-3.5" />
-                                    </button>
-                                </div>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    <div className="flex items-end gap-2">
-                        <button
-                            onClick={() => fileInputRef.current?.click()}
-                            className="p-3 mb-0.5 rounded-full text-[#8e8e93] active:bg-[#1c1c1e] transition-colors focus:outline-none"
-                        >
-                            <Paperclip className="w-[22px] h-[22px]" />
-                            <input
-                                type="file"
-                                ref={fileInputRef}
-                                onChange={handleImageChange}
-                                accept="image/jpeg,image/png,image/webp"
-                                className="hidden"
-                            />
-                        </button>
-
-                        <div className="flex-1 bg-[#1c1c1e] rounded-[22px] px-4 py-3 border border-white/5 shadow-inner min-h-[46px] flex items-center">
-                            <textarea
-                                ref={inputRef}
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                onKeyDown={handleKeyPress}
-                                placeholder="Сообщение..."
-                                className="w-full bg-transparent text-white placeholder-[#8e8e93] resize-none outline-none text-[16px] max-h-32"
-                                rows={1}
-                                disabled={isLoading}
-                                style={{
-                                    height: 'auto',
-                                }}
-                            />
-                        </div>
-
-                        <motion.button
-                            whileTap={{ scale: 0.9 }}
-                            onClick={() => handleSend()}
-                            disabled={(!input.trim() && !image) || isLoading}
-                            className={`p-3 mb-0.5 rounded-full transition-all duration-200 ${(input.trim() || image) && !isLoading
-                                ? 'bg-[#007aff] text-white shadow-[0_4px_14px_rgba(0,122,255,0.4)]'
-                                : 'bg-[#1c1c1e] text-[#8e8e93]'
-                                } flex items-center justify-center`}
-                            style={{ width: '46px', height: '46px' }}
-                        >
-                            {isLoading ? (
-                                <Loader2 className="w-[22px] h-[22px] animate-spin" />
-                            ) : (
-                                <Send className="w-[22px] h-[22px] -ml-0.5" />
-                            )}
-                        </motion.button>
-                    </div>
-                </div>
-            </div>
+            <BlockErrorBoundary>
+                <ChatInput 
+                    image={image}
+                    setImage={setImage}
+                    fileInputRef={fileInputRef}
+                    handleImageChange={handleImageChange}
+                    inputRef={inputRef}
+                    input={input}
+                    setInput={setInput}
+                    handleKeyPress={handleKeyPress}
+                    isLoading={isLoading}
+                    handleSend={handleSend}
+                />
+            </BlockErrorBoundary>
 
             {/* Top Up Modal */}
             <AnimatePresence>

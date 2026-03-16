@@ -2,30 +2,58 @@ import React, { useState, useEffect } from 'react';
 import { Trophy, ChevronRight, Crown, Medal, User } from 'lucide-react';
 import { analytics } from '../lib/supabase';
 import { useQuery } from '@tanstack/react-query';
+import { useNavigate } from 'react-router-dom';
 import { TelegramModal, TelegramListItem } from './TelegramAnimations';
 
 const LeaderboardDrawer = ({ isOpen, onClose }) => {
+    const navigate = useNavigate();
 
+    // Fetch leaderboard
     // Fetch leaderboard
     const { data: leaderboard, isLoading } = useQuery({
         queryKey: ['leaderboard'],
         queryFn: async () => {
             return await analytics.getLeaderboard();
         },
-        enabled: isOpen, // Only fetch when open
+        enabled: isOpen,
         staleTime: 5 * 60 * 1000
     });
+
+    const [activeTab, setActiveTab] = useState('xp'); // 'xp' or 'likes'
+
+    const sortedData = React.useMemo(() => {
+        if (!leaderboard) return [];
+        if (activeTab === 'likes') {
+            return [...leaderboard].sort((a, b) => (b.total_likes || 0) - (a.total_likes || 0));
+        }
+        return leaderboard; // default is XP/Level
+    }, [leaderboard, activeTab]);
 
     return (
         <TelegramModal isOpen={isOpen} onClose={onClose}>
             <div className="flex-1 p-6 relative">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-8">
+                <div className="flex justify-between items-center mb-6">
                     <div>
                         <span className="text-[11px] font-[800] text-amber-500 tracking-widest uppercase mb-1 block">Hall of Fame</span>
-                        <h2 className="font-display font-[800] text-3xl text-white tracking-tight">Top Authors</h2>
+                        <h2 className="font-display font-[800] text-3xl text-white tracking-tight">Leaderboard</h2>
                     </div>
-                    {/* Close button is handled by drag handle, but we can keep this or remove */}
+                </div>
+
+                {/* Tabs */}
+                <div className="flex gap-2 bg-white/5 p-1 rounded-2xl border border-white/5 mb-6">
+                    <button
+                        onClick={() => setActiveTab('xp')}
+                        className={`flex-1 py-2 text-[12px] font-bold rounded-xl transition-all ${activeTab === 'xp' ? 'bg-amber-500 text-black shadow-lg' : 'text-gray-400'}`}
+                    >
+                        XP Rank
+                    </button>
+                    <button
+                        onClick={() => setActiveTab('likes')}
+                        className={`flex-1 py-2 text-[12px] font-bold rounded-xl transition-all ${activeTab === 'likes' ? 'bg-amber-500 text-black shadow-lg' : 'text-gray-400'}`}
+                    >
+                        Top Likes
+                    </button>
                 </div>
 
                 {/* Top 3 Podium */}
@@ -64,7 +92,7 @@ const LeaderboardDrawer = ({ isOpen, onClose }) => {
                             <div className="text-white/30 text-xs font-medium">Loading champions...</div>
                         </div>
                     ) : (
-                        leaderboard?.map((user, index) => (
+                        sortedData?.map((user, index) => (
                             <TelegramListItem key={user.telegram_id || index} delay={index * 0.05}>
                                 <div className="flex items-center gap-4 bg-white/5 p-3 pr-4 rounded-[20px] active:scale-[0.98] transition-all border border-white/5 hover:bg-white/10">
                                     <div className="font-[800] text-white/20 w-8 text-center text-lg italic">
@@ -84,19 +112,38 @@ const LeaderboardDrawer = ({ isOpen, onClose }) => {
                                         </p>
                                     </div>
                                     <div className="bg-amber-500/10 text-amber-500 px-3 py-1.5 rounded-xl text-xs font-[800] border border-amber-500/20 shadow-sm shrink-0">
-                                        {user.xp} XP
+                                        {activeTab === 'xp' ? `${user.xp} XP` : `${user.total_likes || 0} ❤️`}
                                     </div>
                                 </div>
                             </TelegramListItem>
                         ))
                     )}
-                    {!isLoading && (!leaderboard || leaderboard.length === 0) && (
+                    {!isLoading && (!sortedData || sortedData.length === 0) && (
                         <div className="text-center py-12 px-6 rounded-2xl bg-white/5 border border-white/5 border-dashed">
                             <div className="text-3xl mb-2">🏆</div>
                             <div className="text-white font-bold mb-1">Be the first!</div>
                             <div className="text-white/30 text-xs">Start creating to join the leaderboard.</div>
                         </div>
                     )}
+                </div>
+
+                {/* Challenges Link Badge */}
+                <div className="mt-4">
+                    <button
+                        onClick={() => { onClose(); navigate('/challenges'); }}
+                        className="w-full bg-gradient-to-r from-blue-600/20 to-purple-600/20 border border-blue-500/30 rounded-2xl p-4 flex items-center justify-between group active:scale-[0.98] transition-all"
+                    >
+                        <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-blue-500 rounded-xl flex items-center justify-center shadow-lg shadow-blue-500/20 rotate-3 group-hover:rotate-0 transition-transform">
+                                <Trophy size={24} className="text-white" />
+                            </div>
+                            <div className="text-left">
+                                <h4 className="text-white font-bold text-sm">Weekly Challenges</h4>
+                                <p className="text-blue-200/50 text-[11px]">Win up to 500 ⚡ credits</p>
+                            </div>
+                        </div>
+                        <ChevronRight size={20} className="text-blue-500 group-hover:translate-x-1 transition-transform" />
+                    </button>
                 </div>
             </div>
         </TelegramModal>

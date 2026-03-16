@@ -101,7 +101,7 @@ const TemplateView = ({ onOpenPayment }) => {
         };
         load();
         return () => previewUrls.forEach(url => url && URL.revokeObjectURL(url));
-    }, [id]);
+    }, [id, location.state?.initialFile, location.state?.template, previewUrls]);
 
     const similarTemplates = useMemo(() => {
         if (!template) return [];

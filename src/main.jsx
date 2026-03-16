@@ -1,5 +1,6 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { HelmetProvider } from 'react-helmet-async';
 import './index.css'
 import App from './App.jsx'
 import { initMonitoring } from './lib/monitoring'
@@ -88,8 +89,19 @@ if (window.Telegram?.WebApp && window.Telegram.WebApp.initData) {
 initMonitoring();
 tracking.init();
 
+// Catch errors outside the React tree
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('Unhandled promise rejection:', event.reason);
+});
+
+window.addEventListener('error', (event) => {
+  console.error('Global error:', event.error);
+});
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <App />
+    <HelmetProvider>
+      <App />
+    </HelmetProvider>
   </StrictMode>,
 )

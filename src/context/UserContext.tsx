@@ -107,6 +107,64 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const [favoriteTemplates, setFavoriteTemplates] = useState<string[]>([]);
     const [activeGenerations, setActiveGenerations] = useState<GenerationTask[]>([]);
 
+    // --- WEBSOCKET CONNECTION ---
+    useEffect(() => {
+        if (!user?.id || user.id === 'dev_user') return;
+
+        let websocket: WebSocket;
+        let reconnectTimer: any;
+
+        const connectWs = () => {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            // Use same host if same-origin (production), else fallback to localhost:3000 (dev)
+            const host = process.env.NODE_ENV === 'production' ? window.location.host : 'localhost:3000';
+            const wsUrl = `${protocol}//${host}/api/ws`;
+
+            console.log('🔌 Connecting to WS:', wsUrl);
+            websocket = new WebSocket(wsUrl);
+
+            websocket.onopen = () => {
+                websocket.send(JSON.stringify({ type: 'auth', userId: user.id }));
+            };
+
+            websocket.onmessage = (event) => {
+                try {
+                    const data = JSON.parse(event.data);
+
+                    if (data.type === 'generation_complete') {
+                        setActiveGenerations(prev => prev.map(t =>
+                            t.id === data.jobId ? { ...t, status: 'success', result: { imageUrl: data.imageUrl, id: data.jobId } } : t
+                        ));
+                        if ((window as any).Telegram?.WebApp?.HapticFeedback) {
+                            (window as any).Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                        }
+                    } else if (data.type === 'generation_failed') {
+                        setActiveGenerations(prev => prev.map(t =>
+                            t.id === data.jobId ? { ...t, status: 'error', error: data.error || 'Generation failed' } : t
+                        ));
+                        if ((window as any).Telegram?.WebApp?.HapticFeedback) {
+                            (window as any).Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                        }
+                    }
+                } catch (e) {
+                    console.error('WS Parse Error:', e);
+                }
+            };
+
+            websocket.onclose = () => {
+                console.log('🔌 WS Disconnected, reconnecting in 5s...');
+                reconnectTimer = setTimeout(connectWs, 5000);
+            };
+        };
+
+        connectWs();
+
+        return () => {
+            clearTimeout(reconnectTimer);
+            if (websocket) websocket.close();
+        };
+    }, [user?.id]);
+
     useEffect(() => {
         const initUser = async () => {
             setIsLoading(true);
@@ -143,7 +201,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     try {
                         const payload = webAuth.user;
                         setTelegramId(payload.id);
-                        setUser({ id: payload.id.toString(), telegram_id: payload.id, username: payload.username, first_name: payload.first_name });
+                        setUser({ id: payload.id.toString(), telegram_id: payload.telegram_id || null, username: payload.username, first_name: payload.first_name });
 
                         const userStats = await dbAnalytics.getUserStats(payload.id);
                         if (userStats) setStats(userStats);
@@ -163,7 +221,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         const payload = JSON.parse(atob(tokenPart.split('.')[1]));
 
                         setTelegramId(payload.id);
-                        setUser({ id: payload.id.toString(), telegram_id: payload.id, username: payload.username, first_name: payload.first_name });
+                        setUser({ id: payload.id.toString(), telegram_id: payload.telegram_id || null, username: payload.username, first_name: payload.first_name });
 
                         const userStats = await dbAnalytics.getUserStats(payload.id);
                         if (userStats) setStats(userStats);

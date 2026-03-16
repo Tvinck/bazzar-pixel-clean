@@ -18,7 +18,7 @@ export default function ExpertChatView() {
     const { expertId } = useParams();
     const navigate = useNavigate();
     const expert = getExpertById(expertId);
-    const { stats, updateStats, refreshUser, telegramId, isLoading: isUserLoading } = useUser();
+    const { stats, updateStats, telegramId, isLoading: isUserLoading } = useUser();
 
     const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
@@ -30,7 +30,6 @@ export default function ExpertChatView() {
     const [showTopUpModal, setShowTopUpModal] = useState(false);
     const [freeMessagesLeft, setFreeMessagesLeft] = useState(3);
     const [suggestions, setSuggestions] = useState([]);
-    const [conversationId, setConversationId] = useState(null);
     const [image, setImage] = useState(null);
     const [isResetting, setIsResetting] = useState(false);
 
@@ -69,7 +68,6 @@ export default function ExpertChatView() {
 
                 if (response.ok) {
                     const data = await response.json();
-                    setConversationId(data.conversationId);
                     setBalance(data.balance);
                     updateStats({ current_balance: data.balance });
                     setFreeMessagesLeft(data.freeMessagesLeft);
@@ -110,10 +108,10 @@ export default function ExpertChatView() {
         if (expertId) {
             loadConversation();
         }
-    }, [expertId, telegramId, isUserLoading]);
+    }, [expertId, telegramId, isUserLoading, updateStats, addGreeting]);
 
     // Add initial greeting
-    const addGreeting = () => {
+    const addGreeting = useCallback(() => {
         const greetings = {
             health: 'Привет! 👋 Я помогу разобраться с симптомами. Что тебя беспокоит?',
             psychologist: 'Привет! 💜 Я здесь, чтобы выслушать. Как ты себя чувствуешь?',
@@ -134,7 +132,7 @@ export default function ExpertChatView() {
             content: greetings[expertId] || `Привет! Я ${expert?.name || 'эксперт'}. Чем могу помочь?`,
             timestamp: new Date(),
         }]);
-    };
+    }, [expertId, expert?.name]);
 
     // Sync balance with global stats
     useEffect(() => {
@@ -337,9 +335,6 @@ export default function ExpertChatView() {
             </div>
         );
     }
-
-    // Show only assistant messages for rating
-    const assistantMessages = messages.filter(m => m.role === 'assistant' && m.dbId);
 
     return (
         <div className="min-h-screen bg-black flex flex-col md:max-w-3xl md:mx-auto">

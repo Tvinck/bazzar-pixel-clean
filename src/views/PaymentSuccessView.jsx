@@ -69,7 +69,7 @@ const PaymentSuccessView = () => {
         };
 
         verifyPayment();
-    }, [user, navigate]);
+    }, [user, navigate, location.state?.orderId, refreshUser]);
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-black text-center relative overflow-hidden">

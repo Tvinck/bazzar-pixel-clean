@@ -10,7 +10,7 @@ export default async function handler(req, res) {
 
     // 1. Trigger Webhook (Simulate Bank)
     const webhookUrl = `https://${req.headers.host}/api/payment-webhook`;
-    const PASSWORD = 'DFgxaoJ38xAjUrsJ';
+    const PASSWORD = process.env.TBANK_PASSWORD;
 
     // Construct valid payload for our webhook
     const payload = {

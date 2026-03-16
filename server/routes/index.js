@@ -6,6 +6,7 @@ import chatRoutes from './chat.js';
 import generationRoutes from './generation.js';
 import templatesRoutes from './templates.js';
 import stickersRoutes from './stickers.js';
+import kieRoutes from './kie.js';
 
 /**
  * Register all modular route groups on the Express app.
@@ -39,6 +40,9 @@ export function registerRoutes(app, bot) {
 
     // Stickers
     app.use('/api/stickers', stickersRoutes);
+
+    // Kie Webhooks
+    app.use('/api/kie', kieRoutes);
 
     // Legacy aliases — frontend calls these directly (not via /api/generation/*)
     app.get('/api/stars', async (req, res) => {

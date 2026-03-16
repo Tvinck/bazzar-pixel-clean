@@ -133,7 +133,12 @@ export const MODEL_CATALOG = {
     'grok_text_video': { name: 'Grok Text-to-Video', type: 'video', cost: 100 },
     'grok_image_video': { name: 'Grok Image-to-Video', type: 'video', cost: 100 },
     'flux_kontext': { name: 'Flux Kontext', type: 'image', cost: 20 },
-    'sora_2': { name: 'Sora 2', type: 'video', cost: 50 }
+    'sora_2': { name: 'Sora 2', type: 'video', cost: 50 },
+    
+    // ============================================
+    // SPECIAL SERVICES
+    // ============================================
+    'star_greeting': { name: 'Star Greeting', type: 'video', cost: 30 }
 };
 
 export const PRICING = {};

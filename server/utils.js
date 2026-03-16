@@ -38,7 +38,11 @@ export function verifyTelegramWebLoginData(authData) {
             return null;
         }
 
+        // Telegram only includes these explicit fields in the hash check string
+        const allowedKeys = ['auth_date', 'first_name', 'id', 'last_name', 'photo_url', 'username'];
+
         const dataCheckString = Object.keys(dataToCheck)
+            .filter(key => allowedKeys.includes(key) && dataToCheck[key] !== undefined && dataToCheck[key] !== null)
             .sort()
             .map(key => `${key}=${dataToCheck[key]}`)
             .join('\n');
@@ -65,7 +69,12 @@ export function verifyTelegramWebLoginData(authData) {
 export function generateWebAuthToken(user) {
     const JWT_SECRET = process.env.JWT_SECRET || process.env.TELEGRAM_BOT_TOKEN; // Fallback to bot token if no Secret
     return jwt.sign(
-        { id: user.telegram_id || user.id, username: user.username, first_name: user.first_name },
+        {
+            id: user.id, // the UUID
+            telegram_id: user.telegram_id, // numeric if Telegram, null/undefined if OAuth
+            username: user.username,
+            first_name: user.first_name
+        },
         JWT_SECRET,
         { expiresIn: '30d' }
     );

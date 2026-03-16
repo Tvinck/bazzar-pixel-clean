@@ -1,6 +1,6 @@
-import { useSpring, animated, config } from '@react-spring/web';
+import { useSpring, config } from '@react-spring/web';
 import { useDrag } from '@use-gesture/react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 /**
  * React Spring physics-based animations

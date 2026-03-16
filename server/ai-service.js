@@ -1,9 +1,11 @@
 import dotenv from 'dotenv';
 import { supabase } from './lib/supabase.js';
+import FormData from 'form-data';
+import { KIE_MODELS_FLAT } from '../src/kie-models.js';
 
 dotenv.config();
 
-const HARDCODED_KIE_KEY = '365b6afae3b952cef9297bbc5384ec8e';
+// KIE API key must come from environment variables only
 
 // Node.js Model Info
 const KIE_MODELS = {
@@ -51,6 +53,39 @@ const DEFAPI_MODEL_MAP = {
 const aiService = {
     getModelInfo,
 
+    // File Upload API
+    uploadFileToKie: async (imageUrlOrBuffer, apiKey) => {
+        try {
+            console.log("📤 Uploading file to Kie.ai...");
+            const form = new FormData();
+
+            if (typeof imageUrlOrBuffer === 'string' && imageUrlOrBuffer.startsWith('http')) {
+                const res = await fetch(imageUrlOrBuffer);
+                const buffer = await res.arrayBuffer();
+                form.append('file', Buffer.from(buffer), { filename: 'upload.jpg' });
+            } else {
+                form.append('file', Buffer.from(imageUrlOrBuffer), { filename: 'upload.jpg' });
+            }
+
+            const uploadRes = await fetch(`${KIE_API_URL}/files/upload`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${apiKey}`,
+                    ...form.getHeaders()
+                },
+                body: form
+            });
+            const data = await uploadRes.json();
+            if (data?.data?.file_url) return data.data.file_url;
+            if (data?.file_url) return data.file_url;
+
+            throw new Error('Upload failed: ' + JSON.stringify(data));
+        } catch (e) {
+            console.error('Kie File Upload error:', e);
+            throw e;
+        }
+    },
+
     // Main Generation Function
     generateImage: async (prompt, modelId = 'nano_banana', options = {}) => {
         // Node.js: Direct API Call
@@ -81,7 +116,7 @@ const aiService = {
     generateWithKie: async (prompt, modelId, options = {}) => {
         console.log(`🔍 DEBUG: generateWithKie START. Prompt: ${prompt?.substring(0, 20)}... Model: '${modelId}'`);
 
-        const apiKey = getEnv('KIE_API_KEY') || HARDCODED_KIE_KEY;
+        const apiKey = getEnv('KIE_API_KEY');
         if (!apiKey) throw new Error('KIE_API_KEY not set');
 
         // Normalize imageUrl to source_files for unified handling
@@ -89,41 +124,16 @@ const aiService = {
             options.source_files = [options.imageUrl];
         }
 
-        // KIE MODEL MAPPING - Strictly based on Documentation
+        // KIE MODEL MAPPING - Dynamically generated with legacy fallbacks
+        const DYNAMIC_KIE_MAP = Object.fromEntries(
+            Object.entries(KIE_MODELS_FLAT).map(([id, m]) => [id, m.endpoint])
+        );
+
         const KIE_MAP = {
-            // --- GOOGLE FAMILY ---
-            'nano_banana': 'google/nano-banana',
-            'nano_banana_pro': 'google/nano-banana-pro',
-            'nano_banana_edit': 'google/nano-banana-edit',
-            'google/nano-banana-edit': 'google/nano-banana-edit',
-            'imagen_4': 'google/imagen4',
-            'imagen_4_ultra': 'google/imagen4-ultra',
+            ...DYNAMIC_KIE_MAP, // Merge all endpoint mappings directly from kie-models.js
 
-            // --- FLUX FAMILY ---
-            'flux_pro': 'flux-2/pro-text-to-image',
-            'flux_flex': 'flux-2/flex-text-to-image',
-
-            // --- SEEDREAM FAMILY ---
-            'seedream_4_5': 'seedream/4.5-text-to-image',
-            'seedream_edit': 'seedream/4.5-edit',
-
-            // --- IDEOGRAM FAMILY ---
-            'ideogram_v3': 'ideogram/v3',
-            'ideogram_char': 'ideogram/character',
-
-            // --- QWEN FAMILY ---
-            'qwen_edit': 'qwen/image-edit',
-
-            // --- Z-IMAGE FAMILY ---
-            'z_image_turbo': 'z-image',
-
-            // --- VIDEO FAMILY (Existing + New) ---
-            'kling_2_6': 'wan/2-6-text-to-video',
-            'wan_2_6': 'wan/2-6-text-to-video',
-            'hailuo_2_3': 'hailuo/2-3-image-to-video-pro',
+            // --- LEGACY / FALLBACK MAPPINGS ---
             'video': 'wan/2-6-text-to-video', // Default mapping for generic 'video' type
-
-            // --- LEGACY MAPPINGS ---
             'kling_video': 'wan/2-6-image-to-video',
             'kling_motion_control': 'wan/2-6-text-to-video',
             'midjourney': 'midjourney/imagine',
@@ -151,6 +161,26 @@ const aiService = {
         }
 
         console.log(`🚀 Using KIE Model: ${kieModelId}`);
+
+        // --- UPLOAD SOURCE FILES TO KIE.AI ---
+        if (hasSourceFiles && !options.skipUpload) {
+            try {
+                const uploadedUrls = [];
+                for (const url of options.source_files) {
+                    if (url.includes('api.kie.ai') || url.includes('storage.kie.ai')) {
+                        uploadedUrls.push(url); // Already uploaded
+                    } else {
+                        const uploadedUrl = await aiService.uploadFileToKie(url, apiKey);
+                        uploadedUrls.push(uploadedUrl);
+                    }
+                }
+                options.source_files = uploadedUrls;
+                if (options.imageUrl) options.imageUrl = uploadedUrls[0];
+            } catch (err) {
+                console.error('⚠️ Failed to upload source files to Kie.ai:', err.message);
+                // Continue with original URLs; some models process them directly
+            }
+        }
 
         // 2. Prepare Input Object based on Model Family
         let input = { prompt: prompt };
@@ -248,6 +278,11 @@ const aiService = {
             input: finalInput
         };
 
+        if (options.callBackUrl) {
+            requestBody.callBackUrl = options.callBackUrl;
+            console.log(`📡 [Kie Webhook] Assigned for task: ${options.callBackUrl}`);
+        }
+
         console.log(`📡 [Kie Check] Target Model: ${kieModelId}`);
         console.log(`📡 [Kie Check] Final Input Body:`, JSON.stringify(finalInput, null, 2));
 
@@ -297,7 +332,7 @@ const aiService = {
 
         console.log(`📋 Kie.ai Task created: ${taskId}`);
 
-        if (options.skipPolling) {
+        if (options.skipPolling || options.callBackUrl) {
             return { success: true, taskId, status: 'pending', provider: 'kie' };
         }
 
@@ -455,7 +490,7 @@ const aiService = {
     enhancePrompt: async (originalPrompt) => {
         if (!originalPrompt || originalPrompt.length > 300) return originalPrompt;
 
-        const apiKey = getEnv('KIE_API_KEY') || HARDCODED_KIE_KEY;
+        const apiKey = getEnv('KIE_API_KEY');
         if (!apiKey) return originalPrompt;
 
         try {
@@ -491,7 +526,7 @@ const aiService = {
 
     // Generic Text Generation
     generateText: async (prompt) => {
-        const apiKey = getEnv('KIE_API_KEY') || HARDCODED_KIE_KEY;
+        const apiKey = getEnv('KIE_API_KEY');
         if (!apiKey) return null;
 
         try {

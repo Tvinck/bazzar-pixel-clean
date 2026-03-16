@@ -145,52 +145,84 @@ export const MODEL_FAMILIES = {
                 endpoint: 'ideogram/character',
                 description: 'Consistent character generation',
                 capabilities: ['text-to-image']
+            },
+            {
+                id: 'ideogram_char_edit',
+                name: 'Ideogram Character Edit',
+                base_cost: 35,
+                endpoint: 'ideogram/character-edit',
+                description: 'Edit characters while preserving identity',
+                capabilities: ['edit']
+            },
+            {
+                id: 'ideogram_reframe',
+                name: 'Ideogram Reframe',
+                base_cost: 20,
+                endpoint: 'ideogram/v3-reframe',
+                description: 'Change aspect ratio of existing images',
+                capabilities: ['edit']
             }
         ]
     },
 
     // ============================================
-    // QWEN FAMILY
+    // RECRAFT FAMILY
     // ============================================
-    'qwen': {
-        id: 'qwen',
-        name: 'Qwen',
-        icon: 'Q',
-        description: 'Advanced editing capabilities',
+    'recraft': {
+        id: 'recraft',
+        name: 'Recraft Tools',
+        icon: 'R',
+        description: 'Essential utility tools',
         models: [
             {
-                id: 'qwen_edit',
-                name: 'Qwen Image Edit',
-                base_cost: 8, // ~4 credits per image (approx) -> setting safe margin
-                endpoint: 'qwen/image-edit',
-                description: 'Natural language image editing',
-                capabilities: ['edit', 'image-to-image']
-            }
-        ]
-    },
-
-    // ============================================
-    // Z-IMAGE FAMILY
-    // ============================================
-    'z_image': {
-        id: 'z_image',
-        name: 'Z-Image',
-        icon: 'Z',
-        description: 'Fast photorealistic generation',
-        models: [
+                id: 'recraft_remove_bg',
+                name: 'Remove Background',
+                base_cost: 5,
+                endpoint: 'recraft/remove-background',
+                description: 'Automatically remove image background',
+                capabilities: ['edit']
+            },
             {
-                id: 'z_image_turbo',
-                name: 'Z-Image Turbo',
+                id: 'recraft_upscale',
+                name: 'Crisp Upscale',
                 base_cost: 15,
-                endpoint: 'z-image',
-                description: 'Low latency, high quality',
-                capabilities: ['text-to-image']
+                endpoint: 'recraft/crisp-upscale',
+                description: 'High-quality vector-like upscale',
+                capabilities: ['edit']
             }
         ]
     },
 
     // ============================================
-    // VIDEO FAMILY (Existing + New)
+    // SUNO FAMILY (Music)
+    // ============================================
+    'suno': {
+        id: 'suno',
+        name: 'Suno AI Music',
+        icon: '🎵',
+        description: 'Generate full tracks from text',
+        models: [
+            {
+                id: 'suno_v4',
+                name: 'Suno v4.5',
+                base_cost: 80,
+                endpoint: 'suno/music-generation',
+                description: 'Full songs with lyrics and vocals',
+                capabilities: ['text-to-audio']
+            },
+            {
+                id: 'suno_video',
+                name: 'Suno Music Video',
+                base_cost: 120,
+                endpoint: 'suno/create-music-video',
+                description: 'Generates music + visualizer',
+                capabilities: ['text-to-video']
+            }
+        ]
+    },
+
+    // ============================================
+    // VIDEO FAMILY
     // ============================================
     'video': {
         id: 'video',
@@ -199,14 +231,30 @@ export const MODEL_FAMILIES = {
         description: 'Create videos from text or images',
         models: [
             {
+                id: 'veo_3_1',
+                name: 'Veo 3.1',
+                base_cost: 150,
+                endpoint: 'veo-3.1/text-to-video',
+                description: 'Google — video with synced audio, 1080p',
+                capabilities: ['text-to-video', 'image-to-video'],
+                has_audio: true,
+                badge: 'С аудио 🔊'
+            },
+            {
                 id: 'kling_2_6',
                 name: 'Kling 2.6',
                 base_cost: 100,
                 endpoint: 'kling-2.6',
-                description: 'Start of the art video generation',
-                capabilities: ['text-to-video', 'image-to-video'],
-                durations: ['5s', '10s'],
-                qualities: ['720p', '1080p'] // 1080p costs extra
+                description: 'State of the art video generation',
+                capabilities: ['text-to-video', 'image-to-video']
+            },
+            {
+                id: 'kling_avatar',
+                name: 'Kling Talking Avatar',
+                base_cost: 150,
+                endpoint: 'kling/ai-avatar-pro',
+                description: 'Talking avatar from photo + text/audio',
+                capabilities: ['image-to-video']
             },
             {
                 id: 'wan_2_6',
@@ -214,17 +262,43 @@ export const MODEL_FAMILIES = {
                 base_cost: 100,
                 endpoint: 'wan/2-6',
                 description: 'High coherence video',
-                capabilities: ['text-to-video', 'image-to-video'],
-                durations: ['5s']
+                capabilities: ['text-to-video', 'image-to-video', 'video-to-video']
             },
             {
-                id: 'hailuo_2_3',
-                name: 'Hailuo 2.3',
-                base_cost: 120,
-                endpoint: 'hailuo/2-3',
-                description: 'Professional grade animation',
-                capabilities: ['image-to-video'],
-                durations: ['6s']
+                id: 'wan_animate',
+                name: 'Wan Animate Move',
+                base_cost: 80,
+                endpoint: 'wan/2-2-animate-move',
+                description: 'Animate objects on photos',
+                capabilities: ['image-to-video']
+            }
+        ]
+    },
+
+    // ============================================
+    // AUDIO FAMILY (ElevenLabs via Kie)
+    // ============================================
+    'audio': {
+        id: 'audio',
+        name: 'AI Audio',
+        icon: '🎙️',
+        description: 'Text to Speech & Sound Effects',
+        models: [
+            {
+                id: 'eleven_tts',
+                name: 'ElevenLabs TTS',
+                base_cost: 10,
+                endpoint: 'elevenlabs/text-to-speech-turbo-2-5',
+                description: 'Ultra-fast, high-quality voice synthesis',
+                capabilities: ['text-to-audio']
+            },
+            {
+                id: 'eleven_sfx',
+                name: 'ElevenLabs SFX',
+                base_cost: 15,
+                endpoint: 'elevenlabs/sound-effect-v2',
+                description: 'Generate sound effects from text',
+                capabilities: ['text-to-audio']
             }
         ]
     }
