@@ -1,0 +1,10 @@
+src/hooks/useCloudStorage.ts(31,101): error TS6133: 'success' is declared but its value is never read.
+src/hooks/useCloudStorage.ts(117,91): error TS6133: 'success' is declared but its value is never read.
+src/hooks/useCloudStorage.ts(140,93): error TS6133: 'success' is declared but its value is never read.
+src/hooks/useGallery.ts(2,24): error TS7016: Could not find a declaration file for module '../lib/galleryAPI'. '/Users/macbookpro/Desktop/ZENTVPN/bazzar-pixel — копия/src/lib/galleryAPI.js' implicitly has an 'any' type.
+src/hooks/usePerformance.ts(84,17): error TS2554: Expected 1 arguments, but got 0.
+src/hooks/useSecureAPI.ts(2,23): error TS7016: Could not find a declaration file for module '../utils/secureAPI'. '/Users/macbookpro/Desktop/ZENTVPN/bazzar-pixel — копия/src/utils/secureAPI.js' implicitly has an 'any' type.
+src/hooks/useUserStats.ts(2,27): error TS7016: Could not find a declaration file for module '../lib/supabase'. '/Users/macbookpro/Desktop/ZENTVPN/bazzar-pixel — копия/src/lib/supabase.js' implicitly has an 'any' type.
+src/hooks/useUserStats.ts(32,21): error TS6133: 'data' is declared but its value is never read.
+src/views/SuperResolutionView.tsx(39,11): error TS6133: '_t' is declared but its value is never read.
+src/views/SuperResolutionView.tsx(183,11): error TS6133: '_handleMouseUp' is declared but its value is never read.

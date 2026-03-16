@@ -36,7 +36,7 @@ const UPSCALE_COST = 10;
 const SuperResolutionView: React.FC = () => {
     const { id } = useParams<{ id: string }>();
     const navigate = useNavigate();
-    const _t = useLanguage(); // reserved for future i18n
+    useLanguage(); // reserved for future i18n
     const toaster = useToast();
     const sliderRef = useRef<HTMLDivElement>(null);
 
@@ -180,7 +180,7 @@ const SuperResolutionView: React.FC = () => {
     );
 
     const handleMouseDown = () => setIsDragging(true);
-    const _handleMouseUp = () => setIsDragging(false); // used via onUp inline
+    // const _handleMouseUp = () => setIsDragging(false); // used via onUp inline
 
     useEffect(() => {
         const onMove = (e: MouseEvent) => handleSliderMove(e.clientX);

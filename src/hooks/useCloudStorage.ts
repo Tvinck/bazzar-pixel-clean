@@ -1,10 +1,20 @@
 import { useState, useEffect, useCallback } from 'react';
 
+export interface CloudStorageHook {
+    isAvailable: boolean;
+    setItem: (key: string, value: any) => Promise<boolean>;
+    getItem: (key: string, parseJSON?: boolean) => Promise<any>;
+    getItems: (keys: string[]) => Promise<Record<string, any>>;
+    removeItem: (key: string) => Promise<boolean>;
+    removeItems: (keys: string[]) => Promise<boolean>;
+    getKeys: () => Promise<string[]>;
+}
+
 /**
  * Hook for working with Telegram Cloud Storage
  * Provides methods to save and retrieve data from Telegram's cloud storage
  */
-export const useCloudStorage = () => {
+export const useCloudStorage = (): CloudStorageHook => {
     const [isAvailable, setIsAvailable] = useState(false);
 
     useEffect(() => {
@@ -28,7 +38,7 @@ export const useCloudStorage = () => {
             const stringValue = typeof value === 'string' ? value : JSON.stringify(value);
 
             return new Promise((resolve) => {
-                (window as any).Telegram.WebApp.CloudStorage.setItem(key, stringValue, (error: any, success: boolean) => {
+                (window as any).Telegram.WebApp.CloudStorage.setItem(key, stringValue, (error: any, _success: boolean) => {
                     if (error) {
                         console.error(`❌ Failed to save ${key}:`, error);
                         resolve(false);
@@ -114,7 +124,7 @@ export const useCloudStorage = () => {
 
         try {
             return new Promise((resolve) => {
-                (window as any).Telegram.WebApp.CloudStorage.removeItem(key, (error: any, success: boolean) => {
+                (window as any).Telegram.WebApp.CloudStorage.removeItem(key, (error: any, _success: boolean) => {
                     if (error) {
                         console.error(`❌ Failed to remove ${key}:`, error);
                         resolve(false);
@@ -137,7 +147,7 @@ export const useCloudStorage = () => {
 
         try {
             return new Promise((resolve) => {
-                (window as any).Telegram.WebApp.CloudStorage.removeItems(keys, (error: any, success: boolean) => {
+                (window as any).Telegram.WebApp.CloudStorage.removeItems(keys, (error: any, _success: boolean) => {
                     if (error) {
                         console.error('❌ Failed to remove items:', error);
                         resolve(false);

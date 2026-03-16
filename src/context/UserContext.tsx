@@ -1,11 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
-// @ts-expect-error - Untyped JavaScript module
 import { analytics as dbAnalytics } from '../lib/supabase';
-// @ts-expect-error - Untyped JavaScript module
 import { tracking } from '../lib/tracking';
-// @ts-expect-error - Untyped JavaScript module
 import { aiService } from '../ai-client';
-// @ts-expect-error - Untyped JavaScript module
 import galleryAPI from '../lib/galleryAPI';
 import { useCloudStorage, CLOUD_STORAGE_KEYS } from '../hooks/useCloudStorage';
 
@@ -367,7 +363,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             try {
                 let result;
                 if (['replace-object', 'remove-object', 'add-object'].includes(mode)) {
-                    result = await aiService.instructEdit(callbackData.base64Img, { ...inputs, mode });
+                    result = await (aiService as any).instructEdit(callbackData.base64Img, { ...inputs, mode });
                 } else {
                     result = await aiService.generateImage(inputs.prompt, model, {
                         userId: user?.id,
@@ -389,7 +385,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             prompt: inputs['prompt'], tags: [mode, (model as any)],
                             isPublic: callbackData.isPublic, aspectRatio: callbackData.aspectRatio
                         });
-                        savedRecordId = savedRecord?.data?.id || savedRecord?.id;
+                        savedRecordId = (savedRecord as any)?.data?.id || (savedRecord as any)?.id;
                     }
 
                     setActiveGenerations(prev => prev.map(t =>

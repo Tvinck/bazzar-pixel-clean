@@ -29,7 +29,7 @@ export const useAddCredits = () => {
         mutationFn: async ({ userId, amount }: { userId: string | number; amount: number }) => {
             return await analytics.addCredits(userId, amount);
         },
-        onSuccess: (data, variables) => {
+        onSuccess: (_data, variables) => {
             // Update the cache immediately
             queryClient.setQueryData<UserStats>(['userStats', variables.userId], (old) => {
                 if (!old) return old;

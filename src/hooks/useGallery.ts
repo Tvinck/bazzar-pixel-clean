@@ -54,7 +54,7 @@ export const useInfiniteCreations = ({ sortBy = 'trending', filterType = 'all', 
                 filterType,
                 limit,
                 offset: (pageParam as number) * limit
-            });
+            } as any);
             return data.creations;
         },
         initialPageParam: 0,

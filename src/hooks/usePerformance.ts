@@ -81,7 +81,7 @@ export function useStableCallback<T extends (...args: any[]) => any>(callback: T
  * Previous value hook for comparison
  */
 export function usePrevious<T>(value: T): T | undefined {
-    const ref = useRef<T>();
+    const ref = useRef<T | undefined>(undefined);
 
     useEffect(() => {
         ref.current = value;
