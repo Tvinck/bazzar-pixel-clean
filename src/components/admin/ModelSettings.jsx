@@ -4,7 +4,7 @@ const ModelSettings = ({ models, handleUpdateModel }) => {
     return (
         <div className="space-y-3">
             {models.map(m => (
-                <div key={m.id} className="bg-[#2c2c2e] p-4 rounded-[16px] border border-white/5">
+                <div key={m.id} className="bg-bg-elevated p-4 rounded-card border border-white/5">
                     <div className="flex justify-between items-start mb-2">
                         <h3 className="font-bold text-[15px]">{m.display_name}</h3>
                         <div className={`w-2 h-2 rounded-full ${m.is_active ? 'bg-green-500' : 'bg-red-500'}`} />

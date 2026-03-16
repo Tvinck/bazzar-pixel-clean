@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ListRow } from '../components/ui';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -24,41 +25,7 @@ const triggerHaptic = (style = 'light') => {
     }
 };
 
-// Generic Block
-const Block = ({ children, className = '' }) => (
-    <div className={`bg-[#1c1c1e] rounded-[14px] sm:rounded-[20px] shadow-sm ${className}`}>
-        {children}
-    </div>
-);
 
-// Generic Row
-const BlockRow = ({ icon, label, subtext, onClick, isLast, iconColor, rightElement }) => (
-    <button
-        onClick={onClick}
-        className={`w-full flex items-center py-2.5 pl-4 pr-3 ${onClick ? 'hover:bg-[#2c2c2e] active:bg-[#3a3a3c]' : ''} transition-colors relative`}
-    >
-        {icon && (
-            <div className={`w-8 h-8 rounded-[8px] sm:rounded-[10px] ${iconColor} flex items-center justify-center mr-3.5 flex-shrink-0`}>
-                {icon}
-            </div>
-        )}
-        <div className="flex-1 flex flex-col items-start justify-center pr-2">
-            <span className="text-[17px] text-white leading-[22px] tracking-[-0.41px] truncate w-full text-left font-medium">
-                {label}
-            </span>
-            {subtext && (
-                <span className="text-[13px] text-gray-400 leading-[18px] tracking-[-0.08px] mt-0.5 truncate w-full text-left">
-                    {subtext}
-                </span>
-            )}
-        </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-            {rightElement}
-            {onClick && !rightElement && <ChevronRight size={20} className="text-[#3a3a3c]" strokeWidth={2.5} />}
-        </div>
-        {!isLast && <div className={`absolute bottom-0 right-0 h-[0.5px] bg-[#38383a] ${icon ? 'left-[50px]' : 'left-4'}`} />}
-    </button>
-);
 
 
 const containerVariants = {
@@ -103,7 +70,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
     };
 
     return (
-        <div className="min-h-screen bg-black text-white pb-24 relative overflow-y-auto overflow-x-hidden font-sans w-full selection:bg-[#3390ec]/30">
+        <div className="min-h-screen bg-black text-white pb-24 relative overflow-y-auto overflow-x-hidden font-sans w-full selection:bg-accent-blue/30">
             <SEO 
                 title="Bazzar Pixel — AI генерация"
                 description="Создавай уникальный контент с помощью нейросетей"
@@ -120,7 +87,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                         y: [0, 30, 0]
                     }}
                     transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-[#3390ec]/10 blur-[120px]"
+                    className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-accent-blue/10 blur-[120px]"
                 />
                 <motion.div
                     animate={{
@@ -130,7 +97,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                         y: [0, -50, 0]
                     }}
                     transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                    className="absolute top-[20%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-purple-500/10 blur-[100px]"
+                    className="absolute top-[20%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-accent-purple/10 blur-[100px]"
                 />
             </div>
 
@@ -157,7 +124,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                     </div>
                     <button
                         onClick={() => { triggerHaptic('light'); onOpenPayment && onOpenPayment(); }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#1c1c1e] border border-white/10 shadow-sm active:bg-[#2c2c2e] transition-colors"
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-bg-secondary border border-white/10 shadow-sm active:bg-bg-elevated transition-colors"
                     >
                         <Zap size={14} className="text-[#3390ec] fill-current" />
                         <span className="text-white font-semibold text-[15px] tracking-tight">
@@ -175,12 +142,12 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-                        className="w-full bg-[#1c1c1e] rounded-[10px] pl-10 pr-12 py-2 text-[17px] text-white placeholder:text-gray-500 outline-none focus:ring-1 focus:ring-[#007aff] transition-shadow tracking-[-0.41px]"
+                        className="w-full bg-bg-secondary rounded-input pl-10 pr-12 py-2 text-[17px] text-white placeholder:text-gray-500 outline-none focus:ring-1 focus:ring-[#007aff] transition-shadow tracking-[-0.41px]"
                     />
                     {searchQuery ? (
                         <button
                             onClick={handleSearch}
-                            className="absolute right-2 w-7 h-7 bg-[#3390ec] rounded-full flex items-center justify-center text-white active:scale-95 transition-transform z-10"
+                            className="absolute right-2 w-7 h-7 bg-accent-blue rounded-full flex items-center justify-center text-white active:scale-95 transition-transform z-10"
                         >
                             <Send size={12} className="translate-x-[1px]" />
                         </button>
@@ -192,7 +159,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                     variants={itemVariants}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => { triggerHaptic('medium'); navigate('/guide'); }}
-                    className="w-full bg-gradient-to-r from-blue-600 via-[#3390ec] to-blue-500 rounded-[20px] p-5 relative overflow-hidden shadow-[0_8px_30px_rgba(51,144,236,0.25)] flex items-center justify-between group"
+                    className="w-full bg-gradient-to-r from-blue-600 via-[#3390ec] to-blue-500 rounded-card p-5 relative overflow-hidden shadow-[0_8px_30px_rgba(51,144,236,0.25)] flex items-center justify-between group"
                 >
                     <div className="absolute inset-0 bg-white/0 group-hover:bg-white/10 transition-colors duration-300" />
                     <div className="relative z-10 text-left">
@@ -246,10 +213,10 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                         whileHover={{ scale: 1.02, backgroundColor: "rgba(44, 44, 46, 0.8)" }}
                         whileTap={{ scale: 0.96 }}
                         onClick={() => { triggerHaptic('medium'); onOpenCreation('image-gen'); }}
-                        className="bg-[#1c1c1e]/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
+                        className="bg-bg-secondary/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-[#3390ec]/0 to-[#3390ec]/0 group-hover:from-[#3390ec]/10 group-hover:to-transparent transition-all duration-500" />
-                        <div className="w-10 h-10 rounded-[12px] bg-[#3390ec]/20 flex items-center justify-center text-[#3390ec] shadow-inner relative z-10">
+                        <div className="w-10 h-10 rounded-input bg-accent-blue/20 flex items-center justify-center text-[#3390ec] shadow-inner relative z-10">
                             <ImageIcon size={22} className="drop-shadow-sm" />
                         </div>
                         <div className="text-left w-full mt-1 relative z-10">
@@ -262,10 +229,10 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                         whileHover={{ scale: 1.02, backgroundColor: "rgba(44, 44, 46, 0.8)" }}
                         whileTap={{ scale: 0.96 }}
                         onClick={() => { triggerHaptic('medium'); onOpenCreation('video-gen'); }}
-                        className="bg-[#1c1c1e]/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
+                        className="bg-bg-secondary/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-purple-500/0 group-hover:from-purple-500/10 group-hover:to-transparent transition-all duration-500" />
-                        <div className="w-10 h-10 rounded-[12px] bg-purple-500/20 flex items-center justify-center text-purple-400 shadow-inner relative z-10">
+                        <div className="w-10 h-10 rounded-input bg-accent-purple/20 flex items-center justify-center text-purple-400 shadow-inner relative z-10">
                             <Video size={22} className="drop-shadow-sm" />
                         </div>
                         <div className="text-left w-full mt-1 relative z-10">
@@ -278,10 +245,10 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                         whileHover={{ scale: 1.02, backgroundColor: "rgba(44, 44, 46, 0.8)" }}
                         whileTap={{ scale: 0.96 }}
                         onClick={() => { triggerHaptic('light'); navigate('/stickers'); }}
-                        className="bg-[#1c1c1e]/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
+                        className="bg-bg-secondary/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-yellow-500/0 to-yellow-500/0 group-hover:from-yellow-500/10 group-hover:to-transparent transition-all duration-500" />
-                        <div className="w-10 h-10 rounded-[12px] bg-yellow-500/20 flex items-center justify-center text-yellow-400 shadow-inner relative z-10">
+                        <div className="w-10 h-10 rounded-input bg-yellow-500/20 flex items-center justify-center text-yellow-400 shadow-inner relative z-10">
                             <Smile size={22} className="drop-shadow-sm" />
                         </div>
                         <div className="text-left w-full mt-1 relative z-10">
@@ -294,10 +261,10 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                         whileHover={{ scale: 1.02, backgroundColor: "rgba(44, 44, 46, 0.8)" }}
                         whileTap={{ scale: 0.96 }}
                         onClick={() => { triggerHaptic('light'); onOpenPayment && onOpenPayment(); }}
-                        className="bg-[#1c1c1e]/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
+                        className="bg-bg-secondary/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-green-500/0 to-green-500/0 group-hover:from-green-500/10 group-hover:to-transparent transition-all duration-500" />
-                        <div className="w-10 h-10 rounded-[12px] bg-green-500/20 flex items-center justify-center text-green-400 shadow-inner relative z-10">
+                        <div className="w-10 h-10 rounded-input bg-green-500/20 flex items-center justify-center text-green-400 shadow-inner relative z-10">
                             <Zap size={22} className="fill-current drop-shadow-sm" />
                         </div>
                         <div className="text-left w-full mt-1 relative z-10">
@@ -310,11 +277,11 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                         whileHover={{ scale: 1.02, backgroundColor: "rgba(44, 44, 46, 0.8)" }}
                         whileTap={{ scale: 0.96 }}
                         onClick={() => { triggerHaptic('medium'); navigate('/greetings'); }}
-                        className="bg-[#1c1c1e]/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
+                        className="bg-bg-secondary/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
                     >
                         <div className="absolute top-2 right-2 bg-gradient-to-r from-orange-400 to-red-500 px-1.5 py-0.5 rounded-full text-[9px] font-bold text-white uppercase tracking-wider shadow-sm">New</div>
                         <div className="absolute inset-0 bg-gradient-to-br from-orange-500/0 to-orange-500/0 group-hover:from-orange-500/10 group-hover:to-transparent transition-all duration-500" />
-                        <div className="w-10 h-10 rounded-[12px] bg-orange-500/20 flex items-center justify-center text-orange-400 shadow-inner relative z-10">
+                        <div className="w-10 h-10 rounded-input bg-orange-500/20 flex items-center justify-center text-orange-400 shadow-inner relative z-10">
                             <Star size={22} className="fill-current drop-shadow-sm" />
                         </div>
                         <div className="text-left w-full mt-1 relative z-10">
@@ -327,10 +294,10 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                         whileHover={{ scale: 1.02, backgroundColor: "rgba(44, 44, 46, 0.8)" }}
                         whileTap={{ scale: 0.96 }}
                         onClick={() => { triggerHaptic('light'); navigate('/history'); }}
-                        className="bg-[#1c1c1e]/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
+                        className="bg-bg-secondary/90 border border-white/5 backdrop-blur-md shadow-lg rounded-[18px] p-3.5 flex flex-col gap-2 items-start transition-all relative overflow-hidden group"
                     >
                         <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/0 to-indigo-500/0 group-hover:from-indigo-500/10 group-hover:to-transparent transition-all duration-500" />
-                        <div className="w-10 h-10 rounded-[12px] bg-indigo-500/20 flex items-center justify-center text-indigo-400 shadow-inner relative z-10">
+                        <div className="w-10 h-10 rounded-input bg-indigo-500/20 flex items-center justify-center text-indigo-400 shadow-inner relative z-10">
                             <Maximize2 size={22} className="drop-shadow-sm" />
                         </div>
                         <div className="text-left w-full mt-1 relative z-10">
@@ -345,10 +312,10 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                         onClick={() => { triggerHaptic('medium'); navigate('/marketplace'); }}
                         className="bg-gradient-to-br from-[#1c1c1e] to-[#242c38] border border-[#3390ec]/30 shadow-[0_4px_20px_rgba(51,144,236,0.1)] rounded-[18px] p-4 flex flex-col gap-2 items-start transition-all col-span-2 group relative overflow-hidden"
                     >
-                        <div className="absolute inset-0 bg-[#3390ec]/0 group-hover:bg-[#3390ec]/5 transition-colors duration-300" />
+                        <div className="absolute inset-0 bg-accent-blue/0 group-hover:bg-accent-blue/5 transition-colors duration-300" />
                         <div className="flex items-center justify-between w-full relative z-10">
                             <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-[12px] bg-[#3390ec]/20 flex items-center justify-center text-[#3390ec] shadow-inner">
+                                <div className="w-10 h-10 rounded-input bg-accent-blue/20 flex items-center justify-center text-[#3390ec] shadow-inner">
                                     <Sparkles size={22} className="fill-current drop-shadow-md" />
                                 </div>
                                 <div className="text-left">
@@ -382,7 +349,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                                     whileHover={{ scale: 1.03 }}
                                     whileTap={{ scale: 0.95 }}
                                     key={item.id || i}
-                                    className="min-w-[120px] w-[120px] aspect-[4/5] rounded-[18px] overflow-hidden relative bg-[#2c2c2e] snap-start cursor-pointer flex-shrink-0 shadow-lg border border-white/5"
+                                    className="min-w-[120px] w-[120px] aspect-[4/5] rounded-[18px] overflow-hidden relative bg-bg-elevated snap-start cursor-pointer flex-shrink-0 shadow-lg border border-white/5"
                                     onClick={() => { triggerHaptic('medium'); item.id && onOpenTemplate(item); }}
                                 >
                                     {item.src && (
@@ -411,21 +378,21 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                         <span className="text-[17px] font-bold text-white tracking-tight">{t('home.services')}</span>
                     </div>
                     <Block>
-                        <BlockRow
+                        <ListRow
                             icon={<span className="text-[18px]">🔒</span>}
                             iconColor="bg-gray-500/20"
                             label={t('home.privateMode')}
                             subtext={t('home.privateModeDesc')}
                             onClick={() => { triggerHaptic('light'); navigate('/chat/private'); }}
                         />
-                        <BlockRow
+                        <ListRow
                             icon={<span className="text-[18px]">🤔</span>}
                             iconColor="bg-blue-500/20"
                             label={t('home.quiz')}
                             subtext={t('home.quizDesc')}
                             onClick={() => { triggerHaptic('light'); navigate('/onboarding'); }}
                         />
-                        <BlockRow
+                        <ListRow
                             icon={<span className="text-[18px]">⭐</span>}
                             iconColor="bg-yellow-500/20"
                             label={t('home.forCreators')}
@@ -446,7 +413,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                     </div>
                     <Block>
                         {experts.map((expert, i) => (
-                            <BlockRow
+                            <ListRow
                                 key={expert.id}
                                 icon={<span className="text-[18px]">{expert.emoji || expert.icon}</span>}
                                 iconColor="bg-white/5"

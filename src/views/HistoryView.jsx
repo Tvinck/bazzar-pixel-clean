@@ -30,7 +30,7 @@ const SparkleIcon = ({ size = 24, className = '' }) => (
 );
 
 const HistoryLoadingSkeleton = () => (
-    <div className="pt-4 pb-32 px-4 bg-[#1c1c1e] min-h-screen text-white">
+    <div className="pt-4 pb-32 px-4 bg-bg-secondary min-h-screen text-white">
         <div className="mb-6 px-1">
             <div className="h-8 w-28 bg-white/5 rounded-lg animate-pulse mb-2" />
             <div className="h-4 w-16 bg-white/5 rounded-md animate-pulse" />
@@ -42,7 +42,7 @@ const HistoryLoadingSkeleton = () => (
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.08 }}
-                    className="aspect-square rounded-[20px] bg-[#2c2c2e] overflow-hidden relative"
+                    className="aspect-square rounded-card bg-bg-elevated overflow-hidden relative"
                 >
                     <motion.div
                         className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent"
@@ -234,7 +234,7 @@ const HistoryView = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="pt-4 pb-32 px-4 bg-[#1c1c1e] min-h-screen text-white font-sans"
+            className="pt-4 pb-32 px-4 bg-bg-secondary min-h-screen text-white font-sans"
         >
             <SEO title="История генераций — Bazzar Pixel" description="Просматривай и управляй своими AI творениями" />
             
@@ -250,7 +250,7 @@ const HistoryView = () => {
                             История
                         </motion.h1>
                         <motion.div initial={{ scale: 0, rotate: -45 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 400, damping: 15, delay: 0.3 }}>
-                            <SparkleIcon size={22} className="text-[#007aff]" />
+                            <SparkleIcon size={22} className="text-accent-blue" />
                         </motion.div>
                     </div>
                     <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.25 }} className="text-[13px] text-gray-400 font-medium">
@@ -261,7 +261,7 @@ const HistoryView = () => {
                 {generations.length > 1 && (
                     <button
                         onClick={toggleSelectionMode}
-                        className={`text-[13px] font-medium px-3 py-1.5 rounded-full transition-colors ${isSelectionMode ? 'bg-[#007aff] text-white' : 'bg-[#2c2c2e] text-white'}`}
+                        className={`text-[13px] font-medium px-3 py-1.5 rounded-full transition-colors ${isSelectionMode ? 'bg-accent-blue text-white' : 'bg-bg-elevated text-white'}`}
                     >
                         {isSelectionMode ? 'Отмена' : 'Сравнить'}
                     </button>
@@ -276,14 +276,14 @@ const HistoryView = () => {
                         exit={{ height: 0, opacity: 0 }}
                         className="mb-4 overflow-hidden"
                     >
-                        <div className="bg-[#2c2c2e] p-3 rounded-2xl flex items-center justify-between">
+                        <div className="bg-bg-elevated p-3 rounded-2xl flex items-center justify-between">
                             <span className="text-sm font-medium pl-2">
                                 Выбрано: {selectedCompareIds.length} / 4
                             </span>
                             <button
                                 disabled={selectedCompareIds.length < 2}
                                 onClick={() => setShowCompareModal(true)}
-                                className="bg-[#007aff] text-white px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="bg-accent-blue text-white px-4 py-2 rounded-xl text-sm font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 Сравнить
                             </button>

@@ -57,7 +57,7 @@ const TemplateSelectionSheet = ({ template, isOpen, onClose }) => {
                         animate={{ y: 0, opacity: 1 }}
                         exit={{ y: '100%', opacity: 0 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="fixed bottom-0 inset-x-0 bg-[#1c1c1e] rounded-t-[32px] pt-6 pb-12 px-5 z-[101] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border-t border-white/10 flex flex-col items-center"
+                        className="fixed bottom-0 inset-x-0 bg-bg-secondary rounded-t-[32px] pt-6 pb-12 px-5 z-[101] shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border-t border-white/10 flex flex-col items-center"
                     >
                         {/* Drag Handle (Visual only) */}
                         <div className="w-12 h-1.5 bg-white/20 rounded-full mb-6" />
@@ -77,7 +77,7 @@ const TemplateSelectionSheet = ({ template, isOpen, onClose }) => {
                                 initial={{ x: -20, rotate: -15, opacity: 0 }}
                                 animate={{ x: 0, rotate: -8, opacity: 1 }}
                                 transition={{ delay: 0.1, type: "spring" }}
-                                className="w-[110px] aspect-[4/5] rounded-[20px] overflow-hidden shadow-2xl relative z-10 border-[3px] border-white/10 bg-[#2c2c2e]"
+                                className="w-[110px] aspect-[4/5] rounded-card overflow-hidden shadow-2xl relative z-10 border-[3px] border-white/10 bg-bg-elevated"
                             >
                                 <img
                                     src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&h=500&fit=crop"
@@ -104,7 +104,7 @@ const TemplateSelectionSheet = ({ template, isOpen, onClose }) => {
                                 initial={{ x: 20, rotate: 15, opacity: 0 }}
                                 animate={{ x: 0, rotate: 8, opacity: 1 }}
                                 transition={{ delay: 0.15, type: "spring" }}
-                                className="w-[110px] aspect-[4/5] rounded-[20px] overflow-hidden shadow-2xl relative z-10 border-[3px] border-white/10 ml-[-15px] bg-[#2c2c2e]"
+                                className="w-[110px] aspect-[4/5] rounded-card overflow-hidden shadow-2xl relative z-10 border-[3px] border-white/10 ml-[-15px] bg-bg-elevated"
                             >
                                 <img
                                     src={template.src}
@@ -127,14 +127,14 @@ const TemplateSelectionSheet = ({ template, isOpen, onClose }) => {
                         <div className="w-full space-y-3 px-2">
                             <button
                                 onClick={() => { playClick(); fileInputRef.current?.click(); }}
-                                className="w-full bg-[#3390ec] text-white rounded-[20px] py-4 font-bold text-[17px] flex justify-center items-center gap-2.5 shadow-[0_8px_20px_rgba(51,144,236,0.3)] active:scale-95 transition-transform"
+                                className="w-full bg-accent-blue text-white rounded-card py-4 font-bold text-[17px] flex justify-center items-center gap-2.5 shadow-[0_8px_20px_rgba(51,144,236,0.3)] active:scale-95 transition-transform"
                             >
                                 <Plus size={22} strokeWidth={2.5} /> Загрузить фото
                             </button>
 
                             <button
                                 onClick={() => { playClick(); cameraInputRef.current?.click(); }}
-                                className="w-full bg-[#2c2c2e] text-white rounded-[20px] py-4 font-bold text-[17px] flex justify-center items-center gap-2.5 active:scale-95 transition-transform"
+                                className="w-full bg-bg-elevated text-white rounded-card py-4 font-bold text-[17px] flex justify-center items-center gap-2.5 active:scale-95 transition-transform"
                             >
                                 <Camera size={22} strokeWidth={2.5} /> Открыть камеру
                             </button>

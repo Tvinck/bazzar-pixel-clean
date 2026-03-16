@@ -94,7 +94,7 @@ const Onboarding = ({ onComplete }) => {
                 animate={{ y: 0, opacity: 1, scale: 1 }}
                 exit={{ y: "-10%", opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="relative w-full max-w-md bg-white dark:bg-[#1c1c1e] rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+                className="relative w-full max-w-md bg-white dark:bg-bg-secondary rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
             >
                 {/* Drag Handle (Mobile Visual) */}
                 <div className="absolute top-0 left-0 right-0 h-6 flex justify-center items-center z-20 sm:hidden pointer-events-none">

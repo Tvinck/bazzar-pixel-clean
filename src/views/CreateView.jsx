@@ -104,7 +104,7 @@ const CreateView = () => {
     return (
         <div className="min-h-screen bg-black text-white pb-safe md:max-w-3xl md:mx-auto md:px-6">
             {/* Ambient gradients */}
-            <div className="fixed top-0 left-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-[128px] pointer-events-none" />
+            <div className="fixed top-0 left-1/4 w-96 h-96 bg-accent-purple/10 rounded-full blur-[128px] pointer-events-none" />
             <div className="fixed bottom-0 right-0 w-96 h-96 bg-blue-500/10 rounded-full blur-[128px] pointer-events-none" />
 
             {/* Header */}
@@ -135,7 +135,7 @@ const CreateView = () => {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="relative w-full aspect-[2/1] rounded-[20px] overflow-hidden mb-6 bg-gradient-to-br from-yellow-500 via-orange-500 to-amber-600 shadow-md"
+                    className="relative w-full aspect-[2/1] rounded-card overflow-hidden mb-6 bg-gradient-to-br from-yellow-500 via-orange-500 to-amber-600 shadow-md"
                 >
                     <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1571771894821-ce9b6c11b08e?q=80&w=800')] bg-cover bg-center opacity-20 mix-blend-overlay" />
                     <div className="absolute inset-0 bg-gradient-to-r from-black/60 via-transparent to-transparent" />
@@ -158,7 +158,7 @@ const CreateView = () => {
 
                 {/* Section Title */}
                 <div className="flex items-center gap-2 mb-4">
-                    <div className="w-1 h-5 bg-[#007aff] rounded-full" />
+                    <div className="w-1 h-5 bg-accent-blue rounded-full" />
                     <h2 className="text-[17px] tracking-tight font-semibold">Инструменты</h2>
                 </div>
 
@@ -172,13 +172,13 @@ const CreateView = () => {
                             transition={{ delay: idx * 0.05 }}
                             whileTap={{ scale: 0.97 }}
                             onClick={() => handleSelect(tool.id)}
-                            className="group relative bg-[#1c1c1e] rounded-[20px] p-4 border border-transparent transition-all text-left overflow-hidden shadow-sm"
+                            className="group relative bg-bg-secondary rounded-card p-4 border border-transparent transition-all text-left overflow-hidden shadow-sm"
                         >
                             {/* Background gradient on hover */}
                             <div className={`absolute inset-0 bg-gradient-to-br ${tool.gradient} opacity-0 group-hover:opacity-10 transition-opacity`} />
 
                             {/* Icon */}
-                            <div className={`w-12 h-12 rounded-[14px] bg-gradient-to-br ${tool.gradient} flex items-center justify-center mb-3 shadow-md`}>
+                            <div className={`w-12 h-12 rounded-card bg-gradient-to-br ${tool.gradient} flex items-center justify-center mb-3 shadow-md`}>
                                 <tool.icon className="w-6 h-6 text-white" />
                             </div>
 
@@ -222,7 +222,7 @@ const CreateView = () => {
                                 key={action.label}
                                 whileTap={{ scale: 0.95 }}
                                 onClick={() => navigate(action.route)}
-                                className="bg-[#1c1c1e] rounded-[16px] py-3 px-2 flex flex-col items-center gap-1.5 transition-colors shadow-sm"
+                                className="bg-bg-secondary rounded-card py-3 px-2 flex flex-col items-center gap-1.5 transition-colors shadow-sm"
                             >
                                 <span className="text-xl">{action.icon}</span>
                                 <span className="text-[13px] font-medium text-gray-300">{action.label}</span>

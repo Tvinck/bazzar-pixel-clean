@@ -152,7 +152,7 @@ const ActionButton = ({ onClick, icon, label, className = '', spanClass = 'col-s
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay, type: 'spring', stiffness: 300, damping: 25 }}
         whileTap={{ scale: 0.96 }}
-        className={`${spanClass} py-3 rounded-[14px] font-semibold text-[15px] flex items-center justify-center gap-2.5 transition-colors ${className}`}
+        className={`${spanClass} py-3 rounded-card font-semibold text-[15px] flex items-center justify-center gap-2.5 transition-colors ${className}`}
     >
         {icon}
         <span>{label}</span>
@@ -198,7 +198,7 @@ const HistoryModal = ({
                             animate={{ y: 0 }}
                             exit={{ y: '100%' }}
                             transition={{ type: 'spring', damping: 28, stiffness: 300 }}
-                            className="relative bg-[#1c1c1e] w-full max-w-md rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-2xl shadow-black/50 border-t border-white/10 max-h-[92vh] flex flex-col"
+                            className="relative bg-bg-secondary w-full max-w-md rounded-t-[32px] sm:rounded-[32px] overflow-hidden shadow-2xl shadow-black/50 border-t border-white/10 max-h-[92vh] flex flex-col"
                         >
                             {/* Drag Handle */}
                             <div className="absolute top-3 left-1/2 -translate-x-1/2 w-10 h-1.5 bg-white/25 rounded-full z-50" />
@@ -206,7 +206,7 @@ const HistoryModal = ({
                             {/* Media */}
                             <div className="relative w-full aspect-square bg-black overflow-hidden">
                                 {selectedItem.status === 'pending' ? (
-                                    <div className="w-full h-full flex flex-col items-center justify-center bg-[#1c1c1e] gap-4">
+                                    <div className="w-full h-full flex flex-col items-center justify-center bg-bg-secondary gap-4">
                                         <div className="relative">
                                             <div className="w-16 h-16 rounded-full border-4 border-white/5 border-t-white/40 animate-spin" />
                                             <div className="absolute inset-0 flex items-center justify-center">
@@ -265,7 +265,7 @@ const HistoryModal = ({
                                 >
                                     <div>
                                         <div className="flex items-center gap-2 mb-1.5">
-                                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#3390ec] bg-[#3390ec]/10 px-2.5 py-0.5 rounded-lg">
+                                            <span className="text-[10px] font-bold uppercase tracking-wider text-[#3390ec] bg-accent-blue/10 px-2.5 py-0.5 rounded-lg">
                                                 {selectedItem.model_id || 'AI Model'}
                                             </span>
                                             <span className="text-[10px] text-gray-500 font-mono flex items-center gap-1">
@@ -290,7 +290,7 @@ const HistoryModal = ({
                                         onClick={() => handleRepeat(selectedItem)}
                                         icon={<RepeatFlowIcon size={18} />}
                                         label="Создать похожее"
-                                        className="bg-[#007aff] text-white shadow-lg shadow-[#007aff]/20"
+                                        className="bg-accent-blue text-white shadow-lg shadow-[#007aff]/20"
                                         delay={0.1}
                                     />
 
@@ -299,8 +299,8 @@ const HistoryModal = ({
                                         icon={<GlobeAnimIcon size={18} isActive={selectedItem.is_public} />}
                                         label={selectedItem.is_public ? 'Опубликовано' : 'Приватно'}
                                         className={selectedItem.is_public
-                                            ? 'bg-[#34c759]/15 text-[#34c759] border border-[#34c759]/20'
-                                            : 'bg-[#2c2c2e] text-white border border-white/5'}
+                                            ? 'bg-accent-blue/15 text-accent-blue border border-[#34c759]/20'
+                                            : 'bg-bg-elevated text-white border border-white/5'}
                                         spanClass="col-span-1"
                                         delay={0.15}
                                     />
@@ -315,7 +315,7 @@ const HistoryModal = ({
                                         }}
                                         icon={<ShareIcon size={18} />}
                                         label="Поделиться"
-                                        className="bg-[#2c2c2e] text-white border border-white/5"
+                                        className="bg-bg-elevated text-white border border-white/5"
                                         spanClass="col-span-1"
                                         delay={0.2}
                                     />
@@ -324,7 +324,7 @@ const HistoryModal = ({
                                         onClick={() => handleDownload(selectedItem)}
                                         icon={<DownloadAnimIcon size={18} />}
                                         label="Скачать"
-                                        className="bg-[#2c2c2e] text-white border border-white/5"
+                                        className="bg-bg-elevated text-white border border-white/5"
                                         delay={0.25}
                                     />
 
@@ -332,7 +332,7 @@ const HistoryModal = ({
                                         onClick={() => setShowCollectionModal(true)}
                                         icon={<Folder size={18} />}
                                         label="В папку"
-                                        className="bg-[#2c2c2e] text-purple-400 border border-purple-500/20"
+                                        className="bg-bg-elevated text-purple-400 border border-purple-500/20"
                                         delay={0.28}
                                     />
 
@@ -355,7 +355,7 @@ const HistoryModal = ({
                                         onClick={() => handleDelete(selectedItem)}
                                         icon={<TrashAnimIcon size={18} className="text-[#ff3b30]" />}
                                         label="Удалить"
-                                        className="bg-[#2c2c2e] text-[#ff3b30] border border-[#ff3b30]/10 mt-1"
+                                        className="bg-bg-elevated text-[#ff3b30] border border-[#ff3b30]/10 mt-1"
                                         delay={0.35}
                                     />
                                 </div>
@@ -376,7 +376,7 @@ const HistoryModal = ({
                         />
                         <motion.div
                             initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                            className="relative bg-[#1c1c1e] w-full max-w-sm rounded-3xl p-5 border border-white/10 shadow-2xl z-10"
+                            className="relative bg-bg-secondary w-full max-w-sm rounded-3xl p-5 border border-white/10 shadow-2xl z-10"
                         >
                             <h3 className="text-xl font-bold mb-4">Сохранить в папку</h3>
 
@@ -390,7 +390,7 @@ const HistoryModal = ({
                                         <button
                                             key={name}
                                             onClick={() => handleSaveToCollection(name, selectedItem.id)}
-                                            className={`w-full flex items-center justify-between p-3 rounded-xl border ${isSaved ? 'bg-purple-500/20 border-purple-500/50 text-purple-300' : 'bg-[#2c2c2e] border-white/5 text-white hover:bg-[#3a3a3c]'}`}
+                                            className={`w-full flex items-center justify-between p-3 rounded-xl border ${isSaved ? 'bg-accent-purple/20 border-purple-500/50 text-purple-300' : 'bg-bg-elevated border-white/5 text-white hover:bg-bg-elevated'}`}
                                         >
                                             <div className="flex items-center gap-3">
                                                 <Folder size={18} />
@@ -408,12 +408,12 @@ const HistoryModal = ({
                                     placeholder="Новая папка..."
                                     value={newCollectionName}
                                     onChange={e => setNewCollectionName(e.target.value)}
-                                    className="flex-1 bg-[#2c2c2e] px-4 py-2.5 rounded-xl text-[14px] text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 border border-transparent"
+                                    className="flex-1 bg-bg-elevated px-4 py-2.5 rounded-xl text-[14px] text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 border border-transparent"
                                 />
                                 <button
                                     disabled={!newCollectionName.trim()}
                                     onClick={() => handleSaveToCollection(newCollectionName.trim(), selectedItem.id)}
-                                    className="bg-purple-500 text-white px-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+                                    className="bg-accent-purple text-white px-4 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                                 >
                                     <Plus size={20} />
                                 </button>

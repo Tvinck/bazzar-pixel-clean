@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 const SUPABASE_CDN = import.meta.env.VITE_SUPABASE_URL
   ? `${import.meta.env.VITE_SUPABASE_URL}/storage/v1/object/public/assets/`
   : '';

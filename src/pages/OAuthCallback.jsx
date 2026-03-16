@@ -118,7 +118,7 @@ const OAuthCallback = () => {
     }, []);
 
     return (
-        <div className="min-h-screen bg-[#0f0f0f] flex flex-col items-center justify-center p-6">
+        <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center p-6">
             {/* Background glow */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div
@@ -133,15 +133,15 @@ const OAuthCallback = () => {
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="relative z-10 bg-[#1c1c1e] rounded-3xl border border-white/5 p-8 w-full max-w-sm flex flex-col items-center text-center"
+                className="relative z-10 bg-bg-secondary rounded-3xl border border-white/5 p-8 w-full max-w-sm flex flex-col items-center text-center"
             >
                 {status === 'processing' && (
                     <>
-                        <div className="w-16 h-16 rounded-full bg-[#3390ec]/20 flex items-center justify-center mb-5">
+                        <div className="w-16 h-16 rounded-full bg-accent-blue/20 flex items-center justify-center mb-5">
                             <Loader2 className="w-8 h-8 text-[#3390ec] animate-spin" />
                         </div>
                         <h2 className="text-xl font-bold text-white mb-2">Авторизация...</h2>
-                        <p className="text-[#8e8e93] text-sm">Подключаемся к аккаунту</p>
+                        <p className="text-text-secondary text-sm">Подключаемся к аккаунту</p>
                     </>
                 )}
 
@@ -151,12 +151,12 @@ const OAuthCallback = () => {
                             initial={{ scale: 0 }}
                             animate={{ scale: 1 }}
                             transition={{ type: 'spring', damping: 12 }}
-                            className="w-16 h-16 rounded-full bg-[#34c759]/20 flex items-center justify-center mb-5"
+                            className="w-16 h-16 rounded-full bg-accent-blue/20 flex items-center justify-center mb-5"
                         >
-                            <CheckCircle2 className="w-8 h-8 text-[#34c759]" />
+                            <CheckCircle2 className="w-8 h-8 text-accent-blue" />
                         </motion.div>
                         <h2 className="text-xl font-bold text-white mb-2">Успешно!</h2>
-                        <p className="text-[#8e8e93] text-sm">Перенаправляем...</p>
+                        <p className="text-text-secondary text-sm">Перенаправляем...</p>
                     </>
                 )}
 
@@ -166,10 +166,10 @@ const OAuthCallback = () => {
                             <AlertCircle className="w-8 h-8 text-[#ff3b30]" />
                         </div>
                         <h2 className="text-xl font-bold text-white mb-2">Ошибка</h2>
-                        <p className="text-[#8e8e93] text-sm mb-6">{errorMsg}</p>
+                        <p className="text-text-secondary text-sm mb-6">{errorMsg}</p>
                         <button
                             onClick={() => navigate('/')}
-                            className="px-6 py-3 bg-[#3390ec] text-white rounded-xl font-semibold text-sm active:scale-[0.97] transition-transform"
+                            className="px-6 py-3 bg-accent-blue text-white rounded-xl font-semibold text-sm active:scale-[0.97] transition-transform"
                         >
                             Вернуться
                         </button>

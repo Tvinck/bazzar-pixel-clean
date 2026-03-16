@@ -263,9 +263,9 @@ export default function OnboardingView() {
                                 initial={{ opacity: 0, x: -20 }}
                                 animate={{ opacity: 1, x: 0 }}
                                 transition={{ delay: 0.3 + i * 0.1 }}
-                                className="bg-white/5 rounded-[16px] p-3.5 border border-white/5 flex items-center gap-3"
+                                className="bg-white/5 rounded-card p-3.5 border border-white/5 flex items-center gap-3"
                             >
-                                <div className="w-11 h-11 rounded-[12px] bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center text-2xl shrink-0">
+                                <div className="w-11 h-11 rounded-input bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center text-2xl shrink-0">
                                     {item.emoji}
                                 </div>
                                 <div className="flex-1 min-w-0">

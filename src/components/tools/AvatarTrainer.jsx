@@ -104,7 +104,7 @@ const AvatarTrainer = ({ isOpen, onClose }) => {
 
                 {/* Header */}
                 <div className="flex justify-between items-center p-4 bg-slate-900 border-b border-slate-800 sticky top-0 z-10">
-                    <h2 className="text-white font-bold flex items-center gap-2"><UserPlus className="text-purple-500" /> Тренировка AI Аватара</h2>
+                    <h2 className="text-white font-bold flex items-center gap-2"><UserPlus className="text-accent-purple" /> Тренировка AI Аватара</h2>
                     <button onClick={onClose} className="w-10 h-10 rounded-full bg-slate-800 text-white flex items-center justify-center"><X /></button>
                 </div>
 
@@ -170,13 +170,13 @@ const AvatarTrainer = ({ isOpen, onClose }) => {
                             <div className="grid grid-cols-2 gap-2">
                                 <button
                                     onClick={() => setModelType('person')}
-                                    className={`p-3 rounded-xl border text-sm font-bold transition-all ${modelType === 'person' ? 'bg-purple-500/20 border-purple-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
+                                    className={`p-3 rounded-xl border text-sm font-bold transition-all ${modelType === 'person' ? 'bg-accent-purple/20 border-purple-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
                                 >
                                     Человек
                                 </button>
                                 <button
                                     onClick={() => setModelType('style')}
-                                    className={`p-3 rounded-xl border text-sm font-bold transition-all ${modelType === 'style' ? 'bg-purple-500/20 border-purple-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
+                                    className={`p-3 rounded-xl border text-sm font-bold transition-all ${modelType === 'style' ? 'bg-accent-purple/20 border-purple-500 text-white' : 'bg-slate-900 border-slate-700 text-slate-400'}`}
                                 >
                                     Стиль
                                 </button>

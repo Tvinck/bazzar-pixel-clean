@@ -75,14 +75,14 @@ const LazyMedia = ({ src, type, alt, className }) => {
     const videoRef = useRef(null);
 
     return (
-        <div ref={ref} className={`relative bg-[#2c2c2e] overflow-hidden ${className}`}>
+        <div ref={ref} className={`relative bg-bg-elevated overflow-hidden ${className}`}>
             {/* Placeholder / Skeleton */}
             <AnimatePresence>
                 {!isLoaded && (
                     <motion.div
                         initial={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-10 flex items-center justify-center bg-[#2c2c2e]"
+                        className="absolute inset-0 z-10 flex items-center justify-center bg-bg-elevated"
                     >
                         <div className="w-8 h-8 rounded-full border-2 border-white/10 border-t-white/50 animate-spin" />
                     </motion.div>
@@ -189,7 +189,7 @@ const GalleryView = ({ onOpenTemplate }) => {
                                 placeholder={t('gallery.searchPlaceholder')}
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                className="w-full bg-[#1c1c1e] rounded-[10px] pl-10 pr-4 py-2 text-[17px] text-white placeholder:text-gray-500 outline-none focus:ring-1 focus:ring-[#007aff] transition-shadow tracking-[-0.41px]"
+                                className="w-full bg-bg-secondary rounded-input pl-10 pr-4 py-2 text-[17px] text-white placeholder:text-gray-500 outline-none focus:ring-1 focus:ring-[#007aff] transition-shadow tracking-[-0.41px]"
                             />
                         </div>
                     </div>
@@ -207,7 +207,7 @@ const GalleryView = ({ onOpenTemplate }) => {
                                     whileTap={{ scale: 0.94 }}
                                     className={`relative flex flex-col items-center justify-center min-w-[96px] h-[100px] rounded-[24px] p-3 snap-center transition-all duration-300 overflow-hidden ${isActive
                                         ? 'bg-gradient-to-br from-[#007aff] to-[#005bb5] shadow-lg shadow-[#007aff]/30 border border-white/20'
-                                        : 'bg-[#1c1c1e] hover:bg-[#2c2c2e] border border-white/5'
+                                        : 'bg-bg-secondary hover:bg-bg-elevated border border-white/5'
                                         }`}
                                 >
                                     {/* Glow Background */}
@@ -220,7 +220,7 @@ const GalleryView = ({ onOpenTemplate }) => {
                                         />
                                     )}
 
-                                    <div className={`relative z-10 p-2.5 rounded-[16px] mb-2 transition-colors ${isActive ? 'bg-white/20' : 'bg-[#2c2c2e]'
+                                    <div className={`relative z-10 p-2.5 rounded-card mb-2 transition-colors ${isActive ? 'bg-white/20' : 'bg-bg-elevated'
                                         }`}>
                                         <AnimatedIcon icon={Icon} size={24} className={isActive ? 'text-white' : 'text-gray-400'} disableHover />
                                     </div>
@@ -248,7 +248,7 @@ const GalleryView = ({ onOpenTemplate }) => {
                             whileHover={{ y: -6, transition: { duration: 0.2 } }}
                             whileTap={{ scale: 0.98 }}
                             onClick={() => onOpenTemplate && onOpenTemplate(template)}
-                            className="relative aspect-[9/16] overflow-hidden cursor-pointer bg-[#1c1c1e] group md:rounded-[24px] rounded-[20px] shadow-lg shadow-black/40 border border-[#2c2c2e] hover:border-white/20 transition-all duration-300"
+                            className="relative aspect-[9/16] overflow-hidden cursor-pointer bg-bg-secondary group md:rounded-[24px] rounded-card shadow-lg shadow-black/40 border border-glass-border hover:border-white/20 transition-all duration-300"
                         >
                             {/* Optimized Media Loader */}
                             <LazyMedia
@@ -260,14 +260,14 @@ const GalleryView = ({ onOpenTemplate }) => {
 
                             {/* Video Indicator */}
                             {template.mediaType === 'video' && (
-                                <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-md rounded-full p-2 z-20 border border-white/10 group-hover:bg-[#007aff]/80 transition-colors">
+                                <div className="absolute top-3 right-3 bg-black/50 backdrop-blur-md rounded-full p-2 z-20 border border-white/10 group-hover:bg-accent-blue/80 transition-colors">
                                     <AnimatedIcon icon={PlayIcon} size={14} className="text-white fill-white" disableHover disableTap />
                                 </div>
                             )}
 
                             {/* Content Block */}
                             <div className="absolute inset-x-0 bottom-0 p-3 z-30 flex flex-col justify-end bg-gradient-to-t from-black/95 via-black/50 to-transparent pt-16">
-                                <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-[16px] p-3 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
+                                <div className="bg-white/10 backdrop-blur-xl border border-white/10 rounded-card p-3 transform translate-y-1 group-hover:translate-y-0 transition-transform duration-300">
                                     <h3 className="text-white text-[13px] font-bold leading-tight line-clamp-2 md:text-[14px] mb-2 drop-shadow-sm">
                                         {template.title}
                                     </h3>

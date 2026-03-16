@@ -347,7 +347,7 @@ export default function ExpertChatView() {
                         onClick={() => navigate('/experts')}
                         className="p-1 -ml-1 active:opacity-60 transition-opacity"
                     >
-                        <ChevronLeft className="w-7 h-7 text-[#007aff]" />
+                        <ChevronLeft className="w-7 h-7 text-accent-blue" />
                     </button>
 
                     <div
@@ -359,7 +359,7 @@ export default function ExpertChatView() {
 
                     <div className="flex-1 min-w-0">
                         <h1 className="text-white text-[17px] font-semibold truncate tracking-tight">{expert.name}</h1>
-                        <p className="text-[13px] text-[#8e8e93]">
+                        <p className="text-[13px] text-text-secondary">
                             {freeMessagesLeft > 0
                                 ? `🎁 ${freeMessagesLeft} бесплатных`
                                 : `${MESSAGE_COST}⚡ за сообщение`
@@ -368,7 +368,7 @@ export default function ExpertChatView() {
                     </div>
 
                     {/* Balance Display */}
-                    <div className="flex items-center gap-1 bg-[#2c2c2e] px-2.5 py-1.5 rounded-full mr-1">
+                    <div className="flex items-center gap-1 bg-bg-elevated px-2.5 py-1.5 rounded-full mr-1">
                         <Zap className="w-4 h-4 fill-[#ffcc00] text-[#ffcc00]" />
                         <span className="text-[15px] font-semibold text-white">{balance ?? '...'}</span>
                     </div>
@@ -376,7 +376,7 @@ export default function ExpertChatView() {
                     <button
                         onClick={handleResetChat}
                         disabled={isResetting || isLoading}
-                        className="p-1.5 rounded-full bg-[#1c1c1e] text-[#8e8e93] active:bg-[#2c2c2e] transition-colors shadow-sm"
+                        className="p-1.5 rounded-full bg-bg-secondary text-text-secondary active:bg-bg-elevated transition-colors shadow-sm"
                         title="Начать заново"
                     >
                         {isResetting ? <Loader2 className="w-5 h-5 animate-spin" /> : <RotateCcw className="w-5 h-5" />}
@@ -391,9 +391,9 @@ export default function ExpertChatView() {
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
                         exit={{ opacity: 0, height: 0 }}
-                        className="bg-[#34c759]/15 border-b border-[#34c759]/20 px-4 py-2.5"
+                        className="bg-accent-blue/15 border-b border-[#34c759]/20 px-4 py-2.5"
                     >
-                        <div className="flex items-center gap-2 text-[#34c759] text-[13px] font-medium">
+                        <div className="flex items-center gap-2 text-accent-blue text-[13px] font-medium">
                             <Gift className="w-4 h-4 flex-shrink-0" />
                             <span>🎁 {freeMessagesLeft} бесплатных сообщений для знакомства с экспертом!</span>
                         </div>
@@ -443,8 +443,8 @@ export default function ExpertChatView() {
                                 >
                                     <div
                                         className={`max-w-[85%] rounded-[18px] px-4 py-3 ${msg.role === 'user'
-                                            ? 'bg-[#007aff] text-white rounded-br-[4px]'
-                                            : 'bg-[#2c2c2e] text-white rounded-bl-[4px] shadow-sm'
+                                            ? 'bg-accent-blue text-white rounded-br-[4px]'
+                                            : 'bg-bg-elevated text-white rounded-bl-[4px] shadow-sm'
                                             }`}
                                     >
                                         {msg.image && (
@@ -492,7 +492,7 @@ export default function ExpertChatView() {
                                         key={idx}
                                         onClick={() => handleSend(suggestion)}
                                         disabled={isLoading}
-                                        className="px-3.5 py-2 text-[13px] bg-[#1c1c1e] text-white rounded-[10px] active:bg-[#2c2c2e] transition-colors disabled:opacity-50"
+                                        className="px-3.5 py-2 text-[13px] bg-bg-secondary text-white rounded-input active:bg-bg-elevated transition-colors disabled:opacity-50"
                                     >
                                         {suggestion}
                                     </button>
@@ -507,7 +507,7 @@ export default function ExpertChatView() {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="flex justify-start"
                             >
-                                <div className="bg-[#1c1c1e] rounded-[18px] rounded-bl-[6px] px-4 py-3">
+                                <div className="bg-bg-secondary rounded-[18px] rounded-bl-[6px] px-4 py-3">
                                     <div className="flex gap-1">
                                         <span className="w-2 h-2 bg-[#8e8e93] rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                                         <span className="w-2 h-2 bg-[#8e8e93] rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -562,7 +562,7 @@ export default function ExpertChatView() {
                     <div className="flex items-end gap-2">
                         <button
                             onClick={() => fileInputRef.current?.click()}
-                            className="p-3 mb-0.5 rounded-full text-[#8e8e93] active:bg-[#1c1c1e] transition-colors focus:outline-none"
+                            className="p-3 mb-0.5 rounded-full text-text-secondary active:bg-bg-secondary transition-colors focus:outline-none"
                         >
                             <Paperclip className="w-[22px] h-[22px]" />
                             <input
@@ -574,7 +574,7 @@ export default function ExpertChatView() {
                             />
                         </button>
 
-                        <div className="flex-1 bg-[#1c1c1e] rounded-[22px] px-4 py-3 border border-white/5 shadow-inner min-h-[46px] flex items-center">
+                        <div className="flex-1 bg-bg-secondary rounded-[22px] px-4 py-3 border border-white/5 shadow-inner min-h-[46px] flex items-center">
                             <textarea
                                 ref={inputRef}
                                 value={input}
@@ -595,8 +595,8 @@ export default function ExpertChatView() {
                             onClick={() => handleSend()}
                             disabled={(!input.trim() && !image) || isLoading}
                             className={`p-3 mb-0.5 rounded-full transition-all duration-200 ${(input.trim() || image) && !isLoading
-                                ? 'bg-[#007aff] text-white shadow-[0_4px_14px_rgba(0,122,255,0.4)]'
-                                : 'bg-[#1c1c1e] text-[#8e8e93]'
+                                ? 'bg-accent-blue text-white shadow-[0_4px_14px_rgba(0,122,255,0.4)]'
+                                : 'bg-bg-secondary text-text-secondary'
                                 } flex items-center justify-center`}
                             style={{ width: '46px', height: '46px' }}
                         >
@@ -624,7 +624,7 @@ export default function ExpertChatView() {
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
-                            className="bg-[#1c1c1e] rounded-[14px] p-6 max-w-sm w-full text-center"
+                            className="bg-bg-secondary rounded-card p-6 max-w-sm w-full text-center"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#ff3b30]/15 flex items-center justify-center">
@@ -635,7 +635,7 @@ export default function ExpertChatView() {
                                 Недостаточно зарядов
                             </h3>
 
-                            <p className="text-[15px] text-[#8e8e93] mb-6">
+                            <p className="text-[15px] text-text-secondary mb-6">
                                 Для отправки сообщения нужен {MESSAGE_COST} заряд.
                                 {balance !== null && ` Ваш баланс: ${balance} ⚡`}
                             </p>
@@ -643,13 +643,13 @@ export default function ExpertChatView() {
                             <div className="flex gap-3">
                                 <button
                                     onClick={() => setShowTopUpModal(false)}
-                                    className="flex-1 py-3 rounded-[12px] bg-[#2c2c2e] text-white text-[17px] font-semibold active:bg-[#3a3a3c]"
+                                    className="flex-1 py-3 rounded-input bg-bg-elevated text-white text-[17px] font-semibold active:bg-bg-elevated"
                                 >
                                     Закрыть
                                 </button>
                                 <button
                                     onClick={handleTopUp}
-                                    className="flex-1 py-3 rounded-[12px] bg-[#007aff] text-white text-[17px] font-semibold active:bg-blue-600"
+                                    className="flex-1 py-3 rounded-input bg-accent-blue text-white text-[17px] font-semibold active:bg-blue-600"
                                 >
                                     Пополнить
                                 </button>

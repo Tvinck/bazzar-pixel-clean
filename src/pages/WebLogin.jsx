@@ -217,7 +217,7 @@ const WebLogin = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#0f0f0f] flex flex-col items-center justify-center p-6 relative overflow-hidden">
+        <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center p-6 relative overflow-hidden">
             {/* Background Effects */}
             <div className="absolute inset-0 z-0 pointer-events-none">
                 <div
@@ -262,7 +262,7 @@ const WebLogin = () => {
 
                 {/* Title */}
                 <h1 className="text-[28px] font-bold text-white mb-1 tracking-tight">Bazzar Pixel</h1>
-                <p className="text-[15px] text-[#8e8e93] text-center mb-8 max-w-[280px]">
+                <p className="text-[15px] text-text-secondary text-center mb-8 max-w-[280px]">
                     Войдите, чтобы создавать нейроарты и получить доступ к профилю
                 </p>
 
@@ -287,7 +287,7 @@ const WebLogin = () => {
                             />
                             <button
                                 onClick={() => setShowTelegramWidget(false)}
-                                className="text-xs text-[#8e8e93] hover:text-white transition-colors"
+                                className="text-xs text-text-secondary hover:text-white transition-colors"
                             >
                                 ← Назад к выбору
                             </button>
@@ -350,7 +350,7 @@ const WebLogin = () => {
                         className="mt-6 flex items-center gap-2"
                     >
                         <Loader2 className="w-5 h-5 text-[#3390ec] animate-spin" />
-                        <span className="text-sm text-[#8e8e93]">Авторизация...</span>
+                        <span className="text-sm text-text-secondary">Авторизация...</span>
                     </motion.div>
                 )}
 
@@ -358,7 +358,7 @@ const WebLogin = () => {
                 {import.meta.env.DEV && (
                     <button
                         onClick={handleDevLogin}
-                        className="mt-6 text-xs text-[#8e8e93] underline hover:text-white transition-colors"
+                        className="mt-6 text-xs text-text-secondary underline hover:text-white transition-colors"
                     >
                         Войти как разработчик (DEV)
                     </button>

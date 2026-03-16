@@ -62,7 +62,7 @@ const LeaderboardDrawer = ({ isOpen, onClose }) => {
                     <div className="flex flex-col items-center opacity-80 scale-90">
                         <div className="w-14 h-14 rounded-full border-2 border-white/10 bg-white/5 mb-3 relative flex items-center justify-center text-2xl shadow-lg">
                             🥈
-                            <span className="absolute -bottom-2 bg-[#1c1c1e] text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/10">#2</span>
+                            <span className="absolute -bottom-2 bg-bg-secondary text-white text-[10px] font-bold px-2 py-0.5 rounded-full border border-white/10">#2</span>
                         </div>
                         <div className="h-16 w-16 bg-gradient-to-t from-white/10 to-transparent rounded-t-2xl border-t border-white/10" />
                     </div>
@@ -78,7 +78,7 @@ const LeaderboardDrawer = ({ isOpen, onClose }) => {
                     <div className="flex flex-col items-center opacity-80 scale-90">
                         <div className="w-14 h-14 rounded-full border-2 border-orange-700/30 bg-orange-900/10 mb-3 relative flex items-center justify-center text-2xl shadow-lg">
                             🥉
-                            <span className="absolute -bottom-2 bg-[#1c1c1e] text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-orange-500/20">#3</span>
+                            <span className="absolute -bottom-2 bg-bg-secondary text-orange-400 text-[10px] font-bold px-2 py-0.5 rounded-full border border-orange-500/20">#3</span>
                         </div>
                         <div className="h-14 w-16 bg-gradient-to-t from-orange-500/10 to-transparent rounded-t-2xl border-t border-orange-500/10" />
                     </div>
@@ -94,7 +94,7 @@ const LeaderboardDrawer = ({ isOpen, onClose }) => {
                     ) : (
                         sortedData?.map((user, index) => (
                             <TelegramListItem key={user.telegram_id || index} delay={index * 0.05}>
-                                <div className="flex items-center gap-4 bg-white/5 p-3 pr-4 rounded-[20px] active:scale-[0.98] transition-all border border-white/5 hover:bg-white/10">
+                                <div className="flex items-center gap-4 bg-white/5 p-3 pr-4 rounded-card active:scale-[0.98] transition-all border border-white/5 hover:bg-white/10">
                                     <div className="font-[800] text-white/20 w-8 text-center text-lg italic">
                                         {index + 1}
                                     </div>

@@ -46,7 +46,7 @@ const ThemeSettings = ({ isOpen, onClose }) => {
                                 <button
                                     key={mode.id}
                                     onClick={() => setThemeMode(mode.id)}
-                                    className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-[14px] text-sm font-medium transition-all relative z-10 ${themeMode === mode.id
+                                    className={`flex-1 py-2.5 flex items-center justify-center gap-2 rounded-card text-sm font-medium transition-all relative z-10 ${themeMode === mode.id
                                         ? 'text-indigo-600 dark:text-indigo-400 bg-white dark:bg-slate-900 shadow-sm'
                                         : 'text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
                                         }`}

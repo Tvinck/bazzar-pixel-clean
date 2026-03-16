@@ -6,7 +6,7 @@ const StarsManager = ({ searchQuery, setSearchQuery, setEditingStar, stars }) =>
         <div className="space-y-4">
             <div className="flex gap-2 mb-4">
                 <input
-                    className="flex-1 bg-[#2c2c2e] border-none rounded-[14px] px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
+                    className="flex-1 bg-bg-elevated border-none rounded-card px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
                     placeholder="Поиск звезд..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
@@ -17,7 +17,7 @@ const StarsManager = ({ searchQuery, setSearchQuery, setEditingStar, stars }) =>
                         sort_order: stars.length + 1,
                         is_active: true
                     })}
-                    className="bg-[#007aff] px-4 rounded-[14px] flex items-center justify-center text-white shadow-lg gap-2 active:scale-95 transition-transform cursor-pointer hover:bg-blue-600"
+                    className="bg-accent-blue px-4 rounded-card flex items-center justify-center text-white shadow-lg gap-2 active:scale-95 transition-transform cursor-pointer hover:bg-accent-blue"
                 >
                     <Plus size={20} />
                     <span className="text-[13px] font-bold hidden sm:inline">Добавить</span>
@@ -29,7 +29,7 @@ const StarsManager = ({ searchQuery, setSearchQuery, setEditingStar, stars }) =>
                     <div
                         key={s.id}
                         onClick={() => setEditingStar(s)}
-                        className="bg-[#2c2c2e] rounded-[16px] overflow-hidden relative cursor-pointer active:scale-95 transition-transform border border-white/5 group"
+                        className="bg-bg-elevated rounded-card overflow-hidden relative cursor-pointer active:scale-95 transition-transform border border-white/5 group"
                     >
                         <div className="aspect-[3/4] bg-black/50 relative">
                             {s.image_url ? (

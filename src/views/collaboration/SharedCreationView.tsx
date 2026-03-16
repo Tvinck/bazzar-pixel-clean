@@ -207,7 +207,7 @@ const SharedCreationView = () => {
 
                     {/* Prompt Section */}
                     {creation.prompt && (
-                        <div className="bg-[#1c1c1e] p-4 rounded-xl border border-white/5">
+                        <div className="bg-bg-secondary p-4 rounded-xl border border-white/5">
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-[13px] font-semibold text-gray-500 uppercase tracking-wider">Prompt</span>
                                 <button
@@ -233,7 +233,7 @@ const SharedCreationView = () => {
                     </div>
 
                     {/* Referral Bonus Badge */}
-                    <div className="mt-4 bg-[#1c1c1e] rounded-xl p-3 border border-white/5 flex items-center gap-3">
+                    <div className="mt-4 bg-bg-secondary rounded-xl p-3 border border-white/5 flex items-center gap-3">
                         <div className="w-8 h-8 rounded-full bg-yellow-500/20 flex items-center justify-center shrink-0">
                             <Zap size={16} className="text-yellow-400" fill="currentColor" />
                         </div>
@@ -301,7 +301,7 @@ const SharedCreationView = () => {
                                 href={ctaUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="inline-flex items-center gap-2 bg-[#3390ec] text-white font-bold text-[15px] px-6 py-3.5 rounded-[14px] shadow-lg shadow-blue-500/30 hover:brightness-110 active:scale-[0.97] transition-all"
+                                className="inline-flex items-center gap-2 bg-accent-blue text-white font-bold text-[15px] px-6 py-3.5 rounded-card shadow-lg shadow-blue-500/30 hover:brightness-110 active:scale-[0.97] transition-all"
                             >
                                 Открыть Pixel AI
                                 <ArrowRight size={18} />

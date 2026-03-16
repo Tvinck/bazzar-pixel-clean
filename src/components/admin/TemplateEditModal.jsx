@@ -23,22 +23,22 @@ const TemplateEditModal = ({
             />
 
             <motion.div
-                className="bg-[#1c1c1e] w-full max-w-lg h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-[24px] sm:rounded-[24px] relative z-10 flex flex-col border border-white/10 shadow-2xl overflow-hidden"
+                className="bg-bg-secondary w-full max-w-lg h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-[24px] sm:rounded-[24px] relative z-10 flex flex-col border border-white/10 shadow-2xl overflow-hidden"
                 initial={{ y: "100%", opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 exit={{ y: "100%", opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
             >
-                <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#1c1c1e] z-20 shrink-0">
+                <div className="p-4 border-b border-white/10 flex justify-between items-center bg-bg-secondary z-20 shrink-0">
                     <h3 className="text-lg font-bold text-white">{editingTemplate.is_local ? 'Размещение (Local)' : editingTemplate.id?.startsWith('new_') ? 'Новый шаблон' : 'Редактирование'}</h3>
-                    <button onClick={() => setEditingTemplate(null)} className="p-2 bg-[#2c2c2e] rounded-full hover:bg-white/10 transition-colors text-white">
+                    <button onClick={() => setEditingTemplate(null)} className="p-2 bg-bg-elevated rounded-full hover:bg-white/10 transition-colors text-white">
                         <X size={20} />
                     </button>
                 </div>
 
                 <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar pb-safe-bottom">
                     {/* Preview / Upload Section */}
-                    <div className="aspect-[3/4] rounded-[16px] bg-black/50 overflow-hidden relative border border-white/10 mx-auto w-1/2 group">
+                    <div className="aspect-[3/4] rounded-card bg-black/50 overflow-hidden relative border border-white/10 mx-auto w-1/2 group">
                         {editingTemplate.src ? (
                             editingTemplate.media_type === 'video' ? (
                                 <video src={editingTemplate.src} className="w-full h-full object-cover" muted autoPlay loop />
@@ -64,7 +64,7 @@ const TemplateEditModal = ({
                         <div>
                             <label className="text-[11px] text-gray-500 uppercase block mb-1">Название</label>
                             <input
-                                className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                                className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-blue-500/50 transition-all"
                                 placeholder="Название шаблона (ID)"
                                 value={editingTemplate.title || ''}
                                 onChange={e => setEditingTemplate({ ...editingTemplate, title: e.target.value })}
@@ -73,7 +73,7 @@ const TemplateEditModal = ({
 
                         <div className="grid grid-cols-2 gap-3">
                             <input
-                                className="bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none placeholder:text-gray-600 text-[12px]"
+                                className="bg-bg-elevated p-3 rounded-input text-white outline-none placeholder:text-gray-600 text-[12px]"
                                 placeholder="URL (или загрузите файл)"
                                 value={editingTemplate.src || ''}
                                 onChange={e => setEditingTemplate({ ...editingTemplate, src: e.target.value })}
@@ -81,7 +81,7 @@ const TemplateEditModal = ({
                             />
                             <input
                                 type="number"
-                                className="bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none placeholder:text-gray-600"
+                                className="bg-bg-elevated p-3 rounded-input text-white outline-none placeholder:text-gray-600"
                                 placeholder="Сортировка"
                                 value={editingTemplate.sort_order || 0}
                                 onChange={e => setEditingTemplate({ ...editingTemplate, sort_order: e.target.value })}
@@ -92,7 +92,7 @@ const TemplateEditModal = ({
                             <div>
                                 <label className="text-[11px] text-gray-500 uppercase block mb-1">Тип медиа</label>
                                 <select
-                                    className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none appearance-none"
+                                    className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none appearance-none"
                                     value={editingTemplate.media_type || 'image'}
                                     onChange={e => setEditingTemplate({ ...editingTemplate, media_type: e.target.value })}
                                 >
@@ -104,7 +104,7 @@ const TemplateEditModal = ({
                                 <label className="text-[11px] text-gray-500 uppercase block mb-1">Категория</label>
                                 <div className="flex gap-2">
                                     <select
-                                        className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none appearance-none"
+                                        className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none appearance-none"
                                         value={editingTemplate.category || 'trends'}
                                         onChange={e => {
                                             if (e.target.value === 'new_custom_category') {
@@ -130,7 +130,7 @@ const TemplateEditModal = ({
                         <div>
                             <label className="text-[11px] text-gray-500 uppercase block mb-1">Системный Промпт</label>
                             <textarea
-                                className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none placeholder:text-gray-600 h-32 font-mono text-[13px] focus:ring-1 focus:ring-blue-500/50 transition-all"
+                                className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none placeholder:text-gray-600 h-32 font-mono text-[13px] focus:ring-1 focus:ring-blue-500/50 transition-all"
                                 placeholder="Prompt to generate..."
                                 value={editingTemplate.generation_prompt || ''}
                                 onChange={e => setEditingTemplate({ ...editingTemplate, generation_prompt: e.target.value })}
@@ -141,7 +141,7 @@ const TemplateEditModal = ({
                             <div className="flex-1">
                                 <label className="text-[11px] text-gray-500 uppercase block mb-1">AI Model</label>
                                 <select
-                                    className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none appearance-none"
+                                    className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none appearance-none"
                                     value={editingTemplate.model_id || ''}
                                     onChange={e => setEditingTemplate({ ...editingTemplate, model_id: e.target.value })}
                                 >
@@ -166,7 +166,7 @@ const TemplateEditModal = ({
                                 <label className="text-[11px] text-gray-500 uppercase block mb-1">Статус</label>
                                 <button
                                     onClick={() => setEditingTemplate({ ...editingTemplate, is_active: !editingTemplate.is_active })}
-                                    className={`w-full p-3 rounded-[12px] font-bold transition-all ${editingTemplate.is_active ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}
+                                    className={`w-full p-3 rounded-input font-bold transition-all ${editingTemplate.is_active ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}
                                 >
                                     {editingTemplate.is_active ? 'Активен' : 'Скрыт'}
                                 </button>
@@ -176,7 +176,7 @@ const TemplateEditModal = ({
                         {editingTemplate.id && !editingTemplate.is_local && !editingTemplate.id.startsWith('new_') && (
                             <button
                                 onClick={() => handleDeleteTemplate(editingTemplate.id)}
-                                className="w-full mt-4 p-3 bg-red-500/10 text-red-500 rounded-[12px] font-bold hover:bg-red-500/20 transition-colors"
+                                className="w-full mt-4 p-3 bg-red-500/10 text-red-500 rounded-input font-bold hover:bg-red-500/20 transition-colors"
                             >
                                 Удалить из базы
                             </button>
@@ -184,10 +184,10 @@ const TemplateEditModal = ({
                     </div>
                 </div>
 
-                <div className="p-4 border-t border-white/10 bg-[#1c1c1e] sticky bottom-0 z-20 pb-8 safe-bottom">
+                <div className="p-4 border-t border-white/10 bg-bg-secondary sticky bottom-0 z-20 pb-8 safe-bottom">
                     <button
                         onClick={() => handleSaveTemplate(editingTemplate)}
-                        className="w-full bg-[#007aff] text-white font-bold py-3.5 rounded-[12px] shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-transform hover:bg-[#0069d9]"
+                        className="w-full bg-accent-blue text-white font-bold py-3.5 rounded-input shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-transform hover:bg-[#0069d9]"
                     >
                         {editingTemplate.is_local ? 'Разместить в базе' : 'Сохранить изменения'}
                     </button>

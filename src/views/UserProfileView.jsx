@@ -62,7 +62,7 @@ const UserProfileView = () => {
 
     if (isProfileLoading) {
         return (
-            <div className="min-h-screen bg-slate-50 dark:bg-[#09090b] flex items-center justify-center">
+            <div className="min-h-screen bg-slate-50 dark:bg-bg-primary flex items-center justify-center">
                 <div className="w-8 h-8 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin" />
             </div>
         );
@@ -70,7 +70,7 @@ const UserProfileView = () => {
 
     if (!profile) {
         return (
-            <div className="min-h-screen bg-slate-50 dark:bg-[#09090b] flex flex-col items-center justify-center p-4">
+            <div className="min-h-screen bg-slate-50 dark:bg-bg-primary flex flex-col items-center justify-center p-4">
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">User not found</h2>
                 <button onClick={() => navigate(-1)} className="text-indigo-500 font-medium">Go Back</button>
             </div>
@@ -90,7 +90,7 @@ const UserProfileView = () => {
             <div className="sticky top-0 z-40 bg-black/95 backdrop-blur-xl border-b border-white/5 px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] flex items-center gap-4">
                 <button
                     onClick={() => navigate(-1)}
-                    className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center text-[#007aff] hover:bg-white/10 transition-colors"
+                    className="w-10 h-10 rounded-full bg-transparent flex items-center justify-center text-accent-blue hover:bg-white/10 transition-colors"
                 >
                     <ArrowLeft size={24} />
                 </button>
@@ -106,7 +106,7 @@ const UserProfileView = () => {
                 <div className="flex flex-col items-center">
                     {/* Avatar */}
                     <div className="relative group mb-3">
-                        <div className="relative w-28 h-28 rounded-full overflow-hidden bg-[#1c1c1e]">
+                        <div className="relative w-28 h-28 rounded-full overflow-hidden bg-bg-secondary">
                             {profile.avatar_url ? (
                                 <img src={profile.avatar_url} alt={profile.username} className="w-full h-full object-cover" />
                             ) : (
@@ -118,23 +118,23 @@ const UserProfileView = () => {
                     </div>
 
                     <h2 className="text-[22px] font-bold mb-1 tracking-tight text-center text-white">{profile.first_name} {profile.last_name}</h2>
-                    {profile.username && <p className="text-[#8e8e93] font-medium text-[15px] mb-6">@{profile.username}</p>}
+                    {profile.username && <p className="text-text-secondary font-medium text-[15px] mb-6">@{profile.username}</p>}
 
                     {/* Stats */}
-                    <div className="flex items-center gap-6 mb-8 px-6 py-4 bg-[#1c1c1e] rounded-[10px] shadow-sm">
+                    <div className="flex items-center gap-6 mb-8 px-6 py-4 bg-bg-secondary rounded-input shadow-sm">
                         <div className="text-center group cursor-default min-w-[70px]">
                             <div className="text-[17px] font-semibold text-white">{profile.stats?.creations || 0}</div>
-                            <div className="text-[13px] text-[#8e8e93] font-medium mt-0.5">Создания</div>
+                            <div className="text-[13px] text-text-secondary font-medium mt-0.5">Создания</div>
                         </div>
-                        <div className="w-px h-8 bg-[#2c2c2e]" />
+                        <div className="w-px h-8 bg-bg-elevated" />
                         <div className="text-center group cursor-default min-w-[70px]">
                             <div className="text-[17px] font-semibold text-white">{profile.stats?.followers || 0}</div>
-                            <div className="text-[13px] text-[#8e8e93] font-medium mt-0.5">Подписчиков</div>
+                            <div className="text-[13px] text-text-secondary font-medium mt-0.5">Подписчиков</div>
                         </div>
-                        <div className="w-px h-8 bg-[#2c2c2e]" />
+                        <div className="w-px h-8 bg-bg-elevated" />
                         <div className="text-center group cursor-default min-w-[70px]">
                             <div className="text-[17px] font-semibold text-white">{profile.stats?.following || 0}</div>
-                            <div className="text-[13px] text-[#8e8e93] font-medium mt-0.5">Подписок</div>
+                            <div className="text-[13px] text-text-secondary font-medium mt-0.5">Подписок</div>
                         </div>
                     </div>
 
@@ -144,9 +144,9 @@ const UserProfileView = () => {
                             <button
                                 onClick={handleFollowToggle}
                                 disabled={isFollowLoading}
-                                className={`flex-1 h-[44px] rounded-[10px] font-semibold text-[17px] flex items-center justify-center gap-2 transition-all active:scale-95 ${isFollowing
-                                    ? 'bg-[#2c2c2e] text-[#ff3b30]'
-                                    : 'bg-[#007aff] text-white hover:bg-blue-600'
+                                className={`flex-1 h-[44px] rounded-input font-semibold text-[17px] flex items-center justify-center gap-2 transition-all active:scale-95 ${isFollowing
+                                    ? 'bg-bg-elevated text-[#ff3b30]'
+                                    : 'bg-accent-blue text-white hover:bg-accent-blue'
                                     }`}
                             >
                                 {isFollowing ? 'Отписаться' : 'Подписаться'}
@@ -158,7 +158,7 @@ const UserProfileView = () => {
 
             {/* Content Tabs (Glassy) */}
             <div className="px-4 mb-4">
-                <div className="bg-[#1c1c1e] p-1 rounded-[10px] flex items-center justify-center">
+                <div className="bg-bg-secondary p-1 rounded-input flex items-center justify-center">
                     <button className="flex-1 flex items-center justify-center gap-2 py-1.5 rounded-[8px] bg-[#636366] text-white font-medium text-[13px] shadow-sm">
                         Публичная Галерея
                     </button>
@@ -171,7 +171,7 @@ const UserProfileView = () => {
                     {isCreationsLoading ? (
                         // Skeleton
                         [1, 2, 3, 4, 5, 6].map(i => (
-                            <div key={i} className="aspect-square bg-[#1c1c1e] animate-pulse" />
+                            <div key={i} className="aspect-square bg-bg-secondary animate-pulse" />
                         ))
                     ) : (
                         creations?.map((item, i) => (
@@ -180,7 +180,7 @@ const UserProfileView = () => {
                                 initial={{ opacity: 0 }}
                                 animate={{ opacity: 1 }}
                                 transition={{ delay: i * 0.05 }}
-                                className="relative aspect-square bg-[#1c1c1e] overflow-hidden group border-none shadow-none cursor-pointer"
+                                className="relative aspect-square bg-bg-secondary overflow-hidden group border-none shadow-none cursor-pointer"
                                 onClick={() => navigate(`/gallery`)} // Or open detail
                             >
                                 <OptimizedImage
@@ -201,7 +201,7 @@ const UserProfileView = () => {
             </div>
 
             {!isCreationsLoading && creations?.length === 0 && (
-                <div className="py-20 text-center text-[#8e8e93] flex flex-col items-center">
+                <div className="py-20 text-center text-text-secondary flex flex-col items-center">
                     <Grid size={48} className="mb-4 opacity-50" />
                     <p className="font-medium text-[15px]">Нет публичных работ</p>
                 </div>

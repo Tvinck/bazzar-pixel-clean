@@ -18,7 +18,7 @@ const SidebarItem = ({ icon: _Icon, label, isActive, onClick }) => (
         />
         <span className="text-sm font-medium">{label}</span>
         {isActive && (
-            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-[#3390ec]" />
+            <div className="ml-auto w-1.5 h-1.5 rounded-full bg-accent-blue" />
         )}
     </button>
 );
@@ -30,7 +30,7 @@ const Sidebar = ({ activeTab, onTabChange, onCreateClick }) => {
     const isActive = (tab) => activeTab === tab;
 
     return (
-        <aside className="fixed left-0 top-0 bottom-0 w-64 bg-[#0f0f0f] border-r border-white/5 flex flex-col z-50 hidden md:flex">
+        <aside className="fixed left-0 top-0 bottom-0 w-64 bg-bg-primary border-r border-white/5 flex flex-col z-50 hidden md:flex">
             {/* Logo Area */}
             <div className="p-6 flex items-center gap-3">
                 <div className="w-8 h-8 bg-gradient-to-tr from-[#3390ec] to-[#89216B] rounded-xl flex items-center justify-center shadow-lg shadow-purple-500/20">
@@ -81,7 +81,7 @@ const Sidebar = ({ activeTab, onTabChange, onCreateClick }) => {
             </div>
 
             {/* User Stats / Profile Mini */}
-            <div className="p-4 border-t border-white/5 bg-[#1c1c1e]/50">
+            <div className="p-4 border-t border-white/5 bg-bg-secondary/50">
                 <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 overflow-hidden border border-white/10">
                         {user?.avatar_url ? (

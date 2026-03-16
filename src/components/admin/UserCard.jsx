@@ -4,7 +4,7 @@ import UserActions from './UserActions';
 
 const UserCard = ({ user, editingUser, setEditingUser, newBalance, setNewBalance, handleUpdateBalance }) => {
     return (
-        <div className="bg-[#2c2c2e] p-4 rounded-[16px] flex items-center justify-between border border-white/5">
+        <div className="bg-bg-elevated p-4 rounded-card flex items-center justify-between border border-white/5">
             <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden shrink-0">
                     {user.avatar_url ? <img src={user.avatar_url} className="w-full h-full object-cover" /> : <Users size={18} />}

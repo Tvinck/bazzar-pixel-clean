@@ -378,7 +378,7 @@ const GenerationView = ({ onOpenPayment }) => {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans flex flex-col md:max-w-3xl md:mx-auto relative overflow-x-hidden selection:bg-[#3390ec]/30">
+        <div className="min-h-screen bg-black text-white font-sans flex flex-col md:max-w-3xl md:mx-auto relative overflow-x-hidden selection:bg-accent-blue/30">
             {isVideoMode ? (
                 <SEO 
                     title="Генерация видео — Bazzar Pixel"
@@ -396,18 +396,18 @@ const GenerationView = ({ onOpenPayment }) => {
                 <motion.div
                     animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.5, 0.3], x: [0, 50, 0], y: [0, 30, 0] }}
                     transition={{ duration: 15, repeat: Infinity, ease: "easeInOut" }}
-                    className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-[#3390ec]/10 blur-[120px]"
+                    className="absolute -top-[20%] -left-[10%] w-[70vw] h-[70vw] rounded-full bg-accent-blue/10 blur-[120px]"
                 />
                 <motion.div
                     animate={{ scale: [1, 1.3, 1], opacity: [0.2, 0.4, 0.2], x: [0, -40, 0], y: [0, -50, 0] }}
                     transition={{ duration: 20, repeat: Infinity, ease: "easeInOut", delay: 2 }}
-                    className="absolute top-[20%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-purple-500/10 blur-[100px]"
+                    className="absolute top-[20%] -right-[20%] w-[60vw] h-[60vw] rounded-full bg-accent-purple/10 blur-[100px]"
                 />
             </div>
             
             <div className="flex items-center justify-between px-4 py-3 sticky top-0 bg-black/80 backdrop-blur-xl z-30 pt-[calc(env(safe-area-inset-top)+10px)] border-b border-white/5 shadow-sm">
                 <button onClick={() => { playClick(); navigate(-1); }} className="w-10 h-10 flex items-center justify-center -ml-2 active:opacity-60 bg-white/5 rounded-full backdrop-blur-md">
-                    <ChevronDown className="rotate-90 text-[#007aff]" size={24} />
+                    <ChevronDown className="rotate-90 text-accent-blue" size={24} />
                 </button>
                 <h1 className="text-[18px] font-bold tracking-tight flex-1 text-center mr-6 text-white drop-shadow-sm">
                     {isVideoMode ? 'Генерация видео' : 'Генерация фото'}

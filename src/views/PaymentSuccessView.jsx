@@ -76,10 +76,10 @@ const PaymentSuccessView = () => {
 
             {status === 'checking' && (
                 <div className="flex flex-col items-center gap-6 relative z-10">
-                    <div className="w-16 h-16 border-4 border-[#007aff] border-t-white rounded-full animate-spin"></div>
+                    <div className="w-16 h-16 border-4 border-accent-blue border-t-white rounded-full animate-spin"></div>
                     <div>
                         <h2 className="text-[22px] font-bold text-white mb-2 tracking-tight">Проверяем...</h2>
-                        <p className="text-[#8e8e93] text-[15px]">Подключение к платёжному шлюзу</p>
+                        <p className="text-text-secondary text-[15px]">Подключение к платёжному шлюзу</p>
                     </div>
                 </div>
             )}
@@ -90,18 +90,18 @@ const PaymentSuccessView = () => {
                     animate={{ scale: 1, opacity: 1 }}
                     className="flex flex-col items-center gap-6 relative z-10"
                 >
-                    <div className="w-20 h-20 bg-[#34c759] rounded-full flex items-center justify-center relative">
+                    <div className="w-20 h-20 bg-accent-blue rounded-full flex items-center justify-center relative">
                         <svg className="w-10 h-10 text-white relative z-10" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3.5} d="M5 13l4 4L19 7" />
                         </svg>
                     </div>
                     <div>
                         <h2 className="text-[22px] font-bold text-white mb-2 tracking-tight">Успешно!</h2>
-                        <p className="text-[#8e8e93] text-[15px]">Ваш баланс обновлён</p>
+                        <p className="text-text-secondary text-[15px]">Ваш баланс обновлён</p>
                     </div>
                     <button
                         onClick={() => navigate('/profile')}
-                        className="mt-6 px-8 py-3.5 bg-[#007aff] text-white rounded-[12px] text-[17px] font-semibold transition-all active:scale-[0.97]"
+                        className="mt-6 px-8 py-3.5 bg-accent-blue text-white rounded-input text-[17px] font-semibold transition-all active:scale-[0.97]"
                     >
                         Вернуться в профиль
                     </button>

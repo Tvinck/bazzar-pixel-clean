@@ -274,14 +274,14 @@ const TemplateView = ({ onOpenPayment }) => {
         }
     };
 
-    if (isLoading || !template) return <div className="min-h-screen bg-[#1c1c1e] flex items-center justify-center text-white"><div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>;
+    if (isLoading || !template) return <div className="min-h-screen bg-bg-secondary flex items-center justify-center text-white"><div className="w-8 h-8 border-2 border-white/20 border-t-white rounded-full animate-spin" /></div>;
 
     const isReady = selectedFiles.filter(Boolean).length >= (template.requiredFilesCount || 1);
 
     return (
-        <div className="min-h-screen bg-[#1c1c1e] text-white flex flex-col font-sans md:max-w-3xl md:mx-auto">
+        <div className="min-h-screen bg-bg-secondary text-white flex flex-col font-sans md:max-w-3xl md:mx-auto">
             {/* --- HEADER (No Back Button) --- */}
-            <div className="flex items-center justify-between px-4 py-3 bg-[#1c1c1e] sticky top-0 z-30 pt-[calc(env(safe-area-inset-top)+10px)]">
+            <div className="flex items-center justify-between px-4 py-3 bg-bg-secondary sticky top-0 z-30 pt-[calc(env(safe-area-inset-top)+10px)]">
                 <div className="w-8" />
                 <h1 className="text-[17px] font-semibold text-center absolute left-1/2 -translate-x-1/2">Создать</h1>
                 <div className="flex items-center gap-1.5 bg-white/10 px-2.5 py-1 rounded-full ml-auto">
@@ -299,7 +299,7 @@ const TemplateView = ({ onOpenPayment }) => {
                             <input type="file" accept="image/*" onChange={(e) => handleFileChange(e, i)} className="absolute inset-0 z-20 opacity-0 cursor-pointer w-full h-full" />
 
                             {previewUrls[i] ? (
-                                <div className="w-full h-full rounded-[16px] overflow-hidden bg-[#2c2c2e] relative border border-white/10 shadow-lg group cursor-pointer">
+                                <div className="w-full h-full rounded-card overflow-hidden bg-bg-elevated relative border border-white/10 shadow-lg group cursor-pointer">
                                     <img src={getCDNUrl(previewUrls[i])} loading="lazy" decoding="async" alt="Preview" className="w-full h-full object-cover group-hover:opacity-60 transition-opacity duration-300" />
 
                                     {/* Edit Overlay */}
@@ -317,7 +317,7 @@ const TemplateView = ({ onOpenPayment }) => {
                                     </button>
                                 </div>
                             ) : (
-                                <div className="w-full h-full bg-[#3390ec]/10 rounded-[16px] flex flex-col items-center justify-center gap-1.5 border-2 border-dashed border-[#3390ec]/30 active:scale-95 transition-transform hover:bg-[#3390ec]/15">
+                                <div className="w-full h-full bg-accent-blue/10 rounded-card flex flex-col items-center justify-center gap-1.5 border-2 border-dashed border-[#3390ec]/30 active:scale-95 transition-transform hover:bg-accent-blue/15">
                                     <Upload size={20} className="text-[#3390ec]" strokeWidth={2.5} />
                                     <span className="text-[#3390ec] text-[10px] font-bold uppercase tracking-widest text-center leading-none">Фото {i + 1}</span>
                                 </div>
@@ -327,25 +327,25 @@ const TemplateView = ({ onOpenPayment }) => {
                 </div>
 
                 {/* --- IDEA & TEMPLATES TABS --- */}
-                <div className="bg-[#1c1c1e] rounded-[24px] border border-white/5 shadow-lg overflow-hidden flex flex-col">
+                <div className="bg-bg-secondary rounded-[24px] border border-white/5 shadow-lg overflow-hidden flex flex-col">
                     {/* Tab Headers */}
-                    <div className="flex border-b border-white/5 bg-[#2c2c2e]/30 p-1">
+                    <div className="flex border-b border-white/5 bg-bg-elevated/30 p-1">
                         <button
                             onClick={() => { setActiveTab('templates'); playClick(); }}
-                            className={`flex-1 py-3 text-[13px] font-bold flex items-center justify-center gap-2 transition-all relative rounded-[20px] ${activeTab === 'templates' ? 'bg-[#3390ec] text-white shadow-lg shadow-[#3390ec]/20' : 'text-gray-500 hover:text-gray-300'}`}
+                            className={`flex-1 py-3 text-[13px] font-bold flex items-center justify-center gap-2 transition-all relative rounded-card ${activeTab === 'templates' ? 'bg-accent-blue text-white shadow-lg shadow-[#3390ec]/20' : 'text-gray-500 hover:text-gray-300'}`}
                         >
                             <LayoutGrid size={16} /> Похожие
                         </button>
                         <button
                             onClick={() => { setActiveTab('edit'); playClick(); }}
-                            className={`flex-1 py-3 text-[13px] font-bold flex items-center justify-center gap-2 transition-all relative rounded-[20px] ${activeTab === 'edit' ? 'bg-[#3390ec] text-white shadow-lg shadow-[#3390ec]/20' : 'text-gray-500 hover:text-gray-300'}`}
+                            className={`flex-1 py-3 text-[13px] font-bold flex items-center justify-center gap-2 transition-all relative rounded-card ${activeTab === 'edit' ? 'bg-accent-blue text-white shadow-lg shadow-[#3390ec]/20' : 'text-gray-500 hover:text-gray-300'}`}
                         >
                             <Edit3 size={16} /> Редактировать
                         </button>
                     </div>
 
                     {/* Tab Content */}
-                    <div className="p-4 bg-[#2c2c2e]/10 min-h-[140px] relative">
+                    <div className="p-4 bg-bg-elevated/10 min-h-[140px] relative">
                         <AnimatePresence mode="popLayout" initial={false}>
                             {activeTab === 'templates' ? (
                                 <motion.div
@@ -362,7 +362,7 @@ const TemplateView = ({ onOpenPayment }) => {
                                                 <button
                                                     key={t.id}
                                                     onClick={() => { playClick(); navigate(`/template/${t.id}`, { replace: true }); }}
-                                                    className="flex-shrink-0 w-24 aspect-[3/4] rounded-[16px] overflow-hidden relative border border-white/10 active:scale-95 transition-transform shadow-md group"
+                                                    className="flex-shrink-0 w-24 aspect-[3/4] rounded-card overflow-hidden relative border border-white/10 active:scale-95 transition-transform shadow-md group"
                                                 >
                                                     <img src={getCDNUrl(t.src)} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                                 </button>
@@ -370,9 +370,9 @@ const TemplateView = ({ onOpenPayment }) => {
                                             {similarTemplates.length > 5 && (
                                                 <button
                                                     onClick={() => { playClick(); navigate('/gallery'); }}
-                                                    className="flex-shrink-0 w-24 aspect-[3/4] rounded-[16px] overflow-hidden relative border border-white/10 active:scale-95 transition-transform shadow-md bg-[#2c2c2e] flex flex-col items-center justify-center gap-2 hover:bg-[#323236]"
+                                                    className="flex-shrink-0 w-24 aspect-[3/4] rounded-card overflow-hidden relative border border-white/10 active:scale-95 transition-transform shadow-md bg-bg-elevated flex flex-col items-center justify-center gap-2 hover:bg-[#323236]"
                                                 >
-                                                    <div className="w-8 h-8 rounded-full bg-[#1c1c1e] flex items-center justify-center">
+                                                    <div className="w-8 h-8 rounded-full bg-bg-secondary flex items-center justify-center">
                                                         <ChevronRight size={16} className="text-[#3390ec]" />
                                                     </div>
                                                     <span className="text-[11px] font-bold text-[#3390ec] text-center leading-tight">Показать<br />больше</span>
@@ -407,14 +407,14 @@ const TemplateView = ({ onOpenPayment }) => {
                 {/* --- MODEL SELECTOR (Compact) --- */}
                 <div>
                     <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3 ml-1">Модель нейросети</div>
-                    <div className="bg-[#2c2c2e]/50 rounded-[20px] p-1.5 flex gap-2 overflow-x-auto no-scrollbar mb-3 border border-white/5">
+                    <div className="bg-bg-elevated/50 rounded-card p-1.5 flex gap-2 overflow-x-auto no-scrollbar mb-3 border border-white/5">
                         {compatibleModels.map(model => (
                             <button
                                 key={model.id}
                                 onClick={() => { setSelectedModel(model.id); playClick(); }}
                                 className={`px-4 py-2.5 rounded-xl text-[13px] font-bold transition-all whitespace-nowrap flex items-center gap-2 flex-shrink-0
                                     ${selectedModel === model.id
-                                        ? 'bg-[#3390ec] text-white shadow-lg shadow-[#3390ec]/20'
+                                        ? 'bg-accent-blue text-white shadow-lg shadow-[#3390ec]/20'
                                         : 'text-gray-400 hover:text-white hover:bg-white/5'
                                     }`}
                             >
@@ -430,7 +430,7 @@ const TemplateView = ({ onOpenPayment }) => {
                             <p className="flex-1 mr-4 leading-relaxed font-medium">
                                 {compatibleModels.find(m => m.id === selectedModel).label}
                             </p>
-                            <div className="flex items-center gap-1.5 bg-[#3390ec]/20 text-[#3390ec] px-3 py-1.5 rounded-full text-[11px] font-black flex-shrink-0 border border-[#3390ec]/20">
+                            <div className="flex items-center gap-1.5 bg-accent-blue/20 text-[#3390ec] px-3 py-1.5 rounded-full text-[11px] font-black flex-shrink-0 border border-[#3390ec]/20">
                                 <Zap size={12} className="fill-current" />
                                 {compatibleModels.find(m => m.id === selectedModel).cost}
                             </div>
@@ -451,7 +451,7 @@ const TemplateView = ({ onOpenPayment }) => {
                                         onClick={() => { setAspectRatio(ratio); playClick(); }}
                                         className={`py-3.5 rounded-xl text-[13px] font-bold transition-all border ${isSelected
                                             ? 'bg-white text-black border-white shadow-lg shadow-white/10 scale-105'
-                                            : 'bg-[#2c2c2e] text-gray-400 border-transparent hover:bg-[#323236]'
+                                            : 'bg-bg-elevated text-gray-400 border-transparent hover:bg-[#323236]'
                                             }`}
                                     >
                                         {ratio}
@@ -466,13 +466,13 @@ const TemplateView = ({ onOpenPayment }) => {
             </div>
 
             {/* --- FOOTER BUTTON --- */}
-            <div className="fixed bottom-0 left-0 right-0 p-4 pb-8 bg-[#1c1c1e]/90 backdrop-blur-xl border-t border-white/5 z-40">
+            <div className="fixed bottom-0 left-0 right-0 p-4 pb-8 bg-bg-secondary/90 backdrop-blur-xl border-t border-white/5 z-40">
                 <button
                     onClick={handleGenerate}
                     disabled={isProcessing}
-                    className={`w-full py-4 rounded-[20px] flex items-center justify-center gap-2 text-[17px] font-bold transition-all shadow-xl ${isReady && !isProcessing
-                        ? 'bg-[#3390ec] text-white shadow-[0_8px_30px_rgba(51,144,236,0.3)] hover:brightness-110 active:scale-[0.98]'
-                        : 'bg-[#2c2c2e] text-white/30 shadow-none'
+                    className={`w-full py-4 rounded-card flex items-center justify-center gap-2 text-[17px] font-bold transition-all shadow-xl ${isReady && !isProcessing
+                        ? 'bg-accent-blue text-white shadow-[0_8px_30px_rgba(51,144,236,0.3)] hover:brightness-110 active:scale-[0.98]'
+                        : 'bg-bg-elevated text-white/30 shadow-none'
                         }`}
                 >
                     {isProcessing ? (

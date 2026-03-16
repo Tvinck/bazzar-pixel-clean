@@ -122,7 +122,7 @@ export const SpringProgress = ({ progress, className = '' }) => {
         <div className={`w-full h-2 bg-white/10 rounded-full overflow-hidden ${className}`}>
             <animated.div
                 style={springProps}
-                className="h-full bg-[#3390ec] rounded-full"
+                className="h-full bg-accent-blue rounded-full"
             />
         </div>
     );

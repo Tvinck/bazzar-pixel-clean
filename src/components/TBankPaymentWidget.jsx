@@ -246,7 +246,7 @@ const TBankPaymentWidget = ({
                                 setLoading(false);
                             }
                         }}
-                        className="w-full py-4 rounded-[16px] bg-[#ffe646] text-black font-bold text-[15px] hover:brightness-105 active:scale-[0.98] transition-all shadow-lg shadow-yellow-500/20 flex items-center justify-center gap-2"
+                        className="w-full py-4 rounded-card bg-[#ffe646] text-black font-bold text-[15px] hover:brightness-105 active:scale-[0.98] transition-all shadow-lg shadow-yellow-500/20 flex items-center justify-center gap-2"
                     >
                         <span>Оплатить {amount} ₽</span>
                     </button>

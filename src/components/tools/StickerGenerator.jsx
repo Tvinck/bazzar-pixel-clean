@@ -228,10 +228,10 @@ const StickerGenerator = ({ isOpen, onClose }) => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="fixed inset-0 bg-[#0f0f0f] z-[110] flex flex-col overflow-hidden"
+                className="fixed inset-0 bg-bg-primary z-[110] flex flex-col overflow-hidden"
             >
                 {/* Header */}
-                <div className="flex justify-between items-center px-4 py-3 bg-[#1c1c1e] border-b border-white/5 shrink-0">
+                <div className="flex justify-between items-center px-4 py-3 bg-bg-secondary border-b border-white/5 shrink-0">
                     <h2 className="text-white font-bold flex items-center gap-2 text-base">
                         <Smile className="text-yellow-400" size={20} /> AI Стикеры
                     </h2>
@@ -249,7 +249,7 @@ const StickerGenerator = ({ isOpen, onClose }) => {
                                 {/* 1. Upload Face */}
                                 <div className="space-y-2">
                                     <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                                        <span className="w-5 h-5 rounded-full bg-[#3390ec] text-white text-[10px] font-black flex items-center justify-center">1</span>
+                                        <span className="w-5 h-5 rounded-full bg-accent-blue text-white text-[10px] font-black flex items-center justify-center">1</span>
                                         Загрузите фото
                                     </label>
                                     <div className="w-full h-44 bg-white/[0.03] rounded-2xl border-2 border-dashed border-white/10 flex items-center justify-center relative overflow-hidden group hover:border-[#3390ec]/50 transition-all">
@@ -268,7 +268,7 @@ const StickerGenerator = ({ isOpen, onClose }) => {
                                             </div>
                                         ) : (
                                             <div className="text-center p-4">
-                                                <div className="w-12 h-12 bg-[#3390ec]/10 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                                                <div className="w-12 h-12 bg-accent-blue/10 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                                                     <Upload size={24} className="text-[#3390ec]" />
                                                 </div>
                                                 <span className="text-xs font-medium text-slate-400">Загрузите селфи</span>
@@ -282,7 +282,7 @@ const StickerGenerator = ({ isOpen, onClose }) => {
                                 {/* 2. Category Tabs */}
                                 <div className="space-y-2">
                                     <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                                        <span className="w-5 h-5 rounded-full bg-[#3390ec] text-white text-[10px] font-black flex items-center justify-center">2</span>
+                                        <span className="w-5 h-5 rounded-full bg-accent-blue text-white text-[10px] font-black flex items-center justify-center">2</span>
                                         Выберите категорию
                                     </label>
 
@@ -310,7 +310,7 @@ const StickerGenerator = ({ isOpen, onClose }) => {
                                                 key={pack.id}
                                                 onClick={() => { setSelectedPack(pack); setSelectedStickers({}); playClick(); }}
                                                 className={`shrink-0 px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${selectedPack.id === pack.id
-                                                    ? 'bg-[#3390ec] text-white shadow-lg shadow-[#3390ec]/20'
+                                                    ? 'bg-accent-blue text-white shadow-lg shadow-[#3390ec]/20'
                                                     : 'bg-white/5 text-slate-400 hover:bg-white/10'
                                                     }`}
                                             >
@@ -325,7 +325,7 @@ const StickerGenerator = ({ isOpen, onClose }) => {
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <label className="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
-                                            <span className="w-5 h-5 rounded-full bg-[#3390ec] text-white text-[10px] font-black flex items-center justify-center">3</span>
+                                            <span className="w-5 h-5 rounded-full bg-accent-blue text-white text-[10px] font-black flex items-center justify-center">3</span>
                                             Выберите стикеры
                                         </label>
                                         <button
@@ -345,7 +345,7 @@ const StickerGenerator = ({ isOpen, onClose }) => {
                                                     whileTap={{ scale: 0.95 }}
                                                     onClick={() => toggleSticker(sticker.id)}
                                                     className={`relative p-3 rounded-2xl cursor-pointer transition-all flex flex-col items-center gap-2 ${isSelected
-                                                        ? 'bg-[#3390ec]/15 border-2 border-[#3390ec]/60 ring-2 ring-[#3390ec]/10'
+                                                        ? 'bg-accent-blue/15 border-2 border-[#3390ec]/60 ring-2 ring-[#3390ec]/10'
                                                         : 'bg-white/[0.03] border-2 border-transparent hover:bg-white/[0.06]'
                                                         }`}
                                                 >
@@ -378,7 +378,7 @@ const StickerGenerator = ({ isOpen, onClose }) => {
                                 <div
                                     onClick={() => setUseBranding(!useBranding)}
                                     className={`p-3 rounded-xl border transition-all cursor-pointer flex items-center gap-3 ${useBranding
-                                        ? 'bg-purple-500/10 border-purple-500/30'
+                                        ? 'bg-accent-purple/10 border-purple-500/30'
                                         : 'bg-white/[0.02] border-white/5'
                                         }`}
                                 >
@@ -528,7 +528,7 @@ const StickerGenerator = ({ isOpen, onClose }) => {
                                                         <button
                                                             onClick={() => sendToBot(sticker, idx)}
                                                             disabled={isSending[idx]}
-                                                            className="w-9 h-9 rounded-full bg-[#3390ec] text-white flex items-center justify-center hover:bg-[#2d7dd2] transition disabled:opacity-50"
+                                                            className="w-9 h-9 rounded-full bg-accent-blue text-white flex items-center justify-center hover:bg-[#2d7dd2] transition disabled:opacity-50"
                                                         >
                                                             {isSending[idx] ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                                                         </button>

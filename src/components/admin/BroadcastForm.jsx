@@ -13,7 +13,7 @@ const BroadcastForm = ({
     isSending, handleSendMessage
 }) => {
     return (
-        <div className="bg-[#2c2c2e] p-4 rounded-[16px] border border-white/5 space-y-4">
+        <div className="bg-bg-elevated p-4 rounded-card border border-white/5 space-y-4">
             <h2 className="text-lg font-bold flex items-center gap-2">
                 <Send size={20} />
                 Отправка сообщений
@@ -23,7 +23,7 @@ const BroadcastForm = ({
             <div className="flex bg-black/20 p-1 rounded-lg">
                 <button
                     onClick={() => { setIsBroadcastMode(false); setSelectedUserForMessage(null); }}
-                    className={`flex-1 py-2 rounded-md text-[13px] font-medium transition-all ${!isBroadcastMode ? 'bg-[#007aff] text-white' : 'text-gray-400'}`}
+                    className={`flex-1 py-2 rounded-md text-[13px] font-medium transition-all ${!isBroadcastMode ? 'bg-accent-blue text-white' : 'text-gray-400'}`}
                 >
                     Личное
                 </button>
@@ -39,7 +39,7 @@ const BroadcastForm = ({
                 <div className="space-y-2 animate-in fade-in zoom-in duration-200">
                     <label className="text-[11px] text-gray-500 uppercase">Сегмент аудитории</label>
                     <select
-                        className="w-full bg-black/20 rounded-[12px] p-3 text-[13px] outline-none text-white appearance-none"
+                        className="w-full bg-black/20 rounded-input p-3 text-[13px] outline-none text-white appearance-none"
                         value={broadcastSegment}
                         onChange={e => setBroadcastSegment(e.target.value)}
                     >
@@ -57,7 +57,7 @@ const BroadcastForm = ({
                 <div className="space-y-2">
                     <label className="text-[11px] text-gray-500 uppercase">Получатель</label>
                     {selectedUserForMessage ? (
-                        <div className="flex items-center justify-between bg-black/20 p-3 rounded-[12px]">
+                        <div className="flex items-center justify-between bg-black/20 p-3 rounded-input">
                             <div className="flex items-center gap-3">
                                 <div className="w-8 h-8 rounded-full bg-white/10 overflow-hidden shrink-0">
                                     {selectedUserForMessage.avatar_url && <img src={selectedUserForMessage.avatar_url} className="w-full h-full object-cover" />}
@@ -73,13 +73,13 @@ const BroadcastForm = ({
                         <div className="relative">
                             <Search className="absolute left-3 top-3 text-gray-500" size={16} />
                             <input
-                                className="w-full bg-black/20 rounded-[12px] pl-10 pr-4 py-3 text-[13px] outline-none text-white placeholder:text-gray-600"
+                                className="w-full bg-black/20 rounded-input pl-10 pr-4 py-3 text-[13px] outline-none text-white placeholder:text-gray-600"
                                 placeholder="Найти пользователя..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                             />
                             {searchQuery && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1e] border border-white/10 rounded-[12px] overflow-hidden z-20 max-h-48 overflow-y-auto shadow-2xl">
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-bg-secondary border border-white/10 rounded-input overflow-hidden z-20 max-h-48 overflow-y-auto shadow-2xl">
                                     {(() => {
                                         const safeUsers = Array.isArray(users) ? users : [];
                                         const filteredUsersList = safeUsers.filter(u => {
@@ -113,7 +113,7 @@ const BroadcastForm = ({
                 <div>
                     <label className="text-[11px] text-gray-500 uppercase block mb-1">Сообщение</label>
                     <textarea
-                        className="w-full bg-black/20 rounded-[12px] p-3 text-[13px] outline-none text-white placeholder:text-gray-600 min-h-[100px]"
+                        className="w-full bg-black/20 rounded-input p-3 text-[13px] outline-none text-white placeholder:text-gray-600 min-h-[100px]"
                         placeholder="Введите текст сообщения..."
                         value={messageText}
                         onChange={e => setMessageText(e.target.value)}
@@ -124,13 +124,13 @@ const BroadcastForm = ({
                     <label className="text-[11px] text-gray-500 uppercase block mb-1">Медиа (Опционально)</label>
                     <div className="flex gap-2">
                         <input
-                            className="flex-1 bg-black/20 rounded-[12px] p-3 text-[13px] outline-none text-white placeholder:text-gray-600"
+                            className="flex-1 bg-black/20 rounded-input p-3 text-[13px] outline-none text-white placeholder:text-gray-600"
                             placeholder="URL картинки или видео"
                             value={mediaUrl}
                             onChange={e => setMediaUrl(e.target.value)}
                         />
                         <select
-                            className="bg-black/20 rounded-[12px] px-3 outline-none text-[12px]"
+                            className="bg-black/20 rounded-input px-3 outline-none text-[12px]"
                             value={mediaType}
                             onChange={e => setMediaType(e.target.value)}
                         >
@@ -154,7 +154,7 @@ const BroadcastForm = ({
             <button
                 onClick={handleSendMessage}
                 disabled={isSending || (!isBroadcastMode && !selectedUserForMessage)}
-                className={`w-full py-3.5 rounded-[12px] font-bold text-white flex items-center justify-center gap-2 transition-all ${isSending ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#007aff] hover:bg-blue-600 active:scale-[0.98]'}`}
+                className={`w-full py-3.5 rounded-input font-bold text-white flex items-center justify-center gap-2 transition-all ${isSending ? 'bg-gray-600 cursor-not-allowed' : 'bg-accent-blue hover:bg-accent-blue active:scale-[0.98]'}`}
             >
                 {isSending ? <Loader2 className="animate-spin" /> : <Send size={18} />}
                 {isBroadcastMode ? 'Начать рассылку' : 'Отправить сообщение'}

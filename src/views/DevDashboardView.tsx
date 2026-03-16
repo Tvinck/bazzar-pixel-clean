@@ -188,7 +188,7 @@ const { jobId } = await response.json();`
                             <button
                                 onClick={handleCreateKey}
                                 disabled={!newKeyName.trim() || keys.length >= 5}
-                                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 disabled:bg-white/10 rounded-xl text-sm font-medium transition-all active:scale-95"
+                                className="px-4 py-2 bg-blue-500 hover:bg-accent-blue disabled:opacity-50 disabled:bg-white/10 rounded-xl text-sm font-medium transition-all active:scale-95"
                             >
                                 <Plus size={18} />
                             </button>

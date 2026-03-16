@@ -48,9 +48,9 @@ const PromptCard = ({ item, onSelect }: { item: PromptItem, onSelect: (item: Pro
             layout
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="bg-[#1c1c1e] rounded-[16px] overflow-hidden border border-white/5 flex flex-col group active:scale-[0.98] transition-transform"
+            className="bg-bg-secondary rounded-card overflow-hidden border border-white/5 flex flex-col group active:scale-[0.98] transition-transform"
         >
-            <div className="aspect-square relative overflow-hidden bg-[#2c2c2e]">
+            <div className="aspect-square relative overflow-hidden bg-bg-elevated">
                 {item.preview_url ? (
                     <img
                         src={item.preview_url}
@@ -68,7 +68,7 @@ const PromptCard = ({ item, onSelect }: { item: PromptItem, onSelect: (item: Pro
                     <span className="text-[11px] font-bold text-white">{isFree ? 'Free' : `${price}`}</span>
                 </div>
                 {item.is_featured && (
-                    <div className="absolute top-2 left-2 bg-[#007aff] px-2 py-1 rounded-full">
+                    <div className="absolute top-2 left-2 bg-accent-blue px-2 py-1 rounded-full">
                         <span className="text-[10px] font-bold text-white uppercase tracking-wider">Top</span>
                     </div>
                 )}
@@ -86,14 +86,14 @@ const PromptCard = ({ item, onSelect }: { item: PromptItem, onSelect: (item: Pro
 
                 <button
                     onClick={() => onSelect(item)}
-                    className={`mt-auto w-full text-white text-[13px] font-bold py-2.5 rounded-[10px] transition-all flex items-center justify-center gap-1.5 active:scale-[0.97]
+                    className={`mt-auto w-full text-white text-[13px] font-bold py-2.5 rounded-input transition-all flex items-center justify-center gap-1.5 active:scale-[0.97]
                         ${isFree
-                            ? 'bg-[#2c2c2e] hover:bg-[#3a3a3c]'
+                            ? 'bg-bg-elevated hover:bg-bg-elevated'
                             : 'bg-gradient-to-r from-blue-600 to-blue-500 shadow-lg shadow-blue-500/20'
                         }`}
                 >
                     {isFree ? (
-                        <><Sparkles size={14} className="text-[#007aff]" /> Использовать</>
+                        <><Sparkles size={14} className="text-accent-blue" /> Использовать</>
                     ) : (
                         <><ShoppingCart size={14} /> Купить за {price} ⚡</>
                     )}
@@ -210,7 +210,7 @@ const PromptMarketView = () => {
             <div className="sticky top-0 z-30 bg-black/95 backdrop-blur-xl pt-[calc(env(safe-area-inset-top)+10px)] px-4 pb-3 border-b border-white/5">
                 <div className="flex items-center justify-between mb-4">
                     <button onClick={() => navigate(-1)} className="w-8 h-8 flex items-center justify-center -ml-2 active:opacity-60">
-                        <ChevronLeft size={28} className="text-[#007aff]" />
+                        <ChevronLeft size={28} className="text-accent-blue" />
                     </button>
                     <h1 className="text-[17px] font-bold tracking-tight text-center flex-1 mr-8">
                         {t('creation.marketplaceTitle')}
@@ -225,7 +225,7 @@ const PromptMarketView = () => {
                         placeholder={t('creation.searchPrompts')}
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-[#1c1c1e] rounded-[12px] py-2.5 pl-10 pr-4 text-[15px] outline-none focus:ring-1 focus:ring-[#007aff]/30 transition-shadow"
+                        className="w-full bg-bg-secondary rounded-input py-2.5 pl-10 pr-4 text-[15px] outline-none focus:ring-1 focus:ring-[#007aff]/30 transition-shadow"
                     />
                 </div>
             </div>
@@ -238,8 +238,8 @@ const PromptMarketView = () => {
                         onClick={() => { setActiveCategory(cat.id); playClick(); }}
                         className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-bold whitespace-nowrap transition-all
                             ${activeCategory === cat.id
-                                ? 'bg-[#007aff] text-white'
-                                : 'bg-[#1c1c1e] text-[#8e8e93] active:scale-95'
+                                ? 'bg-accent-blue text-white'
+                                : 'bg-bg-secondary text-text-secondary active:scale-95'
                             }`}
                     >
                         {cat.icon}
@@ -253,7 +253,7 @@ const PromptMarketView = () => {
                 {loading ? (
                     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {[1, 2, 4, 5].map(i => (
-                            <div key={i} className="aspect-[3/4] bg-[#1c1c1e] rounded-[16px] animate-pulse" />
+                            <div key={i} className="aspect-[3/4] bg-bg-secondary rounded-card animate-pulse" />
                         ))}
                     </div>
                 ) : filteredPrompts.length > 0 ? (
@@ -270,7 +270,7 @@ const PromptMarketView = () => {
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center py-20 text-center">
-                        <div className="w-16 h-16 bg-[#1c1c1e] rounded-full flex items-center justify-center text-gray-600 mb-4">
+                        <div className="w-16 h-16 bg-bg-secondary rounded-full flex items-center justify-center text-gray-600 mb-4">
                             <Search size={32} />
                         </div>
                         <h3 className="text-[17px] font-semibold text-white mb-1">{t('gallery.nothingFound')}</h3>
@@ -282,8 +282,8 @@ const PromptMarketView = () => {
             {/* Featured Banner at Bottom */}
             {!loading && filteredPrompts.length > 0 && (
                 <div className="px-4 mt-8 mb-4">
-                    <div className="bg-gradient-to-br from-[#007aff]/20 to-purple-600/20 border border-[#007aff]/20 rounded-[16px] p-4 flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[#007aff] rounded-[12px] flex items-center justify-center shadow-lg shadow-[#007aff]/30">
+                    <div className="bg-gradient-to-br from-[#007aff]/20 to-purple-600/20 border border-accent-blue/20 rounded-card p-4 flex items-center gap-4">
+                        <div className="w-12 h-12 bg-accent-blue rounded-input flex items-center justify-center shadow-lg shadow-[#007aff]/30">
                             <Sparkles className="text-white fill-current" size={24} />
                         </div>
                         <div className="flex-1">

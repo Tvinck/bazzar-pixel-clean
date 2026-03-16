@@ -683,7 +683,7 @@ const AdminView = () => {
 
     if (!isAdmin) {
         return (
-            <div className="min-h-screen bg-[#1c1c1e] flex flex-col items-center justify-center text-gray-500">
+            <div className="min-h-screen bg-bg-secondary flex flex-col items-center justify-center text-gray-500">
                 <ShieldAlert size={48} className="mb-4 text-red-500" />
                 <h2 className="text-xl font-bold">Доступ ограничен</h2>
             </div>
@@ -693,8 +693,8 @@ const AdminView = () => {
     // 2FA Gate — requires code verification before admin access
     if (isAdmin && !admin2FAVerified) {
         return (
-            <div className="min-h-screen bg-[#1c1c1e] flex flex-col items-center justify-center p-6">
-                <div className="bg-[#2c2c2e] rounded-[24px] p-8 max-w-sm w-full border border-white/10 shadow-2xl text-center">
+            <div className="min-h-screen bg-bg-secondary flex flex-col items-center justify-center p-6">
+                <div className="bg-bg-elevated rounded-[24px] p-8 max-w-sm w-full border border-white/10 shadow-2xl text-center">
                     <div className="w-16 h-16 rounded-full bg-yellow-500/20 flex items-center justify-center mx-auto mb-5">
                         <ShieldAlert size={32} className="text-yellow-500" />
                     </div>
@@ -708,7 +708,7 @@ const AdminView = () => {
                         value={admin2FACode}
                         onChange={(e) => setAdmin2FACode(e.target.value.replace(/\D/g, '').slice(0, 6))}
                         placeholder="000000"
-                        className="w-full bg-[#1c1c1e] text-center text-[32px] font-[900] tracking-[0.5em] text-white py-4 rounded-[14px] border border-white/10 outline-none focus:border-yellow-500/50 transition-colors placeholder:text-white/10 mb-4"
+                        className="w-full bg-bg-secondary text-center text-[32px] font-[900] tracking-[0.5em] text-white py-4 rounded-card border border-white/10 outline-none focus:border-yellow-500/50 transition-colors placeholder:text-white/10 mb-4"
                         autoFocus
                         onKeyDown={(e) => { if (e.key === 'Enter') handleVerify2FA(); }}
                     />
@@ -718,7 +718,7 @@ const AdminView = () => {
                     <button
                         onClick={handleVerify2FA}
                         disabled={admin2FACode.length !== 6 || admin2FALoading}
-                        className="w-full bg-yellow-500 text-black font-bold text-[15px] py-3.5 rounded-[14px] disabled:opacity-40 active:scale-[0.97] transition-all shadow-lg shadow-yellow-500/20"
+                        className="w-full bg-yellow-500 text-black font-bold text-[15px] py-3.5 rounded-card disabled:opacity-40 active:scale-[0.97] transition-all shadow-lg shadow-yellow-500/20"
                     >
                         {admin2FALoading ? (
                             <span className="w-5 h-5 border-2 border-black/20 border-t-black rounded-full animate-spin inline-block" />
@@ -750,13 +750,13 @@ const AdminView = () => {
     );
 
     return (
-        <div className="min-h-screen bg-[#1c1c1e] text-white font-sans pb-32 md:max-w-5xl md:mx-auto md:px-6">
-            <div className="sticky top-0 z-40 bg-[#1c1c1e]/90 backdrop-blur-md border-b border-white/5 px-4 pt-12 pb-3">
+        <div className="min-h-screen bg-bg-secondary text-white font-sans pb-32 md:max-w-5xl md:mx-auto md:px-6">
+            <div className="sticky top-0 z-40 bg-bg-secondary/90 backdrop-blur-md border-b border-white/5 px-4 pt-12 pb-3">
                 <div className="flex items-center justify-between mb-4">
                     <h1 className="text-2xl font-bold tracking-tight">Pixel Admin</h1>
                     <button
                         onClick={fetchData}
-                        className={`p-2 bg-[#2c2c2e] rounded-full text-white/50 hover:text-white ${isRefreshing ? 'animate-spin' : ''}`}
+                        className={`p-2 bg-bg-elevated rounded-full text-white/50 hover:text-white ${isRefreshing ? 'animate-spin' : ''}`}
                     >
                         <RefreshCw size={18} />
                     </button>
@@ -779,8 +779,8 @@ const AdminView = () => {
                             key={tab.id}
                             onClick={() => setActiveTab(tab.id)}
                             className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium transition-all whitespace-nowrap ${activeTab === tab.id
-                                ? 'bg-[#007aff] text-white shadow-lg shadow-blue-500/20'
-                                : 'bg-[#2c2c2e] text-gray-400 hover:text-white'
+                                ? 'bg-accent-blue text-white shadow-lg shadow-blue-500/20'
+                                : 'bg-bg-elevated text-gray-400 hover:text-white'
                                 }`}
                         >
                             <tab.icon size={14} />
@@ -794,7 +794,7 @@ const AdminView = () => {
 
                 {activeTab === 'system' && (
                     <div className="space-y-4">
-                        <div className="bg-[#2c2c2e] p-6 rounded-[20px] border border-white/5 space-y-6">
+                        <div className="bg-bg-elevated p-6 rounded-card border border-white/5 space-y-6">
                             <div className="flex items-center justify-between">
                                 <h2 className="text-xl font-bold flex items-center gap-3">
                                     <ShieldAlert className="text-blue-500" />
@@ -814,7 +814,7 @@ const AdminView = () => {
                                     { id: 'kie', label: 'Kie.ai AI Engine', status: systemHealth?.kie },
                                     { id: 'queue', label: 'Pg-Boss Queue Manager', status: systemHealth?.queue }
                                 ].map(svc => (
-                                    <div key={svc.id} className="bg-black/20 p-4 rounded-[16px] flex items-center justify-between">
+                                    <div key={svc.id} className="bg-black/20 p-4 rounded-card flex items-center justify-between">
                                         <div className="flex items-center gap-3">
                                             <div className={`w-3 h-3 rounded-full ${svc.status === 'healthy' ? 'bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.5)]' : svc.status === 'degraded' ? 'bg-yellow-500 shadow-[0_0_10px_rgba(234,179,8,0.5)]' : 'bg-red-500 shadow-[0_0_10px_rgba(239,68,68,0.5)]'}`} />
                                             <span className="font-medium text-[15px]">{svc.label}</span>
@@ -829,13 +829,13 @@ const AdminView = () => {
                             <div className="pt-4 border-t border-white/5">
                                 <label className="text-[11px] text-gray-500 uppercase font-bold tracking-widest block mb-4">Queue Depth (Real-time)</label>
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-black/40 p-5 rounded-[16px] border border-white/5">
+                                    <div className="bg-black/40 p-5 rounded-card border border-white/5">
                                         <div className="text-[24px] font-black text-blue-500">
                                             {metrics?.queue?.active || 0}
                                         </div>
                                         <div className="text-[10px] text-gray-500 uppercase mt-1">Active Jobs</div>
                                     </div>
-                                    <div className="bg-black/40 p-5 rounded-[16px] border border-white/5">
+                                    <div className="bg-black/40 p-5 rounded-card border border-white/5">
                                         <div className="text-[24px] font-black text-gray-400">
                                             {metrics?.queue?.waiting || 0}
                                         </div>
@@ -855,7 +855,7 @@ const AdminView = () => {
                     <div className="space-y-4">
                         <div className="flex gap-2 mb-4">
                             <input
-                                className="flex-1 bg-[#2c2c2e] border-none rounded-[14px] px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
+                                className="flex-1 bg-bg-elevated border-none rounded-card px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
                                 placeholder="Поиск по названию..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
@@ -868,7 +868,7 @@ const AdminView = () => {
                                     category: 'trends',
                                     media_type: 'image'
                                 })}
-                                className="bg-[#007aff] px-4 rounded-[14px] flex items-center justify-center text-white shadow-lg gap-2 active:scale-95 transition-transform cursor-pointer hover:bg-blue-600"
+                                className="bg-accent-blue px-4 rounded-card flex items-center justify-center text-white shadow-lg gap-2 active:scale-95 transition-transform cursor-pointer hover:bg-accent-blue"
                             >
                                 <Plus size={20} />
                                 <span className="text-[13px] font-bold hidden sm:inline">Добавить</span>
@@ -879,7 +879,7 @@ const AdminView = () => {
                         <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-2">
                             <button
                                 onClick={() => setSelectedCategoryFilter('all')}
-                                className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${selectedCategoryFilter === 'all' ? 'bg-white text-black' : 'bg-[#2c2c2e] text-white/70 hover:text-white'}`}
+                                className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${selectedCategoryFilter === 'all' ? 'bg-white text-black' : 'bg-bg-elevated text-white/70 hover:text-white'}`}
                             >
                                 Все
                             </button>
@@ -887,7 +887,7 @@ const AdminView = () => {
                                 <button
                                     key={c.slug}
                                     onClick={() => setSelectedCategoryFilter(c.slug)}
-                                    className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${selectedCategoryFilter === c.slug ? 'bg-white text-black' : 'bg-[#2c2c2e] text-white/70 hover:text-white'}`}
+                                    className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${selectedCategoryFilter === c.slug ? 'bg-white text-black' : 'bg-bg-elevated text-white/70 hover:text-white'}`}
                                 >
                                     {c.label}
                                 </button>
@@ -899,13 +899,13 @@ const AdminView = () => {
                                 <div
                                     key={t.id}
                                     onClick={() => setEditingTemplate(t)}
-                                    className="bg-[#2c2c2e] rounded-[16px] overflow-hidden relative cursor-pointer active:scale-95 transition-transform border border-white/5 group"
+                                    className="bg-bg-elevated rounded-card overflow-hidden relative cursor-pointer active:scale-95 transition-transform border border-white/5 group"
                                 >
                                     <div className="aspect-[9/16] bg-black/50 relative">
                                         {t.src && (t.media_type === 'video' ? (
                                             <video src={`${getCDNUrl(t.src)}#t=0.0,0.1`} className="w-full h-full object-cover" muted preload="metadata" />
                                         ) : (
-                                            <img src={getCDNUrl(t.src)} loading="lazy" decoding="async" className="w-full h-full object-cover" loading="lazy" />
+                                            <img src={getCDNUrl(t.src)} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                                         ))}
                                         {!t.is_active && (
                                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -913,7 +913,7 @@ const AdminView = () => {
                                             </div>
                                         )}
                                         {t.is_local && (
-                                            <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-[#007aff] rounded text-[9px] font-bold shadow-lg">
+                                            <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-accent-blue rounded text-[9px] font-bold shadow-lg">
                                                 LOCAL
                                             </div>
                                         )}
@@ -941,7 +941,7 @@ const AdminView = () => {
                     <div className="space-y-4">
                         <div className="flex gap-2 mb-4">
                             <input
-                                className="flex-1 bg-[#2c2c2e] border-none rounded-[14px] px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
+                                className="flex-1 bg-bg-elevated border-none rounded-card px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
                                 placeholder="Поиск звезд..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
@@ -952,7 +952,7 @@ const AdminView = () => {
                                     sort_order: stars.length + 1,
                                     is_active: true
                                 })}
-                                className="bg-[#007aff] px-4 rounded-[14px] flex items-center justify-center text-white shadow-lg gap-2 active:scale-95 transition-transform cursor-pointer hover:bg-blue-600"
+                                className="bg-accent-blue px-4 rounded-card flex items-center justify-center text-white shadow-lg gap-2 active:scale-95 transition-transform cursor-pointer hover:bg-accent-blue"
                             >
                                 <Plus size={20} />
                                 <span className="text-[13px] font-bold hidden sm:inline">Добавить</span>
@@ -964,7 +964,7 @@ const AdminView = () => {
                                 <div
                                     key={s.id}
                                     onClick={() => setEditingStar(s)}
-                                    className="bg-[#2c2c2e] rounded-[16px] overflow-hidden relative cursor-pointer active:scale-95 transition-transform border border-white/5 group"
+                                    className="bg-bg-elevated rounded-card overflow-hidden relative cursor-pointer active:scale-95 transition-transform border border-white/5 group"
                                 >
                                     <div className="aspect-[3/4] bg-black/50 relative">
                                         {s.image_url ? (
@@ -1003,7 +1003,7 @@ const AdminView = () => {
                 {activeTab === 'monitoring' && (
                     <div className="grid grid-cols-2 gap-3">
                         {recentGenerations.map((gen) => (
-                            <div key={gen.id} className="relative aspect-[3/4] bg-[#2c2c2e] rounded-[16px] overflow-hidden border border-white/5">
+                            <div key={gen.id} className="relative aspect-[3/4] bg-bg-elevated rounded-card overflow-hidden border border-white/5">
                                 {gen.type === 'video' ? (
                                     <video src={gen.result_url || gen.image_url} className="w-full h-full object-cover" muted loop autoPlay playsInline />
                                 ) : (
@@ -1025,7 +1025,7 @@ const AdminView = () => {
                 {/* --- MESSAGING --- */}
                 {activeTab === 'messages' && (
                     <div className="space-y-4">
-                        <div className="bg-[#2c2c2e] p-4 rounded-[16px] border border-white/5 space-y-4">
+                        <div className="bg-bg-elevated p-4 rounded-card border border-white/5 space-y-4">
                             <h2 className="text-lg font-bold flex items-center gap-2">
                                 <Send size={20} />
                                 Отправка сообщений
@@ -1035,7 +1035,7 @@ const AdminView = () => {
                             <div className="flex bg-black/20 p-1 rounded-lg">
                                 <button
                                     onClick={() => { setIsBroadcastMode(false); setSelectedUserForMessage(null); }}
-                                    className={`flex-1 py-2 rounded-md text-[13px] font-medium transition-all ${!isBroadcastMode ? 'bg-[#007aff] text-white' : 'text-gray-400'}`}
+                                    className={`flex-1 py-2 rounded-md text-[13px] font-medium transition-all ${!isBroadcastMode ? 'bg-accent-blue text-white' : 'text-gray-400'}`}
                                 >
                                     Личное
                                 </button>
@@ -1051,7 +1051,7 @@ const AdminView = () => {
                                 <div className="space-y-2 animate-in fade-in zoom-in duration-200">
                                     <label className="text-[11px] text-gray-500 uppercase">Сегмент аудитории</label>
                                     <select
-                                        className="w-full bg-black/20 rounded-[12px] p-3 text-[13px] outline-none text-white appearance-none"
+                                        className="w-full bg-black/20 rounded-input p-3 text-[13px] outline-none text-white appearance-none"
                                         value={broadcastSegment}
                                         onChange={e => setBroadcastSegment(e.target.value)}
                                     >
@@ -1069,7 +1069,7 @@ const AdminView = () => {
                                 <div className="space-y-2">
                                     <label className="text-[11px] text-gray-500 uppercase">Получатель</label>
                                     {selectedUserForMessage ? (
-                                        <div className="flex items-center justify-between bg-black/20 p-3 rounded-[12px]">
+                                        <div className="flex items-center justify-between bg-black/20 p-3 rounded-input">
                                             <div className="flex items-center gap-3">
                                                 <div className="w-8 h-8 rounded-full bg-white/10 overflow-hidden">
                                                     {selectedUserForMessage.avatar_url && <img src={selectedUserForMessage.avatar_url} className="w-full h-full object-cover" />}
@@ -1085,13 +1085,13 @@ const AdminView = () => {
                                         <div className="relative">
                                             <Search className="absolute left-3 top-3 text-gray-500" size={16} />
                                             <input
-                                                className="w-full bg-black/20 rounded-[12px] pl-10 pr-4 py-3 text-[13px] outline-none text-white placeholder:text-gray-600"
+                                                className="w-full bg-black/20 rounded-input pl-10 pr-4 py-3 text-[13px] outline-none text-white placeholder:text-gray-600"
                                                 placeholder="Найти пользователя..."
                                                 value={searchQuery}
                                                 onChange={e => setSearchQuery(e.target.value)}
                                             />
                                             {searchQuery && (
-                                                <div className="absolute top-full left-0 right-0 mt-2 bg-[#1c1c1e] border border-white/10 rounded-[12px] overflow-hidden z-10 max-h-48 overflow-y-auto shadow-2xl">
+                                                <div className="absolute top-full left-0 right-0 mt-2 bg-bg-secondary border border-white/10 rounded-input overflow-hidden z-10 max-h-48 overflow-y-auto shadow-2xl">
                                                     {(() => {
                                                         const safeUsers = Array.isArray(users) ? users : [];
                                                         const filteredUsersList = safeUsers.filter(u => {
@@ -1125,7 +1125,7 @@ const AdminView = () => {
                                 <div>
                                     <label className="text-[11px] text-gray-500 uppercase block mb-1">Сообщение</label>
                                     <textarea
-                                        className="w-full bg-black/20 rounded-[12px] p-3 text-[13px] outline-none text-white placeholder:text-gray-600 min-h-[100px]"
+                                        className="w-full bg-black/20 rounded-input p-3 text-[13px] outline-none text-white placeholder:text-gray-600 min-h-[100px]"
                                         placeholder="Введите текст сообщения..."
                                         value={messageText}
                                         onChange={e => setMessageText(e.target.value)}
@@ -1136,13 +1136,13 @@ const AdminView = () => {
                                     <label className="text-[11px] text-gray-500 uppercase block mb-1">Медиа (Опционально)</label>
                                     <div className="flex gap-2">
                                         <input
-                                            className="flex-1 bg-black/20 rounded-[12px] p-3 text-[13px] outline-none text-white placeholder:text-gray-600"
+                                            className="flex-1 bg-black/20 rounded-input p-3 text-[13px] outline-none text-white placeholder:text-gray-600"
                                             placeholder="URL картинки или видео"
                                             value={mediaUrl}
                                             onChange={e => setMediaUrl(e.target.value)}
                                         />
                                         <select
-                                            className="bg-black/20 rounded-[12px] px-3 outline-none text-[12px]"
+                                            className="bg-black/20 rounded-input px-3 outline-none text-[12px]"
                                             value={mediaType}
                                             onChange={e => setMediaType(e.target.value)}
                                         >
@@ -1166,7 +1166,7 @@ const AdminView = () => {
                             <button
                                 onClick={handleSendMessage}
                                 disabled={isSending || (!isBroadcastMode && !selectedUserForMessage)}
-                                className={`w-full py-3.5 rounded-[12px] font-bold text-white flex items-center justify-center gap-2 transition-all ${isSending ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#007aff] hover:bg-blue-600 active:scale-[0.98]'}`}
+                                className={`w-full py-3.5 rounded-input font-bold text-white flex items-center justify-center gap-2 transition-all ${isSending ? 'bg-gray-600 cursor-not-allowed' : 'bg-accent-blue hover:bg-accent-blue active:scale-[0.98]'}`}
                             >
                                 {isSending ? <Loader2 className="animate-spin" /> : <Send size={18} />}
                                 {isBroadcastMode ? 'Начать рассылку' : 'Отправить сообщение'}
@@ -1178,7 +1178,7 @@ const AdminView = () => {
                 {/* --- PUBLICATIONS --- */}
                 {activeTab === 'publications' && (
                     <div className="space-y-4">
-                        <div className="bg-[#2c2c2e] p-4 rounded-[16px] border border-white/5 space-y-4">
+                        <div className="bg-bg-elevated p-4 rounded-card border border-white/5 space-y-4">
                             <h2 className="text-lg font-bold flex items-center gap-2">
                                 <Send size={20} />
                                 Публикация в канал
@@ -1188,7 +1188,7 @@ const AdminView = () => {
                                 <div>
                                     <label className="text-[11px] text-gray-500 uppercase block mb-1">Канал / Чат</label>
                                     <input
-                                        className="w-full bg-black/20 rounded-[12px] p-3 text-[13px] outline-none text-white placeholder:text-gray-600"
+                                        className="w-full bg-black/20 rounded-input p-3 text-[13px] outline-none text-white placeholder:text-gray-600"
                                         placeholder="@channel_name или ID"
                                         value={pubChannel}
                                         onChange={e => setPubChannel(e.target.value)}
@@ -1200,7 +1200,7 @@ const AdminView = () => {
                                         <label className="text-[11px] text-gray-500 uppercase block mb-1">Дата (опц.)</label>
                                         <input
                                             type="date"
-                                            className="w-full bg-black/20 rounded-[12px] p-3 text-[13px] outline-none text-white appearance-none"
+                                            className="w-full bg-black/20 rounded-input p-3 text-[13px] outline-none text-white appearance-none"
                                             value={pubDate}
                                             onChange={e => setPubDate(e.target.value)}
                                         />
@@ -1209,7 +1209,7 @@ const AdminView = () => {
                                         <label className="text-[11px] text-gray-500 uppercase block mb-1">Время (опц.)</label>
                                         <input
                                             type="time"
-                                            className="w-full bg-black/20 rounded-[12px] p-3 text-[13px] outline-none text-white appearance-none"
+                                            className="w-full bg-black/20 rounded-input p-3 text-[13px] outline-none text-white appearance-none"
                                             value={pubTime}
                                             onChange={e => setPubTime(e.target.value)}
                                         />
@@ -1219,7 +1219,7 @@ const AdminView = () => {
                                 <div>
                                     <label className="text-[11px] text-gray-500 uppercase block mb-1">Текст поста</label>
                                     <textarea
-                                        className="w-full bg-black/20 rounded-[12px] p-3 text-[13px] outline-none text-white placeholder:text-gray-600 min-h-[140px]"
+                                        className="w-full bg-black/20 rounded-input p-3 text-[13px] outline-none text-white placeholder:text-gray-600 min-h-[140px]"
                                         placeholder="Markdown разметка поддерживается..."
                                         value={pubText}
                                         onChange={e => setPubText(e.target.value)}
@@ -1230,13 +1230,13 @@ const AdminView = () => {
                                     <label className="text-[11px] text-gray-500 uppercase block mb-1">Медиа</label>
                                     <div className="flex gap-2">
                                         <input
-                                            className="flex-1 bg-black/20 rounded-[12px] p-3 text-[13px] outline-none text-white placeholder:text-gray-600"
+                                            className="flex-1 bg-black/20 rounded-input p-3 text-[13px] outline-none text-white placeholder:text-gray-600"
                                             placeholder="URL картинки или видео"
                                             value={pubMediaUrl}
                                             onChange={e => setPubMediaUrl(e.target.value)}
                                         />
                                         <select
-                                            className="bg-black/20 rounded-[12px] px-3 outline-none text-[12px]"
+                                            className="bg-black/20 rounded-input px-3 outline-none text-[12px]"
                                             value={pubMediaType}
                                             onChange={e => setPubMediaType(e.target.value)}
                                         >
@@ -1260,7 +1260,7 @@ const AdminView = () => {
                             <button
                                 onClick={handlePublishToChannel}
                                 disabled={isPublishing || (!pubText && !pubMediaUrl)}
-                                className={`w-full py-3.5 rounded-[12px] font-bold text-white flex items-center justify-center gap-2 transition-all ${isPublishing ? 'bg-gray-600 cursor-not-allowed' : 'bg-[#007aff] hover:bg-blue-600 active:scale-[0.98]'}`}
+                                className={`w-full py-3.5 rounded-input font-bold text-white flex items-center justify-center gap-2 transition-all ${isPublishing ? 'bg-gray-600 cursor-not-allowed' : 'bg-accent-blue hover:bg-accent-blue active:scale-[0.98]'}`}
                             >
                                 {isPublishing ? <Loader2 className="animate-spin" /> : <Send size={18} />}
                                 {(pubDate && pubTime) ? 'Запланировать публикацию' : 'Опубликовать сейчас'}
@@ -1271,14 +1271,14 @@ const AdminView = () => {
                 {activeTab === 'users' && (
                     <div className="space-y-4">
                         <input
-                            className="w-full bg-[#2c2c2e] border-none rounded-[14px] px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
+                            className="w-full bg-bg-elevated border-none rounded-card px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
                             placeholder="Поиск пользователей..."
                             value={searchQuery}
                             onChange={e => setSearchQuery(e.target.value)}
                         />
                         <div className="space-y-2">
                             {searchFilteredUsers.map(u => (
-                                <div key={u.id} className="bg-[#2c2c2e] p-4 rounded-[16px] flex items-center justify-between border border-white/5">
+                                <div key={u.id} className="bg-bg-elevated p-4 rounded-card flex items-center justify-between border border-white/5">
                                     <div className="flex items-center gap-3">
                                         <div className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center overflow-hidden">
                                             {u.avatar_url ? <img src={u.avatar_url} className="w-full h-full object-cover" /> : <Users size={18} />}
@@ -1301,9 +1301,9 @@ const AdminView = () => {
                                                 <button onClick={() => setEditingUser(null)} className="p-1.5 bg-white/10 text-white rounded"><X size={14} /></button>
                                             </div>
                                         ) : (
-                                            <button onClick={() => { setEditingUser(u.id); setNewBalance(u.balance); }} className="flex items-center gap-1 bg-[#007aff]/10 px-3 py-1.5 rounded-full">
-                                                <Zap size={12} className="text-[#007aff] fill-current" />
-                                                <span className="text-[13px] font-bold text-[#007aff]">{u.balance}</span>
+                                            <button onClick={() => { setEditingUser(u.id); setNewBalance(u.balance); }} className="flex items-center gap-1 bg-accent-blue/10 px-3 py-1.5 rounded-full">
+                                                <Zap size={12} className="text-accent-blue fill-current" />
+                                                <span className="text-[13px] font-bold text-accent-blue">{u.balance}</span>
                                             </button>
                                         )}
                                     </div>
@@ -1316,7 +1316,7 @@ const AdminView = () => {
                 {activeTab === 'promotions' && (
                     <div className="space-y-6">
                         {/* Flash Sales Section */}
-                        <div className="bg-[#2c2c2e] p-4 rounded-[16px] border border-white/5 space-y-4">
+                        <div className="bg-bg-elevated p-4 rounded-card border border-white/5 space-y-4">
                             <h2 className="text-lg font-bold flex items-center gap-2 text-yellow-500">
                                 <Zap size={20} />
                                 Flash Sales (Распродажи)
@@ -1383,7 +1383,7 @@ const AdminView = () => {
                         </div>
 
                         {/* Promo Codes Section */}
-                        <div className="bg-[#2c2c2e] p-4 rounded-[16px] border border-white/5 space-y-4">
+                        <div className="bg-bg-elevated p-4 rounded-card border border-white/5 space-y-4">
                             <h2 className="text-lg font-bold flex items-center gap-2 text-green-500">
                                 <Tag size={20} />
                                 Промокоды (Системные)
@@ -1453,7 +1453,7 @@ const AdminView = () => {
                     activeTab === 'models' && (
                         <div className="space-y-3">
                             {models.map(m => (
-                                <div key={m.id} className="bg-[#2c2c2e] p-4 rounded-[16px] border border-white/5">
+                                <div key={m.id} className="bg-bg-elevated p-4 rounded-card border border-white/5">
                                     <div className="flex justify-between items-start mb-2">
                                         <h3 className="font-bold text-[15px]">{m.display_name}</h3>
                                         <div className={`w-2 h-2 rounded-full ${m.is_active ? 'bg-green-500' : 'bg-red-500'}`} />
@@ -1486,17 +1486,17 @@ const AdminView = () => {
                         <div className="space-y-6">
                             {/* Top Stats */}
                             <div className="grid grid-cols-2 gap-3">
-                                <div className="bg-[#2c2c2e] p-4 rounded-[16px] border border-white/5 relative overflow-hidden group hover:border-[#007aff]/30 transition-colors">
-                                    <div className="absolute -right-4 -top-4 w-16 h-16 bg-[#007aff]/10 rounded-full blur-xl group-hover:bg-[#007aff]/20 transition-colors" />
+                                <div className="bg-bg-elevated p-4 rounded-card border border-white/5 relative overflow-hidden group hover:border-accent-blue/30 transition-colors">
+                                    <div className="absolute -right-4 -top-4 w-16 h-16 bg-accent-blue/10 rounded-full blur-xl group-hover:bg-accent-blue/20 transition-colors" />
                                     <div className="text-[28px] font-black">{metrics?.totals?.users || stats.users || 0}</div>
                                     <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mt-1">Всего Юзеров</div>
                                 </div>
-                                <div className="bg-[#2c2c2e] p-4 rounded-[16px] border border-white/5 relative overflow-hidden group hover:border-[#34c759]/30 transition-colors">
-                                    <div className="absolute -right-4 -top-4 w-16 h-16 bg-[#34c759]/10 rounded-full blur-xl group-hover:bg-[#34c759]/20 transition-colors" />
-                                    <div className="text-[28px] font-black text-[#34c759]">{metrics?.activeUsers24h || 0}</div>
+                                <div className="bg-bg-elevated p-4 rounded-card border border-white/5 relative overflow-hidden group hover:border-[#34c759]/30 transition-colors">
+                                    <div className="absolute -right-4 -top-4 w-16 h-16 bg-accent-blue/10 rounded-full blur-xl group-hover:bg-accent-blue/20 transition-colors" />
+                                    <div className="text-[28px] font-black text-accent-blue">{metrics?.activeUsers24h || 0}</div>
                                     <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mt-1">Актив. (24h)</div>
                                 </div>
-                                <div className="bg-[#2c2c2e] p-4 rounded-[16px] border border-white/5 relative overflow-hidden col-span-2 group hover:border-[#ff9500]/30 transition-colors">
+                                <div className="bg-bg-elevated p-4 rounded-card border border-white/5 relative overflow-hidden col-span-2 group hover:border-[#ff9500]/30 transition-colors">
                                     <div className="absolute right-0 top-0 h-full w-24 bg-gradient-to-l from-[#ff9500]/10 to-transparent pointer-events-none" />
                                     <div className="text-[32px] font-black tracking-tight flex items-center gap-3">
                                         {metrics?.conversion || '0%'}
@@ -1507,7 +1507,7 @@ const AdminView = () => {
                             </div>
 
                             {/* Timeline Chart */}
-                            <div className="bg-[#2c2c2e] p-5 rounded-[20px] border border-white/5">
+                            <div className="bg-bg-elevated p-5 rounded-card border border-white/5">
                                 <h3 className="text-[13px] font-bold uppercase tracking-wider text-gray-400 mb-6 flex items-center justify-between">
                                     <span>Генерации (7 дней)</span>
                                     <span className="bg-white/10 text-white px-2 py-0.5 rounded text-[10px]">{metrics?.totals?.recentGens || 0} всего</span>
@@ -1539,7 +1539,7 @@ const AdminView = () => {
                             </div>
 
                             {/* Top Prompts */}
-                            <div className="bg-[#2c2c2e] rounded-[20px] border border-white/5 overflow-hidden">
+                            <div className="bg-bg-elevated rounded-card border border-white/5 overflow-hidden">
                                 <div className="p-4 border-b border-white/5">
                                     <h3 className="text-[13px] font-bold uppercase tracking-wider text-gray-400">Топ Промптов</h3>
                                 </div>
@@ -1566,21 +1566,21 @@ const AdminView = () => {
 
                             {/* Cache Stats */}
                             {metrics?.cache && (
-                                <div className="bg-gradient-to-br from-[#2c2c2e] to-[#1c1c1e] p-5 rounded-[20px] border border-[#007aff]/20 shadow-[0_0_30px_rgba(0,122,255,0.05)]">
+                                <div className="bg-gradient-to-br from-[#2c2c2e] to-[#1c1c1e] p-5 rounded-card border border-accent-blue/20 shadow-[0_0_30px_rgba(0,122,255,0.05)]">
                                     <div className="flex items-center justify-between mb-4">
-                                        <h3 className="text-[13px] font-bold uppercase tracking-wider text-[#007aff] flex items-center gap-2">
+                                        <h3 className="text-[13px] font-bold uppercase tracking-wider text-accent-blue flex items-center gap-2">
                                             <Zap size={14} /> LRU Prompt Cache
                                         </h3>
-                                        <span className="text-[10px] font-mono bg-[#007aff]/10 text-[#007aff] px-2 py-1 rounded-full">{metrics.cache.size} records</span>
+                                        <span className="text-[10px] font-mono bg-accent-blue/10 text-accent-blue px-2 py-1 rounded-full">{metrics.cache.size} records</span>
                                     </div>
 
                                     <div className="flex h-3 rounded-full overflow-hidden bg-black/40 mb-3">
-                                        <div className="h-full bg-[#34c759]" style={{ width: `${metrics.cache.hits + metrics.cache.misses === 0 ? 0 : (metrics.cache.hits / (metrics.cache.hits + metrics.cache.misses)) * 100}%` }} title="Hits" />
+                                        <div className="h-full bg-accent-blue" style={{ width: `${metrics.cache.hits + metrics.cache.misses === 0 ? 0 : (metrics.cache.hits / (metrics.cache.hits + metrics.cache.misses)) * 100}%` }} title="Hits" />
                                         <div className="h-full bg-red-500/50" style={{ width: `${metrics.cache.hits + metrics.cache.misses === 0 ? 0 : (metrics.cache.misses / (metrics.cache.hits + metrics.cache.misses)) * 100}%` }} title="Misses" />
                                     </div>
 
                                     <div className="flex justify-between text-[11px] font-medium uppercase tracking-wider">
-                                        <span className="text-[#34c759]">Hits: {metrics.cache.hits}</span>
+                                        <span className="text-accent-blue">Hits: {metrics.cache.hits}</span>
                                         <span className="text-red-400">Misses: {metrics.cache.misses}</span>
                                     </div>
                                 </div>
@@ -1605,22 +1605,22 @@ const AdminView = () => {
 
                         {/* Content */}
                         <motion.div
-                            className="bg-[#1c1c1e] w-full max-w-lg h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-[24px] sm:rounded-[24px] relative z-10 flex flex-col border border-white/10 shadow-2xl overflow-hidden"
+                            className="bg-bg-secondary w-full max-w-lg h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-[24px] sm:rounded-[24px] relative z-10 flex flex-col border border-white/10 shadow-2xl overflow-hidden"
                             initial={{ y: "100%", opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             exit={{ y: "100%", opacity: 0 }}
                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         >
-                            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#1c1c1e] z-20 shrink-0">
+                            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-bg-secondary z-20 shrink-0">
                                 <h3 className="text-lg font-bold text-white">{editingTemplate.is_local ? 'Размещение (Local)' : editingTemplate.id.startsWith('new_') ? 'Новый шаблон' : 'Редактирование'}</h3>
-                                <button onClick={() => setEditingTemplate(null)} className="p-2 bg-[#2c2c2e] rounded-full hover:bg-white/10 transition-colors text-white">
+                                <button onClick={() => setEditingTemplate(null)} className="p-2 bg-bg-elevated rounded-full hover:bg-white/10 transition-colors text-white">
                                     <X size={20} />
                                 </button>
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar pb-safe-bottom">
                                 {/* Preview / Upload Section */}
-                                <div className="aspect-[3/4] rounded-[16px] bg-black/50 overflow-hidden relative border border-white/10 mx-auto w-1/2 group">
+                                <div className="aspect-[3/4] rounded-card bg-black/50 overflow-hidden relative border border-white/10 mx-auto w-1/2 group">
                                     {editingTemplate.src ? (
                                         editingTemplate.media_type === 'video' ? (
                                             <video src={getCDNUrl(editingTemplate.src)} className="w-full h-full object-cover" muted autoPlay loop />
@@ -1646,7 +1646,7 @@ const AdminView = () => {
                                     <div>
                                         <label className="text-[11px] text-gray-500 uppercase block mb-1">Название</label>
                                         <input
-                                            className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                                            className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-blue-500/50 transition-all"
                                             placeholder="Название шаблона (ID)"
                                             value={editingTemplate.title || ''}
                                             onChange={e => setEditingTemplate({ ...editingTemplate, title: e.target.value })}
@@ -1655,7 +1655,7 @@ const AdminView = () => {
 
                                     <div className="grid grid-cols-2 gap-3">
                                         <input
-                                            className="bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none placeholder:text-gray-600 text-[12px]"
+                                            className="bg-bg-elevated p-3 rounded-input text-white outline-none placeholder:text-gray-600 text-[12px]"
                                             placeholder="URL (или загрузите файл)"
                                             value={editingTemplate.src || ''}
                                             onChange={e => setEditingTemplate({ ...editingTemplate, src: e.target.value })}
@@ -1663,7 +1663,7 @@ const AdminView = () => {
                                         />
                                         <input
                                             type="number"
-                                            className="bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none placeholder:text-gray-600"
+                                            className="bg-bg-elevated p-3 rounded-input text-white outline-none placeholder:text-gray-600"
                                             placeholder="Сортировка"
                                             value={editingTemplate.sort_order || 0}
                                             onChange={e => setEditingTemplate({ ...editingTemplate, sort_order: e.target.value })}
@@ -1674,7 +1674,7 @@ const AdminView = () => {
                                         <div>
                                             <label className="text-[11px] text-gray-500 uppercase block mb-1">Тип медиа</label>
                                             <select
-                                                className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none appearance-none"
+                                                className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none appearance-none"
                                                 value={editingTemplate.media_type || 'image'}
                                                 onChange={e => setEditingTemplate({ ...editingTemplate, media_type: e.target.value })}
                                             >
@@ -1686,7 +1686,7 @@ const AdminView = () => {
                                             <label className="text-[11px] text-gray-500 uppercase block mb-1">Категория</label>
                                             <div className="flex gap-2">
                                                 <select
-                                                    className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none appearance-none"
+                                                    className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none appearance-none"
                                                     value={editingTemplate.category || 'trends'}
                                                     onChange={e => {
                                                         if (e.target.value === 'new_custom_category') {
@@ -1712,7 +1712,7 @@ const AdminView = () => {
                                     <div>
                                         <label className="text-[11px] text-gray-500 uppercase block mb-1">Системный Промпт</label>
                                         <textarea
-                                            className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none placeholder:text-gray-600 h-32 font-mono text-[13px] focus:ring-1 focus:ring-blue-500/50 transition-all"
+                                            className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none placeholder:text-gray-600 h-32 font-mono text-[13px] focus:ring-1 focus:ring-blue-500/50 transition-all"
                                             placeholder="Prompt to generate..."
                                             value={editingTemplate.generation_prompt || ''}
                                             onChange={e => setEditingTemplate({ ...editingTemplate, generation_prompt: e.target.value })}
@@ -1723,7 +1723,7 @@ const AdminView = () => {
                                         <div className="flex-1">
                                             <label className="text-[11px] text-gray-500 uppercase block mb-1">AI Model</label>
                                             <select
-                                                className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none appearance-none"
+                                                className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none appearance-none"
                                                 value={editingTemplate.model_id || ''}
                                                 onChange={e => setEditingTemplate({ ...editingTemplate, model_id: e.target.value })}
                                             >
@@ -1748,7 +1748,7 @@ const AdminView = () => {
                                             <label className="text-[11px] text-gray-500 uppercase block mb-1">Статус</label>
                                             <button
                                                 onClick={() => setEditingTemplate({ ...editingTemplate, is_active: !editingTemplate.is_active })}
-                                                className={`w-full p-3 rounded-[12px] font-bold transition-all ${editingTemplate.is_active ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}
+                                                className={`w-full p-3 rounded-input font-bold transition-all ${editingTemplate.is_active ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}
                                             >
                                                 {editingTemplate.is_active ? 'Активен' : 'Скрыт'}
                                             </button>
@@ -1758,7 +1758,7 @@ const AdminView = () => {
                                     {editingTemplate.id && !editingTemplate.is_local && !editingTemplate.id.startsWith('new_') && (
                                         <button
                                             onClick={() => handleDeleteTemplate(editingTemplate.id)}
-                                            className="w-full mt-4 p-3 bg-red-500/10 text-red-500 rounded-[12px] font-bold hover:bg-red-500/20 transition-colors"
+                                            className="w-full mt-4 p-3 bg-red-500/10 text-red-500 rounded-input font-bold hover:bg-red-500/20 transition-colors"
                                         >
                                             Удалить из базы
                                         </button>
@@ -1766,10 +1766,10 @@ const AdminView = () => {
                                 </div>
                             </div>
 
-                            <div className="p-4 border-t border-white/10 bg-[#1c1c1e] sticky bottom-0 z-20 pb-8 safe-bottom">
+                            <div className="p-4 border-t border-white/10 bg-bg-secondary sticky bottom-0 z-20 pb-8 safe-bottom">
                                 <button
                                     onClick={() => handleSaveTemplate(editingTemplate)}
-                                    className="w-full bg-[#007aff] text-white font-bold py-3.5 rounded-[12px] shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-transform hover:bg-[#0069d9]"
+                                    className="w-full bg-accent-blue text-white font-bold py-3.5 rounded-input shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-transform hover:bg-[#0069d9]"
                                 >
                                     {editingTemplate.is_local ? 'Разместить в базе' : 'Сохранить изменения'}
                                 </button>
@@ -1793,22 +1793,22 @@ const AdminView = () => {
                         />
 
                         <motion.div
-                            className="bg-[#1c1c1e] w-full max-w-lg h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-[24px] sm:rounded-[24px] relative z-10 flex flex-col border border-white/10 shadow-2xl overflow-hidden"
+                            className="bg-bg-secondary w-full max-w-lg h-[85vh] sm:h-auto sm:max-h-[85vh] rounded-t-[24px] sm:rounded-[24px] relative z-10 flex flex-col border border-white/10 shadow-2xl overflow-hidden"
                             initial={{ y: "100%", opacity: 0 }}
                             animate={{ y: 0, opacity: 1 }}
                             exit={{ y: "100%", opacity: 0 }}
                             transition={{ type: "spring", damping: 25, stiffness: 300 }}
                         >
-                            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#1c1c1e] z-20 shrink-0">
+                            <div className="p-4 border-b border-white/10 flex justify-between items-center bg-bg-secondary z-20 shrink-0">
                                 <h3 className="text-lg font-bold text-white">{editingStar.id?.startsWith('new_') ? 'Новая Звезда' : 'Редактирование'}</h3>
-                                <button onClick={() => setEditingStar(null)} className="p-2 bg-[#2c2c2e] rounded-full hover:bg-white/10 transition-colors text-white">
+                                <button onClick={() => setEditingStar(null)} className="p-2 bg-bg-elevated rounded-full hover:bg-white/10 transition-colors text-white">
                                     <X size={20} />
                                 </button>
                             </div>
 
                             <div className="flex-1 overflow-y-auto p-4 space-y-5 custom-scrollbar pb-safe-bottom">
                                 {/* Preview / Upload Section */}
-                                <div className="aspect-[3/4] rounded-[16px] bg-black/50 overflow-hidden relative border border-white/10 mx-auto w-1/2 group">
+                                <div className="aspect-[3/4] rounded-card bg-black/50 overflow-hidden relative border border-white/10 mx-auto w-1/2 group">
                                     {editingStar.image_url ? (
                                         <img src={editingStar.image_url} className="w-full h-full object-cover" />
                                     ) : (
@@ -1829,7 +1829,7 @@ const AdminView = () => {
                                     <div>
                                         <label className="text-[11px] text-gray-500 uppercase block mb-1">Имя</label>
                                         <input
-                                            className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-blue-500/50 transition-all"
+                                            className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none placeholder:text-gray-600 focus:ring-1 focus:ring-blue-500/50 transition-all"
                                             placeholder="Имя звезды"
                                             value={editingStar.name || ''}
                                             onChange={e => setEditingStar({ ...editingStar, name: e.target.value })}
@@ -1839,7 +1839,7 @@ const AdminView = () => {
                                     <div>
                                         <label className="text-[11px] text-gray-500 uppercase block mb-1">Slug (ID)</label>
                                         <input
-                                            className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none placeholder:text-gray-600 font-mono text-[13px]"
+                                            className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none placeholder:text-gray-600 font-mono text-[13px]"
                                             placeholder="unique_slug"
                                             value={editingStar.slug || ''}
                                             onChange={e => setEditingStar({ ...editingStar, slug: e.target.value.toLowerCase().replace(/[^a-z0-9_]/g, '') })}
@@ -1849,7 +1849,7 @@ const AdminView = () => {
                                     <div>
                                         <label className="text-[11px] text-gray-500 uppercase block mb-1">Описание</label>
                                         <input
-                                            className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none placeholder:text-gray-600"
+                                            className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none placeholder:text-gray-600"
                                             placeholder="Краткое описание"
                                             value={editingStar.description || ''}
                                             onChange={e => setEditingStar({ ...editingStar, description: e.target.value })}
@@ -1859,7 +1859,7 @@ const AdminView = () => {
                                     <div>
                                         <label className="text-[11px] text-gray-500 uppercase block mb-1">Фото URL</label>
                                         <input
-                                            className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none placeholder:text-gray-600 text-[12px]"
+                                            className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none placeholder:text-gray-600 text-[12px]"
                                             value={editingStar.image_url || ''}
                                             onChange={e => setEditingStar({ ...editingStar, image_url: e.target.value })}
                                         />
@@ -1870,7 +1870,7 @@ const AdminView = () => {
                                             <label className="text-[11px] text-gray-500 uppercase block mb-1">Сортировка</label>
                                             <input
                                                 type="number"
-                                                className="w-full bg-[#2c2c2e] p-3 rounded-[12px] text-white outline-none"
+                                                className="w-full bg-bg-elevated p-3 rounded-input text-white outline-none"
                                                 value={editingStar.sort_order || 0}
                                                 onChange={e => setEditingStar({ ...editingStar, sort_order: e.target.value })}
                                             />
@@ -1879,7 +1879,7 @@ const AdminView = () => {
                                             <label className="text-[11px] text-gray-500 uppercase block mb-1">Статус</label>
                                             <button
                                                 onClick={() => setEditingStar({ ...editingStar, is_active: !editingStar.is_active })}
-                                                className={`w-full p-3 rounded-[12px] font-bold transition-all ${editingStar.is_active ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}
+                                                className={`w-full p-3 rounded-input font-bold transition-all ${editingStar.is_active ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'}`}
                                             >
                                                 {editingStar.is_active ? 'Активен' : 'Скрыт'}
                                             </button>
@@ -1889,7 +1889,7 @@ const AdminView = () => {
                                     {editingStar.id && !editingStar.id.startsWith('new_') && (
                                         <button
                                             onClick={() => handleDeleteStar(editingStar.id)}
-                                            className="w-full mt-4 p-3 bg-red-500/10 text-red-500 rounded-[12px] font-bold hover:bg-red-500/20 transition-colors"
+                                            className="w-full mt-4 p-3 bg-red-500/10 text-red-500 rounded-input font-bold hover:bg-red-500/20 transition-colors"
                                         >
                                             Удалить звезду
                                         </button>
@@ -1897,10 +1897,10 @@ const AdminView = () => {
                                 </div>
                             </div>
 
-                            <div className="p-4 border-t border-white/10 bg-[#1c1c1e] sticky bottom-0 z-20 pb-8 safe-bottom">
+                            <div className="p-4 border-t border-white/10 bg-bg-secondary sticky bottom-0 z-20 pb-8 safe-bottom">
                                 <button
                                     onClick={() => handleSaveStar(editingStar)}
-                                    className="w-full bg-[#007aff] text-white font-bold py-3.5 rounded-[12px] shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-transform hover:bg-[#0069d9]"
+                                    className="w-full bg-accent-blue text-white font-bold py-3.5 rounded-input shadow-lg shadow-blue-500/20 active:scale-[0.98] transition-transform hover:bg-[#0069d9]"
                                 >
                                     Сохранить
                                 </button>

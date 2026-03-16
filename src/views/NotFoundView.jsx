@@ -13,8 +13,8 @@ const NotFoundView = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 className="mb-8 relative"
             >
-                <div className="w-28 h-28 bg-[#1c1c1e] rounded-full flex items-center justify-center mb-4 mx-auto">
-                    <Ghost size={56} className="text-[#8e8e93]" />
+                <div className="w-28 h-28 bg-bg-secondary rounded-full flex items-center justify-center mb-4 mx-auto">
+                    <Ghost size={56} className="text-text-secondary" />
                 </div>
                 <div className="absolute -bottom-2 right-2 bg-[#ff3b30] text-white text-[11px] font-bold px-2 py-1 rounded-[8px] rotate-12">
                     404
@@ -22,14 +22,14 @@ const NotFoundView = () => {
             </motion.div>
 
             <h1 className="text-[28px] font-bold tracking-tight mb-2">Страница не найдена</h1>
-            <p className="text-[#8e8e93] mb-8 max-w-xs mx-auto text-[15px] leading-relaxed">
+            <p className="text-text-secondary mb-8 max-w-xs mx-auto text-[15px] leading-relaxed">
                 Похоже, вы заблудились в генерации. Этой страницы не существует или она была удалена.
             </p>
 
             <div className="flex flex-col w-full max-w-xs gap-3">
                 <button
                     onClick={() => navigate('/')}
-                    className="w-full py-3.5 bg-[#007aff] text-white rounded-[12px] text-[17px] font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
+                    className="w-full py-3.5 bg-accent-blue text-white rounded-input text-[17px] font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
                 >
                     <Home size={20} />
                     На главную
@@ -37,7 +37,7 @@ const NotFoundView = () => {
 
                 <button
                     onClick={() => navigate(-1)}
-                    className="w-full py-3.5 bg-[#1c1c1e] text-white rounded-[12px] text-[17px] font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
+                    className="w-full py-3.5 bg-bg-secondary text-white rounded-input text-[17px] font-semibold flex items-center justify-center gap-2 transition-all active:scale-[0.97]"
                 >
                     <ArrowLeft size={20} />
                     Назад

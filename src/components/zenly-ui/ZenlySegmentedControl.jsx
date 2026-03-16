@@ -15,7 +15,7 @@ export const ZenlySegmentedControl = ({ options, activeId, onChange }) => {
                         {isActive && (
                             <motion.div
                                 layoutId="segment-pill"
-                                className="absolute inset-0 bg-white rounded-[20px] shadow-[0_4px_10px_-2px_rgba(0,0,0,0.05)] border border-stone-100"
+                                className="absolute inset-0 bg-white rounded-card shadow-[0_4px_10px_-2px_rgba(0,0,0,0.05)] border border-stone-100"
                                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
                             />
                         )}

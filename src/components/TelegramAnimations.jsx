@@ -119,7 +119,7 @@ export const TelegramCard = ({ children, onClick, className = '' }) => {
 export const TelegramButton = ({ children, onClick, variant = 'primary', className = '' }) => {
     const baseClass = 'px-6 py-3 rounded-xl font-semibold transition-all';
     const variantClass = variant === 'primary'
-        ? 'bg-[#3390ec] text-white hover:bg-[#2b7fd1]'
+        ? 'bg-accent-blue text-white hover:bg-[#2b7fd1]'
         : 'bg-white/10 text-white hover:bg-white/20';
 
     return (
@@ -191,7 +191,7 @@ export const TelegramModal = ({ isOpen, onClose, children, fromBottom = true, cl
                         onClick={(e) => e.stopPropagation()}
                     >
                         <motion.div
-                            className={`bg-[#1c1c1e] w-full md:w-[480px] rounded-t-[32px] md:rounded-[32px] max-h-[95vh] md:max-h-[85vh] flex flex-col shadow-2xl md:pointer-events-auto`}
+                            className={`bg-bg-secondary w-full md:w-[480px] rounded-t-[32px] md:rounded-[32px] max-h-[95vh] md:max-h-[85vh] flex flex-col shadow-2xl md:pointer-events-auto`}
                             {...animation}
                         >
                             {/* Drag Handle Area */}
@@ -217,7 +217,7 @@ export const TelegramModal = ({ isOpen, onClose, children, fromBottom = true, cl
 export const TelegramFAB = ({ icon, onClick, className = '' }) => {
     return (
         <motion.button
-            className={`fixed bottom-20 right-6 w-14 h-14 rounded-full bg-[#3390ec] text-white shadow-2xl flex items-center justify-center z-40 ${className}`}
+            className={`fixed bottom-20 right-6 w-14 h-14 rounded-full bg-accent-blue text-white shadow-2xl flex items-center justify-center z-40 ${className}`}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
             onClick={onClick}
@@ -262,7 +262,7 @@ export const TelegramBadge = ({ count, className = '' }) => {
 
     return (
         <motion.div
-            className={`absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full bg-[#3390ec] text-white text-xs font-bold flex items-center justify-center ${className}`}
+            className={`absolute -top-1 -right-1 min-w-[20px] h-5 px-1.5 rounded-full bg-accent-blue text-white text-xs font-bold flex items-center justify-center ${className}`}
             initial={{ scale: 0 }}
             animate={{ scale: 1 }}
             exit={{ scale: 0 }}
@@ -313,7 +313,7 @@ export const TelegramProgress = ({ progress = 0, className = '' }) => {
     return (
         <div className={`w-full h-1 bg-white/10 rounded-full overflow-hidden ${className}`}>
             <motion.div
-                className="h-full bg-[#3390ec] rounded-full"
+                className="h-full bg-accent-blue rounded-full"
                 initial={{ width: 0 }}
                 animate={{ width: `${progress}%` }}
                 transition={{

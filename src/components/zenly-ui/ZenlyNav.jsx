@@ -17,7 +17,7 @@ export const ZenlyNav = () => {
 
     return (
         <div className="fixed bottom-8 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
-            <div className="pointer-events-auto relative bg-white/80 dark:bg-[#1c1c1e]/90 backdrop-blur-[30px] rounded-[32px] px-6 py-3 flex items-center justify-between gap-2 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.15)] ring-1 ring-white/60 dark:ring-white/10 min-w-[320px]">
+            <div className="pointer-events-auto relative bg-white/80 dark:bg-bg-secondary/90 backdrop-blur-[30px] rounded-[32px] px-6 py-3 flex items-center justify-between gap-2 shadow-[0_20px_50px_-20px_rgba(0,0,0,0.15)] ring-1 ring-white/60 dark:ring-white/10 min-w-[320px]">
 
                 {TABS.map((tab) => {
                     const isActive = location.pathname === tab.path;

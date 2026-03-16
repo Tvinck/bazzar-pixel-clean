@@ -47,10 +47,10 @@ const Toast: React.FC<ToastProps> = ({ id, type, message, onClose }) => {
     };
 
     const colors = {
-        success: 'bg-[#1c1c1e]/80 border-green-500/30 text-green-400',
-        error: 'bg-[#1c1c1e]/80 border-red-500/30 text-red-400',
-        warning: 'bg-[#1c1c1e]/80 border-yellow-500/30 text-yellow-400',
-        info: 'bg-[#1c1c1e]/80 border-blue-500/30 text-blue-400'
+        success: 'bg-bg-secondary/80 border-green-500/30 text-green-400',
+        error: 'bg-bg-secondary/80 border-red-500/30 text-red-400',
+        warning: 'bg-bg-secondary/80 border-yellow-500/30 text-yellow-400',
+        info: 'bg-bg-secondary/80 border-blue-500/30 text-blue-400'
     };
 
     return (
@@ -58,7 +58,7 @@ const Toast: React.FC<ToastProps> = ({ id, type, message, onClose }) => {
             initial={{ opacity: 0, y: -20, scale: 0.95, filter: 'blur(10px)' }}
             animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
             exit={{ opacity: 0, scale: 0.95, filter: 'blur(10px)' }}
-            className={`flex items-center gap-3 backdrop-blur-xl border rounded-[16px] p-4 shadow-2xl w-full md:w-auto md:min-w-[320px] max-w-md pointer-events-auto ${colors[type]}`}
+            className={`flex items-center gap-3 backdrop-blur-xl border rounded-card p-4 shadow-2xl w-full md:w-auto md:min-w-[320px] max-w-md pointer-events-auto ${colors[type]}`}
         >
             <div className={`p-2 rounded-full bg-white/5`}>
                 {icons[type]}

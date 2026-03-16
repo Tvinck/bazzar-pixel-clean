@@ -2,7 +2,7 @@ import React from 'react';
 
 // Common Gloss Overlay for all icons
 const IconGloss = () => (
-    <div className="absolute inset-0 rounded-[20px] bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
+    <div className="absolute inset-0 rounded-card bg-gradient-to-tr from-white/20 to-transparent pointer-events-none" />
 );
 
 // --- GENERIC CATEGORY ICONS ---

@@ -27,10 +27,10 @@ const CreationDrawer = ({ isOpen, onClose, type = 'Картинка', initialPro
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: '100%' }}
                     transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                    className="fixed inset-0 z-[70] flex flex-col bg-[#09090b] text-white"
+                    className="fixed inset-0 z-[70] flex flex-col bg-bg-primary text-white"
                 >
                     {/* Header */}
-                    <div className="px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] flex items-center justify-between bg-[#09090b]">
+                    <div className="px-4 py-4 pt-[calc(env(safe-area-inset-top)+10px)] flex items-center justify-between bg-bg-primary">
                         <button onClick={onClose} className="flex items-center gap-1 text-slate-400 hover:text-white transition-colors">
                             <ChevronLeft size={20} /> <span className="text-sm font-medium">Назад</span>
                         </button>
@@ -53,7 +53,7 @@ const CreationDrawer = ({ isOpen, onClose, type = 'Картинка', initialPro
                         {/* 1. Model Selector */}
                         <div className="mb-6 mt-2">
                             <label className="text-xs font-bold text-slate-400 mb-2 block uppercase tracking-wide">Модель</label>
-                            <div className="bg-[#1c1c1e] rounded-2xl p-4 flex items-center justify-between border border-white/5 active:bg-[#252528] transition-colors cursor-pointer">
+                            <div className="bg-bg-secondary rounded-2xl p-4 flex items-center justify-between border border-white/5 active:bg-bg-elevated transition-colors cursor-pointer">
                                 <div className="flex items-center gap-3">
                                     <div className="w-6 h-6 rounded bg-slate-700 flex items-center justify-center text-[10px] font-bold text-slate-300">G</div>
                                     <span className="font-medium text-sm text-white">NanoBanana</span>
@@ -76,7 +76,7 @@ const CreationDrawer = ({ isOpen, onClose, type = 'Картинка', initialPro
                                 </div>
 
                                 {/* Upload Placeholder */}
-                                <div className="w-28 h-32 flex-shrink-0 rounded-2xl bg-[#1c1c1e] border border-white/5 border-dashed flex flex-col items-center justify-center text-center p-3 cursor-pointer hover:bg-[#252528] transition-colors">
+                                <div className="w-28 h-32 flex-shrink-0 rounded-2xl bg-bg-secondary border border-white/5 border-dashed flex flex-col items-center justify-center text-center p-3 cursor-pointer hover:bg-bg-elevated transition-colors">
                                     <ImageIcon size={20} className="text-slate-500 mb-2" />
                                     <span className="text-[10px] text-slate-500 leading-tight font-medium">Загрузите одно<br />или несколько<br />изображений<br />для редактирования.</span>
                                 </div>
@@ -88,7 +88,7 @@ const CreationDrawer = ({ isOpen, onClose, type = 'Картинка', initialPro
                             <label className="text-xs font-bold text-slate-400 mb-2 block uppercase tracking-wide">Запрос <span className="text-amber-500">*</span></label>
                             <div className="relative">
                                 <textarea
-                                    className="w-full h-36 bg-[#1c1c1e] rounded-2xl border border-white/5 p-4 text-sm leading-relaxed focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-slate-600 text-white resize-none"
+                                    className="w-full h-36 bg-bg-secondary rounded-2xl border border-white/5 p-4 text-sm leading-relaxed focus:outline-none focus:border-amber-500/50 transition-colors placeholder:text-slate-600 text-white resize-none"
                                     placeholder="Опишите, что вы хотите увидеть..."
                                     value={prompt}
                                     onChange={(e) => setPrompt(e.target.value)}
@@ -102,7 +102,7 @@ const CreationDrawer = ({ isOpen, onClose, type = 'Картинка', initialPro
                         {/* 4. Aspect Ratio */}
                         <div className="mb-8">
                             <label className="text-xs font-bold text-slate-400 mb-2 block uppercase tracking-wide">Соотношение сторон</label>
-                            <div className="bg-[#1c1c1e] rounded-2xl p-4 flex items-center justify-between border border-white/5 cursor-pointer hover:bg-[#252528] transition-colors">
+                            <div className="bg-bg-secondary rounded-2xl p-4 flex items-center justify-between border border-white/5 cursor-pointer hover:bg-bg-elevated transition-colors">
                                 <div className="flex items-center gap-3">
                                     <span className="font-medium text-sm text-white">Автоматически</span>
                                     <div className="w-5 h-5 rounded border border-amber-500/30 text-amber-500 text-[10px] font-bold flex items-center justify-center">?</div>
@@ -113,7 +113,7 @@ const CreationDrawer = ({ isOpen, onClose, type = 'Картинка', initialPro
                     </div>
 
                     {/* Footer / Generate Button */}
-                    <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe-bottom bg-[#09090b] border-t border-white/5 z-20">
+                    <div className="fixed bottom-0 left-0 right-0 p-4 pb-safe-bottom bg-bg-primary border-t border-white/5 z-20">
                         <motion.button
                             whileTap={{ scale: 0.98 }}
                             onClick={() => { playClick(); /* Handle Generate */ }}

@@ -36,7 +36,7 @@ const StarCard = ({ star, isSelected, onSelect, index }) => (
                 <motion.div
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
-                    className="absolute bottom-0 right-0 w-5 h-5 bg-[#3390ec] rounded-full flex items-center justify-center border-2 border-[#1c1c1e]"
+                    className="absolute bottom-0 right-0 w-5 h-5 bg-accent-blue rounded-full flex items-center justify-center border-2 border-[#1c1c1e]"
                 >
                     <svg width="8" height="8" viewBox="0 0 12 10" fill="white">
                         <path d="M1 5L4.5 8.5L11 1.5" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" fill="none" />
@@ -61,7 +61,7 @@ const OccasionCard = ({ occasion, isSelected, onSelect }) => (
         className={`relative p-4 rounded-2xl border transition-all flex flex-col items-center justify-center gap-2.5 h-[100px]
             ${isSelected
                 ? `bg-gradient-to-br ${occasion.gradient} border-transparent shadow-lg`
-                : 'bg-[#2c2c2e] border-white/5 hover:bg-[#353538]'}`}
+                : 'bg-bg-elevated border-white/5 hover:bg-[#353538]'}`}
     >
         <motion.span
             className="text-2xl"
@@ -83,11 +83,11 @@ const StarsSkeleton = () => (
         {[...Array(5)].map((_, i) => (
             <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0 w-[80px]">
                 <motion.div
-                    className="w-16 h-16 rounded-full bg-[#2c2c2e]"
+                    className="w-16 h-16 rounded-full bg-bg-elevated"
                     animate={{ opacity: [0.3, 0.6, 0.3] }}
                     transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.15 }}
                 />
-                <div className="w-12 h-3 bg-[#2c2c2e] rounded-md" />
+                <div className="w-12 h-3 bg-bg-elevated rounded-md" />
             </div>
         ))}
     </div>
@@ -217,12 +217,12 @@ const StarGreetingsView = () => {
     };
 
     return (
-        <div className="min-h-screen bg-[#1c1c1e] text-white flex flex-col font-sans md:max-w-3xl md:mx-auto">
+        <div className="min-h-screen bg-bg-secondary text-white flex flex-col font-sans md:max-w-3xl md:mx-auto">
             {/* Sticky Header */}
             <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="flex items-center justify-between px-4 py-3 sticky top-0 bg-[#1c1c1e]/90 backdrop-blur-xl z-30 pt-[calc(env(safe-area-inset-top)+10px)] border-b border-white/5"
+                className="flex items-center justify-between px-4 py-3 sticky top-0 bg-bg-secondary/90 backdrop-blur-xl z-30 pt-[calc(env(safe-area-inset-top)+10px)] border-b border-white/5"
             >
                 <button
                     onClick={() => navigate(-1)}
@@ -257,7 +257,7 @@ const StarGreetingsView = () => {
                                 <motion.div
                                     animate={{ rotate: [0, 10, -10, 0] }}
                                     transition={{ duration: 0.6, delay: 0.3 }}
-                                    className="w-8 h-8 rounded-full bg-[#3390ec]/20 flex items-center justify-center"
+                                    className="w-8 h-8 rounded-full bg-accent-blue/20 flex items-center justify-center"
                                 >
                                     <Gift className="text-[#3390ec]" size={16} />
                                 </motion.div>
@@ -288,14 +288,14 @@ const StarGreetingsView = () => {
                                         a.download = 'greeting.mp4';
                                         a.click();
                                     }}
-                                    className="py-3 bg-[#3390ec] text-white rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#3390ec]/20"
+                                    className="py-3 bg-accent-blue text-white rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 shadow-lg shadow-[#3390ec]/20"
                                 >
                                     <Download size={16} /> Скачать
                                 </motion.button>
                                 <motion.button
                                     whileTap={{ scale: 0.96 }}
                                     onClick={handleShareVideo}
-                                    className="py-3 bg-[#2c2c2e] text-white rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 border border-white/5"
+                                    className="py-3 bg-bg-elevated text-white rounded-xl text-[14px] font-bold flex items-center justify-center gap-2 border border-white/5"
                                 >
                                     <Share2 size={16} /> Поделиться
                                 </motion.button>
@@ -321,7 +321,7 @@ const StarGreetingsView = () => {
                             placeholder="Поиск звезды..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
-                            className="w-full bg-[#2c2c2e] border border-white/5 rounded-2xl py-2.5 pl-10 pr-4 text-[14px] text-white focus:outline-none focus:border-[#3390ec]/50 transition-colors placeholder:text-gray-500"
+                            className="w-full bg-bg-elevated border border-white/5 rounded-2xl py-2.5 pl-10 pr-4 text-[14px] text-white focus:outline-none focus:border-[#3390ec]/50 transition-colors placeholder:text-gray-500"
                         />
                         <Search className="absolute left-3.5 top-3 text-gray-500" size={16} />
                     </div>
@@ -350,16 +350,16 @@ const StarGreetingsView = () => {
                 <section>
                     <div className="px-1 mb-3 flex items-center justify-between">
                         <label className="text-[11px] font-bold text-gray-500 uppercase tracking-widest block ml-1">Что скажет звезда?</label>
-                        <div className="flex bg-[#2c2c2e] p-1 rounded-xl border border-white/5">
+                        <div className="flex bg-bg-elevated p-1 rounded-xl border border-white/5">
                             <button
                                 onClick={() => { setCustomTextMode(false); setCustomText(''); }}
-                                className={`px-3.5 py-1.5 text-[12px] font-bold rounded-lg transition-all ${!customTextMode ? 'bg-[#3390ec] text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                                className={`px-3.5 py-1.5 text-[12px] font-bold rounded-lg transition-all ${!customTextMode ? 'bg-accent-blue text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
                             >
                                 Повод
                             </button>
                             <button
                                 onClick={() => setCustomTextMode(true)}
-                                className={`px-3.5 py-1.5 text-[12px] font-bold rounded-lg transition-all ${customTextMode ? 'bg-[#3390ec] text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
+                                className={`px-3.5 py-1.5 text-[12px] font-bold rounded-lg transition-all ${customTextMode ? 'bg-accent-blue text-white shadow-sm' : 'text-gray-400 hover:text-white'}`}
                             >
                                 Свой текст
                             </button>
@@ -392,8 +392,8 @@ const StarGreetingsView = () => {
                                     disabled={isGeneratingPreview || !targetName.trim()}
                                     className={`w-full py-3 mt-3 rounded-2xl font-bold flex items-center justify-center gap-2 transition-all border
                                         ${!targetName.trim()
-                                            ? 'opacity-40 cursor-not-allowed bg-[#2c2c2e] border-white/5 text-gray-500'
-                                            : 'bg-[#2c2c2e] border-[#3390ec]/40 text-[#3390ec] active:bg-[#3390ec]/10'}`}
+                                            ? 'opacity-40 cursor-not-allowed bg-bg-elevated border-white/5 text-gray-500'
+                                            : 'bg-bg-elevated border-[#3390ec]/40 text-[#3390ec] active:bg-accent-blue/10'}`}
                                 >
                                     {isGeneratingPreview ? (
                                         <div className="animate-spin rounded-full h-4 w-4 border-2 border-[#3390ec] border-t-transparent" />
@@ -420,10 +420,10 @@ const StarGreetingsView = () => {
                                     onChange={(e) => {
                                         if (e.target.value.length <= 140) setCustomText(e.target.value);
                                     }}
-                                    className="w-full h-[120px] bg-[#2c2c2e] border border-white/5 rounded-2xl p-4 text-[14px] text-white focus:outline-none focus:border-[#3390ec]/50 transition-colors placeholder:text-gray-500 resize-none"
+                                    className="w-full h-[120px] bg-bg-elevated border border-white/5 rounded-2xl p-4 text-[14px] text-white focus:outline-none focus:border-[#3390ec]/50 transition-colors placeholder:text-gray-500 resize-none"
                                 />
                                 <div className={`absolute bottom-3 right-3 text-[11px] font-bold px-2 py-1 rounded-lg
-                                    ${customText.length > 120 ? 'text-orange-400 bg-orange-500/10' : 'text-gray-500 bg-[#1c1c1e]/80'}`}
+                                    ${customText.length > 120 ? 'text-orange-400 bg-orange-500/10' : 'text-gray-500 bg-bg-secondary/80'}`}
                                 >
                                     {customText.length} / 140
                                 </div>
@@ -441,14 +441,14 @@ const StarGreetingsView = () => {
                             placeholder="Имя (например: Артем)"
                             value={targetName}
                             onChange={(e) => setTargetName(e.target.value)}
-                            className="w-full bg-[#2c2c2e] border border-white/5 rounded-2xl py-3.5 pl-11 pr-4 text-[15px] text-white focus:outline-none focus:border-[#3390ec]/50 transition-colors placeholder:text-gray-500"
+                            className="w-full bg-bg-elevated border border-white/5 rounded-2xl py-3.5 pl-11 pr-4 text-[15px] text-white focus:outline-none focus:border-[#3390ec]/50 transition-colors placeholder:text-gray-500"
                         />
                         <User className="absolute left-3.5 top-3.5 text-gray-500" size={18} />
                     </div>
                 </section>
 
                 {/* ── How It Works card ─────────────────────────────────────────── */}
-                <section className="bg-[#2c2c2e] rounded-2xl p-4 border border-white/5">
+                <section className="bg-bg-elevated rounded-2xl p-4 border border-white/5">
                     <h3 className="text-[13px] font-bold text-gray-400 mb-3 uppercase tracking-wider">Как это работает</h3>
                     <div className="space-y-3">
                         {[
@@ -477,15 +477,15 @@ const StarGreetingsView = () => {
                 initial={{ y: 40, opacity: 0 }}
                 animate={{ y: 0, opacity: 1 }}
                 transition={{ delay: 0.3, type: 'spring', damping: 25 }}
-                className="fixed bottom-0 left-0 right-0 p-4 pb-8 bg-[#1c1c1e]/90 backdrop-blur-xl border-t border-white/5 z-40"
+                className="fixed bottom-0 left-0 right-0 p-4 pb-8 bg-bg-secondary/90 backdrop-blur-xl border-t border-white/5 z-40"
             >
                 <motion.button
                     whileTap={{ scale: 0.98 }}
                     onClick={handleGenerate}
                     disabled={isGenerating || !targetName.trim() || !selectedStar}
-                    className={`w-full h-[56px] rounded-[20px] flex items-center justify-center gap-2.5 text-[17px] font-bold transition-all shadow-lg
+                    className={`w-full h-[56px] rounded-card flex items-center justify-center gap-2.5 text-[17px] font-bold transition-all shadow-lg
                         ${isGenerating || !targetName.trim() || !selectedStar
-                            ? 'bg-[#2c2c2e] text-white/30 cursor-not-allowed'
+                            ? 'bg-bg-elevated text-white/30 cursor-not-allowed'
                             : 'bg-gradient-to-r from-[#3390ec] to-blue-600 text-white shadow-[#3390ec]/30 active:scale-[0.99]'
                         }`}
                 >

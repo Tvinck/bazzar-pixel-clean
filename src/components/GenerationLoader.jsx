@@ -73,7 +73,7 @@ const GenerationLoader = ({ type = 'image', status, result, estimatedTime = 15, 
     // Success State
     if (status === 'success') {
         return (
-            <div className="fixed inset-0 z-[9999] bg-[#000] flex flex-col items-center justify-center p-6 text-center">
+            <div className="fixed inset-0 z-[9999] bg-bg-primary flex flex-col items-center justify-center p-6 text-center">
                 <div className="absolute inset-0 overflow-hidden">
                     <img
                         src={result?.imageUrl || result?.image_url}
@@ -114,13 +114,13 @@ const GenerationLoader = ({ type = 'image', status, result, estimatedTime = 15, 
                     <div className="w-full flex gap-3">
                         <button
                             onClick={onMinimize}
-                            className="flex-1 h-14 bg-[#2c2c2e] text-white rounded-2xl font-bold active:scale-95 transition-all"
+                            className="flex-1 h-14 bg-bg-elevated text-white rounded-2xl font-bold active:scale-95 transition-all"
                         >
                             Назад
                         </button>
                         <button
                             onClick={onMinimize}
-                            className="flex-[2] h-14 bg-[#3390ec] rounded-2xl font-bold active:scale-95 transition-all shadow-lg shadow-blue-500/20"
+                            className="flex-[2] h-14 bg-accent-blue rounded-2xl font-bold active:scale-95 transition-all shadow-lg shadow-blue-500/20"
                         >
                             Отлично
                         </button>
@@ -131,7 +131,7 @@ const GenerationLoader = ({ type = 'image', status, result, estimatedTime = 15, 
     }
 
     return (
-        <div className="fixed inset-0 z-[9999] bg-[#000] text-white flex flex-col font-sans overflow-hidden">
+        <div className="fixed inset-0 z-[9999] bg-bg-primary text-white flex flex-col font-sans overflow-hidden">
             {/* MINIMIZE BUTTON & TIMER AREA */}
             <div className="absolute top-[calc(env(safe-area-inset-top)+16px)] left-0 right-0 px-4 flex justify-between items-center z-50">
                 <AnimatePresence>

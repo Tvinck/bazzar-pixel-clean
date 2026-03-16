@@ -16,9 +16,9 @@ const UserActions = ({ user, editingUser, setEditingUser, newBalance, setNewBala
                     <button onClick={() => setEditingUser(null)} className="p-1.5 bg-white/10 text-white rounded"><X size={14} /></button>
                 </div>
             ) : (
-                <button onClick={() => { setEditingUser(user.id); setNewBalance(user.balance); }} className="flex items-center gap-1 bg-[#007aff]/10 px-3 py-1.5 rounded-full">
-                    <Zap size={12} className="text-[#007aff] fill-current" />
-                    <span className="text-[13px] font-bold text-[#007aff]">{user.balance}</span>
+                <button onClick={() => { setEditingUser(user.id); setNewBalance(user.balance); }} className="flex items-center gap-1 bg-accent-blue/10 px-3 py-1.5 rounded-full">
+                    <Zap size={12} className="text-accent-blue fill-current" />
+                    <span className="text-[13px] font-bold text-accent-blue">{user.balance}</span>
                 </button>
             )}
         </div>

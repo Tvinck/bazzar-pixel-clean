@@ -16,6 +16,15 @@
     --tg-theme-button-text-color: var(--tg-theme-button-text-color, #ffffff);
     --tg-theme-secondary-bg-color: var(--tg-theme-secondary-bg-color, #f4f4f5);
 
+    /* Semantic Colors - Default (Dark) */
+    --color-bg-primary: #0f0f1a;
+    --color-bg-secondary: #1c1c1e;
+    --color-bg-elevated: #2c2c2e;
+    --color-text-primary: #ffffff;
+    --color-text-secondary: #8e8e93;
+    --color-glass: rgba(255,255,255,0.05);
+    --color-glass-border: rgba(255,255,255,0.10);
+
     /* Telegram Colors */
     --color-primary: 51 144 236;
     /* Telegram Blue */
@@ -23,10 +32,29 @@
     /* Dark Card BG */
     --color-accent: 51 144 236;
     /* Telegram Blue */
-    --color-success: 52 199 89;
+    --color-success: 52 199 8 green;
     /* Green */
     --color-warning: 255 149 0;
     /* Orange */
+  }
+
+  /* Light Theme Override */
+  .tg-light {
+    --color-bg-primary: #f2f2f7;
+    --color-bg-secondary: #ffffff;
+    --color-bg-elevated: #f2f2f7;
+    --color-text-primary: #000000;
+    --color-text-secondary: #8e8e93;
+    --color-glass: rgba(0,0,0,0.03);
+    --color-glass-border: rgba(0,0,0,0.10);
+  }
+
+  /* Telegram Theme Priority */
+  .tg-dark {
+    --color-bg-primary: var(--tg-theme-bg-color, #0f0f1a);
+    --color-bg-secondary: var(--tg-theme-secondary-bg-color, #1c1c1e);
+    --color-text-primary: var(--tg-theme-text-color, #ffffff);
+    --color-text-secondary: var(--tg-theme-hint-color, #8e8e93);
   }
 
   body {

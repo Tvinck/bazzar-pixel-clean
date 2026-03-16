@@ -85,7 +85,7 @@ const GiftModal = ({ isOpen, onClose, currentBalance = 0, onGiftSuccess }) => {
                         initial={{ opacity: 0, scale: 0.95, y: 10 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                        className="bg-[#1c1c1e] w-full max-w-sm rounded-[24px] overflow-hidden relative z-10 shadow-2xl border border-white/10"
+                        className="bg-bg-secondary w-full max-w-sm rounded-[24px] overflow-hidden relative z-10 shadow-2xl border border-white/10"
                     >
                         {/* Header */}
                         <div className="flex justify-between items-center p-4 border-b border-white/5 bg-white/5">
@@ -94,7 +94,7 @@ const GiftModal = ({ isOpen, onClose, currentBalance = 0, onGiftSuccess }) => {
                                 Подарить заряды
                             </h3>
                             {step !== 3 && (
-                                <button onClick={handleClose} className="w-8 h-8 rounded-full bg-[#2c2c2e] flex items-center justify-center text-gray-400 hover:text-white transition-colors">
+                                <button onClick={handleClose} className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center text-gray-400 hover:text-white transition-colors">
                                     <X size={18} />
                                 </button>
                             )}
@@ -116,7 +116,7 @@ const GiftModal = ({ isOpen, onClose, currentBalance = 0, onGiftSuccess }) => {
                                             value={recipient}
                                             onChange={(e) => setRecipient(e.target.value)}
                                             placeholder="@username или ID"
-                                            className="w-full bg-[#2c2c2e] rounded-[14px] py-3.5 pl-10 pr-4 text-[17px] text-white placeholder:text-gray-500 outline-none focus:ring-1 focus:ring-[#3390ec] transition-shadow shadow-inner"
+                                            className="w-full bg-bg-elevated rounded-card py-3.5 pl-10 pr-4 text-[17px] text-white placeholder:text-gray-500 outline-none focus:ring-1 focus:ring-[#3390ec] transition-shadow shadow-inner"
                                             autoFocus
                                             onKeyDown={(e) => { if (e.key === 'Enter') handleSearch(); }}
                                         />
@@ -124,7 +124,7 @@ const GiftModal = ({ isOpen, onClose, currentBalance = 0, onGiftSuccess }) => {
                                     <button
                                         onClick={handleSearch}
                                         disabled={!recipient.trim() || isSearching}
-                                        className="w-full bg-[#3390ec] text-white font-bold text-[17px] py-3.5 rounded-[14px] hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center h-[54px]"
+                                        className="w-full bg-accent-blue text-white font-bold text-[17px] py-3.5 rounded-card hover:bg-accent-blue transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center h-[54px]"
                                     >
                                         {isSearching ? <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span> : 'Найти пользователя'}
                                     </button>
@@ -134,7 +134,7 @@ const GiftModal = ({ isOpen, onClose, currentBalance = 0, onGiftSuccess }) => {
                             {step === 2 && (
                                 <div className="animate-in fade-in slide-in-from-right-4 duration-300">
                                     {/* User Card */}
-                                    <div className="flex items-center gap-3 bg-[#2c2c2e] p-3 rounded-[16px] mb-5 border border-white/5">
+                                    <div className="flex items-center gap-3 bg-bg-elevated p-3 rounded-card mb-5 border border-white/5">
                                         <div className="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center shadow-inner">
                                             <User size={24} className="text-white opacity-80" />
                                         </div>
@@ -169,7 +169,7 @@ const GiftModal = ({ isOpen, onClose, currentBalance = 0, onGiftSuccess }) => {
                                             <button
                                                 key={val}
                                                 onClick={() => { playClick(); setAmount(val === 'MAX' ? currentBalance.toString() : val.toString()); }}
-                                                className="bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white text-[14px] font-bold py-2 rounded-[10px] transition-colors border border-white/5"
+                                                className="bg-bg-elevated hover:bg-bg-elevated text-white text-[14px] font-bold py-2 rounded-input transition-colors border border-white/5"
                                             >
                                                 {val}
                                             </button>
@@ -179,7 +179,7 @@ const GiftModal = ({ isOpen, onClose, currentBalance = 0, onGiftSuccess }) => {
                                     <button
                                         onClick={handleSend}
                                         disabled={!amount || parseInt(amount, 10) <= 0 || isSending}
-                                        className="w-full bg-[#3390ec] text-white font-bold text-[17px] py-3.5 rounded-[14px] hover:bg-blue-600 transition-colors disabled:opacity-50 flex justify-center items-center h-[54px] shadow-lg shadow-blue-500/20"
+                                        className="w-full bg-accent-blue text-white font-bold text-[17px] py-3.5 rounded-card hover:bg-accent-blue transition-colors disabled:opacity-50 flex justify-center items-center h-[54px] shadow-lg shadow-blue-500/20"
                                     >
                                         {isSending ? <span className="w-5 h-5 border-2 border-white/20 border-t-white rounded-full animate-spin"></span> : 'Отправить подарок'}
                                     </button>
@@ -203,7 +203,7 @@ const GiftModal = ({ isOpen, onClose, currentBalance = 0, onGiftSuccess }) => {
                                     </p>
                                     <button
                                         onClick={handleClose}
-                                        className="w-full bg-[#2c2c2e] hover:bg-[#3a3a3c] text-white font-bold text-[17px] py-3.5 rounded-[14px] transition-colors relative z-10"
+                                        className="w-full bg-bg-elevated hover:bg-bg-elevated text-white font-bold text-[17px] py-3.5 rounded-card transition-colors relative z-10"
                                     >
                                         Закрыть
                                     </button>

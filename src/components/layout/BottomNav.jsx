@@ -7,7 +7,7 @@ import { TelegramHome, TelegramGallery, TelegramHistory, TelegramProfile } from 
 const BottomNav = ({ activeTab, onTabChange, onCreateClick, isVisible = true, zIndex = 50 }) => {
     return (
         <div style={{ zIndex }} className={`fixed bottom-0 left-0 right-0 transition-transform duration-300 ${!isVisible ? 'translate-y-full' : 'translate-y-0'}`}>
-            <nav className="bg-[#1c1c1e]/95 backdrop-blur-xl border-t border-white/10 px-2 py-2 flex justify-around items-center safe-area-bottom pb-4">
+            <nav className="bg-bg-secondary/95 backdrop-blur-xl border-t border-white/10 px-2 py-2 flex justify-around items-center safe-area-bottom pb-4">
 
                 {/* Home */}
                 <NavButton

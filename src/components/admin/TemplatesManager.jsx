@@ -11,7 +11,7 @@ const TemplatesManager = ({
         <div className="space-y-4">
             <div className="flex gap-2 mb-4">
                 <input
-                    className="flex-1 bg-[#2c2c2e] border-none rounded-[14px] px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
+                    className="flex-1 bg-bg-elevated border-none rounded-card px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
                     placeholder="Поиск по названию..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
@@ -24,7 +24,7 @@ const TemplatesManager = ({
                         category: 'trends',
                         media_type: 'image'
                     })}
-                    className="bg-[#007aff] px-4 rounded-[14px] flex items-center justify-center text-white shadow-lg gap-2 active:scale-95 transition-transform cursor-pointer hover:bg-blue-600"
+                    className="bg-accent-blue px-4 rounded-card flex items-center justify-center text-white shadow-lg gap-2 active:scale-95 transition-transform cursor-pointer hover:bg-accent-blue"
                 >
                     <Plus size={20} />
                     <span className="text-[13px] font-bold hidden sm:inline">Добавить</span>
@@ -35,7 +35,7 @@ const TemplatesManager = ({
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 mb-2">
                 <button
                     onClick={() => setSelectedCategoryFilter('all')}
-                    className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${selectedCategoryFilter === 'all' ? 'bg-white text-black' : 'bg-[#2c2c2e] text-white/70 hover:text-white'}`}
+                    className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${selectedCategoryFilter === 'all' ? 'bg-white text-black' : 'bg-bg-elevated text-white/70 hover:text-white'}`}
                 >
                     Все
                 </button>
@@ -43,7 +43,7 @@ const TemplatesManager = ({
                     <button
                         key={c.slug}
                         onClick={() => setSelectedCategoryFilter(c.slug)}
-                        className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${selectedCategoryFilter === c.slug ? 'bg-white text-black' : 'bg-[#2c2c2e] text-white/70 hover:text-white'}`}
+                        className={`px-4 py-2 rounded-full text-[13px] font-medium whitespace-nowrap transition-colors ${selectedCategoryFilter === c.slug ? 'bg-white text-black' : 'bg-bg-elevated text-white/70 hover:text-white'}`}
                     >
                         {c.label}
                     </button>
@@ -55,7 +55,7 @@ const TemplatesManager = ({
                     <div
                         key={t.id}
                         onClick={() => setEditingTemplate(t)}
-                        className="bg-[#2c2c2e] rounded-[16px] overflow-hidden relative cursor-pointer active:scale-95 transition-transform border border-white/5 group"
+                        className="bg-bg-elevated rounded-card overflow-hidden relative cursor-pointer active:scale-95 transition-transform border border-white/5 group"
                     >
                         <div className="aspect-[9/16] bg-black/50 relative">
                             {t.src && (t.media_type === 'video' ? (
@@ -69,7 +69,7 @@ const TemplatesManager = ({
                                 </div>
                             )}
                             {t.is_local && (
-                                <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-[#007aff] rounded text-[9px] font-bold shadow-lg">
+                                <div className="absolute top-2 left-2 px-1.5 py-0.5 bg-accent-blue rounded text-[9px] font-bold shadow-lg">
                                     LOCAL
                                 </div>
                             )}

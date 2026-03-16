@@ -6,7 +6,7 @@ export const ScreenErrorBoundary = ({ children }) => (
   <ErrorBoundary
     fallback={({ reset }) => (
       <div className="flex flex-col items-center justify-center 
-                      min-h-screen p-6 text-center bg-[#0f0f1a] relative z-50">
+                      min-h-screen p-6 text-center bg-bg-primary relative z-50">
         <div className="text-6xl mb-4">🔧</div>
         <h2 className="text-white text-xl font-bold mb-2">
           Упс, экран сломался

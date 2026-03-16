@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const LoadingScreen = () => {
     return (
-        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-[#0f0f0f] text-white">
+        <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-bg-primary text-white">
             {/* Dynamic Background Glow */}
             <motion.div
                 animate={{

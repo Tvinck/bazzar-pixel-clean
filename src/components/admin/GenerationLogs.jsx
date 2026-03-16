@@ -4,7 +4,7 @@ const GenerationLogs = ({ recentGenerations }) => {
     return (
         <div className="grid grid-cols-2 gap-3">
             {recentGenerations.map((gen) => (
-                <div key={gen.id} className="relative aspect-[3/4] bg-[#2c2c2e] rounded-[16px] overflow-hidden border border-white/5">
+                <div key={gen.id} className="relative aspect-[3/4] bg-bg-elevated rounded-card overflow-hidden border border-white/5">
                     {gen.type === 'video' ? (
                         <video src={gen.result_url || gen.image_url} className="w-full h-full object-cover" muted loop autoPlay playsInline />
                     ) : (

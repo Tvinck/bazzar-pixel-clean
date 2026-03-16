@@ -217,12 +217,12 @@ const StickersView = () => {
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 sticky top-0 bg-black/95 backdrop-blur-xl z-30 pt-[calc(env(safe-area-inset-top)+10px)] border-b border-white/5">
                 <div onClick={() => navigate(-1)} className="w-8 h-8 flex items-center justify-center -ml-2 active:opacity-60">
-                    <ChevronDown className="rotate-90 text-[#007aff]" size={28} />
+                    <ChevronDown className="rotate-90 text-accent-blue" size={28} />
                 </div>
                 <h1 className="text-[17px] font-semibold tracking-tight flex-1 text-center mr-6">
                     AI Стикеры
                 </h1>
-                <div className="absolute right-4 flex items-center gap-1.5 bg-[#2c2c2e] px-2.5 py-1 rounded-full">
+                <div className="absolute right-4 flex items-center gap-1.5 bg-bg-elevated px-2.5 py-1 rounded-full">
                     <Zap size={14} className="fill-[#ffcc00] text-[#ffcc00]" />
                     <span className="text-[15px] font-semibold">{stats?.current_balance || 0}</span>
                 </div>
@@ -232,10 +232,10 @@ const StickersView = () => {
 
                 {/* How It Works */}
                 <div className="px-4">
-                    <div className="bg-[#1c1c1e] rounded-[14px] p-4 border border-white/5">
+                    <div className="bg-bg-secondary rounded-card p-4 border border-white/5">
                         <div className="flex items-center gap-2 mb-3">
-                            <Info size={14} className="text-[#007aff]" />
-                            <h3 className="text-[13px] font-bold text-[#8e8e93] uppercase tracking-wider">Как это работает</h3>
+                            <Info size={14} className="text-accent-blue" />
+                            <h3 className="text-[13px] font-bold text-text-secondary uppercase tracking-wider">Как это работает</h3>
                         </div>
                         <div className="space-y-3">
                             {[
@@ -252,7 +252,7 @@ const StickersView = () => {
                                     className="flex items-center gap-3"
                                 >
                                     <span className="text-base">{step.emoji}</span>
-                                    <span className="text-[13px] text-[#8e8e93] leading-snug">{step.text}</span>
+                                    <span className="text-[13px] text-text-secondary leading-snug">{step.text}</span>
                                 </motion.div>
                             ))}
                         </div>
@@ -264,11 +264,11 @@ const StickersView = () => {
 
                         {/* 1. Upload Face */}
                         <div className="space-y-2">
-                            <label className="text-[11px] font-bold text-[#8e8e93] uppercase tracking-wider flex items-center gap-1.5 ml-1">
-                                <span className="w-5 h-5 rounded-full bg-[#007aff] text-white text-[10px] font-black flex items-center justify-center">1</span>
+                            <label className="text-[11px] font-bold text-text-secondary uppercase tracking-wider flex items-center gap-1.5 ml-1">
+                                <span className="w-5 h-5 rounded-full bg-accent-blue text-white text-[10px] font-black flex items-center justify-center">1</span>
                                 Загрузите фото
                             </label>
-                            <div className="w-full h-44 bg-[#1c1c1e] rounded-[14px] border-2 border-dashed border-white/10 flex items-center justify-center relative overflow-hidden group hover:border-[#007aff]/50 transition-all">
+                            <div className="w-full h-44 bg-bg-secondary rounded-card border-2 border-dashed border-white/10 flex items-center justify-center relative overflow-hidden group hover:border-accent-blue/50 transition-all">
                                 {sourceImage ? (
                                     <div className="relative w-full h-full">
                                         <img src={sourceImage} className="w-full h-full object-cover" alt="face" />
@@ -284,10 +284,10 @@ const StickersView = () => {
                                     </div>
                                 ) : (
                                     <div className="text-center p-4">
-                                        <div className="w-12 h-12 bg-[#007aff]/10 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                                            <Upload size={24} className="text-[#007aff]" />
+                                        <div className="w-12 h-12 bg-accent-blue/10 rounded-xl flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                                            <Upload size={24} className="text-accent-blue" />
                                         </div>
-                                        <span className="text-xs font-medium text-[#8e8e93]">Загрузите селфи</span>
+                                        <span className="text-xs font-medium text-text-secondary">Загрузите селфи</span>
                                         <p className="text-[10px] text-[#636366] mt-1">Чёткое фото лица для лучшего результата</p>
                                     </div>
                                 )}
@@ -297,8 +297,8 @@ const StickersView = () => {
 
                         {/* 2. Pack Selection */}
                         <div className="space-y-2">
-                            <label className="text-[11px] font-bold text-[#8e8e93] uppercase tracking-wider flex items-center gap-1.5 ml-1">
-                                <span className="w-5 h-5 rounded-full bg-[#007aff] text-white text-[10px] font-black flex items-center justify-center">2</span>
+                            <label className="text-[11px] font-bold text-text-secondary uppercase tracking-wider flex items-center gap-1.5 ml-1">
+                                <span className="w-5 h-5 rounded-full bg-accent-blue text-white text-[10px] font-black flex items-center justify-center">2</span>
                                 Выберите стикерпак
                             </label>
 
@@ -307,9 +307,9 @@ const StickersView = () => {
                                     <button
                                         key={pack.id}
                                         onClick={() => { setSelectedPack(pack); setSelectedStickers({}); playClick(); }}
-                                        className={`shrink-0 px-3.5 py-2.5 rounded-[10px] text-[13px] font-semibold transition-all flex items-center gap-1.5 ${selectedPack.id === pack.id
-                                            ? 'bg-[#007aff] text-white shadow-lg shadow-[#007aff]/20'
-                                            : 'bg-[#1c1c1e] text-[#8e8e93] hover:text-white'
+                                        className={`shrink-0 px-3.5 py-2.5 rounded-input text-[13px] font-semibold transition-all flex items-center gap-1.5 ${selectedPack.id === pack.id
+                                            ? 'bg-accent-blue text-white shadow-lg shadow-[#007aff]/20'
+                                            : 'bg-bg-secondary text-text-secondary hover:text-white'
                                             }`}
                                     >
                                         <span className="text-base">{pack.emoji}</span>
@@ -322,13 +322,13 @@ const StickersView = () => {
                         {/* 3. Sticker Selection Grid */}
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
-                                <label className="text-[11px] font-bold text-[#8e8e93] uppercase tracking-wider flex items-center gap-1.5 ml-1">
-                                    <span className="w-5 h-5 rounded-full bg-[#007aff] text-white text-[10px] font-black flex items-center justify-center">3</span>
+                                <label className="text-[11px] font-bold text-text-secondary uppercase tracking-wider flex items-center gap-1.5 ml-1">
+                                    <span className="w-5 h-5 rounded-full bg-accent-blue text-white text-[10px] font-black flex items-center justify-center">3</span>
                                     Выберите стикеры
                                 </label>
                                 <button
                                     onClick={selectedCount === selectedPack.stickers.length ? deselectAll : selectAll}
-                                    className="text-[11px] font-bold text-[#007aff]"
+                                    className="text-[11px] font-bold text-accent-blue"
                                 >
                                     {selectedCount === selectedPack.stickers.length ? 'Снять все' : 'Выбрать все'}
                                 </button>
@@ -342,9 +342,9 @@ const StickersView = () => {
                                             key={sticker.id}
                                             whileTap={{ scale: 0.95 }}
                                             onClick={() => toggleSticker(sticker.id)}
-                                            className={`relative p-3 rounded-[12px] cursor-pointer transition-all flex flex-col items-center gap-2 ${isSelected
-                                                ? 'bg-[#007aff]/15 border-2 border-[#007aff]/60 ring-2 ring-[#007aff]/10'
-                                                : 'bg-[#1c1c1e] border-2 border-transparent hover:bg-[#2c2c2e]'
+                                            className={`relative p-3 rounded-input cursor-pointer transition-all flex flex-col items-center gap-2 ${isSelected
+                                                ? 'bg-accent-blue/15 border-2 border-accent-blue/60 ring-2 ring-[#007aff]/10'
+                                                : 'bg-bg-secondary border-2 border-transparent hover:bg-bg-elevated'
                                                 }`}
                                         >
                                             {sticker.videoUrl ? (
@@ -352,10 +352,10 @@ const StickersView = () => {
                                             ) : (
                                                 <span className="text-3xl">{sticker.preview}</span>
                                             )}
-                                            <span className="text-[10px] font-bold text-[#8e8e93] text-center leading-tight">{sticker.title}</span>
+                                            <span className="text-[10px] font-bold text-text-secondary text-center leading-tight">{sticker.title}</span>
                                             {isSelected && (
                                                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} className="absolute top-1.5 right-1.5">
-                                                    <CheckCircle size={16} className="text-[#007aff]" fill="rgba(0,122,255,0.2)" />
+                                                    <CheckCircle size={16} className="text-accent-blue" fill="rgba(0,122,255,0.2)" />
                                                 </motion.div>
                                             )}
                                         </motion.div>
@@ -367,9 +367,9 @@ const StickersView = () => {
                         {/* 4. Branding Toggle */}
                         <div
                             onClick={() => setUseBranding(!useBranding)}
-                            className={`p-3 rounded-[12px] border transition-all cursor-pointer flex items-center gap-3 ${useBranding
-                                ? 'bg-purple-500/10 border-purple-500/30'
-                                : 'bg-[#1c1c1e] border-white/5'
+                            className={`p-3 rounded-input border transition-all cursor-pointer flex items-center gap-3 ${useBranding
+                                ? 'bg-accent-purple/10 border-purple-500/30'
+                                : 'bg-bg-secondary border-white/5'
                                 }`}
                         >
                             <Zap size={16} className={useBranding ? 'text-purple-400' : 'text-[#636366]'} fill={useBranding ? 'currentColor' : 'none'} />
@@ -402,12 +402,12 @@ const StickersView = () => {
                         <div>
                             <h3 className="text-lg font-bold text-white">Генерируем стикеры...</h3>
                             {currentSticker && (
-                                <p className="text-sm text-[#8e8e93] mt-1">Сейчас: <span className="text-[#007aff]">{currentSticker}</span></p>
+                                <p className="text-sm text-text-secondary mt-1">Сейчас: <span className="text-accent-blue">{currentSticker}</span></p>
                             )}
                         </div>
                         <div className="grid grid-cols-3 md:grid-cols-4 gap-2 mt-6">
                                 {results.map((s, idx) => (
-                                <div key={idx} className="aspect-square rounded-[12px] bg-[#1c1c1e] border border-white/5 flex items-center justify-center overflow-hidden">
+                                <div key={idx} className="aspect-square rounded-input bg-bg-secondary border border-white/5 flex items-center justify-center overflow-hidden">
                                     {s.status === 'success' ? (
                                         <img src={s.resultUrl} className="w-full h-full object-contain p-1" alt={s.title} />
                                     ) : s.status === 'error' ? (
@@ -415,7 +415,7 @@ const StickersView = () => {
                                     ) : (
                                         <div className="flex flex-col items-center gap-1">
                                             <span className="text-xl opacity-30">{s.preview}</span>
-                                            <Loader2 size={12} className="text-[#007aff] animate-spin opacity-30" />
+                                            <Loader2 size={12} className="text-accent-blue animate-spin opacity-30" />
                                         </div>
                                     )}
                                 </div>
@@ -434,12 +434,12 @@ const StickersView = () => {
                                     type="text" value={telegramId}
                                     onChange={(e) => setTelegramId(e.target.value)}
                                     placeholder="Telegram ID"
-                                    className="bg-[#2c2c2e] text-white text-xs px-2 py-1 rounded-lg border border-white/10 w-28 text-center"
+                                    className="bg-bg-elevated text-white text-xs px-2 py-1 rounded-lg border border-white/10 w-28 text-center"
                                 />
                             )}
                             <button
                                 onClick={() => { setResults([]); setProgress(0); setSelectedStickers({}); setPackLink(null); }}
-                                className="text-[11px] font-bold text-[#007aff]"
+                                className="text-[11px] font-bold text-accent-blue"
                             >
                                 ← Назад
                             </button>
@@ -452,7 +452,7 @@ const StickersView = () => {
                                 animate={{ scale: 1, opacity: 1 }}
                                 onClick={createStickerPack}
                                 disabled={isCreatingPack || results.filter(s => s.status === 'success').length === 0}
-                                className="w-full py-3.5 rounded-[12px] bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-[15px] flex items-center justify-center gap-2 shadow-xl shadow-purple-500/20 disabled:opacity-50 transition-all"
+                                className="w-full py-3.5 rounded-input bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-bold text-[15px] flex items-center justify-center gap-2 shadow-xl shadow-purple-500/20 disabled:opacity-50 transition-all"
                             >
                                 {isCreatingPack ? (
                                     <><Loader2 size={18} className="animate-spin" /> Создаём стикерпак...</>
@@ -465,7 +465,7 @@ const StickersView = () => {
                                 initial={{ scale: 0.95, opacity: 0 }}
                                 animate={{ scale: 1, opacity: 1 }}
                                 href={packLink} target="_blank" rel="noopener noreferrer"
-                                className="w-full py-3.5 rounded-[12px] bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold text-[15px] flex items-center justify-center gap-2 shadow-xl shadow-green-500/20 no-underline transition-all"
+                                className="w-full py-3.5 rounded-input bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold text-[15px] flex items-center justify-center gap-2 shadow-xl shadow-green-500/20 no-underline transition-all"
                             >
                                 <ExternalLink size={18} /> Открыть стикерпак
                             </motion.a>
@@ -478,7 +478,7 @@ const StickersView = () => {
                                     initial={{ scale: 0.8, opacity: 0 }}
                                     animate={{ scale: 1, opacity: 1 }}
                                     transition={{ delay: idx * 0.08 }}
-                                    className="bg-[#1c1c1e] rounded-[14px] overflow-hidden border border-white/5 group relative aspect-square"
+                                    className="bg-bg-secondary rounded-card overflow-hidden border border-white/5 group relative aspect-square"
                                 >
                                     {sticker.status === 'success' ? (
                                         <>
@@ -494,7 +494,7 @@ const StickersView = () => {
                                                 </button>
                                                 <button onClick={() => sendToBot(sticker, idx)}
                                                     disabled={isSending[idx]}
-                                                    className="w-9 h-9 rounded-full bg-[#007aff] text-white flex items-center justify-center hover:bg-[#005ec4] transition disabled:opacity-50">
+                                                    className="w-9 h-9 rounded-full bg-accent-blue text-white flex items-center justify-center hover:bg-[#005ec4] transition disabled:opacity-50">
                                                     {isSending[idx] ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
                                                 </button>
                                             </div>
@@ -503,7 +503,7 @@ const StickersView = () => {
                                                     initial={{ opacity: 0, scale: 0.8 }}
                                                     animate={{ opacity: 1, scale: 1 }}
                                                     exit={{ opacity: 0 }}
-                                                    className="absolute inset-0 bg-green-600/90 backdrop-blur-sm flex flex-col items-center justify-center rounded-[14px] z-10"
+                                                    className="absolute inset-0 bg-green-600/90 backdrop-blur-sm flex flex-col items-center justify-center rounded-card z-10"
                                                 >
                                                     <CheckCircle size={28} className="text-white mb-1.5" />
                                                     <span className="text-[10px] font-bold text-white text-center leading-tight px-2">Отправлено в диалог бота!</span>
@@ -517,7 +517,7 @@ const StickersView = () => {
                                         </div>
                                     ) : (
                                         <div className="w-full h-full flex items-center justify-center">
-                                            <Loader2 size={24} className="text-[#007aff] animate-spin opacity-20" />
+                                            <Loader2 size={24} className="text-accent-blue animate-spin opacity-20" />
                                         </div>
                                     )}
                                     <div className="absolute bottom-1.5 left-1.5 right-1.5 px-2 py-0.5 bg-black/50 backdrop-blur-sm rounded-full">
@@ -536,10 +536,10 @@ const StickersView = () => {
                     <button
                         disabled={!sourceImage || selectedCount === 0 || isProcessing}
                         onClick={generateStickers}
-                        className={`w-full h-[50px] rounded-[12px] flex items-center justify-center gap-2 text-[17px] font-semibold transition-all active:scale-[0.98]
+                        className={`w-full h-[50px] rounded-input flex items-center justify-center gap-2 text-[17px] font-semibold transition-all active:scale-[0.98]
                             ${!sourceImage || selectedCount === 0
-                                ? 'bg-[#2c2c2e] text-[#8e8e93]'
-                                : 'bg-[#007aff] text-white hover:bg-blue-600 shadow-sm'
+                                ? 'bg-bg-elevated text-text-secondary'
+                                : 'bg-accent-blue text-white hover:bg-accent-blue shadow-sm'
                             }`}
                     >
                         {selectedCount === 0 ? 'Выберите стикеры' : (

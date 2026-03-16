@@ -15,7 +15,7 @@ const GenerationButton = ({
             <div className="pointer-events-auto">
                 <div className="flex items-center gap-3 mb-3 px-1">
                     <div className="flex-1 h-[1px] bg-white/5" />
-                    <div className="flex items-center gap-1.5 text-[13px] font-bold text-[#8e8e93]">
+                    <div className="flex items-center gap-1.5 text-[13px] font-bold text-text-secondary">
                         <span>Стоимость:</span>
                         <div className="flex items-center gap-1 text-[#ffcc00] bg-[#ffcc00]/10 px-2 py-0.5 rounded-full">
                             <Zap size={12} className="fill-current" />

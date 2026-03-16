@@ -76,7 +76,7 @@ const CollectionsView = () => {
     };
 
     return (
-        <div className="min-h-screen bg-black text-white font-sans flex flex-col md:max-w-3xl md:mx-auto relative pt-[calc(env(safe-area-inset-top)+10px)] selection:bg-[#3390ec]/30">
+        <div className="min-h-screen bg-black text-white font-sans flex flex-col md:max-w-3xl md:mx-auto relative pt-[calc(env(safe-area-inset-top)+10px)] selection:bg-accent-blue/30">
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 sticky top-0 bg-black/80 backdrop-blur-xl z-30 border-b border-white/5 shadow-sm">
                 <div className="flex items-center">
@@ -90,7 +90,7 @@ const CollectionsView = () => {
                 {!selectedCollection && (
                     <button
                         onClick={() => { playClick(); setIsCreating(true); }}
-                        className="bg-[#3390ec]/10 text-[#3390ec] p-2 rounded-full hover:bg-[#3390ec]/20 transition-colors"
+                        className="bg-accent-blue/10 text-[#3390ec] p-2 rounded-full hover:bg-accent-blue/20 transition-colors"
                     >
                         <Plus size={20} />
                     </button>
@@ -100,7 +100,7 @@ const CollectionsView = () => {
             <div className="flex-1 overflow-y-auto px-4 py-6 pb-24">
                 {/* Create Modal (Inline) */}
                 {isCreating && (
-                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-[#1c1c1e] p-4 rounded-2xl border border-white/10 mb-6 shadow-xl">
+                    <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-bg-secondary p-4 rounded-2xl border border-white/10 mb-6 shadow-xl">
                         <label className="text-[13px] font-medium text-gray-400 mb-2 block uppercase tracking-wider">Новая коллекция</label>
                         <div className="flex gap-2">
                             <input
@@ -108,10 +108,10 @@ const CollectionsView = () => {
                                 value={newCollectionName}
                                 onChange={(e) => setNewCollectionName(e.target.value)}
                                 placeholder="Название..."
-                                className="flex-1 bg-[#2c2c2e] px-4 py-2.5 rounded-xl outline-none focus:ring-1 focus:ring-[#3390ec] transition-shadow text-[15px]"
+                                className="flex-1 bg-bg-elevated px-4 py-2.5 rounded-xl outline-none focus:ring-1 focus:ring-[#3390ec] transition-shadow text-[15px]"
                                 onKeyDown={(e) => { if (e.key === 'Enter') handleCreateCollection(); if (e.key === 'Escape') setIsCreating(false); }}
                             />
-                            <button onClick={handleCreateCollection} className="bg-[#3390ec] text-white px-4 rounded-xl font-bold hover:bg-blue-600 transition-colors">
+                            <button onClick={handleCreateCollection} className="bg-accent-blue text-white px-4 rounded-xl font-bold hover:bg-accent-blue transition-colors">
                                 <Check size={20} />
                             </button>
                         </div>
@@ -134,7 +134,7 @@ const CollectionsView = () => {
                                     whileHover={{ scale: 1.02 }}
                                     whileTap={{ scale: 0.98 }}
                                     onClick={() => setSelectedCollection(col)}
-                                    className="bg-[#1c1c1e] rounded-[18px] p-4 border border-white/5 cursor-pointer flex flex-col items-center justify-center text-center aspect-square shadow-sm relative group overflow-hidden"
+                                    className="bg-bg-secondary rounded-[18px] p-4 border border-white/5 cursor-pointer flex flex-col items-center justify-center text-center aspect-square shadow-sm relative group overflow-hidden"
                                 >
                                     <button
                                         onClick={(e) => { e.stopPropagation(); handleDeleteCollection(col.id); }}
@@ -147,13 +147,13 @@ const CollectionsView = () => {
                                     {col.items && col.items.length > 0 ? (
                                         <div className="w-16 h-16 mb-3 rounded-xl overflow-hidden grid grid-cols-2 grid-rows-2 gap-0.5 transform -rotate-6 shadow-md border border-white/10 group-hover:rotate-0 transition-transform duration-300">
                                             {[...Array(4)].map((_, i) => (
-                                                <div key={i} className="bg-[#2c2c2e] w-full h-full">
+                                                <div key={i} className="bg-bg-elevated w-full h-full">
                                                     {col.items[i]?.url && <img src={col.items[i].url} className="w-full h-full object-cover" />}
                                                 </div>
                                             ))}
                                         </div>
                                     ) : (
-                                        <div className="w-16 h-16 bg-[#2c2c2e] rounded-xl mb-3 flex items-center justify-center transform -rotate-6 shadow-md border border-[#3a3a3c] group-hover:rotate-0 transition-transform duration-300">
+                                        <div className="w-16 h-16 bg-bg-elevated rounded-xl mb-3 flex items-center justify-center transform -rotate-6 shadow-md border border-glass-border group-hover:rotate-0 transition-transform duration-300">
                                             <Folder size={28} className="text-gray-500" />
                                         </div>
                                     )}
@@ -179,7 +179,7 @@ const CollectionsView = () => {
                                     animate={{ opacity: 1, scale: 1 }}
                                     transition={{ delay: idx * 0.05 }}
                                     key={item.id || idx}
-                                    className="relative aspect-square rounded-[14px] overflow-hidden group border border-white/5"
+                                    className="relative aspect-square rounded-card overflow-hidden group border border-white/5"
                                 >
                                     <img src={item.url} alt="Generation" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
 

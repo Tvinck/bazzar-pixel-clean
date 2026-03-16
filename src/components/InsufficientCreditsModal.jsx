@@ -115,7 +115,7 @@ const InsufficientCreditsModal = ({ isOpen, onClose, onTopUp }) => {
                         onDragEnd={(_, info) => {
                             if (info.offset.y > 100) onClose();
                         }}
-                        className="fixed bottom-0 left-0 right-0 z-[100] bg-[#121214] rounded-t-[40px] overflow-hidden border-t border-white/10 pb-safe-bottom shadow-[0_-10px_60px_-15px_rgba(220,38,38,0.3)]"
+                        className="fixed bottom-0 left-0 right-0 z-[100] bg-bg-secondary rounded-t-[40px] overflow-hidden border-t border-white/10 pb-safe-bottom shadow-[0_-10px_60px_-15px_rgba(220,38,38,0.3)]"
                     >
                         {/* Drag Handle */}
                         <div className="flex justify-center pt-3 pb-1" onPointerDown={(e) => dragControls.start(e)}>
@@ -157,12 +157,12 @@ const InsufficientCreditsModal = ({ isOpen, onClose, onTopUp }) => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ delay: 0.1 }}
                                 onClick={handleTopUp}
-                                className="mb-4 bg-[#18181b] rounded-[28px] p-1.5 border border-white/5 cursor-pointer group relative overflow-hidden"
+                                className="mb-4 bg-bg-secondary rounded-[28px] p-1.5 border border-white/5 cursor-pointer group relative overflow-hidden"
                             >
                                 <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 
-                                <div className="flex items-center gap-4 bg-[#1c1c1e] rounded-[24px] p-4 border border-white/5 relative z-10">
-                                    <div className="w-12 h-12 rounded-xl bg-[#27272a] flex items-center justify-center text-green-400 shadow-[0_0_15px_rgba(74,222,128,0.2)]">
+                                <div className="flex items-center gap-4 bg-bg-secondary rounded-[24px] p-4 border border-white/5 relative z-10">
+                                    <div className="w-12 h-12 rounded-xl bg-bg-elevated flex items-center justify-center text-green-400 shadow-[0_0_15px_rgba(74,222,128,0.2)]">
                                         <Zap size={24} fill="currentColor" />
                                     </div>
                                     <div className="flex-1">

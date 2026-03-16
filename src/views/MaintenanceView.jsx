@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 
 const MaintenanceView = () => {
     return (
-        <div className="min-h-screen bg-[#0f0f0f] flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
+        <div className="min-h-screen bg-bg-primary flex flex-col items-center justify-center p-6 text-center relative overflow-hidden">
 
             {/* Background Glows */}
             <div className="absolute inset-0 z-0 pointer-events-none overflow-hidden">

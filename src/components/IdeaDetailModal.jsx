@@ -26,7 +26,7 @@ const IdeaDetailModal = ({ isOpen, onClose, creation, onRemix, onLike }) => {
                         animate={{ y: 0 }}
                         exit={{ y: "100%" }}
                         transition={{ type: "spring", damping: 25, stiffness: 200 }}
-                        className="w-full bg-[#151517] rounded-t-[32px] overflow-hidden relative z-10 pointer-events-auto max-h-[92vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border-t border-white/10"
+                        className="w-full bg-bg-secondary rounded-t-[32px] overflow-hidden relative z-10 pointer-events-auto max-h-[92vh] flex flex-col shadow-[0_-10px_40px_rgba(0,0,0,0.5)] border-t border-white/10"
                     >
                         {/* Drag Handle Area */}
                         <div className="w-full flex justify-center pt-4 pb-2 shrink-0 cursor-grab active:cursor-grabbing" onClick={onClose}>
@@ -104,7 +104,7 @@ const IdeaDetailModal = ({ isOpen, onClose, creation, onRemix, onLike }) => {
                         </div>
 
                         {/* Sticky Bottom Actions */}
-                        <div className="p-4 px-5 bg-[#151517]/90 backdrop-blur-xl border-t border-white/5 pb-8 shrink-0">
+                        <div className="p-4 px-5 bg-bg-secondary/90 backdrop-blur-xl border-t border-white/5 pb-8 shrink-0">
                             <div className="grid grid-cols-1 gap-3">
                                 <motion.button
                                     onClick={() => {

@@ -10,7 +10,7 @@ const PromotionsManager = ({
         <div className="space-y-4">
             <div className="flex gap-2 mb-4">
                 <input
-                    className="flex-1 bg-[#2c2c2e] border-none rounded-[14px] px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
+                    className="flex-1 bg-bg-elevated border-none rounded-card px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
                     placeholder="Поиск акций..."
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
@@ -21,7 +21,7 @@ const PromotionsManager = ({
                         is_active: true,
                         discount_percent: 0
                     })}
-                    className="bg-[#007aff] px-4 rounded-[14px] flex items-center justify-center text-white shadow-lg gap-2 active:scale-95 transition-transform cursor-pointer hover:bg-blue-600"
+                    className="bg-accent-blue px-4 rounded-card flex items-center justify-center text-white shadow-lg gap-2 active:scale-95 transition-transform cursor-pointer hover:bg-accent-blue"
                 >
                     <Plus size={20} />
                     <span className="text-[13px] font-bold hidden sm:inline">Добавить</span>
@@ -32,7 +32,7 @@ const PromotionsManager = ({
                 {promotions.filter(p => (p.title || '').toLowerCase().includes(searchQuery.toLowerCase())).map((p) => (
                     <div
                         key={p.id}
-                        className="bg-[#2c2c2e] rounded-[16px] overflow-hidden relative border border-white/5 p-4 flex flex-col gap-3 group"
+                        className="bg-bg-elevated rounded-card overflow-hidden relative border border-white/5 p-4 flex flex-col gap-3 group"
                     >
                         <div className="flex justify-between items-start">
                             <div className="flex-1 min-w-0 pr-3">
@@ -56,7 +56,7 @@ const PromotionsManager = ({
                         </div>
 
                         <div className="flex items-center gap-2 flex-wrap">
-                            <span className="text-[11px] font-mono bg-[#007aff]/10 text-[#007aff] px-2 py-1 rounded-md bg-opacity-70 dark:bg-opacity-20 border border-[#007aff]/20">
+                            <span className="text-[11px] font-mono bg-accent-blue/10 text-accent-blue px-2 py-1 rounded-md bg-opacity-70 dark:bg-opacity-20 border border-accent-blue/20">
                                 -{p.discount_percent}%
                             </span>
                             {(p.valid_until || p.valid_from) && (

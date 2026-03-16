@@ -215,7 +215,7 @@ const HowToGuide = ({ isOpen, onClose }) => {
                                 <motion.button
                                     whileTap={{ scale: 0.96 }}
                                     onClick={handleNext}
-                                    className="w-full bg-white text-black font-bold text-[17px] py-[18px] rounded-[20px] shadow-xl flex items-center justify-center gap-2 active:opacity-90"
+                                    className="w-full bg-white text-black font-bold text-[17px] py-[18px] rounded-card shadow-xl flex items-center justify-center gap-2 active:opacity-90"
                                 >
                                     {currentSlide.buttonText}
                                     {currentSlide.isFinal ? <Check size={20} /> : <ArrowRight size={20} />}

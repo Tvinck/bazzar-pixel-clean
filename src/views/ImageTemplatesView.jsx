@@ -97,7 +97,7 @@ const ImageTemplatesView = ({ onOpenTemplate }) => {
                         <button
                             key={cat.id}
                             onClick={() => setActiveCategory(cat.id)}
-                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-[16px] text-xs font-[800] whitespace-nowrap transition-all duration-300 border ${activeCategory === cat.id
+                            className={`flex items-center gap-1.5 px-4 py-2.5 rounded-card text-xs font-[800] whitespace-nowrap transition-all duration-300 border ${activeCategory === cat.id
                                 ? 'bg-stone-800 text-white border-transparent shadow-lg scale-105'
                                 : 'bg-white dark:bg-white/5 text-stone-500 dark:text-stone-400 border-stone-100 dark:border-white/10'
                                 }`}
@@ -114,7 +114,7 @@ const ImageTemplatesView = ({ onOpenTemplate }) => {
                 <div className="columns-2 gap-3 space-y-3">
                     {isLoading ? (
                         Array.from({ length: 6 }).map((_unused, i) => (
-                            <div key={i} className="break-inside-avoid relative rounded-[20px] overflow-hidden bg-white dark:bg-white/5 h-48 animate-pulse" />
+                            <div key={i} className="break-inside-avoid relative rounded-card overflow-hidden bg-white dark:bg-white/5 h-48 animate-pulse" />
                         ))
                     ) : filteredItems.length > 0 ? (
                         filteredItems.map((item, i) => (
@@ -128,7 +128,7 @@ const ImageTemplatesView = ({ onOpenTemplate }) => {
                                     stiffness: 100,
                                     damping: 20
                                 }}
-                                className="break-inside-avoid relative group rounded-[20px] overflow-hidden bg-stone-900 cursor-pointer shadow-md mb-3"
+                                className="break-inside-avoid relative group rounded-card overflow-hidden bg-stone-900 cursor-pointer shadow-md mb-3"
                                 onClick={() => onOpenTemplate && onOpenTemplate(item)}
                             >
                                 <div className="relative aspect-[3/4] bg-stone-800">

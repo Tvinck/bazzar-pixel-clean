@@ -86,7 +86,7 @@ const GenerationResult = ({ result, type = 'image', onClose, onRemix }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9999] bg-[#09090b] flex flex-col font-sans overflow-hidden"
+            className="fixed inset-0 z-[9999] bg-bg-primary flex flex-col font-sans overflow-hidden"
         >
             {/* --- Zenly Ambient Glow --- */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">

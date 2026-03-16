@@ -66,6 +66,31 @@ function AppContent() {
 
   // Effects
   useEffect(() => {
+    // Telegram WebApp Initialization
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+        tg.ready();
+        tg.expand();
+        
+        // Set initial theme
+        const applyTheme = () => {
+            const colorScheme = tg.colorScheme || 'dark';
+            document.documentElement.classList.remove('tg-dark', 'tg-light');
+            document.documentElement.classList.add(colorScheme === 'dark' ? 'tg-dark' : 'tg-light');
+        };
+        
+        applyTheme();
+        
+        // Listen for theme changes
+        tg.onEvent('themeChanged', applyTheme);
+        
+        return () => {
+            tg.offEvent('themeChanged', applyTheme);
+        };
+    }
+  }, []);
+
+  useEffect(() => {
     if (isPaymentOpen) trackEvent("shop_view");
   }, [isPaymentOpen, trackEvent]);
 
@@ -148,7 +173,7 @@ function AppContent() {
     // Allow OAuth callback to process without auth
     if (location.pathname === '/auth/callback') {
       return (
-        <Suspense fallback={<div className="min-h-screen bg-[#0f0f0f]" />}>
+        <Suspense fallback={<div className="min-h-screen bg-bg-primary" />}>
           <Routes>
             <Route path="/auth/callback" element={<OAuthCallback />} />
           </Routes>
@@ -160,7 +185,7 @@ function AppContent() {
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? "dark" : ""}`}>
-      <div className="mx-auto max-w-[480px] md:max-w-none md:ml-64 md:w-auto md:mx-0 min-h-screen bg-[#0f0f0f] relative transition-all duration-300 pt-[60px] md:pt-0">
+      <div className="mx-auto max-w-[480px] md:max-w-none md:ml-64 md:w-auto md:mx-0 min-h-screen bg-bg-primary relative transition-all duration-300 pt-[60px] md:pt-0">
 
         <Sidebar activeTab={activeTab} onTabChange={handleTabChange} onCreateClick={() => openCreation('image-gen')} />
 

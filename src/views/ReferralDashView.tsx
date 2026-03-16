@@ -21,7 +21,7 @@ interface BlockProps {
 const Block = ({ children, className = '', title }: BlockProps) => (
     <div className="mb-6">
         {title && <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">{title}</p>}
-        <div className={`bg-[#1c1c1e] rounded-[14px] overflow-hidden ${className}`}>
+        <div className={`bg-bg-secondary rounded-card overflow-hidden ${className}`}>
             {children}
         </div>
     </div>
@@ -125,7 +125,7 @@ const ReferralDashView = () => {
             <div className="flex items-center mb-6">
                 <button
                     onClick={() => navigate(-1)}
-                    className="w-10 h-10 rounded-full bg-[#1c1c1e] flex items-center justify-center text-white active:bg-[#2c2c2e] mr-3"
+                    className="w-10 h-10 rounded-full bg-bg-secondary flex items-center justify-center text-white active:bg-bg-elevated mr-3"
                 >
                     <ChevronLeft size={24} />
                 </button>
@@ -155,7 +155,7 @@ const ReferralDashView = () => {
 
                 <button
                     onClick={shareLink}
-                    className="w-full py-3.5 bg-white text-[#007aff] font-bold rounded-xl active:opacity-90 transition-opacity flex items-center justify-center gap-2"
+                    className="w-full py-3.5 bg-white text-accent-blue font-bold rounded-xl active:opacity-90 transition-opacity flex items-center justify-center gap-2"
                 >
                     <Share2 size={18} />
                     Отправить друзьям
@@ -164,17 +164,17 @@ const ReferralDashView = () => {
 
             {/* Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                <div className="bg-[#1c1c1e] rounded-[14px] p-4 border border-[#2c2c2e]">
+                <div className="bg-bg-secondary rounded-card p-4 border border-glass-border">
                     <div className="text-blue-500 mb-1"><Users size={20} /></div>
                     <div className="text-[24px] font-bold">{stats?.total_invites || 0}</div>
                     <div className="text-[13px] text-gray-400">Приглашено</div>
                 </div>
-                <div className="bg-[#1c1c1e] rounded-[14px] p-4 border border-[#2c2c2e]">
+                <div className="bg-bg-secondary rounded-card p-4 border border-glass-border">
                     <div className="text-green-500 mb-1"><TrendingUp size={20} /></div>
                     <div className="text-[24px] font-bold">{stats?.active_referrals || 0}</div>
                     <div className="text-[13px] text-gray-400">Активных</div>
                 </div>
-                <div className="bg-[#1c1c1e] rounded-[14px] p-4 border border-[#2c2c2e] col-span-2">
+                <div className="bg-bg-secondary rounded-card p-4 border border-glass-border col-span-2">
                     <div className="flex justify-between items-center">
                         <div>
                             <div className="text-orange-500 mb-1"><Gift size={20} /></div>
@@ -196,7 +196,7 @@ const ReferralDashView = () => {
                         <span className="text-[15px] font-medium text-white">Уровень {currentTier}: {tiers[currentTier - 1].label}</span>
                         <span className="text-[13px] text-gray-400">{stats?.total_invites || 0} / {nextTier.limit}</span>
                     </div>
-                    <div className="w-full h-2 bg-[#2c2c2e] rounded-full overflow-hidden mb-4">
+                    <div className="w-full h-2 bg-bg-elevated rounded-full overflow-hidden mb-4">
                         <motion.div
                             initial={{ width: 0 }}
                             animate={{ width: `${progress}%` }}
@@ -232,7 +232,7 @@ const ReferralDashView = () => {
                         {referrals.map((ref, idx) => (
                             <div key={idx} className="p-4 flex justify-between items-center">
                                 <div className="flex items-center gap-3">
-                                    <div className="w-8 h-8 rounded-full bg-[#2c2c2e] flex items-center justify-center text-[14px]">👤</div>
+                                    <div className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center text-[14px]">👤</div>
                                     <div>
                                         <div className="text-[15px] font-medium">{ref.name}</div>
                                         {ref.username && <div className="text-[12px] text-gray-500">@{ref.username}</div>}

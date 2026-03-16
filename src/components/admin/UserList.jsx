@@ -14,7 +14,7 @@ const UserList = ({
     return (
         <div className="space-y-4">
             <input
-                className="w-full bg-[#2c2c2e] border-none rounded-[14px] px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
+                className="w-full bg-bg-elevated border-none rounded-card px-4 py-3 text-[15px] outline-none placeholder:text-gray-600"
                 placeholder="Поиск пользователей..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}

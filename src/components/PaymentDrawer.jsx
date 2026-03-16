@@ -211,7 +211,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                         dragConstraints={{ top: 0, bottom: 0 }}
                         dragElastic={0.1}
                         onDragEnd={(_, info) => { if (info.offset.y > 100) onClose(); }}
-                        className="fixed bottom-0 left-0 right-0 md:left-1/2 md:right-auto md:bottom-auto md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-[100] bg-[#1c1c1e] rounded-t-[32px] md:rounded-[32px] overflow-hidden flex flex-col max-h-[92vh] md:max-h-[85vh] w-full md:w-[480px] shadow-2xl"
+                        className="fixed bottom-0 left-0 right-0 md:left-1/2 md:right-auto md:bottom-auto md:top-1/2 md:-translate-x-1/2 md:-translate-y-1/2 z-[100] bg-bg-secondary rounded-t-[32px] md:rounded-[32px] overflow-hidden flex flex-col max-h-[92vh] md:max-h-[85vh] w-full md:w-[480px] shadow-2xl"
                     >
                         {/* Drag Handle */}
                         <div className="w-full h-6 flex items-center justify-center pt-2 cursor-grab active:cursor-grabbing" onPointerDown={(e) => dragControls.start(e)}>
@@ -261,8 +261,8 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
 
                                     {/* Promo Code Input */}
                                     <div className="mb-6 flex flex-col gap-2 relative">
-                                        <div className="flex bg-[#2c2c2e] rounded-[16px] border border-white/10 p-1 focus-within:border-blue-500/50 transition-colors shadow-lg shadow-black/20">
-                                            <div className="absolute top-[-10px] left-[16px] bg-[#1c1c1e] text-white/50 px-1 text-[11px] font-bold tracking-wider uppercase">Промокод</div>
+                                        <div className="flex bg-bg-elevated rounded-card border border-white/10 p-1 focus-within:border-blue-500/50 transition-colors shadow-lg shadow-black/20">
+                                            <div className="absolute top-[-10px] left-[16px] bg-bg-secondary text-white/50 px-1 text-[11px] font-bold tracking-wider uppercase">Промокод</div>
                                             <input
                                                 value={promoInput}
                                                 onChange={e => { setPromoInput(e.target.value.toUpperCase()); setPromoError(''); }}
@@ -271,29 +271,29 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                 disabled={appliedPromo || isApplyingPromo}
                                             />
                                             {appliedPromo ? (
-                                                <button onClick={() => { setAppliedPromo(null); setPromoInput(''); }} className="px-4 bg-white/10 text-white rounded-[12px] text-[13px] font-bold hover:bg-white/20 transition-colors">Сброс</button>
+                                                <button onClick={() => { setAppliedPromo(null); setPromoInput(''); }} className="px-4 bg-white/10 text-white rounded-input text-[13px] font-bold hover:bg-white/20 transition-colors">Сброс</button>
                                             ) : (
-                                                <button onClick={handleApplyPromo} disabled={isApplyingPromo} className="px-4 bg-[#007aff] text-white rounded-[12px] text-[13px] font-bold hover:bg-[#007aff]/80 transition-colors shadow-lg shadow-[#007aff]/30 disabled:opacity-50">
+                                                <button onClick={handleApplyPromo} disabled={isApplyingPromo} className="px-4 bg-accent-blue text-white rounded-input text-[13px] font-bold hover:bg-accent-blue/80 transition-colors shadow-lg shadow-[#007aff]/30 disabled:opacity-50">
                                                     {isApplyingPromo ? '...' : 'Применить'}
                                                 </button>
                                             )}
                                         </div>
                                         {promoError && <p className="text-red-400 text-[11px] pl-2">{promoError}</p>}
-                                        {appliedPromo && <p className="text-[#34c759] text-[11px] pl-2 font-bold flex items-center gap-1"><Check size={12} /> Применена скидка {appliedPromo.discount_percent}%</p>}
+                                        {appliedPromo && <p className="text-accent-blue text-[11px] pl-2 font-bold flex items-center gap-1"><Check size={12} /> Применена скидка {appliedPromo.discount_percent}%</p>}
                                         {maxBaseDiscount > 0 && !appliedPromo && <p className="text-yellow-400 text-[11px] pl-2 font-bold flex items-center gap-1"><Zap size={12} /> Активна Flash-скидка {maxBaseDiscount}%</p>}
                                     </div>
 
                                     {/* Packages Mode Toggle */}
-                                    <div className="flex bg-[#1c1c1e] rounded-[16px] p-1 mb-6 border border-white/5">
+                                    <div className="flex bg-bg-secondary rounded-card p-1 mb-6 border border-white/5">
                                         <button
                                             onClick={() => { playClick(); setViewMode('topup'); }}
-                                            className={`flex-1 py-2 text-[14px] font-bold rounded-[12px] transition-colors ${viewMode === 'topup' ? 'bg-[#2c2c2e] text-white shadow-md' : 'text-white/50 hover:text-white'}`}
+                                            className={`flex-1 py-2 text-[14px] font-bold rounded-input transition-colors ${viewMode === 'topup' ? 'bg-bg-elevated text-white shadow-md' : 'text-white/50 hover:text-white'}`}
                                         >
                                             Разовое
                                         </button>
                                         <button
                                             onClick={() => { playClick(); setViewMode('sub'); }}
-                                            className={`flex-1 py-2 text-[14px] font-bold rounded-[12px] transition-colors relative ${viewMode === 'sub' ? 'bg-[#2c2c2e] text-white shadow-md' : 'text-white/50 hover:text-white'}`}
+                                            className={`flex-1 py-2 text-[14px] font-bold rounded-input transition-colors relative ${viewMode === 'sub' ? 'bg-bg-elevated text-white shadow-md' : 'text-white/50 hover:text-white'}`}
                                         >
                                             Подписка
                                             <span className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-orange-500 text-[10px] text-white px-1.5 py-0.5 rounded-full shadow-lg">PRO</span>
@@ -309,7 +309,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                             </div>
 
                                             {/* Dynamic Bonus Scale */}
-                                            <div className="mb-5 bg-[#1c1c1e] rounded-[16px] p-4 border border-white/5 relative overflow-hidden">
+                                            <div className="mb-5 bg-bg-secondary rounded-card p-4 border border-white/5 relative overflow-hidden">
                                                 <div className="absolute top-0 right-0 p-2 opacity-5"><Zap size={60} /></div>
                                                 <p className="text-[12px] font-bold text-white/50 uppercase tracking-widest mb-3">Сетка бонусов</p>
                                                 <div className="flex justify-between relative z-10">
@@ -322,7 +322,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                         </div>
                                                     ))}
                                                     {/* Connecting line */}
-                                                    <div className="absolute top-4 left-4 right-4 h-0.5 bg-[#2c2c2e] -z-0">
+                                                    <div className="absolute top-4 left-4 right-4 h-0.5 bg-bg-elevated -z-0">
                                                         <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-orange-500 opacity-50 w-full" />
                                                     </div>
                                                 </div>
@@ -336,7 +336,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                             key={pack.id}
                                                             whileTap={{ scale: 0.98 }}
                                                             onClick={() => handleBuy({ ...pack, price: finalPrice })}
-                                                            className="bg-[#2c2c2e] rounded-[20px] p-4 flex items-center justify-between cursor-pointer border border-white/5 hover:border-blue-500/30 transition-colors group relative overflow-hidden"
+                                                            className="bg-bg-elevated rounded-card p-4 flex items-center justify-between cursor-pointer border border-white/5 hover:border-blue-500/30 transition-colors group relative overflow-hidden"
                                                         >
                                                             <div className="flex items-center gap-4 relative z-10">
                                                                 <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${pack.gradient} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
@@ -352,7 +352,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                                         </div>
                                                                     )}
                                                                     {pack.tag && (
-                                                                        <div className="absolute top-[-10px] left-[130px] bg-[#3390ec] text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-lg shadow-blue-500/20">
+                                                                        <div className="absolute top-[-10px] left-[130px] bg-accent-blue text-white text-[10px] font-bold px-1.5 py-0.5 rounded-md shadow-lg shadow-blue-500/20">
                                                                             {pack.tag}
                                                                         </div>
                                                                     )}
@@ -385,7 +385,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                         <h5 className="text-[20px] font-[900] text-white mb-1">PRO Подписка</h5>
                                                         <p className="text-[14px] text-blue-400 font-bold">1500 зарядов / месяц</p>
                                                     </div>
-                                                    <div className="bg-[#3390ec] text-white text-[12px] font-bold px-2 py-1 rounded-lg">
+                                                    <div className="bg-accent-blue text-white text-[12px] font-bold px-2 py-1 rounded-lg">
                                                         Хит
                                                     </div>
                                                 </div>
@@ -396,7 +396,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                         Выгода до 40% по сравнению с разовой
                                                     </li>
                                                     <li className="flex items-start gap-2 text-[13px] text-white/80 font-medium">
-                                                        <div className="w-4 h-4 rounded-full bg-purple-500/20 flex items-center justify-center shrink-0 mt-0.5"><Zap size={10} className="text-purple-400" fill="currentColor" /></div>
+                                                        <div className="w-4 h-4 rounded-full bg-accent-purple/20 flex items-center justify-center shrink-0 mt-0.5"><Zap size={10} className="text-purple-400" fill="currentColor" /></div>
                                                         <span><strong className="text-purple-400">Перенос остатка:</strong> до 30% неизрасходованных зарядов сохраняются!</span>
                                                     </li>
                                                 </ul>
@@ -416,7 +416,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                         <h4 className="text-[17px] font-semibold text-white mb-4">
                                             Заработать токены
                                         </h4>
-                                        <div className="bg-[#2c2c2e] rounded-[24px] p-5 border border-white/5 relative overflow-hidden">
+                                        <div className="bg-bg-elevated rounded-[24px] p-5 border border-white/5 relative overflow-hidden">
                                             <div className="absolute top-0 right-0 p-4 opacity-10">
                                                 <Users size={80} />
                                             </div>
@@ -440,13 +440,13 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                                 </div>
                                             </div>
 
-                                            <div className="bg-[#1c1c1e] rounded-[14px] flex items-center p-1 pl-3 border border-white/5">
+                                            <div className="bg-bg-secondary rounded-card flex items-center p-1 pl-3 border border-white/5">
                                                 <div className="flex-1 truncate text-[13px] text-blue-400 font-medium">
                                                     {inviteLink}
                                                 </div>
                                                 <button
                                                     onClick={handleCopy}
-                                                    className={`w-9 h-8 rounded-[10px] flex items-center justify-center transition-all ${copied ? 'bg-green-500 text-white' : 'bg-[#3390ec] text-white checked:bg-green-500'}`}
+                                                    className={`w-9 h-8 rounded-input flex items-center justify-center transition-all ${copied ? 'bg-green-500 text-white' : 'bg-accent-blue text-white checked:bg-green-500'}`}
                                                 >
                                                     {copied ? <Check size={16} /> : <Copy size={16} />}
                                                 </button>
@@ -523,7 +523,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                         </h2>
 
                                         {/* Brand Pill */}
-                                        <div className="inline-flex items-center gap-1.5 bg-[#2c2c2e] rounded-full px-3 py-1 mb-4 border border-white/10">
+                                        <div className="inline-flex items-center gap-1.5 bg-bg-elevated rounded-full px-3 py-1 mb-4 border border-white/10">
                                             <div className="w-4 h-4 rounded-full bg-blue-500/20 flex items-center justify-center">
                                                 <Sparkles size={10} className="text-[#3390ec]" fill="currentColor" />
                                             </div>
@@ -539,7 +539,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                         <button
                                             onClick={handleStarsPayment}
                                             disabled={isProcessingStars}
-                                            className="w-full py-4 rounded-[16px] bg-[#3390ec] text-white font-bold text-[15px] hover:brightness-105 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 mb-4 disabled:opacity-50"
+                                            className="w-full py-4 rounded-card bg-accent-blue text-white font-bold text-[15px] hover:brightness-105 active:scale-[0.98] transition-all shadow-lg shadow-blue-500/20 flex items-center justify-center gap-2 mb-4 disabled:opacity-50"
                                         >
                                             <Star size={18} fill="currentColor" />
                                             {isProcessingStars ? 'Ожидание...' : `Оплатить ${Math.ceil(selectedPack.price / 2)} ⭐️`}
@@ -552,7 +552,7 @@ const PaymentDrawer = ({ isOpen, onClose }) => {
                                         </div>
 
                                         {/* Payment Widget Area */}
-                                        <div className="w-full bg-[#1c1c1e] rounded-[24px] overflow-hidden relative min-h-[100px]">
+                                        <div className="w-full bg-bg-secondary rounded-[24px] overflow-hidden relative min-h-[100px]">
                                             <TBankPaymentWidget
                                                 amount={selectedPack.price}
                                                 credits={selectedPack.credits}

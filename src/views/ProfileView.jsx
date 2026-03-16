@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { ListRow } from '../components/ui';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -17,41 +18,7 @@ import SEO from '../components/SEO/SEO';
 import { ProfileSkeleton } from '../components/ui/Skeletons';
 import GiftModal from '../components/modals/GiftModal';
 
-// iOS-style List Block
-const ListBlock = ({ children, className = '' }) => (
-    <div className={`bg-[#1c1c1e] rounded-[10px] overflow-hidden ${className}`}>
-        {children}
-    </div>
-);
 
-// iOS-style List Row
-const ListRow = ({ icon, label, value, subtext, onClick, isLast, iconColor = 'bg-blue-500', isDestructive }) => (
-    <button
-        onClick={onClick}
-        className={`w-full flex items-center py-2.5 pl-4 pr-3 ${onClick ? 'hover:bg-[#2c2c2e] active:bg-[#3a3a3c]' : ''} transition-colors relative`}
-    >
-        {icon && (
-            <div className={`w-7 h-7 rounded-md ${iconColor} flex items-center justify-center mr-3.5 flex-shrink-0`}>
-                {icon}
-            </div>
-        )}
-        <div className="flex-1 flex flex-col items-start justify-center pr-2">
-            <span className={`text-[17px] ${isDestructive ? 'text-red-500' : 'text-white'} leading-[22px] tracking-[-0.41px] truncate w-full text-left`}>
-                {label}
-            </span>
-            {subtext && (
-                <span className="text-[13px] text-gray-400 leading-[18px] tracking-[-0.08px] mt-0.5 truncate w-full text-left">
-                    {subtext}
-                </span>
-            )}
-        </div>
-        <div className="flex items-center gap-1.5 flex-shrink-0">
-            {value && <span className="text-[17px] text-gray-400 tracking-[-0.41px] max-w-[120px] truncate">{value}</span>}
-            {onClick && <ChevronRight size={20} className="text-[#3a3a3c]" strokeWidth={2.5} />}
-        </div>
-        {!isLast && <div className={`absolute bottom-0 right-0 h-[0.5px] bg-[#38383a] ${icon ? 'left-[46px]' : 'left-4'}`} />}
-    </button>
-);
 
 const EditModal = ({ isOpen, onClose, title, value, onSave, type = 'text', options = [] }) => {
     const { t } = useLanguage();
@@ -75,11 +42,11 @@ const EditModal = ({ isOpen, onClose, title, value, onSave, type = 'text', optio
                 initial={{ opacity: 0, scale: 0.95, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                className="bg-[#1c1c1e] w-full max-w-sm rounded-[14px] p-5 relative z-10 shadow-2xl"
+                className="bg-bg-secondary w-full max-w-sm rounded-card p-5 relative z-10 shadow-2xl"
             >
                 <div className="flex justify-between items-center mb-4">
                     <h3 className="font-semibold text-white text-[17px] tracking-[-0.41px]">{title}</h3>
-                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-[#2c2c2e] flex items-center justify-center text-gray-400 active:scale-95 transition-transform"><X size={18} /></button>
+                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center text-gray-400 active:scale-95 transition-transform"><X size={18} /></button>
                 </div>
 
                 {type === 'select' ? (
@@ -88,10 +55,10 @@ const EditModal = ({ isOpen, onClose, title, value, onSave, type = 'text', optio
                             <button
                                 key={opt}
                                 onClick={() => setVal(opt)}
-                                className={`w-full py-3 px-4 rounded-[10px] text-left text-[17px] tracking-[-0.41px] transition-all flex justify-between items-center ${val === opt ? 'bg-[#007aff]/10 text-[#007aff]' : 'text-white hover:bg-[#2c2c2e]'}`}
+                                className={`w-full py-3 px-4 rounded-input text-left text-[17px] tracking-[-0.41px] transition-all flex justify-between items-center ${val === opt ? 'bg-accent-blue/10 text-accent-blue' : 'text-white hover:bg-bg-elevated'}`}
                             >
                                 {opt}
-                                {val === opt && <Check size={20} className="text-[#007aff]" strokeWidth={2.5} />}
+                                {val === opt && <Check size={20} className="text-accent-blue" strokeWidth={2.5} />}
                             </button>
                         ))}
                     </div>
@@ -100,7 +67,7 @@ const EditModal = ({ isOpen, onClose, title, value, onSave, type = 'text', optio
                         type={type}
                         value={val}
                         onChange={e => setVal(e.target.value)}
-                        className="w-full bg-[#2c2c2e] rounded-[10px] py-3 px-4 text-[17px] text-white placeholder:text-gray-500 outline-none focus:ring-1 focus:ring-[#007aff] transition-shadow tracking-[-0.41px]"
+                        className="w-full bg-bg-elevated rounded-input py-3 px-4 text-[17px] text-white placeholder:text-gray-500 outline-none focus:ring-1 focus:ring-[#007aff] transition-shadow tracking-[-0.41px]"
                         placeholder={t('profile.enterValue') || 'Введите значение...'}
                         autoFocus
                     />
@@ -108,7 +75,7 @@ const EditModal = ({ isOpen, onClose, title, value, onSave, type = 'text', optio
 
                 <button
                     onClick={handleSave}
-                    className="w-full mt-4 bg-[#007aff] text-white font-semibold text-[17px] py-3 rounded-[10px] active:opacity-80 transition-opacity tracking-[-0.41px]"
+                    className="w-full mt-4 bg-accent-blue text-white font-semibold text-[17px] py-3 rounded-input active:opacity-80 transition-opacity tracking-[-0.41px]"
                 >
                     {t('common.save')}
                 </button>
@@ -159,9 +126,9 @@ const TransactionHistory = () => {
     return (
         <div className="flex flex-col">
             {transactions.slice(0, 5).map((tx, idx) => (
-                <div key={tx.id || idx} className="flex items-center justify-between py-[11px] pl-4 pr-3 relative hover:bg-[#2c2c2e] transition-colors">
+                <div key={tx.id || idx} className="flex items-center justify-between py-[11px] pl-4 pr-3 relative hover:bg-bg-elevated transition-colors">
                     <div className="flex items-center gap-3">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-green-500/10' : 'bg-[#2c2c2e]'}`}>
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${tx.amount > 0 ? 'bg-green-500/10' : 'bg-bg-elevated'}`}>
                             <Zap size={16} className={tx.amount > 0 ? "fill-current text-green-500" : "text-white"} />
                         </div>
                         <div className="flex flex-col">
@@ -319,12 +286,12 @@ const ProfileView = ({ onOpenPayment }) => {
             <div className="flex flex-col items-center mb-6">
                 <div className="w-[100px] h-[100px] rounded-full bg-gradient-to-br from-[#3390ec] to-blue-600 flex items-center justify-center text-[40px] font-bold text-white shadow-xl border-2 border-transparent relative mt-2">
                     {initals}
-                    <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#1c1c1e] border-2 border-black flex items-center justify-center text-white active:bg-[#2c2c2e]">
+                    <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-bg-secondary border-2 border-black flex items-center justify-center text-white active:bg-bg-elevated">
                         <Edit2 size={14} />
                     </button>
                 </div>
                 <h1 className="text-[28px] font-bold mt-3 tracking-[-0.6px]">{displayName}</h1>
-                <p className="text-[17px] text-[#007aff] tracking-[-0.41px] mt-0.5 font-medium cursor-pointer active:opacity-70">
+                <p className="text-[17px] text-accent-blue tracking-[-0.41px] mt-0.5 font-medium cursor-pointer active:opacity-70">
                     {t('profile.editProfile')}
                 </p>
             </div>
@@ -362,8 +329,8 @@ const ProfileView = ({ onOpenPayment }) => {
 
                 {/* Subscription Rollover Status */}
                 {user?.subscription && (
-                    <div className="bg-gradient-to-br from-[#1c1c1e] to-[#2c2c2e] rounded-[16px] p-4 border border-purple-500/20 relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 rounded-full blur-[30px] -mr-6 -mt-6" />
+                    <div className="bg-gradient-to-br from-[#1c1c1e] to-[#2c2c2e] rounded-card p-4 border border-purple-500/20 relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-24 h-24 bg-accent-purple/10 rounded-full blur-[30px] -mr-6 -mt-6" />
                         <div className="flex items-center gap-3 mb-3 relative z-10">
                             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg">
                                 <Crown size={20} className="text-white" />
@@ -371,17 +338,17 @@ const ProfileView = ({ onOpenPayment }) => {
                             <div className="flex-1">
                                 <div className="flex items-center gap-2">
                                     <h4 className="text-[15px] font-bold text-white">Pixel PRO</h4>
-                                    <span className="bg-purple-500/20 text-purple-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">Активна</span>
+                                    <span className="bg-accent-purple/20 text-purple-400 text-[10px] font-bold px-1.5 py-0.5 rounded-full">Активна</span>
                                 </div>
                                 <p className="text-[12px] text-white/40">Следующее списание: 10 апр</p>
                             </div>
                         </div>
-                        <div className="bg-[#1c1c1e] rounded-[12px] p-3 relative z-10">
+                        <div className="bg-bg-secondary rounded-input p-3 relative z-10">
                             <div className="flex justify-between items-center mb-2">
                                 <span className="text-[12px] text-white/50 font-medium">Остаток зарядов</span>
                                 <span className="text-[14px] font-bold text-white">{stats?.current_balance || 0} / 1500 ⚡</span>
                             </div>
-                            <div className="w-full h-2 bg-[#2c2c2e] rounded-full overflow-hidden">
+                            <div className="w-full h-2 bg-bg-elevated rounded-full overflow-hidden">
                                 <div
                                     className="h-full bg-gradient-to-r from-purple-500 to-indigo-400 rounded-full transition-all"
                                     style={{ width: `${Math.min(100, ((stats?.current_balance || 0) / 1500) * 100)}%` }}
@@ -467,7 +434,7 @@ const ProfileView = ({ onOpenPayment }) => {
                         />
                         <ListRow
                             icon={<Crown size={16} className="text-white" />}
-                            iconColor="bg-purple-500"
+                            iconColor="bg-accent-purple"
                             label="Партнёрская программа"
                             value="15% комиссия"
                             onClick={() => navigate('/affiliate')}
@@ -481,7 +448,7 @@ const ProfileView = ({ onOpenPayment }) => {
                         />
                         <ListRow
                             icon={<Edit2 size={16} className="text-white" />}
-                            iconColor="bg-purple-500"
+                            iconColor="bg-accent-purple"
                             label={t('profile.bio')}
                             value={profileData.bio || t('profile.notSpecified')}
                             onClick={() => openEdit('bio', t('profile.bio'))}

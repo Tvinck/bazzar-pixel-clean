@@ -54,7 +54,7 @@ const CommentItem = ({ comment, depth = 0, onReply, onLike }) => {
             <div className="flex gap-2.5 py-2.5">
                 {/* Avatar */}
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[14px]
-                    ${depth === 0 ? 'bg-blue-500/20' : depth === 1 ? 'bg-purple-500/20' : 'bg-green-500/20'}`}>
+                    ${depth === 0 ? 'bg-blue-500/20' : depth === 1 ? 'bg-accent-purple/20' : 'bg-green-500/20'}`}>
                     {comment.avatar_emoji || <User size={14} className="text-white/50" />}
                 </div>
 
@@ -275,7 +275,7 @@ const CommentsSection = ({ creationId }) => {
                         exit={{ opacity: 0, height: 0 }}
                         transition={{ duration: 0.2 }}
                     >
-                        <div className="bg-[#1c1c1e] rounded-[16px] border border-white/5 overflow-hidden">
+                        <div className="bg-bg-secondary rounded-card border border-white/5 overflow-hidden">
                             {/* Comment Input */}
                             <div className="p-3 border-b border-white/5">
                                 {replyingTo && (
@@ -295,7 +295,7 @@ const CommentsSection = ({ creationId }) => {
                                         onChange={(e) => setNewComment(e.target.value)}
                                         onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
                                         placeholder={replyingTo ? 'Ваш ответ...' : 'Написать комментарий...'}
-                                        className="flex-1 bg-white/5 rounded-[10px] px-3 py-2 text-[14px] text-white placeholder:text-white/25 outline-none focus:ring-1 focus:ring-blue-500/50"
+                                        className="flex-1 bg-white/5 rounded-input px-3 py-2 text-[14px] text-white placeholder:text-white/25 outline-none focus:ring-1 focus:ring-blue-500/50"
                                     />
                                     <motion.button
                                         whileTap={{ scale: 0.9 }}

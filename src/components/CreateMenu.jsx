@@ -15,7 +15,7 @@ const CreateMenu = ({ isOpen, onClose, onSelectTool, balance = 10 }) => {
         { id: 'banana', label: 'Nano Banana\nPro', icon: Banana, color: 'text-yellow-500 dark:text-yellow-400', special: true },
         { id: 'kling', label: 'Kling 2.6\nMotion', icon: Wind, color: 'text-emerald-500 dark:text-emerald-400' },
         { id: 'audio', label: 'Аудио', icon: Music, color: 'text-blue-500 dark:text-blue-400' },
-        { id: 'animate', label: 'Оживить фото', icon: Wand2, color: 'text-purple-500 dark:text-purple-400' },
+        { id: 'animate', label: 'Оживить фото', icon: Wand2, color: 'text-accent-purple dark:text-purple-400' },
         { id: 'veo', label: 'Veo 3', icon: Layers, color: 'text-orange-500 dark:text-orange-400' },
         { id: 'sora', label: 'Sora 2', icon: Cloud, color: 'text-sky-500 dark:text-sky-400' },
         { id: 'tools', label: 'Инструменты', icon: PenTool, color: 'text-slate-500 dark:text-slate-400' },
@@ -27,7 +27,7 @@ const CreateMenu = ({ isOpen, onClose, onSelectTool, balance = 10 }) => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: '100%' }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="fixed inset-0 z-[100] bg-slate-50 dark:bg-[#09090b] text-slate-900 dark:text-white overflow-y-auto pb-safe transition-colors duration-300"
+            className="fixed inset-0 z-[100] bg-slate-50 dark:bg-bg-primary text-slate-900 dark:text-white overflow-y-auto pb-safe transition-colors duration-300"
         >
             <div className="max-w-md mx-auto min-h-screen flex flex-col relative">
 
@@ -107,7 +107,7 @@ const CreateMenu = ({ isOpen, onClose, onSelectTool, balance = 10 }) => {
                                 className="flex flex-col items-center gap-3 min-w-[80px] snap-start group"
                             >
                                 {/* Icon Container */}
-                                <div className="w-[80px] h-[80px] rounded-[1.8rem] bg-white dark:bg-[#1c1c1e] border border-slate-200 dark:border-white/5 flex items-center justify-center shadow-lg shadow-slate-200/50 dark:shadow-black/20 group-hover:scale-105 group-hover:bg-slate-50 dark:group-hover:bg-[#252528] group-hover:border-slate-300 dark:group-hover:border-white/20 transition-all duration-300 relative overflow-hidden">
+                                <div className="w-[80px] h-[80px] rounded-[1.8rem] bg-white dark:bg-bg-secondary border border-slate-200 dark:border-white/5 flex items-center justify-center shadow-lg shadow-slate-200/50 dark:shadow-black/20 group-hover:scale-105 group-hover:bg-slate-50 dark:group-hover:bg-bg-elevated group-hover:border-slate-300 dark:group-hover:border-white/20 transition-all duration-300 relative overflow-hidden">
                                     {/* Inner Glow */}
                                     <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
 

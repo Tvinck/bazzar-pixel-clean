@@ -30,7 +30,7 @@ const CompareModal = ({ isOpen, onClose, selectedItems }) => {
                         animate={{ scale: 1, y: 0 }}
                         exit={{ scale: 0.9, y: 20 }}
                         transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                        className="w-full max-w-4xl max-h-[90vh] bg-[#1c1c1e] text-white rounded-[24px] overflow-hidden flex flex-col shadow-2xl"
+                        className="w-full max-w-4xl max-h-[90vh] bg-bg-secondary text-white rounded-[24px] overflow-hidden flex flex-col shadow-2xl"
                         onClick={e => e.stopPropagation()}
                     >
                         {/* Header */}
@@ -51,7 +51,7 @@ const CompareModal = ({ isOpen, onClose, selectedItems }) => {
                                     'grid-cols-2'}`}>
                                 {selectedItems.map((item, index) => (
                                     <div key={item.id} className="flex flex-col gap-3 bg-black/20 p-3 rounded-2xl border border-white/5">
-                                        <div className="relative aspect-square rounded-xl overflow-hidden bg-[#2c2c2e]">
+                                        <div className="relative aspect-square rounded-xl overflow-hidden bg-bg-elevated">
                                             {item.type === 'video' ? (
                                                 <video
                                                     src={item.video_url}
@@ -75,7 +75,7 @@ const CompareModal = ({ isOpen, onClose, selectedItems }) => {
 
                                         <div className="flex-1 space-y-2">
                                             <div className="flex items-center gap-2">
-                                                <span className="text-[10px] font-bold bg-[#007aff]/20 text-[#007aff] px-2 py-0.5 rounded uppercase">
+                                                <span className="text-[10px] font-bold bg-accent-blue/20 text-accent-blue px-2 py-0.5 rounded uppercase">
                                                     {item.model_id || 'Unknown Model'}
                                                 </span>
                                                 <span className="text-[10px] text-gray-400">

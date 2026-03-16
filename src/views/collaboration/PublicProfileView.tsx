@@ -165,7 +165,7 @@ const PublicProfileView = () => {
                     <button
                         onClick={handleFollow}
                         className={`w-full py-3 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${isFollowing
-                            ? 'bg-[#1c1c1e] text-white border border-white/10'
+                            ? 'bg-bg-secondary text-white border border-white/10'
                             : 'bg-blue-500 text-white'
                             }`}
                     >

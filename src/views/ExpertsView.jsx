@@ -38,10 +38,10 @@ export default function ExpertsView() {
                         onClick={() => navigate('/')}
                         className="p-1 -ml-1 active:opacity-60 transition-opacity"
                     >
-                        <ChevronLeft className="w-7 h-7 text-[#007aff]" />
+                        <ChevronLeft className="w-7 h-7 text-accent-blue" />
                     </button>
                     <h1 className="text-[17px] font-semibold text-white tracking-tight flex items-center gap-2">
-                        <Sparkles className="w-5 h-5 text-[#007aff]" />
+                        <Sparkles className="w-5 h-5 text-accent-blue" />
                         Эксперты
                     </h1>
                     <div className="w-8" /> {/* Spacer for centering */}
@@ -55,7 +55,7 @@ export default function ExpertsView() {
                     animate={{ opacity: 1, y: 0 }}
                     className="text-center mb-5"
                 >
-                    <p className="text-[#8e8e93] text-[15px]">
+                    <p className="text-text-secondary text-[15px]">
                         AI-помощники с уникальными личностями
                     </p>
                 </motion.div>
@@ -69,7 +69,7 @@ export default function ExpertsView() {
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: index * 0.05 }}
                             onClick={() => handleExpertClick(expert)}
-                            className="relative overflow-hidden rounded-[12px] cursor-pointer group active:scale-[0.97] transition-transform"
+                            className="relative overflow-hidden rounded-input cursor-pointer group active:scale-[0.97] transition-transform"
                             style={{ background: expert.gradient }}
                         >
                             {/* Card Content */}
@@ -101,9 +101,9 @@ export default function ExpertsView() {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ delay: 0.5 }}
-                    className="mt-6 p-4 rounded-[12px] bg-[#1c1c1e]"
+                    className="mt-6 p-4 rounded-input bg-bg-secondary"
                 >
-                    <p className="text-[13px] text-[#8e8e93] text-center leading-relaxed">
+                    <p className="text-[13px] text-text-secondary text-center leading-relaxed">
                         🤖 Эксперты используют AI для генерации ответов.
                         Для серьезных вопросов обращайтесь к профессионалам.
                     </p>

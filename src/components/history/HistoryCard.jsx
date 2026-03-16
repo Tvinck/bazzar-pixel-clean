@@ -27,11 +27,11 @@ const HistoryCard = ({ gen, index, isSelected, isSelectionMode, handleCardClick 
             transition={{ delay: Math.min(index * 0.06, 0.6), type: 'spring', stiffness: 260, damping: 22 }}
             whileTap={{ scale: 0.95 }}
             onClick={() => handleCardClick(gen)}
-            className={`relative aspect-square rounded-[20px] overflow-hidden bg-[#2c2c2e] group cursor-pointer shadow-lg shadow-black/20 border-2 transition-colors ${isSelected ? 'border-[#007aff]' : 'border-white/[0.06]'}`}
+            className={`relative aspect-square rounded-card overflow-hidden bg-bg-elevated group cursor-pointer shadow-lg shadow-black/20 border-2 transition-colors ${isSelected ? 'border-accent-blue' : 'border-white/[0.06]'}`}
         >
             {/* Selection Checkbox */}
             {isSelectionMode && (
-                <div className={`absolute top-2.5 left-2.5 z-30 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-[#007aff] border-[#007aff]' : 'border-white/50 bg-black/20 backdrop-blur-sm'}`}>
+                <div className={`absolute top-2.5 left-2.5 z-30 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-colors ${isSelected ? 'bg-accent-blue border-accent-blue' : 'border-white/50 bg-black/20 backdrop-blur-sm'}`}>
                     {isSelected && <svg width="12" height="9" viewBox="0 0 12 9" fill="none" className="translate-y-[0.5px]"><path d="M1 4.5L4.5 8L11 1" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
                 </div>
             )}
@@ -41,7 +41,7 @@ const HistoryCard = ({ gen, index, isSelected, isSelectionMode, handleCardClick 
 
             {/* Media */}
             {gen.status === 'pending' ? (
-                <div className="w-full h-full flex flex-col items-center justify-center bg-[#1c1c1e] gap-3">
+                <div className="w-full h-full flex flex-col items-center justify-center bg-bg-secondary gap-3">
                     <div className="relative">
                         <div className="w-10 h-10 rounded-full border-2 border-white/5 border-t-white/40 animate-spin" />
                         <div className="absolute inset-0 flex items-center justify-center">
@@ -73,7 +73,7 @@ const HistoryCard = ({ gen, index, isSelected, isSelectionMode, handleCardClick 
             {/* Public indicator glow dot */}
             {gen.is_public && (
                 <motion.div
-                    className="absolute top-2.5 left-2.5 z-20 w-2.5 h-2.5 rounded-full bg-[#34c759]"
+                    className="absolute top-2.5 left-2.5 z-20 w-2.5 h-2.5 rounded-full bg-accent-blue"
                     animate={{ scale: [1, 1.3, 1], opacity: [0.8, 1, 0.8] }}
                     transition={{ duration: 2, repeat: Infinity }}
                 />

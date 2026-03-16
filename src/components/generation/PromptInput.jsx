@@ -23,11 +23,11 @@ const PromptInput = ({
 }) => {
     return (
         <motion.div variants={itemVariants} className="px-4">
-            <div className="bg-[#1c1c1e]/80 backdrop-blur-md border border-white/5 rounded-[18px] p-4 relative shadow-lg overflow-hidden group">
+            <div className="bg-bg-secondary/80 backdrop-blur-md border border-white/5 rounded-[18px] p-4 relative shadow-lg overflow-hidden group">
                 <div className="absolute inset-0 bg-gradient-to-br from-[#3390ec]/5 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
 
                 <div className="flex items-center gap-3 mb-4 relative z-10">
-                    <div className="w-12 h-12 rounded-[12px] bg-gradient-to-br from-blue-500 to-[#3390ec] flex items-center justify-center shadow-md">
+                    <div className="w-12 h-12 rounded-input bg-gradient-to-br from-blue-500 to-[#3390ec] flex items-center justify-center shadow-md">
                         <CreateGraphic />
                     </div>
                     <div>
@@ -44,7 +44,7 @@ const PromptInput = ({
                             onChange={e => setInputs({ ...inputs, prompt: e.target.value })}
                             onFocus={() => setShowPromptHistory(true)}
                             onBlur={() => setTimeout(() => setShowPromptHistory(false), 200)}
-                            className="w-full bg-[#2c2c2e]/60 focus:bg-[#2c2c2e]/90 rounded-[12px] p-3.5 pr-12 text-white text-[15px] placeholder:text-[#8e8e93] resize-none outline-none min-h-[100px] leading-relaxed transition-all shadow-inner border border-white/5 focus:border-[#3390ec]/50"
+                            className="w-full bg-bg-elevated/60 focus:bg-bg-elevated/90 rounded-input p-3.5 pr-12 text-white text-[15px] placeholder:text-text-secondary resize-none outline-none min-h-[100px] leading-relaxed transition-all shadow-inner border border-white/5 focus:border-[#3390ec]/50"
                         />
                         <button
                             onClick={handleVoiceInput}
@@ -60,7 +60,7 @@ const PromptInput = ({
                                 initial={{ opacity: 0, y: -10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                className="absolute top-full left-0 right-0 mt-2 bg-[#2c2c2e] border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50"
+                                className="absolute top-full left-0 right-0 mt-2 bg-bg-elevated border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50"
                             >
                                 <div className="px-3 py-2 border-b border-white/5 flex items-center gap-2 text-gray-400">
                                     <Clock size={14} />
@@ -74,7 +74,7 @@ const PromptInput = ({
                                             setInputs({ ...inputs, prompt: p });
                                             setShowPromptHistory(false);
                                         }}
-                                        className="w-full text-left px-3 py-3 text-[14px] text-white border-b border-white/5 last:border-none hover:bg-[#3a3a3c] transition-colors truncate"
+                                        className="w-full text-left px-3 py-3 text-[14px] text-white border-b border-white/5 last:border-none hover:bg-bg-elevated transition-colors truncate"
                                     >
                                         {p}
                                     </button>
@@ -90,10 +90,10 @@ const PromptInput = ({
                         whileTap={{ scale: 0.95 }}
                         onClick={handleEnhancePrompt}
                         disabled={isEnhancing || !inputs.prompt?.trim()}
-                        className={`px-4 py-1.5 rounded-[10px] text-[13px] font-bold whitespace-nowrap transition-all shadow-sm focus:outline-none flex items-center gap-1.5 flex-shrink-0
+                        className={`px-4 py-1.5 rounded-input text-[13px] font-bold whitespace-nowrap transition-all shadow-sm focus:outline-none flex items-center gap-1.5 flex-shrink-0
                             ${inputs.prompt?.trim()
                                 ? 'bg-gradient-to-r from-purple-500/20 to-blue-500/20 border border-purple-500/30 text-purple-300 hover:text-white hover:border-purple-400/50'
-                                : 'bg-[#2c2c2e]/40 border border-white/5 text-[#8e8e93] cursor-not-allowed'
+                                : 'bg-bg-elevated/40 border border-white/5 text-text-secondary cursor-not-allowed'
                             }`}
                     >
                         {isEnhancing ? (
@@ -108,12 +108,12 @@ const PromptInput = ({
                         whileTap={{ scale: 0.95 }}
                         onClick={() => { setShowRefine(!showRefine); playClick(); }}
                         disabled={!inputs.prompt?.trim()}
-                        className={`px-4 py-1.5 rounded-[10px] text-[13px] font-bold whitespace-nowrap transition-all shadow-sm focus:outline-none flex items-center gap-1.5 flex-shrink-0
+                        className={`px-4 py-1.5 rounded-input text-[13px] font-bold whitespace-nowrap transition-all shadow-sm focus:outline-none flex items-center gap-1.5 flex-shrink-0
                             ${showRefine
                                 ? 'bg-blue-500 text-white border border-blue-400'
                                 : inputs.prompt?.trim()
                                     ? 'bg-blue-500/10 border border-blue-500/30 text-blue-400 hover:text-white hover:border-blue-400'
-                                    : 'bg-[#2c2c2e]/40 border border-white/5 text-[#8e8e93] cursor-not-allowed'
+                                    : 'bg-bg-elevated/40 border border-white/5 text-text-secondary cursor-not-allowed'
                             }`}
                     >
                         <Recycle size={14} /> {showRefine ? 'Отмена' : 'Изменить'}
@@ -126,7 +126,7 @@ const PromptInput = ({
                                 whileTap={{ scale: 0.95 }}
                                 key={style.id}
                                 onClick={() => handleAddPreset(style.prompt)}
-                                className="px-3.5 py-1.5 rounded-[10px] bg-[#2c2c2e]/80 border border-white/5 text-[13px] font-semibold text-white whitespace-nowrap active:bg-[#3a3a3c] transition-all shadow-sm focus:outline-none"
+                                className="px-3.5 py-1.5 rounded-input bg-bg-elevated/80 border border-white/5 text-[13px] font-semibold text-white whitespace-nowrap active:bg-bg-elevated transition-all shadow-sm focus:outline-none"
                             >
                                 {style.label}
                             </motion.button>
@@ -146,10 +146,10 @@ const PromptInput = ({
                                 <input
                                     type="text"
                                     placeholder="Что изменить? (например: сделай в стиле киберпанк)"
-                                    className="flex-1 bg-[#2c2c2e] rounded-[10px] px-3 py-2 text-[14px] text-white outline-none border border-white/5 focus:border-blue-500/50"
+                                    className="flex-1 bg-bg-elevated rounded-input px-3 py-2 text-[14px] text-white outline-none border border-white/5 focus:border-blue-500/50"
                                     autoFocus
                                 />
-                                <button className="bg-blue-500 text-white px-4 py-2 rounded-[10px] text-[13px] font-bold">
+                                <button className="bg-blue-500 text-white px-4 py-2 rounded-input text-[13px] font-bold">
                                     OK
                                 </button>
                             </div>

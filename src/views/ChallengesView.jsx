@@ -60,7 +60,7 @@ const ChallengesView = () => {
                     onClick={() => { playClick(); navigate(-1); }}
                     className="w-10 h-10 flex items-center justify-center bg-white/5 rounded-full active:scale-95 transition-transform"
                 >
-                    <ChevronLeft size={24} className="text-[#007aff]" />
+                    <ChevronLeft size={24} className="text-accent-blue" />
                 </button>
                 <h1 className="text-[20px] font-bold tracking-tight">{t('challenges.title')}</h1>
             </div>
@@ -131,13 +131,13 @@ const ChallengesView = () => {
                 <div className="flex gap-2 bg-white/5 p-1 rounded-2xl border border-white/5">
                     <button
                         onClick={() => { playClick(); setActiveTab('active'); }}
-                        className={`flex-1 py-3 text-[14px] font-bold rounded-xl transition-all ${activeTab === 'active' ? 'bg-[#007aff] text-white shadow-lg' : 'text-gray-400'}`}
+                        className={`flex-1 py-3 text-[14px] font-bold rounded-xl transition-all ${activeTab === 'active' ? 'bg-accent-blue text-white shadow-lg' : 'text-gray-400'}`}
                     >
                         {t('challenges.active')}
                     </button>
                     <button
                         onClick={() => { playClick(); setActiveTab('past'); }}
-                        className={`flex-1 py-3 text-[14px] font-bold rounded-xl transition-all ${activeTab === 'past' ? 'bg-[#007aff] text-white shadow-lg' : 'text-gray-400'}`}
+                        className={`flex-1 py-3 text-[14px] font-bold rounded-xl transition-all ${activeTab === 'past' ? 'bg-accent-blue text-white shadow-lg' : 'text-gray-400'}`}
                     >
                         {t('challenges.past')}
                     </button>
@@ -146,7 +146,7 @@ const ChallengesView = () => {
                 {/* Past Challenges List */}
                 <div className="grid gap-4">
                     {activeTab === 'active' ? (
-                        <div className="bg-[#1c1c1e] rounded-3xl p-6 border border-white/5 text-center space-y-4">
+                        <div className="bg-bg-secondary rounded-3xl p-6 border border-white/5 text-center space-y-4">
                             <div className="w-16 h-16 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-2">
                                 <Trophy size={32} className="text-blue-500" />
                             </div>
@@ -161,7 +161,7 @@ const ChallengesView = () => {
                                 key={challenge.id}
                                 initial={{ opacity: 0, x: -10 }}
                                 animate={{ opacity: 1, x: 0 }}
-                                className="bg-[#1c1c1e] rounded-2xl overflow-hidden flex border border-white/5 shadow-md flex-col"
+                                className="bg-bg-secondary rounded-2xl overflow-hidden flex border border-white/5 shadow-md flex-col"
                             >
                                 <div className="p-4 flex gap-4">
                                     <img src={challenge.image} className="w-24 h-24 rounded-xl object-cover" />
@@ -180,13 +180,13 @@ const ChallengesView = () => {
                                                     <img key={idx} src={w.avatar} className="w-5 h-5 rounded-full border border-black" />
                                                 ))}
                                             </div>
-                                            <span className="text-[11px] text-[#007aff] font-bold uppercase tracking-wider">{t('challenges.winners')}</span>
+                                            <span className="text-[11px] text-accent-blue font-bold uppercase tracking-wider">{t('challenges.winners')}</span>
                                         </div>
                                     </div>
                                 </div>
                                 <div className="px-4 py-3 bg-white/[0.02] border-t border-white/5 flex justify-between items-center">
                                     <span className="text-[12px] text-gray-400">Завершено 2 дня назад</span>
-                                    <button className="text-[12px] text-[#007aff] font-bold flex items-center gap-1">
+                                    <button className="text-[12px] text-accent-blue font-bold flex items-center gap-1">
                                         Посмотреть <ArrowRight size={14} />
                                     </button>
                                 </div>
