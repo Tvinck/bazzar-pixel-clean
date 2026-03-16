@@ -13,6 +13,7 @@ import { useToast } from '../context/ToastContext';
 import { templatesData } from '../data/templates';
 import { KIE_MODELS_FLAT } from '../kie-models';
 
+import { getCDNUrl } from '../hooks/useCDN';
 const AdminView = () => {
     const { user, profile } = useUser();
     const [isAdmin, setIsAdmin] = useState(false);
@@ -902,9 +903,9 @@ const AdminView = () => {
                                 >
                                     <div className="aspect-[9/16] bg-black/50 relative">
                                         {t.src && (t.media_type === 'video' ? (
-                                            <video src={`${t.src}#t=0.0,0.1`} className="w-full h-full object-cover" muted preload="metadata" />
+                                            <video src={`${getCDNUrl(t.src)}#t=0.0,0.1`} className="w-full h-full object-cover" muted preload="metadata" />
                                         ) : (
-                                            <img src={t.src} className="w-full h-full object-cover" loading="lazy" />
+                                            <img src={getCDNUrl(t.src)} loading="lazy" decoding="async" className="w-full h-full object-cover" loading="lazy" />
                                         ))}
                                         {!t.is_active && (
                                             <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
@@ -1622,9 +1623,9 @@ const AdminView = () => {
                                 <div className="aspect-[3/4] rounded-[16px] bg-black/50 overflow-hidden relative border border-white/10 mx-auto w-1/2 group">
                                     {editingTemplate.src ? (
                                         editingTemplate.media_type === 'video' ? (
-                                            <video src={editingTemplate.src} className="w-full h-full object-cover" muted autoPlay loop />
+                                            <video src={getCDNUrl(editingTemplate.src)} className="w-full h-full object-cover" muted autoPlay loop />
                                         ) : (
-                                            <img src={editingTemplate.src} className="w-full h-full object-cover" />
+                                            <img src={getCDNUrl(editingTemplate.src)} className="w-full h-full object-cover" />
                                         )
                                     ) : (
                                         <div className="flex flex-col items-center justify-center h-full text-white/20 gap-2">

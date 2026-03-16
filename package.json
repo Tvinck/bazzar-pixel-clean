@@ -9,6 +9,9 @@
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "preview": "vite preview",
+    "optimize:images": "node scripts/convert-to-webp.js",
+    "upload:cdn": "node scripts/upload-all-to-cdn.js",
+    "optimize:all": "npm run optimize:images && npm run upload:cdn",
     "start": "node server/index.js",
     "server:payments": "node server/services/payments/index.js",
     "server:users": "node server/services/users/index.js",
@@ -95,6 +98,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite": "^7.2.4",
+    "vite-plugin-imagemin": "^0.6.1",
     "vite-plugin-pwa": "^1.2.0"
   }
 }

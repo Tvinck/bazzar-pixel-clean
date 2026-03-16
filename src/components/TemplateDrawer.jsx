@@ -5,6 +5,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useSound } from '../context/SoundContext';
 import { AnimatedButton } from './ui/AnimatedButtons';
 
+import { getCDNUrl } from '../hooks/useCDN';
 const TemplateDrawer = ({ isOpen, onClose, template }) => {
     const { playClick, playSuccess } = useSound();
 
@@ -132,13 +133,13 @@ const TemplateDrawer = ({ isOpen, onClose, template }) => {
                             <div className="aspect-[9/16] w-full max-w-[200px] mx-auto rounded-3xl overflow-hidden shadow-2xl mb-8 bg-black relative ring-4 ring-white dark:ring-slate-800/50">
                                 {template.mediaType === 'image' ? (
                                     <img
-                                        src={template.src}
+                                        src={getCDNUrl(template.src)} loading="lazy" decoding="async"
                                         className="w-full h-full object-cover"
                                         alt={template.title}
                                     />
                                 ) : (
                                     <video
-                                        src={template.src}
+                                        src={getCDNUrl(template.src)} loading="lazy" decoding="async"
                                         autoPlay
                                         loop
                                         muted
@@ -184,7 +185,7 @@ const TemplateDrawer = ({ isOpen, onClose, template }) => {
                                                 `}>
                                                     {previewUrls[i] ? (
                                                         <div className="relative w-full h-full">
-                                                            <img src={previewUrls[i]} className="w-full h-full object-cover rounded-2xl" alt="Preview" />
+                                                            <img src={getCDNUrl(previewUrls[i])} loading="lazy" decoding="async" className="w-full h-full object-cover rounded-2xl" alt="Preview" />
                                                             <button
                                                                 onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleRemoveFile(i); }}
                                                                 className="absolute top-2 right-2 bg-white/90 dark:bg-slate-900/90 text-red-500 p-1.5 rounded-full z-30 shadow-sm hover:scale-110 transition-transform"

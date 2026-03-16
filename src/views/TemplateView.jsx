@@ -13,6 +13,7 @@ import InsufficientCreditsModal from '../components/InsufficientCreditsModal';
 // Import Dynamic Models & Pricing
 import { MODEL_FAMILIES, calculateModelCost, KIE_MODELS_FLAT } from '../kie-models';
 
+import { getCDNUrl } from '../hooks/useCDN';
 // Typewriter Component
 const TypewriterText = ({ text, speed = 10, startDelay = 500 }) => {
     const [displayedText, setDisplayedText] = useState('');
@@ -299,7 +300,7 @@ const TemplateView = ({ onOpenPayment }) => {
 
                             {previewUrls[i] ? (
                                 <div className="w-full h-full rounded-[16px] overflow-hidden bg-[#2c2c2e] relative border border-white/10 shadow-lg group cursor-pointer">
-                                    <img src={previewUrls[i]} alt="Preview" className="w-full h-full object-cover group-hover:opacity-60 transition-opacity duration-300" />
+                                    <img src={getCDNUrl(previewUrls[i])} loading="lazy" decoding="async" alt="Preview" className="w-full h-full object-cover group-hover:opacity-60 transition-opacity duration-300" />
 
                                     {/* Edit Overlay */}
                                     <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
@@ -363,7 +364,7 @@ const TemplateView = ({ onOpenPayment }) => {
                                                     onClick={() => { playClick(); navigate(`/template/${t.id}`, { replace: true }); }}
                                                     className="flex-shrink-0 w-24 aspect-[3/4] rounded-[16px] overflow-hidden relative border border-white/10 active:scale-95 transition-transform shadow-md group"
                                                 >
-                                                    <img src={t.src} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                                                    <img src={getCDNUrl(t.src)} loading="lazy" decoding="async" className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                                                 </button>
                                             ))}
                                             {similarTemplates.length > 5 && (

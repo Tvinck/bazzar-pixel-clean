@@ -17,6 +17,7 @@ import { useABTest } from '../hooks/useABTest';
 import { useMarketing } from '../hooks/useMarketing';
 import { EXPERTS } from '../config/experts';
 
+import { getCDNUrl } from '../hooks/useCDN';
 const triggerHaptic = (style = 'light') => {
     if (window.Telegram?.WebApp?.HapticFeedback) {
         window.Telegram.WebApp.HapticFeedback.impactOccurred(style);
@@ -385,7 +386,7 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                                     onClick={() => { triggerHaptic('medium'); item.id && onOpenTemplate(item); }}
                                 >
                                     {item.src && (
-                                        <img src={item.src} className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" alt="" />
+                                        <img src={getCDNUrl(item.src)} loading="lazy" decoding="async" className="w-full h-full object-cover transition-transform duration-700 hover:scale-110" alt="" />
                                     )}
                                     <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/90 via-black/40 to-transparent pointer-events-none" />
                                     <div className="absolute bottom-2.5 left-2.5 right-2.5 flex flex-col gap-0.5">
