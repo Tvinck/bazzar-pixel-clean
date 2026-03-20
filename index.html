@@ -40,13 +40,26 @@
         const lastReload = localStorage.getItem('pixel_last_reload');
         const now = Date.now();
         
-        // Reload only if last reload was more than 10 seconds ago to avoid loops
+        // Reload if last reload was more than 10s ago
         if (!lastReload || (now - parseInt(lastReload)) > 10000) {
           localStorage.setItem('pixel_last_reload', now.toString());
-          // Add cache-busting parameter to force server fetch
-          const retryUrl = new URL(window.location.href);
-          retryUrl.searchParams.set('v', now.toString());
-          window.location.replace(retryUrl.toString());
+
+          // Nuclear option: Unregister all service workers then reload
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(registrations) {
+              for(let registration of registrations) {
+                registration.unregister();
+              }
+              // Force reload with cache busting
+              const retryUrl = new URL(window.location.href);
+              retryUrl.searchParams.set('v', now.toString());
+              window.location.replace(retryUrl.toString());
+            });
+          } else {
+             const retryUrl = new URL(window.location.href);
+             retryUrl.searchParams.set('v', now.toString());
+             window.location.replace(retryUrl.toString());
+          }
         }
       }
     }, true);
