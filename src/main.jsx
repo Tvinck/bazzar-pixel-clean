@@ -32,59 +32,6 @@ if (!window.Telegram?.WebApp?.initData && webAuthToken) {
   }
 }
 
-// Initialize Telegram WebApp
-if (window.Telegram?.WebApp && window.Telegram.WebApp.initData) {
-  const tg = window.Telegram.WebApp;
-
-  console.log('🚀 Initializing Telegram WebApp...');
-
-  // Basic initialization
-  if (typeof tg.ready === 'function') tg.ready();
-  if (typeof tg.expand === 'function') tg.expand();
-
-  // Configure header - try multiple methods
-  try {
-    // Method 1: Direct property
-    tg.headerColor = '#000000';
-
-    // Method 2: setHeaderColor method (if available)
-    if (typeof tg.setHeaderColor === 'function') {
-      tg.setHeaderColor('#000000');
-    }
-
-    // Method 3: Set background color
-    tg.backgroundColor = '#000000';
-
-    // Set theme params
-    if (tg.themeParams) {
-      tg.themeParams.bg_color = '#000000';
-      tg.themeParams.secondary_bg_color = '#000000';
-    }
-
-    console.log('🎨 Header color configured');
-  } catch (e) {
-    console.warn('⚠️ Could not set header color:', e);
-  }
-
-  // Enable closing confirmation (optional)
-  if (typeof tg.enableClosingConfirmation === 'function') tg.enableClosingConfirmation();
-
-  // Setup back button handler
-  if (tg.BackButton && typeof tg.BackButton.onClick === 'function') {
-    tg.BackButton.onClick(() => {
-      console.log('📱 Back button clicked');
-      window.dispatchEvent(new CustomEvent('telegram-back-button'));
-    });
-    if (typeof tg.BackButton.show === 'function') tg.BackButton.show();
-  }
-
-  console.log('📱 Telegram WebApp initialized:', tg);
-  console.log('👤 Telegram User Data:', tg.initDataUnsafe?.user);
-  console.log('🎨 Header color set to:', tg.headerColor);
-} else {
-  console.warn('⚠️ Telegram WebApp SDK not loaded');
-}
-
 // Initialize Monitoring & Analytics
 initMonitoring();
 tracking.init();

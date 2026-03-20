@@ -19,7 +19,24 @@
   <link rel="apple-touch-icon" href="/icons/icon-192.png">
 
   <!-- Telegram WebApp SDK -->
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://telegram.org/js/telegram-web-app.js" defer></script>
+
+  <!-- Chunk Load Error Handler -->
+  <script>
+    window.addEventListener('error', function(e) {
+      if (e.target && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
+        const url = e.target.src || e.target.href;
+        if (url && (url.indexOf('index-') > -1 || url.indexOf('vendor-') > -1)) {
+          console.error('📦 Chunk load error detected for:', url);
+          const hasReloaded = sessionStorage.getItem('pixel_auto_reloaded');
+          if (!hasReloaded) {
+            sessionStorage.setItem('pixel_auto_reloaded', 'true');
+            window.location.reload();
+          }
+        }
+      }
+    }, true);
+  </script>
 
   <!-- Yandex ID SDK -->
   <script src="https://yastatic.net/s3/passport-sdk/autofill/v1/sdk-suggest-with-polyfills-latest.js"></script>

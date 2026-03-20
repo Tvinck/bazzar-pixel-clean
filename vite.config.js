@@ -92,12 +92,9 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          'motion': ['framer-motion'],
-          'icons': ['lucide-react'],
-          'query': ['@tanstack/react-query'],
-          'supabase': ['@supabase/supabase-js'],
-          'ui-components': [
+          'core-vendor': ['react', 'react-dom', 'react-router-dom', 'framer-motion'],
+          'common-utils': ['lucide-react', '@tanstack/react-query', '@supabase/supabase-js'],
+          'ui-kit': [
             './src/components/ui/Button.jsx',
             './src/components/ui/Input.jsx',
             './src/components/ui/Card.jsx'

@@ -127,6 +127,15 @@ export const useTelegramInit = (setTelegramUser?: (user: any) => void) => {
             } catch (e) {
                 console.error("Telegram Mini App Init Error:", e);
             }
+        } else {
+            // SDK Missing or Timeout Check
+            console.warn("⚠️ Telegram SDK not detected yet. Retrying initialization...");
+            const timer = setTimeout(() => {
+                if (!(window as any).Telegram?.WebApp) {
+                    console.error("❌ Telegram SDK Load Timeout (5s). Network issues detected.");
+                }
+            }, 5000);
+            return () => clearTimeout(timer);
         }
     }, [navigate, setTelegramUser]);
 
