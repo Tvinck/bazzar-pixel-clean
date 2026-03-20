@@ -145,25 +145,34 @@ function AppContent() {
     isOnboardingVisible, isNotificationsOpen, telegramUser
   };
 
-    if (!isLoading && !telegramId && !user) {
-        // Allow OAuth callback to process without auth
-        if (location.pathname === '/auth/callback') {
-            return (
-                <Suspense fallback={<div className="min-h-screen bg-bg-primary" />}>
-                    <Routes>
-                        <Route path="/auth/callback" element={<OAuthCallback />} />
-                    </Routes>
-                </Suspense>
-            );
-        }
-        return (
-            <Suspense fallback={<div className="min-h-screen bg-bg-primary flex items-center justify-center">
-                <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
-            </div>}>
-                <WebLogin />
-            </Suspense>
-        );
+  // Final Render Logic
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-bg-primary flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!telegramId && !user) {
+    // Allow OAuth callback to process without auth
+    if (location.pathname === '/auth/callback') {
+      return (
+        <Suspense fallback={<div className="min-h-screen bg-bg-primary" />}>
+          <Routes>
+            <Route path="/auth/callback" element={<OAuthCallback />} />
+          </Routes>
+        </Suspense>
+      );
     }
+    return (
+      <Suspense fallback={<div className="min-h-screen bg-bg-primary flex items-center justify-center">
+        <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+      </div>}>
+        <WebLogin />
+      </Suspense>
+    );
+  }
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? "dark" : ""}`}>

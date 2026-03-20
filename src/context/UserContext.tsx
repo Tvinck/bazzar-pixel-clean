@@ -184,9 +184,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
                     // Start all DB calls in parallel for speed
                     const [userData, userStats, userProfile] = await Promise.all([
-                        dbAnalytics.upsertUser(tgId, tgUser),
-                        dbAnalytics.getUserStats(tgId),
-                        dbAnalytics.getUserProfile(tgId)
+                        dbAnalytics.upsertUser(tgId, tgUser).catch(err => { console.error('Upsert failed', err); return null; }),
+                        dbAnalytics.getUserStats(tgId).catch(err => { console.error('Stats failed', err); return null; }),
+                        dbAnalytics.getUserProfile(tgId).catch(err => { console.error('Profile failed', err); return null; })
                     ]);
 
                     if (userData) setUser(userData);
