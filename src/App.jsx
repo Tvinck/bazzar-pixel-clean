@@ -11,6 +11,7 @@ import { ToastProvider } from "./context/ToastContext";
 import { UserProvider, useUser } from "./context/UserContext";
 import { ThemeProvider } from "./context/ThemeContext";
 import { ABTestProvider } from "./context/ABTestContext";
+import { BottomSheetProvider } from "./context/BottomSheetContext";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 
@@ -239,8 +240,10 @@ function App() {
                   <ABTestProvider>
                     <Router>
                       <AppRoot appearance={document.documentElement.classList.contains("dark") ? "dark" : "light"}>
-                        <AppContent />
-                        <UpdateBanner />
+                        <BottomSheetProvider>
+                          <AppContent />
+                          <UpdateBanner />
+                        </BottomSheetProvider>
                       </AppRoot>
                     </Router>
                   </ABTestProvider>

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ListRow } from '../components/ui';
+import { ListRow, Block } from '../components/ui';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -11,7 +11,7 @@ import SEO from '../components/SEO/SEO';
 import { useUser } from '../context/UserContext';
 import { templatesData } from '../data/templates';
 import { SpringCounter } from '../components/SpringAnimations';
-import { ImageCardSkeleton } from '../components/ui/Skeletons';
+import { SkeletonListRow, SkeletonCard, SkeletonImageCard } from '../components/ui/Skeleton';
 import AnimatedIcon from '../components/ui/AnimatedIcon';
 import { useLanguage } from '../context/LanguageContext';
 import { useABTest } from '../hooks/useABTest';
@@ -341,8 +341,8 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                     <div className="flex gap-3 overflow-x-auto no-scrollbar snap-x pb-2 -mx-4 px-4 w-[calc(100%+2rem)] px-5">
                         {(isTemplatesLoading ? Array(5).fill({}) : finalTemplates?.slice(0, 10))?.map((item, i) => (
                             isTemplatesLoading ? (
-                                <div key={i} className="min-w-[120px] w-[120px] snap-start flex-shrink-0">
-                                    <ImageCardSkeleton />
+                                <div key={`skeleton-${i}`} className="min-w-[120px] w-[120px] snap-start flex-shrink-0">
+                                    <SkeletonImageCard />
                                 </div>
                             ) : (
                                 <motion.div
@@ -411,19 +411,27 @@ const HomeView = ({ onLoadComplete, onOpenCreation, onOpenTemplate, onOpenPaymen
                             {t('home.seeAll')} <ChevronRight size={16} />
                         </button>
                     </div>
-                    <Block>
-                        {experts.map((expert, i) => (
-                            <ListRow
-                                key={expert.id}
-                                icon={<span className="text-[18px]">{expert.emoji || expert.icon}</span>}
-                                iconColor="bg-white/5"
-                                label={expert.name}
-                                subtext={expert.desc}
-                                onClick={() => { triggerHaptic('light'); navigate(`/experts/${expert.id}`); }}
-                                isLast={i === experts.length - 1}
-                            />
-                        ))}
-                    </Block>
+                    {isTemplatesLoading ? (
+                        <div className="space-y-1">
+                            {[1, 2, 3, 4].map(i => (
+                                <SkeletonListRow key={i} />
+                            ))}
+                        </div>
+                    ) : (
+                        <Block>
+                            {experts.map((expert, i) => (
+                                <ListRow
+                                    key={expert.id}
+                                    icon={<span className="text-[18px]">{expert.emoji || expert.icon}</span>}
+                                    iconColor="bg-white/5"
+                                    label={expert.name}
+                                    subtext={expert.desc}
+                                    onClick={() => { triggerHaptic('light'); navigate(`/experts/${expert.id}`); }}
+                                    isLast={i === experts.length - 1}
+                                />
+                            ))}
+                        </Block>
+                    )}
                 </motion.div>
 
             </motion.div>

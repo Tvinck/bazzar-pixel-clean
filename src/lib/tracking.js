@@ -28,22 +28,26 @@ class TrackingService {
     }
 
     track(eventName, properties = {}) {
-        const eventData = {
-            timestamp: new Date().toISOString(),
-            ...properties
-        };
+        try {
+            const eventData = {
+                timestamp: new Date().toISOString(),
+                ...properties
+            };
 
-        if (import.meta.env.DEV) {
-            console.log(`[Tracking] Track: ${eventName}`, eventData);
-        }
+            if (import.meta.env.DEV) {
+                console.log(`[Tracking] Track: ${eventName}`, eventData);
+            }
 
-        if (window.Sentry) {
-            window.Sentry.addBreadcrumb({
-                category: 'user-action',
-                message: eventName,
-                data: properties,
-                level: 'info',
-            });
+            if (window.Sentry) {
+                window.Sentry.addBreadcrumb({
+                    category: 'user-action',
+                    message: eventName,
+                    data: properties,
+                    level: 'info',
+                });
+            }
+        } catch (error) {
+            console.warn('[Tracking] Failed to track event:', eventName, error);
         }
     }
 

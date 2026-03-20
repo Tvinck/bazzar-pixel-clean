@@ -14,13 +14,14 @@ const activeRetentions = new Map();
  */
 export function setupMarketingRoutes(bot) {
     router.post('/track', authTG, async (req, res) => {
-        const { event } = req.body;
-        const telegramId = req.tgUser.id;
+        try {
+            const { event } = req.body;
+            const telegramId = req.tgUser.id;
 
-        // Always return success immediately (Fire & Forget)
-        res.json({ ok: true });
+            // Always return success immediately (Fire & Forget)
+            res.json({ ok: true });
 
-        if (!telegramId) return;
+            if (!telegramId) return;
         const uid = telegramId.toString();
 
         // 1. Session Start (Tourist Logic)
@@ -95,6 +96,12 @@ export function setupMarketingRoutes(bot) {
                     } catch (e) { }
                 }, 5 * 60 * 1000);
                 activeRetentions.set(upsellKey, timeout);
+            }
+            }
+        } catch (error) {
+            console.error('Track error:', error);
+            if (!res.headersSent) {
+                res.status(200).json({ ok: true });
             }
         }
     });

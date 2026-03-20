@@ -273,7 +273,8 @@ const WebLogin = () => {
                     transition={{ delay: 0.2 }}
                     className="w-full flex flex-col gap-3"
                 >
-                    {/* Telegram */}
+                    {/* Telegram Login Hidden per User Request (Browser Only) */}
+                    {/* 
                     {showTelegramWidget ? (
                         <motion.div
                             initial={{ opacity: 0, height: 0 }}
@@ -307,6 +308,7 @@ const WebLogin = () => {
                             disabled={isLoading}
                         />
                     )}
+                    */}
 
                     {/* Yandex ID — SDK button container + fallback */}
                     <div id="yandex-login-button" className="w-full" style={{ minHeight: 0 }}></div>

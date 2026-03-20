@@ -64,38 +64,36 @@ function isPortListening(port) {
 
 // --- SETUP ROUTES ---
 async function setupRouting() {
-    const [paymentsUp, usersUp, generationUp] = await Promise.all([
-        isPortListening(PORTS.PAYMENTS),
-        isPortListening(PORTS.USERS),
-        isPortListening(PORTS.GENERATION)
-    ]);
+    // Always register proxies to avoid race conditions during startup.
+    // Microservices will handle connections once they are up.
+    app.use('/api/payments', createProxyMiddleware({ 
+        target: `http://localhost:${PORTS.PAYMENTS}`, 
+        changeOrigin: true, 
+        on: { proxyReq: fixRequestBody },
+        onError: (err, req, res) => res.status(503).json({ error: 'Payments service unavailable' })
+    }));
+    
+    app.use('/api/user', createProxyMiddleware({ 
+        target: `http://localhost:${PORTS.USERS}`, 
+        changeOrigin: true, 
+        on: { proxyReq: fixRequestBody },
+        onError: (err, req, res) => res.status(503).json({ error: 'User service unavailable' })
+    }));
+    
+    app.use('/api/generation', generationLimiter, createProxyMiddleware({ 
+        target: `http://localhost:${PORTS.GENERATION}`, 
+        changeOrigin: true, 
+        on: { proxyReq: fixRequestBody },
+        onError: (err, req, res) => res.status(503).json({ error: 'Generation service unavailable' })
+    }));
 
-    console.log(`📊 Service discovery:`);
-    console.log(`   💳 Payments (${PORTS.PAYMENTS}): ${paymentsUp ? '✅ UP' : '❌ DOWN'}`);
-    console.log(`   👤 Users (${PORTS.USERS}):    ${usersUp ? '✅ UP' : '❌ DOWN'}`);
-    console.log(`   🚀 Generation (${PORTS.GENERATION}):  ${generationUp ? '✅ UP' : '❌ DOWN'}`);
-
-    if (paymentsUp) {
-        app.use('/api/payments', createProxyMiddleware({ target: `http://localhost:${PORTS.PAYMENTS}`, changeOrigin: true, on: { proxyReq: fixRequestBody } }));
-        console.log('   → Proxying /api/payments');
-    }
-
-    if (usersUp) {
-        app.use('/api/user', createProxyMiddleware({ target: `http://localhost:${PORTS.USERS}`, changeOrigin: true, on: { proxyReq: fixRequestBody } }));
-        console.log('   → Proxying /api/user');
-    }
-
-    if (generationUp) {
-        app.use('/api/generation', generationLimiter, createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}`, changeOrigin: true, on: { proxyReq: fixRequestBody } }));
-        // Legacy compatibility proxies
-        app.use('/api/experts', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/experts`, pathRewrite: { '^/api/experts': '' }, on: { proxyReq: fixRequestBody } }));
-        app.use('/api/stickers', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/stickers`, pathRewrite: { '^/api/stickers': '' }, on: { proxyReq: fixRequestBody } }));
-        app.use('/api/gallery', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/gallery`, pathRewrite: { '^/api/gallery': '' }, on: { proxyReq: fixRequestBody } }));
-        app.use('/api/stars', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/stars`, pathRewrite: { '^/api/stars': '' }, on: { proxyReq: fixRequestBody } }));
-        app.use('/api/preview-greeting', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/preview-greeting`, pathRewrite: { '^/api/preview-greeting': '' }, on: { proxyReq: fixRequestBody } }));
-        app.use('/api/generate-greeting-v2', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/generate-greeting-v2`, pathRewrite: { '^/api/generate-greeting-v2': '' }, on: { proxyReq: fixRequestBody } }));
-        console.log('   → Proxying /api/generation + legacy routes');
-    }
+    // Legacy compatibility proxies
+    app.use('/api/experts', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/experts`, pathRewrite: { '^/api/experts': '' }, on: { proxyReq: fixRequestBody } }));
+    app.use('/api/stickers', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/stickers`, pathRewrite: { '^/api/stickers': '' }, on: { proxyReq: fixRequestBody } }));
+    app.use('/api/gallery', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/gallery`, pathRewrite: { '^/api/gallery': '' }, on: { proxyReq: fixRequestBody } }));
+    app.use('/api/stars', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/stars`, pathRewrite: { '^/api/stars': '' }, on: { proxyReq: fixRequestBody } }));
+    app.use('/api/preview-greeting', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/preview-greeting`, pathRewrite: { '^/api/preview-greeting': '' }, on: { proxyReq: fixRequestBody } }));
+    app.use('/api/generate-greeting-v2', createProxyMiddleware({ target: `http://localhost:${PORTS.GENERATION}/api/generation/generate-greeting-v2`, pathRewrite: { '^/api/generate-greeting-v2': '' }, on: { proxyReq: fixRequestBody } }));
 
     // --- ALWAYS REGISTER GATEWAY-LEVEL ROUTES ---
     // Some routes (marketing, templates, experts, stickers) are still in the monolith routes 

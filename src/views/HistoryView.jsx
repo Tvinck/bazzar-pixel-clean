@@ -6,6 +6,7 @@ import { useUser } from '../context/UserContext';
 import galleryAPI from '../lib/galleryAPI';
 import { useCloudStorage } from '../hooks/useCloudStorage';
 import CompareModal from '../components/CompareModal';
+import { SkeletonHistory } from '../components/ui/Skeleton';
 import SEO from '../components/SEO/SEO';
 
 import HistoryFilter from '../components/history/HistoryFilter';
@@ -29,31 +30,7 @@ const SparkleIcon = ({ size = 24, className = '' }) => (
     </svg>
 );
 
-const HistoryLoadingSkeleton = () => (
-    <div className="pt-4 pb-32 px-4 bg-bg-secondary min-h-screen text-white">
-        <div className="mb-6 px-1">
-            <div className="h-8 w-28 bg-white/5 rounded-lg animate-pulse mb-2" />
-            <div className="h-4 w-16 bg-white/5 rounded-md animate-pulse" />
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-            {[...Array(6)].map((_, i) => (
-                <motion.div
-                    key={i}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: i * 0.08 }}
-                    className="aspect-square rounded-card bg-bg-elevated overflow-hidden relative"
-                >
-                    <motion.div
-                        className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.03] to-transparent"
-                        animate={{ x: ['-100%', '200%'] }}
-                        transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.15 }}
-                    />
-                </motion.div>
-            ))}
-        </div>
-    </div>
-);
+
 
 const HistoryView = () => {
     const navigate = useNavigate();
@@ -223,10 +200,26 @@ const HistoryView = () => {
         setSelectedCompareIds([]);
     };
 
-    if (isLoading) return <HistoryLoadingSkeleton />;
+    if (isLoading) return <SkeletonHistory />;
 
     if (!generations || generations.length === 0) {
-        return <HistoryEmpty onCreateClick={() => navigate('/create')} />;
+        return (
+            <div className="flex flex-col items-center justify-center py-20 px-6 gap-3 min-h-[60vh]">
+                <span className="text-6xl mb-4 animate-bounce">🎨</span>
+                <p className="text-text-primary text-xl font-bold">
+                    Пока нет генераций
+                </p>
+                <p className="text-text-secondary text-sm text-center max-w-[240px]">
+                    Создай своё первое изображение и оно появится здесь!
+                </p>
+                <button 
+                    onClick={() => navigate('/create')}
+                    className="mt-6 px-8 py-3 bg-accent-blue text-white rounded-full font-bold active:scale-95 transition-transform"
+                >
+                    Начать создавать
+                </button>
+            </div>
+        );
     }
 
     return (

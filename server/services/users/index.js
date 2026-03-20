@@ -13,6 +13,76 @@ const activeRetentions = new Map();
 // --- ROUTES ---
 
 /**
+ * POST /api/user/init
+ * Initialize/Upsert user from TWA
+ */
+app.post('/api/user/init', authTG, async (req, res) => {
+    try {
+        const { id, ...rest } = req.tgUser;
+        const { userId, data } = await botAnalytics.upsertUser(req.tgUser);
+        res.json({ success: true, userId, user: data });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+/**
+ * POST /api/user/credits/add
+ * Proxy to add credits securely (internal or verified only)
+ */
+app.post('/api/user/credits/add', authTG, async (req, res) => {
+    try {
+        const { amount } = req.body;
+        const telegramId = req.tgUser.id;
+        
+        const { data, error } = await supabase.rpc('add_user_credits', {
+            p_telegram_id: telegramId,
+            p_amount: amount,
+            p_reason: 'Client-triggered bonus',
+            p_source: 'client_proxy'
+        });
+
+        if (error) throw error;
+        res.json({ success: true, data });
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+/**
+ * POST /api/user/credits/pay
+ * Proxy to process generation payment via RPC
+ */
+app.post('/api/user/credits/pay', authTG, async (req, res) => {
+    try {
+        const { cost, xpReward, type } = req.body;
+        const telegramId = req.tgUser.id;
+        const userUUID = await getUserUUID(telegramId);
+        if (!userUUID) return res.status(404).json({ error: 'User not found' });
+
+        const { data, error } = await supabase.rpc('process_generation_payment', {
+            p_user_id: userUUID,
+            p_cost: cost,
+            p_xp_reward: xpReward || 2,
+            p_service_type: type || 'generation'
+        });
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+/**
+ * GET /api/user/leaderboard
+ */
+app.get('/api/user/leaderboard', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('public_leaderboard')
+            .select('*')
+            .limit(100);
+        if (error) throw error;
+        res.json(data);
+    } catch (e) { res.status(500).json({ error: e.message }); }
+});
+
+/**
  * GET /api/user/stats
  */
 app.get('/api/user/stats', async (req, res) => {

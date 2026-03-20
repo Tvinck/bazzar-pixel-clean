@@ -38,4 +38,25 @@ router.get('/', async (req, res) => {
     }
 });
 
+/**
+ * GET /api/templates/:id
+ * Fetches a single template by ID.
+ */
+router.get('/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { data, error } = await supabase
+            .from('templates')
+            .select('*')
+            .eq('id', id)
+            .single();
+
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        console.error('Template Fetch Error:', e);
+        res.status(e.code === 'PGRST116' ? 404 : 500).json({ error: 'Template not found' });
+    }
+});
+
 export default router;

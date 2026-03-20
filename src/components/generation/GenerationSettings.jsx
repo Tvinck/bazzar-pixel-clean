@@ -1,6 +1,7 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronDown, Music, Settings2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { ChevronDown, Music, Settings2, Check } from 'lucide-react';
+import BottomSheet from '../ui/BottomSheet';
 
 const GenerationSettings = ({
     t,
@@ -30,31 +31,33 @@ const GenerationSettings = ({
                             <span className="text-white">{customValues.resolution || currentModel.default_res || '1K'}</span>
                             <ChevronDown size={18} className="text-text-secondary" />
                         </button>
-                        <AnimatePresence>
-                            {openDropdown === 'res' && (
-                                <motion.div
-                                    initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
-                                    className="absolute top-full left-0 right-0 mt-2 bg-bg-elevated rounded-input overflow-hidden z-20 shadow-xl"
-                                >
-                                    {(currentModel.resolutions || ['1K', '2K']).map(res => (
-                                        <button key={res}
-                                            onClick={() => {
-                                                setCustomValues(p => ({ ...p, resolution: res }));
-                                                setOpenDropdown(null);
-                                            }}
-                                            className="w-full text-left px-4 py-3 text-[15px] text-white border-b border-white/5 last:border-0 hover:bg-bg-elevated"
-                                        >
-                                            <div className="flex justify-between items-center">
-                                                <span>{res}</span>
-                                                {currentModel.pricing_type === 'resolution' && (
-                                                    <span className="text-text-secondary text-[13px]">{res === '4K' ? '24 cr' : '18 cr'}</span>
-                                                )}
-                                            </div>
-                                        </button>
-                                    ))}
-                                </motion.div>
-                            )}
-                        </AnimatePresence>
+                        
+                        <BottomSheet
+                            isOpen={openDropdown === 'res'}
+                            onClose={() => setOpenDropdown(null)}
+                            title={t('creation.resolution')}
+                        >
+                            <div className="space-y-1">
+                                {(currentModel.resolutions || ['1K', '2K']).map(res => (
+                                    <button 
+                                        key={res}
+                                        onClick={() => {
+                                            setCustomValues(p => ({ ...p, resolution: res }));
+                                            setOpenDropdown(null);
+                                        }}
+                                        className={`w-full text-left px-4 py-3.5 rounded-input text-[17px] transition-all flex justify-between items-center ${customValues.resolution === res ? 'bg-accent-blue/10 text-accent-blue' : 'text-white hover:bg-bg-elevated'}`}
+                                    >
+                                        <div className="flex flex-col">
+                                            <span>{res}</span>
+                                            {currentModel.pricing_type === 'resolution' && (
+                                                <span className="text-text-secondary text-[12px]">{res === '4K' ? '24 cr' : '18 cr'}</span>
+                                            )}
+                                        </div>
+                                        {customValues.resolution === res && <Check size={20} className="text-accent-blue" />}
+                                    </button>
+                                ))}
+                            </div>
+                        </BottomSheet>
                     </div>
                 ) : (
                     // Default Aspect Ratio selector for standard models
@@ -67,15 +70,25 @@ const GenerationSettings = ({
                             <span className="text-white">{customValues.aspect_ratio || '1:1'}</span>
                             <ChevronDown size={18} className="text-text-secondary" />
                         </button>
-                        {openDropdown === 'ar' && (
-                            <div className="absolute top-full left-0 right-0 mt-2 bg-bg-elevated rounded-input z-20 shadow-xl overflow-hidden">
+
+                        <BottomSheet
+                            isOpen={openDropdown === 'ar'}
+                            onClose={() => setOpenDropdown(null)}
+                            title={t('creation.aspectRatio')}
+                        >
+                            <div className="space-y-1">
                                 {['1:1', '16:9', '9:16', '4:3', '3:4'].map(r => (
-                                    <button key={r} onClick={() => { setCustomValues(p => ({ ...p, aspect_ratio: r })); setOpenDropdown(null); }} className="w-full text-left px-4 py-3 text-[15px] text-white border-b border-white/5 last:border-0 hover:bg-bg-elevated">
+                                    <button 
+                                        key={r} 
+                                        onClick={() => { setCustomValues(p => ({ ...p, aspect_ratio: r })); setOpenDropdown(null); }} 
+                                        className={`w-full text-left px-4 py-3.5 rounded-input text-[17px] transition-all flex justify-between items-center ${customValues.aspect_ratio === r ? 'bg-accent-blue/10 text-accent-blue' : 'text-white hover:bg-bg-elevated'}`}
+                                    >
                                         {r}
+                                        {customValues.aspect_ratio === r && <Check size={20} className="text-accent-blue" />}
                                     </button>
                                 ))}
                             </div>
-                        )}
+                        </BottomSheet>
                     </div>
                 )}
 
@@ -123,15 +136,25 @@ const GenerationSettings = ({
                             <span className="text-white capitalize">{(customValues.mode || currentModel.default_mode || currentModel.modes[0]).replace(/-/g, ' ')}</span>
                             <ChevronDown size={18} className="text-text-secondary" />
                         </button>
-                        {openDropdown === 'mode' && (
-                            <div className="absolute top-full left-0 right-0 mt-2 bg-bg-elevated rounded-input z-20 shadow-xl overflow-hidden">
+                        
+                        <BottomSheet
+                            isOpen={openDropdown === 'mode'}
+                            onClose={() => setOpenDropdown(null)}
+                            title="Выберите режим"
+                        >
+                            <div className="space-y-1">
                                 {currentModel.modes.map(m => (
-                                    <button key={m} onClick={() => { setCustomValues(p => ({ ...p, mode: m })); setOpenDropdown(null); }} className="w-full text-left px-4 py-3 text-[15px] text-white border-b border-white/5 last:border-0 hover:bg-bg-elevated capitalize">
+                                    <button 
+                                        key={m} 
+                                        onClick={() => { setCustomValues(p => ({ ...p, mode: m })); setOpenDropdown(null); }} 
+                                        className={`w-full text-left px-4 py-3.5 rounded-input text-[17px] transition-all flex justify-between items-center capitalize ${customValues.mode === m ? 'bg-accent-blue/10 text-accent-blue' : 'text-white hover:bg-bg-elevated'}`}
+                                    >
                                         {m.replace(/-/g, ' ')}
+                                        {customValues.mode === m && <Check size={20} className="text-accent-blue" />}
                                     </button>
                                 ))}
                             </div>
-                        )}
+                        </BottomSheet>
                     </div>
                 )}
             </div>

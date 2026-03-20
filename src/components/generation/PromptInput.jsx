@@ -1,6 +1,7 @@
 import React from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Mic, MicOff, Clock, Sparkles, Recycle } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Mic, MicOff, Clock, Sparkles, Recycle, Check } from 'lucide-react';
+import BottomSheet from '../ui/BottomSheet';
 import { CreateGraphic } from '../ui/GuideGraphics';
 
 const PromptInput = ({
@@ -54,34 +55,26 @@ const PromptInput = ({
                         </button>
                     </div>
 
-                    <AnimatePresence>
-                        {showPromptHistory && recentPrompts.length > 0 && (
-                            <motion.div
-                                initial={{ opacity: 0, y: -10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="absolute top-full left-0 right-0 mt-2 bg-bg-elevated border border-white/10 rounded-xl overflow-hidden shadow-2xl z-50"
-                            >
-                                <div className="px-3 py-2 border-b border-white/5 flex items-center gap-2 text-gray-400">
-                                    <Clock size={14} />
-                                    <span className="text-[12px] font-medium uppercase tracking-wider">Недавние промпты</span>
-                                </div>
-                                {recentPrompts.map((p, idx) => (
-                                    <button
-                                        key={idx}
-                                        onMouseDown={(e) => {
-                                            e.preventDefault();
-                                            setInputs({ ...inputs, prompt: p });
-                                            setShowPromptHistory(false);
-                                        }}
-                                        className="w-full text-left px-3 py-3 text-[14px] text-white border-b border-white/5 last:border-none hover:bg-bg-elevated transition-colors truncate"
-                                    >
-                                        {p}
-                                    </button>
-                                ))}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
+                    <BottomSheet
+                        isOpen={showPromptHistory && recentPrompts.length > 0}
+                        onClose={() => setShowPromptHistory(false)}
+                        title="История промптов"
+                    >
+                        <div className="space-y-1">
+                            {recentPrompts.map((p, idx) => (
+                                <button
+                                    key={idx}
+                                    onClick={() => {
+                                        setInputs({ ...inputs, prompt: p });
+                                        setShowPromptHistory(false);
+                                    }}
+                                    className="w-full text-left px-4 py-4 text-[16px] text-white border-b border-white/5 last:border-none hover:bg-bg-elevated transition-colors line-clamp-2"
+                                >
+                                    {p}
+                                </button>
+                            ))}
+                        </div>
+                    </BottomSheet>
                 </div>
 
                 <div className="mt-4 flex flex-wrap gap-2">

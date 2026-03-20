@@ -20,7 +20,12 @@ const UpdateBanner = () => {
         </p>
       </div>
       <button
-        onClick={() => updateServiceWorker(true)}
+        onClick={() => {
+          console.log('🔄 Triggering PWA Update...');
+          updateServiceWorker(true);
+          // Fallback reload if updateServiceWorker doesn't trigger it automatically
+          setTimeout(() => window.location.reload(), 500);
+        }}
         className="px-4 py-2 bg-white rounded-xl 
                    text-purple-600 text-sm font-medium
                    active:scale-95 transition-transform"

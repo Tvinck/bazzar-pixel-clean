@@ -32,7 +32,7 @@ import { templatesData } from '../data/templates';
 import { TelegramCard, TelegramButton, TelegramBadge } from '../components/TelegramAnimations';
 import { useMagneticButton, useStaggerAnimation } from '../hooks/useGSAPAnimations';
 import { SpringCounter } from '../components/SpringAnimations';
-import { ImageCardSkeleton } from '../components/ui/Skeletons';
+import { SkeletonImageCard } from '../components/ui/Skeleton';
 import AnimatedIcon from '../components/ui/AnimatedIcon';
 import { useLanguage } from '../context/LanguageContext';
 

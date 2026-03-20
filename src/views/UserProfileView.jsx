@@ -8,6 +8,7 @@ import OptimizedImage from '../components/ui/OptimizedImage';
 import LikeButton from '../components/ui/LikeButton';
 import galleryAPI from '../lib/galleryAPI';
 import { useToast } from '../context/ToastContext';
+import { SkeletonImageCard } from '../components/ui/Skeleton';
 
 const UserProfileView = () => {
     const { userId } = useParams();
@@ -171,7 +172,7 @@ const UserProfileView = () => {
                     {isCreationsLoading ? (
                         // Skeleton
                         [1, 2, 3, 4, 5, 6].map(i => (
-                            <div key={i} className="aspect-square bg-bg-secondary animate-pulse" />
+                            <SkeletonImageCard key={i} />
                         ))
                     ) : (
                         creations?.map((item, i) => (

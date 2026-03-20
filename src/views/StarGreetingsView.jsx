@@ -5,6 +5,7 @@ import { ChevronLeft, Zap, Search, Gift, PartyPopper, Flame, Heart, Trophy, User
 import { useNavigate } from 'react-router-dom';
 import { MODEL_CATALOG } from '../config/models';
 import InsufficientCreditsModal from '../components/InsufficientCreditsModal';
+import { SkeletonStarCard } from '../components/ui/Skeleton';
 
 const GREETING_COST = MODEL_CATALOG['star_greeting']?.cost || 30;
 
@@ -81,14 +82,7 @@ const OccasionCard = ({ occasion, isSelected, onSelect }) => (
 const StarsSkeleton = () => (
     <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
         {[...Array(5)].map((_, i) => (
-            <div key={i} className="flex flex-col items-center gap-2 flex-shrink-0 w-[80px]">
-                <motion.div
-                    className="w-16 h-16 rounded-full bg-bg-elevated"
-                    animate={{ opacity: [0.3, 0.6, 0.3] }}
-                    transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.15 }}
-                />
-                <div className="w-12 h-3 bg-bg-elevated rounded-md" />
-            </div>
+            <SkeletonStarCard key={i} />
         ))}
     </div>
 );

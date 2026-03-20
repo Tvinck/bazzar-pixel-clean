@@ -12,11 +12,8 @@ export const getCDNUrl = (path: string | undefined | null): string | null => {
   
   if (!SUPABASE_CDN) return `/${cleanPath}`;
 
-  // Use webp if it's png or jpg
+  // No automatic extension replacement to avoid 400 errors for missing webp assets
   let finalPath = cleanPath;
-  if (finalPath.endsWith('.png') || finalPath.endsWith('.jpg') || finalPath.endsWith('.jpeg')) {
-     finalPath = finalPath.replace(/\.(png|jpe?g)$/i, '.webp');
-  }
 
   return `${SUPABASE_CDN}${finalPath}`;
 };

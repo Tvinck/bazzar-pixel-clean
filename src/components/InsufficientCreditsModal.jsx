@@ -1,5 +1,6 @@
 import React from 'react';
-import { motion, AnimatePresence, useDragControls } from 'framer-motion';
+import { motion } from 'framer-motion';
+import BottomSheet from './ui/BottomSheet';
 import { X, Zap, ArrowRight, Gift } from 'lucide-react';
 import { useSound } from '../context/SoundContext';
 import { PACKS } from './PaymentDrawer';
@@ -70,7 +71,6 @@ const AnimatedBattery = () => {
 
 const InsufficientCreditsModal = ({ isOpen, onClose, onTopUp }) => {
     const { playClick } = useSound();
-    const dragControls = useDragControls();
 
     // Select Best Offer
     const promoPack = PACKS.find(p => p.promo) || PACKS[0];
@@ -88,130 +88,90 @@ const InsufficientCreditsModal = ({ isOpen, onClose, onTopUp }) => {
     };
 
     return (
-        <AnimatePresence>
-            {isOpen && (
-                <>
-                    {/* Backdrop with red tint */}
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        onClick={onClose}
-                        className="fixed inset-0 bg-[#0f0f10]/90 backdrop-blur-xl z-[90] transition-colors"
-                    >
-                        <div className="absolute inset-0 bg-gradient-to-t from-red-900/20 to-transparent pointer-events-none" />
-                    </motion.div>
+        <BottomSheet
+            isOpen={isOpen}
+            onClose={onClose}
+            title="Недостаточно кредитов"
+            className="shadow-[0_-10px_60px_-15px_rgba(220,38,38,0.3)]"
+        >
+            <div className="relative">
+                {/* --- BATTERY ANIMATION --- */}
+                <AnimatedBattery />
 
-                    {/* Sheet */}
-                    <motion.div
-                        initial={{ y: '100%' }}
-                        animate={{ y: 0 }}
-                        exit={{ y: '100%' }}
-                        transition={{ type: "spring", damping: 24, stiffness: 220 }}
-                        drag="y"
-                        dragControls={dragControls}
-                        dragConstraints={{ top: 0, bottom: 0 }}
-                        dragElastic={0.2}
-                        onDragEnd={(_, info) => {
-                            if (info.offset.y > 100) onClose();
-                        }}
-                        className="fixed bottom-0 left-0 right-0 z-[100] bg-bg-secondary rounded-t-[40px] overflow-hidden border-t border-white/10 pb-safe-bottom shadow-[0_-10px_60px_-15px_rgba(220,38,38,0.3)]"
+                {/* Message */}
+                <div className="text-center mb-8">
+                    <motion.h2
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="text-[28px] font-black text-white mb-2 leading-tight tracking-tight"
                     >
-                        {/* Drag Handle */}
-                        <div className="flex justify-center pt-3 pb-1" onPointerDown={(e) => dragControls.start(e)}>
-                            <div className="w-12 h-1.5 bg-white/10 rounded-full" />
+                        КРИТИЧЕСКИЙ<br />
+                        <span className="text-red-500 text-3xl drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">РАЗРЯД 12%</span>
+                    </motion.h2>
+                    <p className="text-white/40 text-sm font-medium">
+                        Система не может продолжить генерацию.
+                        Требуется источник питания.
+                    </p>
+                </div>
+
+                {/* Flash Charge Offer */}
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1 }}
+                    onClick={handleTopUp}
+                    className="mb-4 bg-bg-secondary rounded-[28px] p-1.5 border border-white/5 cursor-pointer group relative overflow-hidden"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+
+                    <div className="flex items-center gap-4 bg-bg-secondary rounded-[24px] p-4 border border-white/5 relative z-10">
+                        <div className="w-12 h-12 rounded-xl bg-bg-elevated flex items-center justify-center text-green-400 shadow-[0_0_15px_rgba(74,222,128,0.2)]">
+                            <Zap size={24} fill="currentColor" />
                         </div>
-
-                        {/* Content */}
-                        <div className="p-6 relative">
-                            {/* Close Button */}
-                            <button
-                                onClick={onClose}
-                                className="absolute top-4 right-6 p-2 rounded-full bg-white/5 text-white/40 hover:text-white hover:bg-white/10 transition-all"
-                            >
-                                <X size={20} />
-                            </button>
-
-                            {/* --- BATTERY ANIMATION --- */}
-                            <AnimatedBattery />
-
-                            {/* Message */}
-                            <div className="text-center mb-8">
-                                <motion.h2
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="text-[28px] font-black text-white mb-2 leading-tight tracking-tight"
-                                >
-                                    КРИТИЧЕСКИЙ<br />
-                                    <span className="text-red-500 text-3xl drop-shadow-[0_0_15px_rgba(239,68,68,0.5)]">РАЗРЯД 12%</span>
-                                </motion.h2>
-                                <p className="text-white/40 text-sm font-medium">
-                                    Система не может продолжить генерацию.
-                                    Требуется источник питания.
-                                </p>
-                            </div>
-
-                            {/* Flash Charge Offer */}
-                            <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: 0.1 }}
-                                onClick={handleTopUp}
-                                className="mb-4 bg-bg-secondary rounded-[28px] p-1.5 border border-white/5 cursor-pointer group relative overflow-hidden"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-green-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-
-                                <div className="flex items-center gap-4 bg-bg-secondary rounded-[24px] p-4 border border-white/5 relative z-10">
-                                    <div className="w-12 h-12 rounded-xl bg-bg-elevated flex items-center justify-center text-green-400 shadow-[0_0_15px_rgba(74,222,128,0.2)]">
-                                        <Zap size={24} fill="currentColor" />
-                                    </div>
-                                    <div className="flex-1">
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-white font-black text-lg">FAST CHARGE</span>
-                                            <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded animate-pulse">
-                                                -{Math.round((1 - promoPack.price / promoPack.originalPrice) * 100)}%
-                                            </span>
-                                        </div>
-                                        <div className="text-white/50 text-xs font-bold">
-                                            Мгновенное пополнение {promoPack.credits} CR
-                                        </div>
-                                    </div>
-                                    <div className="text-right">
-                                        <div className="text-lg font-black text-white">{promoPack.price}₽</div>
-                                        <div className="text-[10px] text-white/30 line-through font-bold">{promoPack.originalPrice}₽</div>
-                                    </div>
-                                </div>
-                            </motion.div>
-
-                            {/* Main Action */}
-                            <button
-                                onClick={handleTopUp}
-                                className="w-full h-16 rounded-[24px] relative overflow-hidden group shadow-[0_0_40px_rgba(34,197,94,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
-                            >
-                                <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600" />
-                                <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
-                                {/* Scanning line effect */}
-                                <div className="absolute top-0 bottom-0 left-[-100%] w-[50%] bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:animate-[shimmer_1s_infinite]" />
-
-                                <span className="relative z-10 flex items-center justify-center gap-2 text-white font-black text-lg tracking-wide">
-                                    ПОДКЛЮЧИТЬ ПИТАНИЕ
-                                    <ArrowRight size={20} strokeWidth={3} />
+                        <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                                <span className="text-white font-black text-lg">FAST CHARGE</span>
+                                <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.5 rounded animate-pulse">
+                                    -{Math.round((1 - promoPack.price / promoPack.originalPrice) * 100)}%
                                 </span>
-                            </button>
-
-                            {/* Secondary Action */}
-                            <button
-                                onClick={handleSubscribe}
-                                className="w-full mt-3 py-3 text-white/30 text-xs font-bold hover:text-white transition-colors flex items-center justify-center gap-2 group"
-                            >
-                                <Gift size={14} className="group-hover:text-amber-400 transition-colors" />
-                                Или получить +10 CR бесплатно
-                            </button>
+                            </div>
+                            <div className="text-white/50 text-xs font-bold">
+                                Мгновенное пополнение {promoPack.credits} CR
+                            </div>
                         </div>
-                    </motion.div>
-                </>
-            )}
-        </AnimatePresence>
+                        <div className="text-right">
+                            <div className="text-lg font-black text-white">{promoPack.price}₽</div>
+                            <div className="text-[10px] text-white/30 line-through font-bold">{promoPack.originalPrice}₽</div>
+                        </div>
+                    </div>
+                </motion.div>
+
+                {/* Main Action */}
+                <button
+                    onClick={handleTopUp}
+                    className="w-full h-16 rounded-[24px] relative overflow-hidden group shadow-[0_0_40px_rgba(34,197,94,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-r from-green-500 to-emerald-600" />
+                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20" />
+                    {/* Scanning line effect */}
+                    <div className="absolute top-0 bottom-0 left-[-100%] w-[50%] bg-gradient-to-r from-transparent via-white/30 to-transparent group-hover:animate-[shimmer_1s_infinite]" />
+
+                    <span className="relative z-10 flex items-center justify-center gap-2 text-white font-black text-lg tracking-wide">
+                        ПОДКЛЮЧИТЬ ПИТАНИЕ
+                        <ArrowRight size={20} strokeWidth={3} />
+                    </span>
+                </button>
+
+                {/* Secondary Action */}
+                <button
+                    onClick={handleSubscribe}
+                    className="w-full mt-3 py-3 text-white/30 text-xs font-bold hover:text-white transition-colors flex items-center justify-center gap-2 group"
+                >
+                    <Gift size={14} className="group-hover:text-amber-400 transition-colors" />
+                    Или получить +10 CR бесплатно
+                </button>
+            </div>
+        </BottomSheet>
     );
 };
 

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { Block } from '../components/ui';
 import { useNavigate } from 'react-router-dom';
 import {
     Users, Gift, Copy, Share2,
@@ -11,21 +12,6 @@ import { useUser } from '../context/UserContext';
 import { useToast } from '../context/ToastContext';
 import { useSound } from '../context/SoundContext';
 
-interface BlockProps {
-    children: React.ReactNode;
-    className?: string;
-    title?: string;
-}
-
-// iOS-style Block
-const Block = ({ children, className = '', title }: BlockProps) => (
-    <div className="mb-6">
-        {title && <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">{title}</p>}
-        <div className={`bg-bg-secondary rounded-card overflow-hidden ${className}`}>
-            {children}
-        </div>
-    </div>
-);
 
 interface ReferralStats {
     total_invites: number;

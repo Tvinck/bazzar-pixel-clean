@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+// @ts-ignore
 import { analytics } from '../lib/supabase';
 
 // Define the shape of UserStats

@@ -14,6 +14,7 @@ import { templatesData } from '../data/templates';
 import { KIE_MODELS_FLAT } from '../kie-models';
 
 import { getCDNUrl } from '../hooks/useCDN';
+import { SkeletonListRow, SkeletonProfile } from '../components/ui/Skeleton';
 const AdminView = () => {
     const { user, profile } = useUser();
     const [isAdmin, setIsAdmin] = useState(false);
@@ -592,12 +593,7 @@ const AdminView = () => {
 
         try {
             const { error } = await supabase.from('user_stats').update({ current_balance: val }).eq('user_id', userId);
-            if (error) {
-                const { error: e2 } = await supabase.from('users').update({ balance: val }).eq('id', userId);
-                if (e2) throw e2;
-            }
-            toast.success('Баланс обновлен!');
-            setEditingUser(null);
+
             fetchData();
         } catch (e) {
             toast.error('Ошибка: ' + e.message);
@@ -1488,7 +1484,11 @@ const AdminView = () => {
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-bg-elevated p-4 rounded-card border border-white/5 relative overflow-hidden group hover:border-accent-blue/30 transition-colors">
                                     <div className="absolute -right-4 -top-4 w-16 h-16 bg-accent-blue/10 rounded-full blur-xl group-hover:bg-accent-blue/20 transition-colors" />
-                                    <div className="text-[28px] font-black">{metrics?.totals?.users || stats.users || 0}</div>
+                                    {isRefreshing ? (
+                                        <div className="h-8 w-20 bg-white/5 rounded-lg animate-pulse" />
+                                    ) : (
+                                        <div className="text-[28px] font-black">{metrics?.totals?.users || stats.users || 0}</div>
+                                    )}
                                     <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mt-1">Всего Юзеров</div>
                                 </div>
                                 <div className="bg-bg-elevated p-4 rounded-card border border-white/5 relative overflow-hidden group hover:border-[#34c759]/30 transition-colors">

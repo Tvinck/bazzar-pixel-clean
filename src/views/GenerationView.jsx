@@ -13,6 +13,7 @@ import InsufficientCreditsModal from '../components/InsufficientCreditsModal';
 import { MODEL_FAMILIES, calculateModelCost, KIE_MODELS_FLAT } from '../kie-models';
 import SEO from '../components/SEO/SEO';
 import { GenerationErrorBoundary } from '../components/ErrorBoundary';
+import { SkeletonGenerationResult } from '../components/ui/Skeleton';
 
 // Subcomponents
 import PromptInput from '../components/generation/PromptInput';
@@ -425,7 +426,23 @@ const GenerationView = ({ onOpenPayment }) => {
                     animate="show"
                     className="flex-1 overflow-y-auto pb-44 pt-4 space-y-6 relative z-10"
                 >
-                    <PromptInput 
+                    {isProcessing ? (
+                        <div className="px-4 py-8 space-y-6">
+                            <SkeletonGenerationResult />
+                             <div className="flex flex-col items-center justify-center gap-3 py-4">
+                                <motion.div
+                                    animate={{ rotate: 360 }}
+                                    transition={{ duration: 1.5, repeat: Infinity, ease: "linear" }}
+                                    className="w-10 h-10 border-4 border-accent-purple border-t-transparent rounded-full"
+                                />
+                                <p className="text-text-secondary font-medium animate-pulse">
+                                    {isVideoMode ? t('generation.creatingVideo') : t('generation.creatingArt')}...
+                                </p>
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <PromptInput 
                         inputs={inputs}
                         setInputs={setInputs}
                         t={t}
@@ -489,6 +506,8 @@ const GenerationView = ({ onOpenPayment }) => {
                         cancelCountdown={cancelCountdown}
                         t={t}
                     />
+                        </>
+                    )}
                 </motion.div>
             </GenerationErrorBoundary>
 

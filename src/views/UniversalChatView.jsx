@@ -2,6 +2,7 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, Send, Loader2, AlertCircle, Zap, AlertTriangle, Gift, ThumbsUp, ThumbsDown, Paperclip, X, RotateCcw } from 'lucide-react';
+import { SkeletonChat } from '../components/ui/Skeleton';
 import { useUser } from '../context/UserContext';
 
 /**
@@ -33,9 +34,7 @@ const MessagesList = ({
 }) => (
     <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
         {isLoadingHistory ? (
-            <div className="flex items-center justify-center py-8">
-                <Loader2 className="w-6 h-6 text-gray-400 animate-spin" />
-            </div>
+            <SkeletonChat />
         ) : (
             <>
                 <AnimatePresence>

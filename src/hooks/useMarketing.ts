@@ -12,27 +12,33 @@ export const useMarketing = (user: any) => {
     const { activeVariants } = useABTestContext();
 
     const trackEvent = useCallback(async (event: string, payload: MarketingEventPayload = {}) => {
-        const initData = (window as any).Telegram?.WebApp?.initData;
+        const tgWebApp = (window as any).Telegram?.WebApp;
+        const initData = tgWebApp?.initData;
+        const initDataUnsafe = tgWebApp?.initDataUnsafe;
 
         // Skip if no auth available (e.g. local browser without mock)
-        if (!initData && process.env.NODE_ENV === 'production') return;
+        if (!initData && import.meta.env.MODE === 'production') return;
 
         try {
-            fetch(`${API_URL}/api/marketing/track`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-TG-Data': initData
-                },
-                body: JSON.stringify({
-                    userId: user?.id,
-                    event,
-                    timestamp: Date.now(),
+            const dataUrl = `https://api.bazzar.pixel/marketing/track`;
+            const requestBody = {
+                eventType: event,
+                eventData: {
+                    ...payload,
                     ab_tests: activeVariants, // Automatically include active experiments
-                    ...payload
-                })
+                    timestamp: Date.now(),
+                    userId: user?.id,
+                },
+                telegramId: user?.telegram_id || initDataUnsafe?.user?.id,
+                initData: initData || ''
+            };
+
+            fetch(dataUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestBody)
             }).catch(err => {
-                if (process.env.NODE_ENV === 'development') console.warn('Marketing track failed:', err);
+                if (import.meta.env.MODE === 'development') console.warn('Marketing track failed:', err);
             });
         } catch (e) {
             // Ignore

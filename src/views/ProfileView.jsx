@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ListRow } from '../components/ui';
+import { ListRow, Block } from '../components/ui';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -15,8 +15,9 @@ import AnimatedIcon from '../components/ui/AnimatedIcon';
 import SEO from '../components/SEO/SEO';
 
 // Components
-import { ProfileSkeleton } from '../components/ui/Skeletons';
+import { SkeletonProfile } from '../components/ui/Skeleton';
 import GiftModal from '../components/modals/GiftModal';
+import BottomSheet from '../components/ui/BottomSheet';
 
 
 
@@ -33,22 +34,13 @@ const EditModal = ({ isOpen, onClose, title, value, onSave, type = 'text', optio
         onClose();
     };
 
-    if (!isOpen) return null;
-
     return (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose} />
-            <motion.div
-                initial={{ opacity: 0, scale: 0.95, y: 10 }}
-                animate={{ opacity: 1, scale: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95, y: 10 }}
-                className="bg-bg-secondary w-full max-w-sm rounded-card p-5 relative z-10 shadow-2xl"
-            >
-                <div className="flex justify-between items-center mb-4">
-                    <h3 className="font-semibold text-white text-[17px] tracking-[-0.41px]">{title}</h3>
-                    <button onClick={onClose} className="w-8 h-8 rounded-full bg-bg-elevated flex items-center justify-center text-gray-400 active:scale-95 transition-transform"><X size={18} /></button>
-                </div>
-
+        <BottomSheet
+            isOpen={isOpen}
+            onClose={onClose}
+            title={title}
+        >
+            <div className="space-y-4">
                 {type === 'select' ? (
                     <div className="space-y-1">
                         {options.map(opt => (
@@ -75,12 +67,12 @@ const EditModal = ({ isOpen, onClose, title, value, onSave, type = 'text', optio
 
                 <button
                     onClick={handleSave}
-                    className="w-full mt-4 bg-accent-blue text-white font-semibold text-[17px] py-3 rounded-input active:opacity-80 transition-opacity tracking-[-0.41px]"
+                    className="w-full bg-accent-blue text-white font-semibold text-[17px] py-3.5 rounded-input active:opacity-80 transition-opacity tracking-[-0.41px] shadow-lg shadow-accent-blue/20"
                 >
                     {t('common.save')}
                 </button>
-            </motion.div>
-        </div>
+            </div>
+        </BottomSheet>
     );
 };
 
@@ -273,7 +265,7 @@ const ProfileView = ({ onOpenPayment }) => {
     const totalFields = 8;
     const progressPercent = Math.round((filledCount / totalFields) * 100);
 
-    if (isLoading) return <ProfileSkeleton />;
+    if (isLoading) return <SkeletonProfile />;
 
     return (
         <div className="min-h-screen bg-black text-white font-sans pb-24 pt-4 px-4 overflow-y-auto w-full md:max-w-2xl md:mx-auto md:px-6">
@@ -299,7 +291,7 @@ const ProfileView = ({ onOpenPayment }) => {
             <div className="space-y-6">
 
                 {/* 1. Wallet & App Info */}
-                <ListBlock>
+                <Block>
                     <ListRow
                         icon={<Wallet size={16} className="text-white" />}
                         iconColor="bg-orange-500"
@@ -325,7 +317,7 @@ const ProfileView = ({ onOpenPayment }) => {
                         }}
                         isLast
                     />
-                </ListBlock>
+                </Block>
 
                 {/* Subscription Rollover Status */}
                 {user?.subscription && (
@@ -362,7 +354,7 @@ const ProfileView = ({ onOpenPayment }) => {
                 )}
 
                 {isAdmin && (
-                    <ListBlock>
+                    <Block>
                         <ListRow
                             icon={<ShieldAlert size={16} className="text-white" />}
                             iconColor="bg-red-500"
@@ -371,20 +363,20 @@ const ProfileView = ({ onOpenPayment }) => {
                             onClick={() => navigate('/admin')}
                             isLast
                         />
-                    </ListBlock>
+                    </Block>
                 )}
 
                 {/* 2. Info details block */}
                 <div>
                     <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">{t('profile.personalData')}</p>
-                    <ListBlock>
+                    <Block>
                         <ListRow label={t('profile.name')} value={displayName} />
                         <ListRow label={t('profile.gender')} value={profileData.gender || t('profile.notSpecified')} onClick={() => openEdit('gender', t('profile.gender'), 'select', ['Мужской', 'Женский'])} />
                         <ListRow label={t('profile.age')} value={profileData.age || t('profile.notSpecified')} onClick={() => openEdit('age', t('profile.age'), 'number')} />
                         <ListRow label={t('profile.location')} value={profileData.location || t('profile.setCity')} onClick={() => openEdit('location', t('profile.location'))} />
                         <ListRow label={t('profile.activity')} value={profileData.activity || t('profile.setActivity')} onClick={() => openEdit('activity', t('profile.activity'))} />
                         <ListRow label={t('profile.interests')} value={profileData.interests || t('profile.setInterests')} onClick={() => openEdit('interests', t('profile.interests'))} isLast />
-                    </ListBlock>
+                    </Block>
                     {progressPercent < 100 && (
                         <p className="text-[13px] text-gray-500 leading-tight mt-2 ml-4 tracking-[-0.08px]">
                             {t('profile.profileProgress').replace('{percent}', progressPercent.toString())}
@@ -395,7 +387,7 @@ const ProfileView = ({ onOpenPayment }) => {
                 {/* 3. Pixel Style */}
                 <div>
                     <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">{t('profile.pixelSettings')}</p>
-                    <ListBlock>
+                    <Block>
                         <ListRow
                             icon={<MessageCircle size={16} className="text-white" />}
                             iconColor="bg-pink-500"
@@ -411,13 +403,13 @@ const ProfileView = ({ onOpenPayment }) => {
                             onClick={() => openEdit('pixelLang', t('profile.responseLang'), 'select', ['Русский', 'English', 'Español'])}
                             isLast
                         />
-                    </ListBlock>
+                    </Block>
                 </div>
 
                 {/* 4. Social & Privacy */}
                 <div>
                     <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">{t('profile.socialPrivacy')}</p>
-                    <ListBlock>
+                    <Block>
                         <ListRow
                             icon={<Layers size={16} className="text-white" />}
                             iconColor="bg-amber-500"
@@ -461,7 +453,7 @@ const ProfileView = ({ onOpenPayment }) => {
                             onClick={() => navigate('/developer')}
                             isLast
                         />
-                    </ListBlock>
+                    </Block>
                     <p className="text-[12px] text-gray-500 mt-2 ml-4 px-2">
                         {t('profile.privacyTip')}
                     </p>
@@ -470,15 +462,15 @@ const ProfileView = ({ onOpenPayment }) => {
                 {/* 5. Transactions */}
                 <div>
                     <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">{t('profile.recentTransactions')}</p>
-                    <ListBlock>
+                    <Block>
                         <TransactionHistory />
-                    </ListBlock>
+                    </Block>
                 </div>
 
                 {/* 6. Email for Reactivation */}
                 <div>
                     <p className="text-[13px] text-gray-400 font-medium uppercase tracking-wider mb-2 ml-4">Уведомления</p>
-                    <ListBlock>
+                    <Block>
                         <ListRow
                             icon={<Mail size={16} className="text-white" />}
                             iconColor="bg-orange-500"
@@ -497,14 +489,14 @@ const ProfileView = ({ onOpenPayment }) => {
                             }}
                             isLast
                         />
-                    </ListBlock>
+                    </Block>
                     <p className="text-[12px] text-gray-500 mt-2 ml-4 px-2">
                         Мы отправим письмо только когда появится что-то новое и крутое ✨
                     </p>
                 </div>
 
                 {/* 5. Extra */}
-                <ListBlock>
+                <Block>
                     <ListRow
                         icon={<HelpCircle size={16} className="text-white" />}
                         iconColor="bg-blue-500/50"
@@ -518,7 +510,7 @@ const ProfileView = ({ onOpenPayment }) => {
                         onClick={() => navigate('/guide')}
                         isLast
                     />
-                </ListBlock>
+                </Block>
 
             </div>
 

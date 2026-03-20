@@ -180,7 +180,6 @@ const SuperResolutionView: React.FC = () => {
     );
 
     const handleMouseDown = () => setIsDragging(true);
-    // const _handleMouseUp = () => setIsDragging(false); // used via onUp inline
 
     useEffect(() => {
         const onMove = (e: MouseEvent) => handleSliderMove(e.clientX);

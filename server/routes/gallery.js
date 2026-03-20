@@ -79,4 +79,132 @@ router.get('/is_liked', async (req, res) => {
     }
 });
 
+// --- PUBLIC GALLERY & SEARCH ---
+router.get('/', async (req, res) => {
+    try {
+        const { sortBy = 'trending', filterType = 'all', page = 1, limit = 20 } = req.query;
+        const viewName = `public_gallery_${sortBy}`;
+        
+        let query = supabase.from(viewName).select('*', { count: 'exact' });
+        
+        if (filterType !== 'all') {
+            query = query.eq('type', filterType);
+        }
+        
+        const from = (parseInt(page) - 1) * parseInt(limit);
+        const to = from + parseInt(limit) - 1;
+        query = query.range(from, to);
+        
+        const { data, error, count } = await query;
+        if (error) throw error;
+        
+        res.json({
+            creations: data || [],
+            hasMore: data && data.length === parseInt(limit),
+            total: count
+        });
+    } catch (e) {
+        console.error('Gallery Fetch Error:', e);
+        res.status(500).json({ error: 'Failed to fetch gallery' });
+    }
+});
+
+// --- TEMPLATE CATEGORIES ---
+router.get('/categories', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('template_categories')
+            .select('*')
+            .order('sort_order', { ascending: true });
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to fetch categories' });
+    }
+});
+
+// --- CREATION MANAGEMENT ---
+
+// Get single creation
+router.get('/creations/:id', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('creations')
+            .select('*, user:users(username, first_name, avatar_url)')
+            .eq('id', req.params.id)
+            .single();
+        if (error) throw error;
+        res.json(data);
+    } catch (e) {
+        res.status(404).json({ error: 'Creation not found' });
+    }
+});
+
+// Get user creations
+router.get('/creations/user/:userId', async (req, res) => {
+    try {
+        const { includePrivate } = req.query;
+        let query = supabase
+            .from('creations')
+            .select('*')
+            .eq('user_id', req.params.userId)
+            .order('created_at', { ascending: false });
+            
+        if (includePrivate !== 'true') {
+            query = query.eq('is_public', true);
+        }
+        
+        const { data, error } = await query;
+        if (error) throw error;
+        res.json(data || []);
+    } catch (e) {
+        res.status(500).json({ error: 'Failed to fetch user creations' });
+    }
+});
+
+// Save creation
+router.post('/creations', authTG, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('creations')
+            .insert(req.body)
+            .select()
+            .single();
+        if (error) throw error;
+        res.json({ success: true, data });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Update creation
+router.put('/creations/:id', authTG, async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('creations')
+            .update(req.body)
+            .eq('id', req.params.id)
+            .select()
+            .single();
+        if (error) throw error;
+        res.json({ success: true, data });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+// Delete creation
+router.delete('/creations/:id', authTG, async (req, res) => {
+    try {
+        const { error } = await supabase
+            .from('creations')
+            .delete()
+            .eq('id', req.params.id);
+        if (error) throw error;
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
 export default router;

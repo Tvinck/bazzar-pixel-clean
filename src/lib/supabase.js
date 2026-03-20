@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Hardcoded for stability
-const supabaseUrl = 'https://ktookvpqtmzfccojarwm.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzMTM3NjUsImV4cCI6MjA4Mzg4OTc2NX0.54qQke_wvQFjRE1-bm0Wv4CXSi5GXwoHrHMyBlt896A';
+// Use environment variables for security
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || 'https://ktookvpqtmzfccojarwm.supabase.co';
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt0b29rdnBxdG16ZmNjb2phcndtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgzMTM3NjUsImV4cCI6MjA4Mzg4OTc2NX0.54qQke_wvQFjRE1-bm0Wv4CXSi5GXwoHrHMyBlt896A';
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
@@ -37,29 +37,22 @@ export const analytics = {
     // Upsert user
     async upsertUser(telegramId, telegramData) {
         try {
-            const { data, error } = await supabase
-                .from('users')
-                .upsert({
-                    telegram_id: telegramId,
-                    username: telegramData?.username,
-                    first_name: telegramData?.first_name,
-                    last_name: telegramData?.last_name,
-                    language_code: telegramData?.language_code,
-                    is_premium: telegramData?.is_premium || false,
-                    last_active_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString()
-                }, {
-                    onConflict: 'telegram_id'
-                })
-                .select()
-                .single();
-
-            if (error && error.code !== 'PGRST116') {
-                console.error('User upsert error:', error);
+            const res = await fetch('/api/user/init', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-TG-Data': window.Telegram?.WebApp?.initData || ''
+                },
+                body: JSON.stringify({ telegramId, ...telegramData })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                return data.user;
             }
-            return data;
+            return null;
         } catch (err) {
             console.error('Analytics error:', err);
+            return null;
         }
     },
 
@@ -137,32 +130,14 @@ export const analytics = {
     // Get user profile
     async getUserProfile(telegramId) {
         try {
-            let userUUID = telegramId;
-            const isUUID = typeof telegramId === 'string' && telegramId.length === 36 && telegramId.includes('-');
-
-            if (!isUUID) {
-                // First get userUUID
-                const { data: user } = await supabase
-                    .from('users')
-                    .select('id')
-                    .eq('telegram_id', telegramId)
-                    .single();
-
-                if (!user) return null;
-                userUUID = user.id;
+            const res = await fetch('/api/user/profile', {
+                headers: { 'X-TG-Data': window.Telegram?.WebApp?.initData || '' }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                return data.profile;
             }
-
-            // Then get profile
-            const { data, error } = await supabase
-                .from('user_profiles')
-                .select('*')
-                .eq('user_id', userUUID)
-                .single();
-
-            if (error && error.code !== 'PGRST116') {
-                console.error('Profile fetch error:', error);
-            }
-            return data;
+            return null;
         } catch (err) {
             console.error('Analytics profile error:', err);
             return null;
@@ -172,13 +147,11 @@ export const analytics = {
     // Get Leaderboard
     async getLeaderboard() {
         try {
-            const { data, error } = await supabase
-                .from('public_leaderboard')
-                .select('*')
-                .limit(100);
-
-            if (error) console.error('Leaderboard error:', error);
-            return data || [];
+            const res = await fetch('/api/user/leaderboard');
+            if (res.ok) {
+                return await res.json();
+            }
+            return [];
         } catch (err) {
             console.error('Leaderboard fetch error:', err);
             return [];
@@ -188,59 +161,63 @@ export const analytics = {
     // Add credits to user
     async addCredits(telegramId, amount) {
         try {
-            const stats = await this.getUserStats(telegramId);
-            if (!stats) return null;
-
-            const { data, error } = await supabase
-                .from('user_stats')
-                .update({
-                    current_balance: (stats.current_balance || 0) + amount,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('user_id', stats.user_id)
-                .select()
-                .single();
-
-            if (error) console.error('Add credits error:', error);
-            return data;
+            const res = await fetch('/api/user/credits/add', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-TG-Data': window.Telegram?.WebApp?.initData || ''
+                },
+                body: JSON.stringify({ amount })
+            });
+            if (res.ok) {
+                const json = await res.json();
+                return json.data;
+            }
+            return null;
         } catch (err) {
             console.error('Analytics error:', err);
+            return null;
         }
     },
 
     // Update user profile
     async updateUserProfile(telegramId, profileData) {
         try {
-            const { data, error } = await supabase
-                .from('users')
-                .update({
-                    ...profileData,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('telegram_id', telegramId)
-                .select()
-                .single();
-
-            if (error) console.error('Profile update error:', error);
-            return data;
+            const res = await fetch('/api/user/profile', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-TG-Data': window.Telegram?.WebApp?.initData || ''
+                },
+                body: JSON.stringify(profileData)
+            });
+            if (res.ok) {
+                const json = await res.json();
+                return json.profile;
+            }
+            return null;
         } catch (err) {
             console.error('Analytics error:', err);
+            return null;
         }
     },
 
-    // Pay for generation (RPC)
+    // Pay for generation (RPC via Proxy)
     async payForGeneration(userId, cost, xpReward, type = 'generation') {
         try {
-            const { data, error } = await supabase
-                .rpc('process_generation_payment', {
-                    p_user_id: userId,
-                    p_cost: cost,
-                    p_xp_reward: xpReward,
-                    p_service_type: type
-                });
-
-            if (error) throw error;
-            return data;
+            const res = await fetch('/api/user/credits/pay', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-TG-Data': window.Telegram?.WebApp?.initData || ''
+                },
+                body: JSON.stringify({ cost, xpReward, type })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                return data;
+            }
+            return { success: false, error: 'Payment failed' };
         } catch (err) {
             console.error('Payment error:', err);
             return { success: false, error: err.message };
@@ -250,14 +227,14 @@ export const analytics = {
     // Get transaction history
     async getTransactionHistory(userId) {
         try {
-            const { data, error } = await supabase
-                .from('transactions')
-                .select('*')
-                .eq('user_id', userId)
-                .order('created_at', { ascending: false });
-
-            if (error) throw error;
-            return data;
+            const res = await fetch('/api/payments/transactions', {
+                headers: { 'X-TG-Data': window.Telegram?.WebApp?.initData || '' }
+            });
+            if (res.ok) {
+                const json = await res.json();
+                return json.transactions || [];
+            }
+            return [];
         } catch (err) {
             console.error('Transactions fetch error:', err);
             return [];

@@ -113,7 +113,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const connectWs = () => {
             const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
             // Use same host if same-origin (production), else fallback to localhost:3000 (dev)
-            const host = process.env.NODE_ENV === 'production' ? window.location.host : 'localhost:3000';
+            const host = import.meta.env.MODE === 'production' ? window.location.host : 'localhost:3000';
             const wsUrl = `${protocol}//${host}/api/ws`;
 
             console.log('🔌 Connecting to WS:', wsUrl);
@@ -234,7 +234,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                     console.log('No Auth found - checking for Dev Override');
                     const isDevOverride = localStorage.getItem('bazzar_dev_override') === 'true';
 
-                    if (isDevOverride || process.env.NODE_ENV !== 'production') {
+                    if (isDevOverride || import.meta.env.MODE !== 'production') {
                         const devId = 603207436;
                         setTelegramId(devId);
 
@@ -250,8 +250,12 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                             setUser(userData);
 
                             const realStats = await dbAnalytics.getUserStats(devId);
-                            if (realStats) setStats(realStats);
-                            else throw new Error('Stats not found');
+                            if (realStats) {
+                                setStats(realStats);
+                            } else {
+                                // Создаём дефолтные stats если нет
+                                setStats({ current_balance: 112500, total_generations: 10, level: 5, xp: 500 });
+                            }
 
                             const userProfile = await dbAnalytics.getUserProfile(devId);
                             if (userProfile) setProfile(userProfile);
