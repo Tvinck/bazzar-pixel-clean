@@ -24,18 +24,39 @@
   <!-- Chunk Load Error Handler -->
   <script>
     window.addEventListener('error', function(e) {
-      if (e.target && (e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) {
-        const url = e.target.src || e.target.href;
-        if (url && (url.indexOf('index-') > -1 || url.indexOf('vendor-') > -1)) {
-          console.error('📦 Chunk load error detected for:', url);
-          const hasReloaded = sessionStorage.getItem('pixel_auto_reloaded');
-          if (!hasReloaded) {
-            sessionStorage.setItem('pixel_auto_reloaded', 'true');
-            window.location.reload();
-          }
+      const isChunkError = e.message && (
+        e.message.includes('Loading chunk') || 
+        e.message.includes('Unexpected EOF') ||
+        e.message.includes('SyntaxError')
+      );
+      
+      const target = e.target || {};
+      const isScriptError = target.tagName === 'SCRIPT' || target.tagName === 'LINK';
+      const url = target.src || target.href || '';
+      
+      if (isChunkError || (isScriptError && (url.includes('assets/') || url.includes('index-')))) {
+        console.error('📦 Critical load error detected:', url || e.message);
+        
+        const lastReload = localStorage.getItem('pixel_last_reload');
+        const now = Date.now();
+        
+        // Reload only if last reload was more than 10 seconds ago to avoid loops
+        if (!lastReload || (now - parseInt(lastReload)) > 10000) {
+          localStorage.setItem('pixel_last_reload', now.toString());
+          // Add cache-busting parameter to force server fetch
+          const retryUrl = new URL(window.location.href);
+          retryUrl.searchParams.set('v', now.toString());
+          window.location.replace(retryUrl.toString());
         }
       }
     }, true);
+
+    // Also catch unhandled rejections (often where ChunkLoadErrors end up)
+    window.addEventListener('unhandledrejection', function(event) {
+      if (event.reason && event.reason.name === 'ChunkLoadError') {
+        window.location.reload();
+      }
+    });
   </script>
 
   <!-- Yandex ID SDK -->
