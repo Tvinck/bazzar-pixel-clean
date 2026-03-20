@@ -7,6 +7,13 @@ import PageTransition from '../components/PageTransition';
 import LoadingScreen from '../components/LoadingScreen';
 import { ScreenErrorBoundary } from '../components/ErrorBoundary';
 
+import { 
+    ProfileSkeleton, 
+    SkeletonHistory, 
+    SkeletonImageCard,
+    SkeletonChat
+} from '../components/ui/Skeleton';
+
 // Lazy Load Views
 const HomeView = React.lazy(() => import("../views/HomeView"));
 const GalleryView = React.lazy(() => import("../views/GalleryView"));
@@ -58,45 +65,52 @@ const AppRoutes = ({ handlers, state }) => {
     );
 
     return (
-        <Suspense fallback={<LoadingScreen />}>
-            <AnimatePresence mode="wait" initial={false}>
+        <AnimatePresence mode="wait" initial={false}>
                 <Routes location={location} key={location.pathname}>
                     {/* Main Tabs */}
                     <Route path="/" element={
                         wrap(
-                            <PageTransition>
-                                <HomeView
-                                    onOpenCreation={openCreation}
-                                    onOpenTemplate={openTemplate}
-                                    onOpenLeaderboard={openLeaderboard}
-                                    onOpenPayment={openPayment}
-                                    onOpenStickers={openStickerGen}
-                                />
-                            </PageTransition>
+                            <Suspense fallback={<div className="p-4 space-y-4"><SkeletonImageCard /><SkeletonImageCard /></div>}>
+                                <PageTransition>
+                                    <HomeView
+                                        onOpenCreation={openCreation}
+                                        onOpenTemplate={openTemplate}
+                                        onOpenLeaderboard={openLeaderboard}
+                                        onOpenPayment={openPayment}
+                                        onOpenStickers={openStickerGen}
+                                    />
+                                </PageTransition>
+                            </Suspense>
                         )
                     } />
                     <Route path="/gallery" element={
                         wrap(
-                            <PageTransition>
-                                <GalleryView
-                                    onRemix={(creation) => openCreation("image-gen", creation.prompt)}
-                                    onOpenTemplate={openTemplate}
-                                />
-                            </PageTransition>
+                            <Suspense fallback={<SkeletonHistory />}>
+                                <PageTransition>
+                                    <GalleryView
+                                        onRemix={(creation) => openCreation("image-gen", creation.prompt)}
+                                        onOpenTemplate={openTemplate}
+                                    />
+                                </PageTransition>
+                            </Suspense>
                         )
                     } />
                     <Route path="/history" element={
                         wrap(
-                            <PageTransition>
-                                <HistoryView />
-                            </PageTransition>
+                            <Suspense fallback={<SkeletonHistory />}>
+                                <PageTransition>
+                                    <HistoryView />
+                                </PageTransition>
+                            </Suspense>
                         )
                     } />
                     <Route path="/profile" element={
                         wrap(
-                            <PageTransition>
-                                <ProfileView isDark={isDarkMode} onOpenPayment={openPayment} />
-                            </PageTransition>
+                            <Suspense fallback={<ProfileSkeleton />}>
+                                <PageTransition>
+                                    <ProfileView isDark={isDarkMode} onOpenPayment={openPayment} />
+                                </PageTransition>
+                            </Suspense>
                         )
                     } />
 
@@ -189,9 +203,11 @@ const AppRoutes = ({ handlers, state }) => {
                     } />
                     <Route path="/experts/:expertId" element={
                         wrap(
-                            <PageTransition>
-                                <ExpertChatView />
-                            </PageTransition>
+                            <Suspense fallback={<SkeletonChat />}>
+                                <PageTransition>
+                                    <ExpertChatView />
+                                </PageTransition>
+                            </Suspense>
                         )
                     } />
                     <Route path="/chat/:chatType" element={
@@ -287,7 +303,6 @@ const AppRoutes = ({ handlers, state }) => {
                     } />
                 </Routes>
             </AnimatePresence>
-        </Suspense>
     );
 };
 

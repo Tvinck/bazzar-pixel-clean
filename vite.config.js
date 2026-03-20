@@ -80,9 +80,6 @@ export default defineConfig({
       webp: { quality: 75 },
     }),
   ],
-  define: {
-    'process.env': {}
-  },
   build: {
     target: 'es2015',
     minify: 'terser',
@@ -95,10 +92,16 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          'react-vendor': ['react', 'react-dom'],
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
           'motion': ['framer-motion'],
           'icons': ['lucide-react'],
-          'query': ['@tanstack/react-query']
+          'query': ['@tanstack/react-query'],
+          'supabase': ['@supabase/supabase-js'],
+          'ui-components': [
+            './src/components/ui/Button.jsx',
+            './src/components/ui/Input.jsx',
+            './src/components/ui/Card.jsx'
+          ]
         }
       }
     },

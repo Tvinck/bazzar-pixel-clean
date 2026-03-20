@@ -38,12 +38,22 @@ const LoadingScreen = () => {
                     className="relative"
                 >
                     {/* Main Logo Image */}
-                    <div className="w-32 h-32 rounded-[2rem] overflow-hidden shadow-2xl shadow-blue-500/20 relative">
+                    <div className="w-32 h-32 rounded-[2rem] overflow-hidden shadow-2xl shadow-blue-500/20 relative bg-white/5 flex items-center justify-center">
                         <img
                             src="/loading_logo.jpg"
                             alt="Loading..."
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover relative z-10"
+                            onLoad={(e) => e.currentTarget.style.opacity = '1'}
+                            style={{ opacity: 0, transition: 'opacity 0.3s' }}
                         />
+                        
+                        {/* Static SVG Placeholder for brand ID */}
+                        <div className="absolute inset-0 flex items-center justify-center">
+                            <svg viewBox="0 0 100 100" className="w-16 h-16 text-blue-500/20">
+                                <rect x="20" y="20" width="60" height="60" rx="15" fill="currentColor" />
+                                <path d="M40 40 L60 60 M60 40 L40 60" stroke="white" strokeWidth="5" strokeLinecap="round" />
+                            </svg>
+                        </div>
 
                         {/* Shimmer Overlay */}
                         <motion.div

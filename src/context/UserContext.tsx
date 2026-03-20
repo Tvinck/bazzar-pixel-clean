@@ -182,13 +182,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
                         language: tgUser?.language_code
                     });
 
-                    const userData = await dbAnalytics.upsertUser(tgId, tgUser);
-                    setUser(userData);
+                    // Start all DB calls in parallel for speed
+                    const [userData, userStats, userProfile] = await Promise.all([
+                        dbAnalytics.upsertUser(tgId, tgUser),
+                        dbAnalytics.getUserStats(tgId),
+                        dbAnalytics.getUserProfile(tgId)
+                    ]);
 
-                    const userStats = await dbAnalytics.getUserStats(tgId);
+                    if (userData) setUser(userData);
                     if (userStats) setStats(userStats);
-
-                    const userProfile = await dbAnalytics.getUserProfile(tgId);
                     if (userProfile) setProfile(userProfile);
                 }
                 // Path 2: Browser Session with Web Login Widget Token

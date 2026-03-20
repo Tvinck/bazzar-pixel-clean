@@ -25,9 +25,9 @@ import Sidebar from "./components/layout/Sidebar";
 import AppRoutes from "./routes/AppRoutes";
 import GlobalModals from "./components/modals/GlobalModals";
 import TemplateSelectionSheet from "./components/TemplateSelectionSheet";
-import WebLogin from "./pages/WebLogin";
-import OAuthCallback from "./pages/OAuthCallback";
-import MaintenanceView from "./views/MaintenanceView";
+const WebLogin = React.lazy(() => import("./pages/WebLogin"));
+const OAuthCallback = React.lazy(() => import("./pages/OAuthCallback"));
+const MaintenanceView = React.lazy(() => import("./views/MaintenanceView"));
 
 function AppContent() {
   const navigate = useNavigate();
@@ -170,19 +170,25 @@ function AppContent() {
     isOnboardingVisible, isNotificationsOpen, telegramUser
   };
 
-  if (!isLoading && !telegramId && !user) {
-    // Allow OAuth callback to process without auth
-    if (location.pathname === '/auth/callback') {
-      return (
-        <Suspense fallback={<div className="min-h-screen bg-bg-primary" />}>
-          <Routes>
-            <Route path="/auth/callback" element={<OAuthCallback />} />
-          </Routes>
-        </Suspense>
-      );
+    if (!isLoading && !telegramId && !user) {
+        // Allow OAuth callback to process without auth
+        if (location.pathname === '/auth/callback') {
+            return (
+                <Suspense fallback={<div className="min-h-screen bg-bg-primary" />}>
+                    <Routes>
+                        <Route path="/auth/callback" element={<OAuthCallback />} />
+                    </Routes>
+                </Suspense>
+            );
+        }
+        return (
+            <Suspense fallback={<div className="min-h-screen bg-bg-primary flex items-center justify-center">
+                <div className="w-12 h-12 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+            </div>}>
+                <WebLogin />
+            </Suspense>
+        );
     }
-    return <WebLogin />;
-  }
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${isDarkMode ? "dark" : ""}`}>
