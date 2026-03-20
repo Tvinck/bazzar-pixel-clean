@@ -304,10 +304,32 @@
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
 }
 
-/* Hide Scrollbar */
-::-webkit-scrollbar {
+/* Hide Scrollbar on Mobile, show thin on Desktop */
+.tg-is-mobile::-webkit-scrollbar {
   width: 0px;
   background: transparent;
+}
+
+.tg-is-desktop::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.tg-is-desktop::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.tg-is-desktop::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+
+.tg-is-desktop::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.tg-light.tg-is-desktop::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 /* Smooth Scrolling */
@@ -432,12 +454,38 @@ html {
   .desktop-container {
     max-width: 960px;
   }
-  .desktop-header {
-    max-width: 960px;
+}
+
+/* Safe Area Utilities */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+.safe-area-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Screen Size Specifics */
+@media (max-width: 767px) {
+  .tg-is-mobile main {
+    padding-bottom: calc(85px + env(safe-area-inset-bottom, 0px));
   }
-  .desktop-fixed-bottom {
-    max-width: 960px;
-  }
+}
+
+/* Specific TDesktop/Max Fixes */
+.tg-platform-macos body, .tg-platform-tdesktop body {
+    /* macOS version specific tweaks */
+    -webkit-font-smoothing: antialiased;
+}
+
+.tg-is-desktop .mx-auto.max-w-\[480px\] {
+    /* Allow wider content on Desktop view if needed, or keep centered */
+    max-width: 600px;
+}
+
+.tg-is-desktop main {
+    /* Add some breath space for desktop app */
+    padding-bottom: 24px;
 }
 
 /* No-scrollbar utility */

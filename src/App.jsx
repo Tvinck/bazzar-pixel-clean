@@ -67,31 +67,6 @@ function AppContent() {
 
   // Effects
   useEffect(() => {
-    // Telegram WebApp Initialization
-    const tg = window.Telegram?.WebApp;
-    if (tg) {
-        tg.ready();
-        tg.expand();
-        
-        // Set initial theme
-        const applyTheme = () => {
-            const colorScheme = tg.colorScheme || 'dark';
-            document.documentElement.classList.remove('tg-dark', 'tg-light');
-            document.documentElement.classList.add(colorScheme === 'dark' ? 'tg-dark' : 'tg-light');
-        };
-        
-        applyTheme();
-        
-        // Listen for theme changes
-        tg.onEvent('themeChanged', applyTheme);
-        
-        return () => {
-            tg.offEvent('themeChanged', applyTheme);
-        };
-    }
-  }, []);
-
-  useEffect(() => {
     if (isPaymentOpen) trackEvent("shop_view");
   }, [isPaymentOpen, trackEvent]);
 

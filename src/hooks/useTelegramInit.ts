@@ -91,6 +91,39 @@ export const useTelegramInit = (setTelegramUser?: (user: any) => void) => {
                     try { tg.lockOrientation("portrait"); } catch (e) { }
                 }
 
+                // 7. Platform Specific Classes
+                const platform = tg.platform || 'unknown';
+                document.body.classList.add(`tg-platform-${platform}`);
+                if (['tdesktop', 'macos', 'web', 'weba'].includes(platform)) {
+                    document.body.classList.add('tg-is-desktop');
+                } else {
+                    document.body.classList.add('tg-is-mobile');
+                }
+
+                // 8. Dynamic Theme Sync
+                const syncTheme = () => {
+                    const colorScheme = tg.colorScheme || 'dark';
+                    document.documentElement.classList.remove('tg-dark', 'tg-light');
+                    document.documentElement.classList.add(colorScheme === 'dark' ? 'tg-dark' : 'tg-light');
+                    
+                    // Also sync with our internal dark mode class if needed
+                    if (colorScheme === 'dark') {
+                        document.documentElement.classList.add('dark');
+                    } else {
+                        // Only remove if not explicitly set by user before
+                        if (!localStorage.getItem('pixel_theme_mode')) {
+                            document.documentElement.classList.remove('dark');
+                        }
+                    }
+                };
+
+                syncTheme();
+                tg.onEvent('themeChanged', syncTheme);
+
+                return () => {
+                    tg.offEvent('themeChanged', syncTheme);
+                };
+
             } catch (e) {
                 console.error("Telegram Mini App Init Error:", e);
             }
